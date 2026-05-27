@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String
+  password      String
+  role          String   @default("clerk") // admin, clerk
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  enquiries     Enquiry[]
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  image       String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products    Product[]
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  description   String?
+  shortDescription String?
+  price         Float
+  comparePrice  Float?
+  sku           String?
+  images        String   @default("[]") // JSON array of image URLs
+  categoryId    String?
+  isFeatured    Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  specifications String?  // JSON object of specs
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  category      Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  enquiries     Enquiry[]
+}
+
+model Enquiry {
+  id            String   @id @default(cuid())
+  name          String
+  email         String
+  phone         String?
+  subject       String
+  message       String
+  productId     String?
+  type          String   @default("product") // product, contact
+  status        String   @default("new") // new, read, replied, closed
+  userId        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  product       Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+}
+
+model Banner {
+  id            String   @id @default(cuid())
+  title         String
+  subtitle      String?
+  image         String?
+  link          String?
+  linkText      String?
+  sortOrder     Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model SiteSetting {
+  id            String   @id @default(cuid())
+  key           String   @unique
+  value         String
+  updatedAt     DateTime @updatedAt
+}
+
+model ContentPage {
+  id            String   @id @default(cuid())
+  title         String
+  slug          String   @unique
+  content       String   @default("")
+  metaTitle     String?
+  metaDescription String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

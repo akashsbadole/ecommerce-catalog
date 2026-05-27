@@ -1,0 +1,69 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const body = await request.json();
+
+    const existing = await db.enquiry.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json(
+        { error: 'Enquiry not found' },
+        { status: 404 }
+      );
+    }
+
+    const enquiry = await db.enquiry.update({
+      where: { id },
+      data: {
+        ...(body.status !== undefined && { status: body.status }),
+        ...(body.name !== undefined && { name: body.name }),
+        ...(body.email !== undefined && { email: body.email }),
+        ...(body.phone !== undefined && {
+          phone: body.phone || null,
+        }),
+        ...(body.subject !== undefined && { subject: body.subject }),
+        ...(body.message !== undefined && { message: body.message }),
+      },
+    });
+
+    return NextResponse.json({ enquiry });
+  } catch (error) {
+    console.error('Update enquiry error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    const existing = await db.enquiry.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json(
+        { error: 'Enquiry not found' },
+        { status: 404 }
+      );
+    }
+
+    await db.enquiry.delete({ where: { id } });
+
+    return NextResponse.json({ message: 'Enquiry deleted successfully' });
+  } catch (error) {
+    console.error('Delete enquiry error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
