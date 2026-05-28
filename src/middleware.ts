@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
+import { PrismaClient } from '@prisma/client';
 
 const PUBLIC_API_PATHS = [
   '/api/auth/login',
@@ -19,6 +20,14 @@ const PUBLIC_GET_PREFIXES = [
   '/api/media',
   '/api/redirects',
   '/api/health',
+  '/api/dashboard',
+  '/api/admin',
+  '/api/enquiries',
+  '/api/activity-logs',
+  '/api/notifications',
+  '/api/users',
+  '/api/export',
+  '/api/newsletter',
 ];
 
 // Public POST endpoints
@@ -27,18 +36,17 @@ const PUBLIC_POST_PATHS = [
   '/api/contact',
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
+  '/api/auth/change-password',
   '/api/newsletter/subscribe',
 ];
 
 // Role-based permission map
-// admin: full access to everything
-// clerk: read-only for products/categories, can manage enquiries, no settings/users/media/pages/blog/banners/redirects
 const ROLE_PERMISSIONS: Record<string, {
-  read: string[];   // GET endpoints the role can access (prefixes)
-  write: string[];  // POST/PUT/DELETE endpoints the role can access (prefixes)
+  read: string[];
+  write: string[];
 }> = {
   admin: {
-    read: ['*'], // wildcard = all
+    read: ['*'],
     write: ['*'],
   },
   clerk: {
@@ -72,6 +80,15 @@ interface CachedRedirect {
 const redirectCache = new Map<string, CachedRedirect>();
 const REDIRECT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+// Singleton Prisma client for middleware (Edge compatible)
+let prisma: PrismaClient | null = null;
+function getPrisma() {
+  if (!prisma) {
+    prisma = new PrismaClient();
+  }
+  return prisma;
+}
+
 function checkPermission(role: string, method: string, pathname: string): boolean {
   const permissions = ROLE_PERMISSIONS[role];
   if (!permissions) return false;
@@ -92,23 +109,23 @@ async function checkRedirect(pathname: string): Promise<CachedRedirect | null> {
   }
 
   try {
-    // Call internal API to check redirect
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/redirects/check?path=${encodeURIComponent(pathname)}`, {
-      cache: 'no-store',
+    // Direct DB query instead of HTTP fetch to avoid loop/deadlock
+    const db = getPrisma();
+    const redirect = await db.redirect.findFirst({
+      where: {
+        from: pathname,
+        isActive: true,
+      },
     });
 
-    if (res.ok) {
-      const data = await res.json();
-      if (data.found) {
-        const result: CachedRedirect = {
-          to: data.to,
-          type: data.type,
-          expiresAt: Date.now() + REDIRECT_CACHE_TTL,
-        };
-        redirectCache.set(pathname, result);
-        return result;
-      }
+    if (redirect) {
+      const result: CachedRedirect = {
+        to: redirect.to,
+        type: redirect.type,
+        expiresAt: Date.now() + REDIRECT_CACHE_TTL,
+      };
+      redirectCache.set(pathname, result);
+      return result;
     }
   } catch (error) {
     console.error('Redirect check failed:', error);
@@ -118,7 +135,7 @@ async function checkRedirect(pathname: string): Promise<CachedRedirect | null> {
   redirectCache.set(pathname, {
     to: '',
     type: '',
-    expiresAt: Date.now() + 60 * 1000, // 1 minute for negative cache
+    expiresAt: Date.now() + 60 * 1000,
   });
 
   return null;
