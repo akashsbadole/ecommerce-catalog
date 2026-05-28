@@ -14,6 +14,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { adminFetch } from '@/lib/admin-fetch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -124,7 +125,7 @@ export function AdminUsers() {
       setLoading(true);
       const params = new URLSearchParams();
       if (searchTerm) params.set('search', searchTerm);
-      const res = await fetch(`/api/users?${params.toString()}`);
+      const res = await adminFetch(`/api/users?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setUsers(data.users || []);
@@ -159,7 +160,7 @@ export function AdminUsers() {
     if (action === 'delete') {
       setBulkLoading(true);
       try {
-        const res = await fetch('/api/users/bulk', {
+        const res = await adminFetch('/api/users/bulk', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ids: selectedIds, action }),
@@ -182,7 +183,7 @@ export function AdminUsers() {
     }
     setBulkLoading(true);
     try {
-      const res = await fetch('/api/users/bulk', {
+      const res = await adminFetch('/api/users/bulk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids: selectedIds, action }),
@@ -256,7 +257,7 @@ export function AdminUsers() {
         : '/api/users';
       const method = editingUser ? 'PUT' : 'POST';
 
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -281,7 +282,7 @@ export function AdminUsers() {
     if (!deleteId) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/users/${deleteId}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/users/${deleteId}`, { method: 'DELETE' });
       if (res.ok) {
         toast.success('User deleted');
         setUsers(prev => prev.filter(u => u.id !== deleteId));

@@ -247,3 +247,27 @@ Stage Summary:
 - Redirect handling in middleware with in-memory cache and 5-minute TTL
 - Full Users CRUD API (list, create, update, delete, bulk operations)
 - ESLint: CLEAN (zero errors)
+---
+Task ID: 1
+Agent: Main Agent
+Task: Fix critical missing items - Auth tokens, Upload security, Fetch consolidation
+
+Work Log:
+- Audited full project state: discovered all features already exist but had critical auth bugs
+- Fixed AdminUsers.tsx: replaced 5 raw `fetch()` calls with `adminFetch()` + added import
+- Fixed AdminMedia.tsx: replaced 4 raw `fetch()` calls with `adminFetch()` + added import
+- Fixed AdminDashboardHome.tsx: replaced 4 raw `fetch()` calls with `adminFetch()` + added import
+- Fixed AdminBlog.tsx: replaced 1 raw `fetch()` (`/api/auth/me`) with `adminFetch()`
+- Fixed AdminBanners.tsx: replaced 1 raw `fetch()` (`/api/upload`) with `adminFetch()`
+- Fixed AdminProducts.tsx: replaced 1 raw `fetch()` (`/api/upload`) with `adminFetch()`
+- Secured Upload API: removed `/api/upload` from PUBLIC_POST_PATHS in middleware (was publicly accessible)
+- Consolidated duplicate fetch helpers: `fetch.ts` is now single source of truth, `admin-fetch.ts` re-exports
+- Verified: only AdminLogin.tsx has raw `fetch()` (intentional - no token before login)
+- Build passed with zero errors
+
+Stage Summary:
+- Total raw `fetch()` calls fixed: 16 (across 6 files)
+- Upload endpoint now requires authentication (security fix)
+- All admin API calls now properly send JWT Bearer tokens
+- Duplicate fetch utility files consolidated
+- Existing features verified: WYSIWYG, RBAC middleware, User Management, Redirects, Theme Toggle all working

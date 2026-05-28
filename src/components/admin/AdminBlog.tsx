@@ -195,7 +195,7 @@ export function AdminBlog() {
 
   const fetchAuthors = useCallback(async () => {
     try {
-      const res = await fetch('/api/auth/me');
+      const res = await adminFetch('/api/auth/me');
       if (res.ok) {
         const data = await res.json();
         // Collect all users — we only have the current user from this endpoint

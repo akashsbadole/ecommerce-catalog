@@ -40,6 +40,7 @@ import {
   Info,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { adminFetch } from '@/lib/admin-fetch';
 
 interface MediaItem {
   id: string;
@@ -114,7 +115,7 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
         limit: String(limit),
       });
       if (searchQuery) params.set('search', searchQuery);
-      const res = await fetch(`/api/media?${params}`);
+      const res = await adminFetch(`/api/media?${params}`);
       if (res.ok) {
         const data: MediaResponse = await res.json();
         setMedia(data.media);
@@ -150,7 +151,7 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
     try {
       const formData = new FormData();
       Array.from(files).forEach(f => formData.append('files', f));
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      const res = await adminFetch('/api/upload', { method: 'POST', body: formData });
       if (res.ok) {
         const data = await res.json();
         const successCount = data.files.filter((f: { error?: string }) => !f.error).length;
@@ -176,7 +177,7 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
   const handleDelete = async (item: MediaItem) => {
     if (!confirm(`Delete "${item.originalName}"?`)) return;
     try {
-      const res = await fetch(`/api/media/${item.id}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/media/${item.id}`, { method: 'DELETE' });
       if (res.ok) {
         toast.success('Deleted');
         fetchMedia(page, search);
@@ -208,7 +209,7 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
   const handleUpdateAlt = async () => {
     if (!selectedItem) return;
     try {
-      const res = await fetch('/api/media', {
+      const res = await adminFetch('/api/media', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: selectedItem.id, alt: editAlt }),

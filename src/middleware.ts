@@ -24,7 +24,6 @@ const PUBLIC_GET_PREFIXES = [
 const PUBLIC_POST_PATHS = [
   '/api/enquiries',
   '/api/contact',
-  '/api/upload',
 ];
 
 // Role-based permission map

@@ -14,6 +14,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { adminFetch } from '@/lib/admin-fetch';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -62,10 +63,10 @@ export function AdminDashboardHome({ onNavigate }: { onNavigate?: (tab: string) 
     async function load() {
       try {
         const [productsRes, categoriesRes, enquiriesRes, bannersRes] = await Promise.all([
-          fetch('/api/products?all=true'),
-          fetch('/api/categories?all=true'),
-          fetch('/api/enquiries'),
-          fetch('/api/banners?all=true'),
+          adminFetch('/api/products?all=true'),
+          adminFetch('/api/categories?all=true'),
+          adminFetch('/api/enquiries'),
+          adminFetch('/api/banners?all=true'),
         ]);
 
         if (!cancelled && productsRes.ok) {

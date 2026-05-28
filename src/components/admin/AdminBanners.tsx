@@ -221,7 +221,7 @@ export function AdminBanners() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const res = await fetch('/api/upload', {
+      const res = await adminFetch('/api/upload', {
         method: 'POST',
         body: formData,
       });
