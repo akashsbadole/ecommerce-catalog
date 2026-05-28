@@ -51,6 +51,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { adminFetch } from '@/lib/admin-fetch';
 
 interface Redirect {
   id: string;
@@ -97,7 +98,7 @@ export function AdminRedirects() {
 
   const fetchRedirects = useCallback(async () => {
     try {
-      const res = await fetch('/api/redirects');
+      const res = await adminFetch('/api/redirects');
       if (res.ok) {
         const data = await res.json();
         setRedirects(data.redirects || []);
@@ -131,7 +132,7 @@ export function AdminRedirects() {
     if (selectedIds.length === 0) return;
     setBulkLoading(true);
     try {
-      const res = await fetch('/api/redirects/bulk', {
+      const res = await adminFetch('/api/redirects/bulk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids: selectedIds, action: 'delete' }),
@@ -194,7 +195,7 @@ export function AdminRedirects() {
         : '/api/redirects';
       const method = editingRedirect ? 'PUT' : 'POST';
 
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -219,7 +220,7 @@ export function AdminRedirects() {
     if (!deleteId) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/redirects/${deleteId}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/redirects/${deleteId}`, { method: 'DELETE' });
       if (res.ok) {
         toast.success('Redirect deleted');
         setRedirects(prev => prev.filter(r => r.id !== deleteId));

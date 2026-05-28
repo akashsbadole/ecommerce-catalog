@@ -155,3 +155,95 @@ Stage Summary:
 - Build: SUCCESS, Lint: CLEAN
 - 30+ API routes, 10+ admin tabs, 8+ public pages
 
+---
+Task ID: 5, 6, 9
+Agent: main
+Task: WYSIWYG Editor, Admin Users Management, Theme Toggle
+
+Work Log:
+
+Task 5 - WYSIWYG Editor:
+- Created `/src/components/admin/WysiwygEditor.tsx` using @mdxeditor/editor with 'use client' directive
+- Editor supports: bold, italic, underline, strikethrough, headings, lists, links, images, tables, code blocks, thematic breaks, markdown shortcuts
+- Accepts `value`, `onChange`, `placeholder`, `minHeight`, `readOnly` props
+- Uses emerald accent color for toolbar styling
+- Integrated into AdminPages.tsx - replaced content Textarea with WysiwygEditor via dynamic import (ssr: false)
+- Integrated into AdminBlog.tsx - replaced content Textarea with WysiwygEditor via dynamic import (ssr: false, minHeight 400px)
+- Integrated into AdminProducts.tsx - replaced description Textarea with WysiwygEditor via dynamic import (ssr: false)
+
+Task 6 - Admin Users Management:
+- Created `/api/users/route.ts` - GET list (search, role filter) + POST create (bcrypt password hashing, duplicate email check)
+- Created `/api/users/[id]/route.ts` - GET by id, PUT update (name, email, role, isActive, optional password reset), DELETE
+- Created `/api/users/bulk/route.ts` - POST bulk actions (activate, deactivate, delete)
+- Created `/src/components/admin/AdminUsers.tsx` - full CRUD UI with search, table, add/edit dialog, delete confirmation, bulk select + actions
+- Shows role badges: admin=emerald with ShieldCheck icon, clerk=sky-blue with UserCog icon
+- Added 'Users' tab to AdminDashboard sidebarItems with Users icon
+- Registered AdminUsers in renderContent switch case
+
+Task 9 - Theme Toggle (Dark/Light Mode):
+- Created `/src/components/ThemeProvider.tsx` wrapping next-themes ThemeProvider with class attribute, system default
+- Created `/src/components/ThemeToggle.tsx` - dropdown with Light/Dark/System options, Sun/Moon icons with rotation animation
+- Updated `/src/app/layout.tsx` to wrap children with ThemeProvider
+- Added ThemeToggle to StoreHeader.tsx (desktop nav, after Admin button)
+- Added ThemeToggle to AdminDashboard.tsx sidebar footer area (beside user info)
+
+Stage Summary:
+- WYSIWYG rich text editor integrated across 3 admin pages using dynamic SSR-disabled imports
+- Full admin user management with CRUD API, search, bulk operations, role badges
+- Dark/light/system theme toggle available on storefront header and admin sidebar
+- ESLint: CLEAN (zero errors), Dev server compiles successfully
+
+---
+Task ID: 2, 3, 4, 7, 8
+Agent: main
+Task: Upload API, adminFetch helper, RBAC middleware, redirect handling, Users CRUD API
+
+Work Log:
+
+Task 2 - Upload API with Image Resizing:
+- Created `/api/upload/route.ts` with POST (single/multi file), PUT (update alt/folder), DELETE handlers
+- Uses sharp for image resizing to thumbnail (200x200), small (400x400), medium (800x800), large (1200x1200)
+- SVG files skip thumbnail generation
+- Validates file types (jpeg, png, gif, webp, svg) and enforces 10MB size limit
+- Generates unique filenames using timestamp + uuidv4 random string
+- Records each upload in Media table via Prisma with thumbnails JSON
+- Saves files to `/public/uploads/` directory (auto-creates if missing)
+
+Task 3 - adminFetch Helper:
+- Created `/src/lib/admin-fetch.ts` as a wrapper around fetch() that auto-injects JWT Bearer token from localStorage
+- Updated ALL 8 admin components to use `adminFetch` instead of plain `fetch` for every API call:
+  - AdminProducts.tsx (GET, POST, PUT, DELETE, bulk)
+  - AdminCategories.tsx (GET, POST, PUT, DELETE)
+  - AdminBanners.tsx (GET, POST, PUT, DELETE, toggle)
+  - AdminEnquiries.tsx (GET, PUT, DELETE)
+  - AdminSettings.tsx (GET, PUT, POST)
+  - AdminPages.tsx (GET, POST, PUT, DELETE)
+  - AdminBlog.tsx (GET, POST, PUT, DELETE, bulk)
+  - AdminRedirects.tsx (GET, POST, PUT, DELETE, bulk)
+
+Task 4 - RBAC Middleware:
+- Updated `/src/middleware.ts` with role-based permission map
+- `admin` role: full access to all endpoints (wildcard)
+- `clerk` role: read access to products, categories, enquiries, banners, blog, content-pages, settings, media, redirects; write access only to enquiries
+- Middleware now returns 403 Forbidden for insufficient permissions
+- Matcher expanded from `/api/:path*` to `/:path*` to handle redirects on page routes
+
+Task 7 - Redirect Handling:
+- Created `/api/redirects/check/route.ts` - lightweight GET endpoint that checks `?path=/some-path` and returns redirect target + type
+- Updated middleware to check non-API paths against redirect database before rendering pages
+- In-memory redirect cache with 5-minute TTL for performance (1-minute negative cache)
+- Supports both 301 (permanent) and 302 (temporary) redirect types
+
+Task 8 - Users CRUD API:
+- Created `/api/users/route.ts` - GET (list with search, role filter, pagination) + POST (create with bcrypt hashing)
+- Created `/api/users/[id]/route.ts` - GET (single user), PUT (update name/email/role/isActive/password), DELETE (prevent self-deletion)
+- Created `/api/users/bulk/route.ts` - POST bulk actions (delete, activate, deactivate with self-protection)
+- All routes follow existing patterns (check x-user-role from middleware headers)
+
+Stage Summary:
+- Upload API with image resizing (4 sizes), validation, and Media DB records
+- adminFetch helper adopted across all 8 admin components for consistent auth
+- RBAC middleware with admin/clerk role permissions and 403 enforcement
+- Redirect handling in middleware with in-memory cache and 5-minute TTL
+- Full Users CRUD API (list, create, update, delete, bulk operations)
+- ESLint: CLEAN (zero errors)

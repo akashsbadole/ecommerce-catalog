@@ -45,6 +45,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { adminFetch } from '@/lib/admin-fetch';
 
 interface Banner {
   id: string;
@@ -93,7 +94,7 @@ export function AdminBanners() {
 
   const fetchBanners = useCallback(async () => {
     try {
-      const res = await fetch('/api/banners?all=true');
+      const res = await adminFetch('/api/banners?all=true');
       if (res.ok) {
         const data = await res.json();
         setBanners(data.banners || []);
@@ -152,7 +153,7 @@ export function AdminBanners() {
         : '/api/banners';
       const method = editingBanner ? 'PUT' : 'POST';
 
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -177,7 +178,7 @@ export function AdminBanners() {
     if (!deleteId) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/banners/${deleteId}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/banners/${deleteId}`, { method: 'DELETE' });
       if (res.ok) {
         toast.success('Banner deleted');
         setBanners(prev => prev.filter(b => b.id !== deleteId));
@@ -195,7 +196,7 @@ export function AdminBanners() {
 
   const handleToggleActive = async (banner: Banner) => {
     try {
-      const res = await fetch(`/api/banners/${banner.id}`, {
+      const res = await adminFetch(`/api/banners/${banner.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: !banner.isActive }),

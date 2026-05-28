@@ -51,6 +51,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { adminFetch } from '@/lib/admin-fetch';
 
 interface Category {
   id: string;
@@ -112,7 +113,7 @@ export function AdminCategories() {
 
   const fetchCategories = useCallback(async () => {
     try {
-      const res = await fetch('/api/categories?all=true');
+      const res = await adminFetch('/api/categories?all=true');
       if (res.ok) {
         const data = await res.json();
         setCategories(data.categories || []);
@@ -183,7 +184,7 @@ export function AdminCategories() {
         : '/api/categories';
       const method = editingCategory ? 'PUT' : 'POST';
 
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -213,7 +214,7 @@ export function AdminCategories() {
     if (!deleteId) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/categories/${deleteId}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/categories/${deleteId}`, { method: 'DELETE' });
       if (res.ok) {
         toast.success('Category deleted');
         setCategories(prev => prev.filter(c => c.id !== deleteId));

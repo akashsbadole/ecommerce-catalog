@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import {
   Plus,
   Search,
@@ -16,6 +17,11 @@ import {
   EyeOff,
   Eye,
 } from 'lucide-react';
+
+const WysiwygEditor = dynamic(
+  () => import('@/components/admin/WysiwygEditor'),
+  { ssr: false, loading: () => <div className="min-h-[300px] rounded-md border border-input bg-muted/30 animate-pulse" /> }
+);
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -65,6 +71,7 @@ import {
 } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
+import { adminFetch } from '@/lib/admin-fetch';
 
 interface Category {
   id: string;
@@ -197,7 +204,7 @@ export function AdminProducts() {
       const params = new URLSearchParams({ all: 'true' });
       if (searchTerm) params.set('search', searchTerm);
       if (categoryFilter && categoryFilter !== 'all') params.set('categoryId', categoryFilter);
-      const res = await fetch(`/api/products?${params.toString()}`);
+      const res = await adminFetch(`/api/products?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setProducts(data.products || []);
@@ -211,7 +218,7 @@ export function AdminProducts() {
 
   const fetchCategories = useCallback(async () => {
     try {
-      const res = await fetch('/api/categories?all=true');
+      const res = await adminFetch('/api/categories?all=true');
       if (res.ok) {
         const data = await res.json();
         setCategories(data.categories || []);
@@ -317,7 +324,7 @@ export function AdminProducts() {
         : '/api/products';
       const method = editingProduct ? 'PUT' : 'POST';
 
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -360,7 +367,7 @@ export function AdminProducts() {
     }
     setBulkLoading(true);
     try {
-      const res = await fetch('/api/products/bulk', {
+      const res = await adminFetch('/api/products/bulk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids: selectedIds, action }),
@@ -383,7 +390,7 @@ export function AdminProducts() {
     if (selectedIds.length === 0) return;
     setBulkLoading(true);
     try {
-      const res = await fetch('/api/products/bulk', {
+      const res = await adminFetch('/api/products/bulk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids: selectedIds, action: 'delete' }),
@@ -407,7 +414,7 @@ export function AdminProducts() {
     if (!deleteId) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/products/${deleteId}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/products/${deleteId}`, { method: 'DELETE' });
       if (res.ok) {
         toast.success('Product deleted');
         setProducts(prev => prev.filter(p => p.id !== deleteId));
@@ -740,15 +747,11 @@ export function AdminProducts() {
 
               {/* Description */}
               <div className="space-y-2">
-                <Label htmlFor="prod-desc">Description</Label>
-                <Textarea
-                  id="prod-desc"
-                  placeholder="Full product description"
+                <Label>Description</Label>
+                <WysiwygEditor
                   value={form.description}
-                  onChange={(e) =>
-                    setForm(prev => ({ ...prev, description: e.target.value }))
-                  }
-                  rows={3}
+                  onChange={(val) => setForm(prev => ({ ...prev, description: val }))}
+                  placeholder="Full product description..."
                 />
               </div>
 

@@ -1,0 +1,615 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import {
+  Plus,
+  Search,
+  Pencil,
+  Trash2,
+  RefreshCw,
+  Users,
+  ShieldCheck,
+  UserCog,
+  CheckCircle2,
+  XCircle,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface UserFormData {
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+  isActive: boolean;
+}
+
+const emptyForm: UserFormData = {
+  name: '',
+  email: '',
+  password: '',
+  role: 'clerk',
+  isActive: true,
+};
+
+function RoleBadge({ role }: { role: string }) {
+  if (role === 'admin') {
+    return (
+      <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+        <ShieldCheck className="mr-1 h-3 w-3" />
+        Admin
+      </Badge>
+    );
+  }
+  return (
+    <Badge className="bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400">
+      <UserCog className="mr-1 h-3 w-3" />
+      Clerk
+    </Badge>
+  );
+}
+
+export function AdminUsers() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Selection for bulk actions
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // Dialog state
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [form, setForm] = useState<UserFormData>(emptyForm);
+  const [saving, setSaving] = useState(false);
+
+  // Delete dialog state
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // Bulk action state
+  const [bulkLoading, setBulkLoading] = useState(false);
+
+  const fetchUsers = useCallback(async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (searchTerm) params.set('search', searchTerm);
+      const res = await fetch(`/api/users?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setUsers(data.users || []);
+      }
+    } catch {
+      toast.error('Failed to load users');
+    } finally {
+      setLoading(false);
+    }
+  }, [searchTerm]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === users.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(users.map(u => u.id));
+    }
+  };
+
+  const handleBulkAction = async (action: 'activate' | 'deactivate' | 'delete') => {
+    if (selectedIds.length === 0) return;
+    if (action === 'delete') {
+      setBulkLoading(true);
+      try {
+        const res = await fetch('/api/users/bulk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: selectedIds, action }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          toast.success(data.message);
+          setSelectedIds([]);
+          fetchUsers();
+        } else {
+          const err = await res.json();
+          toast.error(err.error || 'Bulk action failed');
+        }
+      } catch {
+        toast.error('Bulk action failed');
+      } finally {
+        setBulkLoading(false);
+      }
+      return;
+    }
+    setBulkLoading(true);
+    try {
+      const res = await fetch('/api/users/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: selectedIds, action }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(data.message);
+        setSelectedIds([]);
+        fetchUsers();
+      } else {
+        const err = await res.json();
+        toast.error(err.error || 'Bulk action failed');
+      }
+    } catch {
+      toast.error('Bulk action failed');
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleOpenAdd = () => {
+    setEditingUser(null);
+    setForm(emptyForm);
+    setFormOpen(true);
+  };
+
+  const handleOpenEdit = (user: User) => {
+    setEditingUser(user);
+    setForm({
+      name: user.name,
+      email: user.email,
+      password: '',
+      role: user.role,
+      isActive: user.isActive,
+    });
+    setFormOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!form.name.trim()) {
+      toast.error('User name is required');
+      return;
+    }
+    if (!form.email.trim()) {
+      toast.error('Email is required');
+      return;
+    }
+    if (!editingUser && !form.password.trim()) {
+      toast.error('Password is required for new users');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const payload: Record<string, unknown> = {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        role: form.role,
+        isActive: form.isActive,
+      };
+
+      if (!editingUser) {
+        payload.password = form.password;
+      } else if (form.password.trim()) {
+        // Optional password reset when editing
+        payload.password = form.password;
+      }
+
+      const url = editingUser
+        ? `/api/users/${editingUser.id}`
+        : '/api/users';
+      const method = editingUser ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        toast.success(editingUser ? 'User updated' : 'User created');
+        setFormOpen(false);
+        fetchUsers();
+      } else {
+        const err = await res.json();
+        toast.error(err.error || 'Failed to save user');
+      }
+    } catch {
+      toast.error('Failed to save user');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/users/${deleteId}`, { method: 'DELETE' });
+      if (res.ok) {
+        toast.success('User deleted');
+        setUsers(prev => prev.filter(u => u.id !== deleteId));
+        setDeleteId(null);
+      } else {
+        const err = await res.json();
+        toast.error(err.error || 'Failed to delete user');
+      }
+    } catch {
+      toast.error('Failed to delete user');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Users</h2>
+          <p className="text-muted-foreground mt-1">Manage admin and clerk accounts</p>
+        </div>
+        <Button onClick={handleOpenAdd}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add User
+        </Button>
+      </div>
+
+      {/* Search Bar */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search users by name or email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Button variant="outline" onClick={() => { setLoading(true); fetchUsers(); }}>
+          <RefreshCw className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Bulk Actions Toolbar */}
+      {selectedIds.length > 0 && (
+        <Card className="p-3 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <span className="text-sm font-medium">
+            {selectedIds.length} user(s) selected
+          </span>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={bulkLoading}
+              onClick={() => handleBulkAction('activate')}
+            >
+              <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
+              Activate
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={bulkLoading}
+              onClick={() => handleBulkAction('deactivate')}
+            >
+              <XCircle className="mr-1 h-3.5 w-3.5" />
+              Deactivate
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={bulkLoading}
+              className="text-rose-600 hover:text-rose-700"
+              onClick={() => handleBulkAction('delete')}
+            >
+              <Trash2 className="mr-1 h-3.5 w-3.5" />
+              Delete
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {/* Users Table */}
+      <Card>
+        {loading ? (
+          <div className="p-6 space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-14 w-full" />
+            ))}
+          </div>
+        ) : users.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <Users className="h-12 w-12 text-muted-foreground/50" />
+            <h3 className="mt-4 text-lg font-medium">No users found</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {searchTerm
+                ? 'Try adjusting your search'
+                : 'Create your first user to get started'}
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={selectedIds.length === users.length && users.length > 0}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead className="hidden md:table-cell">Email</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="hidden lg:table-cell">Created</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.includes(user.id)}
+                        onCheckedChange={() => toggleSelect(user.id)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
+                          <span className="text-sm font-medium">
+                            {user.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <span className="font-medium">{user.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-muted-foreground">
+                      {user.email}
+                    </TableCell>
+                    <TableCell>
+                      <RoleBadge role={user.role} />
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="secondary"
+                        className={
+                          user.isActive
+                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                            : 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400'
+                        }
+                      >
+                        {user.isActive ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell text-muted-foreground text-sm">
+                      {new Date(user.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleOpenEdit(user)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                          onClick={() => setDeleteId(user.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </Card>
+
+      {/* Add/Edit Dialog */}
+      <Dialog open={formOpen} onOpenChange={setFormOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {editingUser ? 'Edit User' : 'Add User'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {/* Name */}
+            <div className="space-y-2">
+              <Label htmlFor="user-name">
+                Name <span className="text-rose-500">*</span>
+              </Label>
+              <Input
+                id="user-name"
+                placeholder="User name"
+                value={form.name}
+                onChange={(e) =>
+                  setForm(prev => ({ ...prev, name: e.target.value }))
+                }
+              />
+            </div>
+
+            {/* Email */}
+            <div className="space-y-2">
+              <Label htmlFor="user-email">
+                Email <span className="text-rose-500">*</span>
+              </Label>
+              <Input
+                id="user-email"
+                type="email"
+                placeholder="user@example.com"
+                value={form.email}
+                onChange={(e) =>
+                  setForm(prev => ({ ...prev, email: e.target.value }))
+                }
+              />
+            </div>
+
+            {/* Password */}
+            <div className="space-y-2">
+              <Label htmlFor="user-password">
+                Password
+                {!editingUser && <span className="text-rose-500"> *</span>}
+              </Label>
+              <Input
+                id="user-password"
+                type="password"
+                placeholder={editingUser ? 'Leave blank to keep current' : 'Password'}
+                value={form.password}
+                onChange={(e) =>
+                  setForm(prev => ({ ...prev, password: e.target.value }))
+                }
+              />
+              {editingUser && (
+                <p className="text-xs text-muted-foreground">
+                  Leave blank to keep the existing password unchanged
+                </p>
+              )}
+            </div>
+
+            {/* Role */}
+            <div className="space-y-2">
+              <Label htmlFor="user-role">Role</Label>
+              <Select
+                value={form.role}
+                onValueChange={(val) =>
+                  setForm(prev => ({ ...prev, role: val }))
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">
+                    <span className="flex items-center gap-2">
+                      <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                      Admin
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="clerk">
+                    <span className="flex items-center gap-2">
+                      <UserCog className="h-3.5 w-3.5 text-sky-600" />
+                      Clerk
+                    </span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Active */}
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={form.isActive}
+                onCheckedChange={(checked) =>
+                  setForm(prev => ({ ...prev, isActive: checked }))
+                }
+              />
+              <Label
+                className="cursor-pointer"
+                onClick={() => setForm(prev => ({ ...prev, isActive: !prev.isActive }))}
+              >
+                Active
+              </Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFormOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? 'Saving...' : editingUser ? 'Update User' : 'Create User'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this user? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-rose-600 hover:bg-rose-700"
+            >
+              {deleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}

@@ -15,6 +15,7 @@ import {
   LogOut,
   Menu,
   ChevronRight,
+  Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +37,8 @@ import { AdminMedia } from '@/components/admin/AdminMedia';
 import { AdminPages } from '@/components/admin/AdminPages';
 import { AdminBlog } from '@/components/admin/AdminBlog';
 import { AdminRedirects } from '@/components/admin/AdminRedirects';
+import { AdminUsers } from '@/components/admin/AdminUsers';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 interface AdminDashboardProps {
   user: { id: string; email: string; name: string; role: string } | null;
@@ -54,6 +57,7 @@ const sidebarItems = [
   { id: 'blog', label: 'Blog', icon: BookOpen },
   { id: 'banners', label: 'Banners', icon: ImageIcon },
   { id: 'redirects', label: 'Redirects', icon: ArrowRightLeft },
+  { id: 'users', label: 'Users', icon: Users },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
@@ -116,9 +120,12 @@ function SidebarContent({
 
       {/* User Info & Actions */}
       <div className="p-4 space-y-3">
-        <div>
-          <p className="text-sm font-medium">{userName}</p>
-          <p className="text-xs text-muted-foreground">{userEmail}</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium">{userName}</p>
+            <p className="text-xs text-muted-foreground">{userEmail}</p>
+          </div>
+          <ThemeToggle />
         </div>
         <Separator />
         <div className="flex flex-col gap-1">
@@ -180,6 +187,8 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
         return <AdminBlog />;
       case 'redirects':
         return <AdminRedirects />;
+      case 'users':
+        return <AdminUsers />;
       case 'settings':
         return <AdminSettings />;
       default:

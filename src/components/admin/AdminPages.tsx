@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import {
   Plus,
   Search,
@@ -11,6 +12,11 @@ import {
   ChevronDown,
   SearchCode,
 } from 'lucide-react';
+
+const WysiwygEditor = dynamic(
+  () => import('@/components/admin/WysiwygEditor'),
+  { ssr: false, loading: () => <div className="min-h-[300px] rounded-md border border-input bg-muted/30 animate-pulse" /> }
+);
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,6 +58,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { adminFetch } from '@/lib/admin-fetch';
 
 interface ContentPage {
   id: string;
@@ -118,7 +125,7 @@ export function AdminPages() {
     try {
       const params = new URLSearchParams({ all: 'true' });
       if (searchTerm) params.set('search', searchTerm);
-      const res = await fetch(`/api/content-pages?${params.toString()}`);
+      const res = await adminFetch(`/api/content-pages?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setPages(data.contentPages || []);
@@ -192,7 +199,7 @@ export function AdminPages() {
         : '/api/content-pages';
       const method = editingPage ? 'PUT' : 'POST';
 
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -217,7 +224,7 @@ export function AdminPages() {
     if (!deleteId) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/content-pages/${deleteId}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/content-pages/${deleteId}`, { method: 'DELETE' });
       if (res.ok) {
         toast.success('Page deleted');
         setPages(prev => prev.filter(p => p.id !== deleteId));
@@ -408,20 +415,12 @@ export function AdminPages() {
 
               {/* Content */}
               <div className="space-y-2">
-                <Label htmlFor="page-content">Content</Label>
-                <Textarea
-                  id="page-content"
-                  placeholder="Page content (HTML supported)..."
+                <Label>Content</Label>
+                <WysiwygEditor
                   value={form.content}
-                  onChange={(e) =>
-                    setForm(prev => ({ ...prev, content: e.target.value }))
-                  }
-                  rows={10}
-                  className="font-mono text-sm"
+                  onChange={(val) => setForm(prev => ({ ...prev, content: val }))}
+                  placeholder="Write page content here..."
                 />
-                <p className="text-xs text-muted-foreground">
-                  HTML markup is supported. A WYSIWYG editor can be integrated for richer editing.
-                </p>
               </div>
 
               {/* Sort Order */}

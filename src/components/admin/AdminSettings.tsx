@@ -24,6 +24,7 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import { adminFetch } from '@/lib/admin-fetch';
 
 interface Settings {
   [key: string]: string;
@@ -65,7 +66,7 @@ export function AdminSettings() {
   useEffect(() => {
     async function fetchSettings() {
       try {
-        const res = await fetch('/api/settings');
+        const res = await adminFetch('/api/settings');
         if (res.ok) {
           const data = await res.json();
           setSettings({ ...defaultSettings, ...data.settings });
@@ -86,7 +87,7 @@ export function AdminSettings() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await fetch('/api/settings', {
+      const res = await adminFetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ settings }),
@@ -107,7 +108,7 @@ export function AdminSettings() {
   const handleTestEmail = async () => {
     setTesting(true);
     try {
-      const res = await fetch('/api/settings', { method: 'POST' });
+      const res = await adminFetch('/api/settings', { method: 'POST' });
       if (res.ok) {
         toast.success('Test email sent successfully');
       } else {

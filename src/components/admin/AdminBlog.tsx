@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import {
   Plus,
   Search,
@@ -15,6 +16,11 @@ import {
   Eye,
   EyeOff,
 } from 'lucide-react';
+
+const WysiwygEditor = dynamic(
+  () => import('@/components/admin/WysiwygEditor'),
+  { ssr: false, loading: () => <div className="min-h-[300px] rounded-md border border-input bg-muted/30 animate-pulse" /> }
+);
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -64,6 +70,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { adminFetch } from '@/lib/admin-fetch';
 
 interface Author {
   id: string;
@@ -173,7 +180,7 @@ export function AdminBlog() {
       setLoading(true);
       const params = new URLSearchParams({ all: 'true', page: String(page), limit: '12' });
       if (searchTerm) params.set('search', searchTerm);
-      const res = await fetch(`/api/blog?${params.toString()}`);
+      const res = await adminFetch(`/api/blog?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setPosts(data.blogPosts || []);
@@ -237,7 +244,7 @@ export function AdminBlog() {
     if (selectedIds.length === 0) return;
     setBulkLoading(true);
     try {
-      const res = await fetch('/api/blog/bulk', {
+      const res = await adminFetch('/api/blog/bulk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids: selectedIds, action }),
@@ -325,7 +332,7 @@ export function AdminBlog() {
         : '/api/blog';
       const method = editingPost ? 'PUT' : 'POST';
 
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -350,7 +357,7 @@ export function AdminBlog() {
     if (!deleteId) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/blog/${deleteId}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/blog/${deleteId}`, { method: 'DELETE' });
       if (res.ok) {
         toast.success('Post deleted');
         setPosts(prev => prev.filter(p => p.id !== deleteId));
@@ -635,20 +642,13 @@ export function AdminBlog() {
 
               {/* Content */}
               <div className="space-y-2">
-                <Label htmlFor="post-content">Content</Label>
-                <Textarea
-                  id="post-content"
-                  placeholder="Post content (HTML supported)..."
+                <Label>Content</Label>
+                <WysiwygEditor
                   value={form.content}
-                  onChange={(e) =>
-                    setForm(prev => ({ ...prev, content: e.target.value }))
-                  }
-                  rows={12}
-                  className="font-mono text-sm"
+                  onChange={(val) => setForm(prev => ({ ...prev, content: val }))}
+                  placeholder="Write blog post content here..."
+                  minHeight="400px"
                 />
-                <p className="text-xs text-muted-foreground">
-                  HTML markup is supported. A WYSIWYG editor can be integrated for richer editing.
-                </p>
               </div>
 
               {/* Cover Image */}

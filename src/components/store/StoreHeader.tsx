@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { Menu, X, ShoppingBag, FileText, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import {
   Sheet,
   SheetContent,
@@ -179,6 +180,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
             >
               Admin
             </Button>
+            <ThemeToggle />
           </nav>
 
           {/* Mobile Menu */}

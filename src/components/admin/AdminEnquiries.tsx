@@ -55,6 +55,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { adminFetch } from '@/lib/admin-fetch';
 
 interface Enquiry {
   id: string;
@@ -115,7 +116,7 @@ export function AdminEnquiries() {
       if (activeFilter !== 'all') {
         url += `?status=${activeFilter}`;
       }
-      const res = await fetch(url);
+      const res = await adminFetch(url);
       if (res.ok) {
         const data = await res.json();
         let items = data.enquiries || [];
@@ -154,7 +155,7 @@ export function AdminEnquiries() {
 
   const updateStatus = async (id: string, status: string) => {
     try {
-      const res = await fetch(`/api/enquiries/${id}`, {
+      const res = await adminFetch(`/api/enquiries/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
@@ -183,7 +184,7 @@ export function AdminEnquiries() {
     if (!deleteId) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/enquiries/${deleteId}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/enquiries/${deleteId}`, { method: 'DELETE' });
       if (res.ok) {
         toast.success('Enquiry deleted');
         setEnquiries(prev => prev.filter(e => e.id !== deleteId));
