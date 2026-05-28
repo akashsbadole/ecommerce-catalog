@@ -44,6 +44,20 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { SocialShare } from './SocialShare';
+
+interface ProductVariant {
+  id: string;
+  productId: string;
+  name: string;
+  sku: string | null;
+  price: number | null;
+  comparePrice: number | null;
+  wholesalePrice: number | null;
+  stock: number;
+  images: string;
+  isActive: boolean;
+}
 
 interface Product {
   id: string;
@@ -63,6 +77,9 @@ interface Product {
   specifications: string | null;
   metaTitle: string | null;
   metaDescription: string | null;
+  stock: number;
+  lowStockThreshold: number;
+  relatedProductIds: string;
 }
 
 interface ProductDetailPageProps {
@@ -77,6 +94,9 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
   const [submitting, setSubmitting] = useState(false);
   const [businessOpen, setBusinessOpen] = useState(false);
   const [siteSettings, setSiteSettings] = useState<Record<string, string> | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -131,6 +151,47 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
     };
     fetchProduct();
   }, [productId, onNavigate]);
+
+  // Fetch variants
+  useEffect(() => {
+    if (!productId) return;
+    const fetchVariants = async () => {
+      try {
+        const res = await fetch(`/api/products/${productId}/variants`);
+        if (res.ok) {
+          const data = await res.json();
+          const activeVariants = (data.variants || []).filter((v: ProductVariant) => v.isActive);
+          setVariants(activeVariants);
+          if (activeVariants.length > 0) setSelectedVariant(activeVariants[0]);
+        }
+      } catch {
+        // ignore
+      }
+    };
+    fetchVariants();
+  }, [productId]);
+
+  // Fetch related products
+  useEffect(() => {
+    if (!product?.relatedProductIds) return;
+    let ids: string[] = [];
+    try { ids = JSON.parse(product.relatedProductIds); } catch { return; }
+    if (!Array.isArray(ids) || ids.length === 0) return;
+    const fetchRelated = async () => {
+      try {
+        const params = new URLSearchParams({ all: 'true' });
+        ids.forEach(id => params.append('ids', id));
+        const res = await fetch(`/api/products?${params.toString()}`);
+        if (res.ok) {
+          const data = await res.json();
+          setRelatedProducts(data.products || []);
+        }
+      } catch {
+        // ignore
+      }
+    };
+    fetchRelated();
+  }, [product?.relatedProductIds]);
 
   // SEO: dynamic title, meta description, JSON-LD
   useEffect(() => {
@@ -238,8 +299,8 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
           email: form.email,
           phone: form.phone || null,
           subject: isRFQ
-            ? `RFQ: ${product.name} (Qty: ${form.quantity})`
-            : `Enquiry about ${product.name}`,
+            ? `RFQ: ${product.name}${selectedVariant ? ` (${selectedVariant.name})` : ''} (Qty: ${form.quantity})`
+            : `Enquiry about ${product.name}${selectedVariant ? ` (${selectedVariant.name})` : ''}`,
           message: form.message,
           productId: product.id,
           type: isRFQ ? 'rfq' : 'product',
@@ -428,19 +489,110 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
           {/* Pricing */}
           <div className="flex items-center gap-3">
             <span className="text-3xl font-bold text-emerald-600">
-              {formatPrice(product.price)}
+              {selectedVariant?.price ? formatPrice(selectedVariant.price) : formatPrice(product.price)}
             </span>
-            {hasDiscount && (
-              <>
-                <span className="text-xl text-muted-foreground line-through">
-                  {formatPrice(product.comparePrice!)}
-                </span>
-                <Badge variant="secondary" className="bg-rose-100 text-rose-700">
-                  Save {discountPercent}%
-                </Badge>
-              </>
-            )}
+            {(() => {
+              const cp = selectedVariant?.comparePrice || product.comparePrice;
+              const sp = selectedVariant?.price || product.price;
+              if (cp && cp > sp) {
+                const pct = Math.round(((cp - sp) / cp) * 100);
+                return (
+                  <>
+                    <span className="text-xl text-muted-foreground line-through">
+                      {formatPrice(cp)}
+                    </span>
+                    <Badge variant="secondary" className="bg-rose-100 text-rose-700">
+                      Save {pct}%
+                    </Badge>
+                  </>
+                );
+              }
+              return null;
+            })()}
           </div>
+
+          {/* Variant Selector */}
+          {variants.length > 0 && (
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Select Variant</Label>
+              <div className="flex flex-wrap gap-2">
+                {variants.map((v) => (
+                  <Button
+                    key={v.id}
+                    variant={selectedVariant?.id === v.id ? 'default' : 'outline'}
+                    size="sm"
+                    className={
+                      selectedVariant?.id === v.id
+                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                        : ''
+                    }
+                    onClick={() => {
+                      setSelectedVariant(v);
+                      if (v.images && v.images !== '[]') {
+                        try {
+                          const imgs = JSON.parse(v.images);
+                          if (imgs.length > 0) setSelectedImage(0);
+                        } catch {}
+                      }
+                    }}
+                  >
+                    {v.name}
+                  </Button>
+                ))}
+              </div>
+              {selectedVariant?.sku && (
+                <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  <Hash className="h-3.5 w-3.5" />
+                  SKU: {selectedVariant.sku}
+                </p>
+              )}
+              {selectedVariant?.wholesalePrice && (
+                <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/30">
+                  <CardContent className="p-4 flex items-start gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/50">
+                      <Package className="h-4.5 w-4.5 text-amber-700 dark:text-amber-400" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-amber-800 dark:text-amber-300 text-sm">Wholesale Price</p>
+                      <p className="text-lg font-bold text-amber-700 dark:text-amber-200">
+                        {formatPrice(selectedVariant.wholesalePrice)}
+                        <span className="text-xs font-normal text-amber-600 dark:text-amber-400 ml-2">per unit</span>
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              {/* Variant Stock */}
+              {(() => {
+                const stock = selectedVariant?.stock ?? product.stock;
+                const threshold = product.lowStockThreshold;
+                if (stock <= 0) {
+                  return <Badge variant="secondary" className="bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">Out of stock</Badge>;
+                }
+                if (stock <= threshold) {
+                  return <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Only {stock} left in stock</Badge>;
+                }
+                return <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">In Stock</Badge>;
+              })()}
+            </div>
+          )}
+
+          {/* Stock (no variants) */}
+          {variants.length === 0 && (() => {
+            const stock = product.stock;
+            const threshold = product.lowStockThreshold;
+            return (
+              <div className="flex items-center gap-2">
+                {stock <= 0 ? (
+                  <Badge variant="secondary" className="bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">Out of stock</Badge>
+                ) : stock <= threshold ? (
+                  <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Only {stock} left</Badge>
+                ) : (
+                  <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">In Stock</Badge>
+                )}
+              </div>
+            );
+          })()}
 
           {/* B2B Pricing */}
           {product.wholesalePrice && (
@@ -516,6 +668,12 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
           )}
         </div>
       </div>
+
+      {/* Social Sharing */}
+      <SocialShare
+        url={typeof window !== 'undefined' ? window.location.href : ''}
+        title={product.name}
+      />
 
       {/* Enquiry Form */}
       <Separator />
@@ -728,6 +886,48 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
           </form>
         </CardContent>
       </Card>
+
+      {/* Related Products */}
+      {relatedProducts.length > 0 && (
+        <div className="space-y-4">
+          <Separator />
+          <div>
+            <h3 className="text-xl font-semibold">Related Products</h3>
+            <p className="text-sm text-muted-foreground mt-1">You may also be interested in</p>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 snap-x">
+            {relatedProducts.map((rp) => {
+              const rpImages = (() => { try { return JSON.parse(rp.images || '[]'); } catch { return []; } })();
+              const rpImg = rpImages.length > 0 ? rpImages[0] : null;
+              return (
+                <button
+                  key={rp.id}
+                  type="button"
+                  className="flex-shrink-0 w-48 snap-start rounded-lg border bg-card hover:shadow-md transition-shadow text-left group"
+                  onClick={() => onNavigate('product', { productId: rp.id })}
+                >
+                  <div className="relative aspect-square overflow-hidden rounded-t-lg bg-muted">
+                    {rpImg ? (
+                      <Image src={rpImg} alt={rp.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" unoptimized />
+                    ) : (
+                      <div className="flex h-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                        <ShoppingCart className="h-10 w-10 text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3">
+                    <p className="font-medium text-sm truncate">{rp.name}</p>
+                    <p className="text-emerald-600 font-semibold text-sm mt-1">{formatPrice(rp.price)}</p>
+                    {rp.category && (
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{rp.category.name}</p>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

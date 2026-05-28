@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { logActivity } from '@/lib/activity-log';
+import { blogPostSchema } from '@/lib/validations';
 
 export async function GET(request: NextRequest) {
   try {
@@ -82,41 +83,36 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const {
-      title,
-      slug,
-      excerpt,
-      content,
-      coverImage,
-      authorId,
-      metaTitle,
-      metaDescription,
-      ogImage,
-      tags,
-      isPublished,
-    } = body;
 
-    if (!title || !slug) {
+    const result = blogPostSchema.safeParse(body);
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'Title and slug are required' },
+        { error: 'Validation failed', details: result.error.flatten().fieldErrors },
         { status: 400 }
       );
+    }
+    const validatedData = result.data;
+
+    // Check slug uniqueness
+    const existingSlug = await db.blogPost.findUnique({ where: { slug: validatedData.slug } });
+    if (existingSlug) {
+      return NextResponse.json({ error: 'Slug already in use' }, { status: 409 });
     }
 
     const blogPost = await db.blogPost.create({
       data: {
-        title,
-        slug,
-        excerpt: excerpt || null,
-        content: content || '',
-        coverImage: coverImage || null,
-        authorId: authorId || null,
-        metaTitle: metaTitle || null,
-        metaDescription: metaDescription || null,
-        ogImage: ogImage || null,
-        tags: tags ? JSON.stringify(tags) : null,
-        isPublished: isPublished ?? false,
-        publishedAt: isPublished ? new Date() : null,
+        title: validatedData.title,
+        slug: validatedData.slug,
+        excerpt: validatedData.excerpt || null,
+        content: validatedData.content || '',
+        coverImage: validatedData.coverImage || null,
+        authorId: validatedData.authorId || null,
+        metaTitle: validatedData.metaTitle || null,
+        metaDescription: validatedData.metaDescription || null,
+        ogImage: validatedData.ogImage || null,
+        tags: validatedData.tags ? JSON.stringify(validatedData.tags) : null,
+        isPublished: validatedData.isPublished ?? false,
+        publishedAt: validatedData.isPublished ? new Date() : null,
       },
       include: { author: { select: { id: true, name: true, email: true } } },
     });

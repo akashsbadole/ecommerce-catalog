@@ -3,6 +3,8 @@
 import { useEffect, useState, useRef, ReactNode, cloneElement, isValidElement } from 'react';
 import { StoreHeader } from './StoreHeader';
 import { StoreFooter } from './StoreFooter';
+import { BackToTop } from './BackToTop';
+import { CookieConsent } from './CookieConsent';
 
 interface StoreLayoutProps {
   currentPage: string;
@@ -106,6 +108,10 @@ export function StoreLayout({ currentPage, onNavigate, children }: StoreLayoutPr
       </main>
 
       <StoreFooter onNavigate={onNavigate} settings={settings} />
+
+      <BackToTop />
+
+      <CookieConsent />
     </div>
   );
 }

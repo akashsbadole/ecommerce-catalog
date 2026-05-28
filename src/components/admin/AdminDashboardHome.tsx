@@ -26,6 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { DashboardCharts } from '@/components/admin/DashboardCharts';
 
 interface EnquiryRow {
   id: string;
@@ -38,6 +39,30 @@ interface EnquiryRow {
   product?: { id: string; name: string } | null;
 }
 
+interface DashboardStats {
+  productStats: {
+    total: number;
+    active: number;
+    featured: number;
+    categories: number;
+  };
+  enquiryStats: {
+    thisWeek: number;
+    lastWeek: number;
+    total: number;
+    newCount: number;
+    rfqCount: number;
+  };
+  recentActivity: Array<{
+    id: string;
+    action: string;
+    entity: string | null;
+    entityId: string | null;
+    userName: string | null;
+    createdAt: string;
+  }>;
+}
+
 const statusColors: Record<string, string> = {
   new: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
   read: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
@@ -46,15 +71,7 @@ const statusColors: Record<string, string> = {
 };
 
 export function AdminDashboardHome({ onNavigate }: { onNavigate?: (tab: string) => void }) {
-  const [stats, setStats] = useState({
-    totalProducts: 0,
-    activeProducts: 0,
-    totalCategories: 0,
-    newEnquiries: 0,
-    totalEnquiries: 0,
-    totalBanners: 0,
-    rfqRequests: 0,
-  });
+  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentEnquiries, setRecentEnquiries] = useState<EnquiryRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -62,46 +79,19 @@ export function AdminDashboardHome({ onNavigate }: { onNavigate?: (tab: string) 
     let cancelled = false;
     async function load() {
       try {
-        const [productsRes, categoriesRes, enquiriesRes, bannersRes] = await Promise.all([
-          adminFetch('/api/products?all=true'),
-          adminFetch('/api/categories?all=true'),
-          adminFetch('/api/enquiries'),
-          adminFetch('/api/banners?all=true'),
-        ]);
+        // Fetch dashboard stats from the new unified endpoint
+        const statsRes = await adminFetch('/api/dashboard/stats');
+        if (statsRes.ok && !cancelled) {
+          const statsData = await statsRes.json();
+          setStats(statsData);
+        }
 
-        if (!cancelled && productsRes.ok) {
-          const d = await productsRes.json();
-          const prods = d.products || [];
-          setStats(prev => ({
-            ...prev,
-            totalProducts: prods.length,
-            activeProducts: prods.filter((p: { isActive: boolean }) => p.isActive).length,
-          }));
-        }
-        if (!cancelled && categoriesRes.ok) {
-          const d = await categoriesRes.json();
-          setStats(prev => ({
-            ...prev,
-            totalCategories: d.categories?.length || 0,
-          }));
-        }
-        if (!cancelled && enquiriesRes.ok) {
+        // Fetch recent enquiries (still need full enquiry data for the table)
+        const enquiriesRes = await adminFetch('/api/enquiries');
+        if (enquiriesRes.ok && !cancelled) {
           const d = await enquiriesRes.json();
-          const all = d.enquiries || [];
-          setStats(prev => ({
-            ...prev,
-            totalEnquiries: all.length,
-            newEnquiries: all.filter((e: { status: string }) => e.status === 'new').length,
-            rfqRequests: all.filter((e: { type: string }) => e.type === 'rfq').length,
-          }));
+          const all: EnquiryRow[] = d.enquiries || [];
           setRecentEnquiries(all.slice(0, 5));
-        }
-        if (!cancelled && bannersRes.ok) {
-          const d = await bannersRes.json();
-          setStats(prev => ({
-            ...prev,
-            totalBanners: d.banners?.length || 0,
-          }));
         }
       } catch {
         // ignore
@@ -113,15 +103,16 @@ export function AdminDashboardHome({ onNavigate }: { onNavigate?: (tab: string) 
     return () => { cancelled = true; };
   }, []);
 
-  const statCards = [
-    { label: 'Total Products', value: stats.totalProducts, icon: Package, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/40' },
-    { label: 'Active Products', value: stats.activeProducts, icon: BarChart3, color: 'text-teal-600', bg: 'bg-teal-50 dark:bg-teal-950/40' },
-    { label: 'Categories', value: stats.totalCategories, icon: FolderOpen, color: 'text-violet-600', bg: 'bg-violet-50 dark:bg-violet-950/40' },
-    { label: 'New Enquiries', value: stats.newEnquiries, icon: MessageSquare, color: 'bg-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/40' },
-    { label: 'Total Enquiries', value: stats.totalEnquiries, icon: Star, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-950/40' },
-    { label: 'RFQ Requests', value: stats.rfqRequests, icon: FileText, color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-950/40' },
-    { label: 'Banners', value: stats.totalBanners, icon: ImageIcon, color: 'text-sky-600', bg: 'bg-sky-50 dark:bg-sky-950/40' },
-  ];
+  const statCards = stats
+    ? [
+        { label: 'Total Products', value: stats.productStats.total, icon: Package, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/40' },
+        { label: 'Active Products', value: stats.productStats.active, icon: BarChart3, color: 'text-teal-600', bg: 'bg-teal-50 dark:bg-teal-950/40' },
+        { label: 'Categories', value: stats.productStats.categories, icon: FolderOpen, color: 'text-violet-600', bg: 'bg-violet-50 dark:bg-violet-950/40' },
+        { label: 'New Enquiries', value: stats.enquiryStats.newCount, icon: MessageSquare, color: 'bg-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/40' },
+        { label: 'Total Enquiries', value: stats.enquiryStats.total, icon: Star, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-950/40' },
+        { label: 'RFQ Requests', value: stats.enquiryStats.rfqCount, icon: FileText, color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-950/40' },
+      ]
+    : [];
 
   const formatDate = (dateStr: string) => {
     try {
@@ -152,9 +143,9 @@ export function AdminDashboardHome({ onNavigate }: { onNavigate?: (tab: string) 
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {loading
-          ? Array.from({ length: 7 }).map((_, i) => (
+          ? Array.from({ length: 6 }).map((_, i) => (
               <Card key={i}>
                 <CardContent className="pt-6">
                   <Skeleton className="h-4 w-24 mb-3" />
@@ -181,6 +172,9 @@ export function AdminDashboardHome({ onNavigate }: { onNavigate?: (tab: string) 
               );
             })}
       </div>
+
+      {/* Dashboard Charts (Enquiry Trends + Quick Stats) */}
+      <DashboardCharts />
 
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Recent Enquiries */}

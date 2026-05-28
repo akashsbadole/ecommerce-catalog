@@ -14,6 +14,10 @@ import {
   Building2,
   Hash,
   MapPin,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -23,6 +27,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table,
   TableBody,
@@ -77,6 +82,13 @@ interface Enquiry {
   product?: { id: string; name: string } | null;
 }
 
+interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 const statusTabs = ['all', 'new', 'read', 'replied', 'closed'];
 
 const statusColors: Record<string, string> = {
@@ -98,11 +110,20 @@ const typeLabels: Record<string, string> = {
   rfq: 'RFQ',
 };
 
+const PAGE_SIZE = 20;
+
 export function AdminEnquiries() {
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [pagination, setPagination] = useState<PaginationInfo>({ page: 1, limit: PAGE_SIZE, total: 0, totalPages: 0 });
+
+  // Bulk selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkStatus, setBulkStatus] = useState('');
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [showBulkDelete, setShowBulkDelete] = useState(false);
 
   const [viewEnquiry, setViewEnquiry] = useState<Enquiry | null>(null);
   const [statusUpdate, setStatusUpdate] = useState('');
@@ -110,11 +131,11 @@ export function AdminEnquiries() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const fetchEnquiries = useCallback(async () => {
+  const fetchEnquiries = useCallback(async (page = 1) => {
     try {
-      let url = '/api/enquiries';
+      let url = `/api/enquiries?page=${page}&limit=${PAGE_SIZE}`;
       if (activeFilter !== 'all') {
-        url += `?status=${activeFilter}`;
+        url += `&status=${activeFilter}`;
       }
       const res = await adminFetch(url);
       if (res.ok) {
@@ -131,6 +152,7 @@ export function AdminEnquiries() {
           );
         }
         setEnquiries(items);
+        setPagination(data.pagination || { page: 1, limit: PAGE_SIZE, total: 0, totalPages: 0 });
       }
     } catch {
       toast.error('Failed to load enquiries');
@@ -141,8 +163,100 @@ export function AdminEnquiries() {
 
   useEffect(() => {
     setLoading(true);
-    fetchEnquiries();
+    setSelectedIds(new Set());
+    fetchEnquiries(1);
   }, [fetchEnquiries]);
+
+  const handlePageChange = (newPage: number) => {
+    setLoading(true);
+    setSelectedIds(new Set());
+    fetchEnquiries(newPage);
+  };
+
+  // Selection handlers
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === enquiries.length && enquiries.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(enquiries.map(e => e.id)));
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedIds(new Set());
+    setBulkStatus('');
+  };
+
+  // Bulk operations
+  const handleBulkStatusUpdate = async () => {
+    if (!bulkStatus || selectedIds.size === 0) return;
+    setBulkLoading(true);
+    try {
+      const res = await adminFetch('/api/enquiries/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ids: Array.from(selectedIds),
+          action: 'update-status',
+          status: bulkStatus,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(`${data.count} enquiry(ies) status updated`);
+        clearSelection();
+        fetchEnquiries(pagination.page);
+      } else {
+        const err = await res.json();
+        toast.error(err.error || 'Failed to update status');
+      }
+    } catch {
+      toast.error('Failed to update status');
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    setBulkLoading(true);
+    try {
+      const res = await adminFetch('/api/enquiries/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ids: Array.from(selectedIds),
+          action: 'delete',
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(`${data.count} enquiry(ies) deleted`);
+        setShowBulkDelete(false);
+        clearSelection();
+        fetchEnquiries(pagination.page);
+      } else {
+        const err = await res.json();
+        toast.error(err.error || 'Failed to delete enquiries');
+      }
+    } catch {
+      toast.error('Failed to delete enquiries');
+    } finally {
+      setBulkLoading(false);
+    }
+  };
 
   const handleViewEnquiry = (enquiry: Enquiry) => {
     setViewEnquiry(enquiry);
@@ -188,6 +302,11 @@ export function AdminEnquiries() {
       if (res.ok) {
         toast.success('Enquiry deleted');
         setEnquiries(prev => prev.filter(e => e.id !== deleteId));
+        setSelectedIds(prev => {
+          const next = new Set(prev);
+          next.delete(deleteId);
+          return next;
+        });
         setDeleteId(null);
       } else {
         const err = await res.json();
@@ -229,6 +348,8 @@ export function AdminEnquiries() {
     enq.companyName || enq.companyEmail || enq.companyPhone ||
     enq.companyAddress || enq.quantity;
 
+  const isAllSelected = enquiries.length > 0 && selectedIds.size === enquiries.length;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -237,7 +358,7 @@ export function AdminEnquiries() {
           <h2 className="text-2xl font-bold tracking-tight">Enquiries</h2>
           <p className="text-muted-foreground mt-1">View and manage customer enquiries</p>
         </div>
-        <Button variant="outline" onClick={() => { setLoading(true); fetchEnquiries(); }}>
+        <Button variant="outline" onClick={() => { setLoading(true); fetchEnquiries(pagination.page); }}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
@@ -269,6 +390,57 @@ export function AdminEnquiries() {
         />
       </div>
 
+      {/* Bulk Actions Toolbar */}
+      {selectedIds.size > 0 && (
+        <Card className="border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20">
+          <div className="flex flex-wrap items-center gap-3 p-3">
+            <span className="text-sm font-medium">
+              {selectedIds.size} selected
+            </span>
+            <Separator orientation="vertical" className="h-6 hidden sm:block" />
+            <div className="flex items-center gap-2">
+              <Select value={bulkStatus} onValueChange={setBulkStatus}>
+                <SelectTrigger className="w-[160px] h-9">
+                  <SelectValue placeholder="Change status..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="read">Mark as Read</SelectItem>
+                  <SelectItem value="replied">Mark as Replied</SelectItem>
+                  <SelectItem value="closed">Mark as Closed</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                size="sm"
+                onClick={handleBulkStatusUpdate}
+                disabled={!bulkStatus || bulkLoading}
+              >
+                {bulkLoading && <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />}
+                Apply
+              </Button>
+            </div>
+            <Separator orientation="vertical" className="h-6 hidden sm:block" />
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200"
+              onClick={() => setShowBulkDelete(true)}
+            >
+              <Trash2 className="mr-1 h-3.5 w-3.5" />
+              Delete
+            </Button>
+            <Separator orientation="vertical" className="h-6 hidden sm:block" />
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={clearSelection}
+            >
+              <X className="mr-1 h-3.5 w-3.5" />
+              Clear
+            </Button>
+          </div>
+        </Card>
+      )}
+
       {/* Enquiries Table */}
       <Card>
         {loading ? (
@@ -292,6 +464,13 @@ export function AdminEnquiries() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={isAllSelected}
+                      onCheckedChange={toggleSelectAll}
+                      aria-label="Select all enquiries"
+                    />
+                  </TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead className="hidden sm:table-cell">Email</TableHead>
                   <TableHead className="hidden md:table-cell">Subject</TableHead>
@@ -303,7 +482,14 @@ export function AdminEnquiries() {
               </TableHeader>
               <TableBody>
                 {enquiries.map((enq) => (
-                  <TableRow key={enq.id}>
+                  <TableRow key={enq.id} className={selectedIds.has(enq.id) ? 'bg-muted/50' : ''}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.has(enq.id)}
+                        onCheckedChange={() => toggleSelect(enq.id)}
+                        aria-label={`Select enquiry from ${enq.name}`}
+                      />
+                    </TableCell>
                     <TableCell>
                       <div>
                         <p className="font-medium">
@@ -369,6 +555,38 @@ export function AdminEnquiries() {
                 ))}
               </TableBody>
             </Table>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {pagination.totalPages > 1 && (
+          <div className="flex items-center justify-between border-t px-4 py-3">
+            <p className="text-sm text-muted-foreground">
+              Showing {(pagination.page - 1) * pagination.limit + 1}&ndash;{Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(pagination.page - 1)}
+                disabled={pagination.page <= 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </Button>
+              <span className="text-sm font-medium px-2">
+                Page {pagination.page} of {pagination.totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(pagination.page + 1)}
+                disabled={pagination.page >= pagination.totalPages}
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         )}
       </Card>
@@ -520,7 +738,7 @@ export function AdminEnquiries() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
+      {/* Delete Confirmation (Single) */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -537,6 +755,35 @@ export function AdminEnquiries() {
               className="bg-rose-600 hover:bg-rose-700"
             >
               {deleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirmation */}
+      <AlertDialog open={showBulkDelete} onOpenChange={setShowBulkDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedIds.size} Enquiries</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selectedIds.size} selected enquiry(ies)? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowBulkDelete(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              disabled={bulkLoading}
+              className="bg-rose-600 hover:bg-rose-700"
+            >
+              {bulkLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                `Delete ${selectedIds.size} Enquiries`
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

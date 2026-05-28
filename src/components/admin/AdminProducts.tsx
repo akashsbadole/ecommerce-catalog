@@ -16,7 +16,15 @@ import {
   Package,
   EyeOff,
   Eye,
+  Undo2,
+  Trash,
+  Download,
+  FileText,
+  Link2,
+  Check,
+  X,
 } from 'lucide-react';
+import { AdminProductVariants } from './AdminProductVariants';
 
 const WysiwygEditor = dynamic(
   () => import('@/components/admin/WysiwygEditor'),
@@ -71,6 +79,7 @@ import {
 } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { adminFetch } from '@/lib/admin-fetch';
 
 interface Category {
@@ -99,6 +108,10 @@ interface Product {
   metaTitle: string | null;
   metaDescription: string | null;
   whatsappNumber: string | null;
+  deletedAt: string | null;
+  stock: number;
+  lowStockThreshold: number;
+  relatedProductIds: string;
   category?: Category | null;
   createdAt: string;
 }
@@ -122,6 +135,9 @@ interface ProductFormData {
   metaTitle: string;
   metaDescription: string;
   whatsappNumber: string;
+  stock: string;
+  lowStockThreshold: string;
+  relatedProductIds: string;
 }
 
 const emptyForm: ProductFormData = {
@@ -143,6 +159,9 @@ const emptyForm: ProductFormData = {
   metaTitle: '',
   metaDescription: '',
   whatsappNumber: '',
+  stock: '0',
+  lowStockThreshold: '10',
+  relatedProductIds: '',
 };
 
 function generateSlug(name: string): string {
@@ -165,9 +184,9 @@ function parseImages(images: string): string[] {
   return images.split(',').map(s => s.trim()).filter(Boolean);
 }
 
-function getFirstImage(product: Product): string | null {
+function getFirstImage(product: Product): string {
   const imgs = parseImages(product.images);
-  return imgs.length > 0 ? imgs[0] : null;
+  return imgs.length > 0 ? imgs[0] : '';
 }
 
 export function AdminProducts() {
@@ -199,9 +218,31 @@ export function AdminProducts() {
   const [bulkAction, setBulkAction] = useState<string | null>(null);
   const [bulkLoading, setBulkLoading] = useState(false);
 
+  // Trash tab state
+  const [activeTab, setActiveTab] = useState('active');
+  const [permanentDeleteId, setPermanentDeleteId] = useState<string | null>(null);
+  const [permanentDeleting, setPermanentDeleting] = useState(false);
+
+  // CSV import/export state
+  const [importing, setImporting] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  // Inline stock edit state
+  const [editingStockId, setEditingStockId] = useState<string | null>(null);
+  const [inlineStock, setInlineStock] = useState('');
+
+  // Related products search state
+  const [relatedSearch, setRelatedSearch] = useState('');
+  const [relatedResults, setRelatedResults] = useState<Product[]>([]);
+  const [selectedRelatedIds, setSelectedRelatedIds] = useState<string[]>([]);
+
+  // Edit dialog tab
+  const [editTab, setEditTab] = useState('general');
+
   const fetchProducts = useCallback(async () => {
     try {
       const params = new URLSearchParams({ all: 'true' });
+      if (activeTab === 'trashed') params.set('trashed', 'true');
       if (searchTerm) params.set('search', searchTerm);
       if (categoryFilter && categoryFilter !== 'all') params.set('categoryId', categoryFilter);
       const res = await adminFetch(`/api/products?${params.toString()}`);
@@ -214,7 +255,7 @@ export function AdminProducts() {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, categoryFilter]);
+  }, [searchTerm, categoryFilter, activeTab]);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -230,6 +271,7 @@ export function AdminProducts() {
 
   useEffect(() => {
     setLoading(true);
+    setSelectedIds([]);
     fetchProducts();
   }, [fetchProducts]);
 
@@ -248,6 +290,10 @@ export function AdminProducts() {
   const handleOpenEdit = (product: Product) => {
     setEditingProduct(product);
     const imgs = parseImages(product.images);
+    const relatedIds: string[] = (() => {
+      try { const parsed = JSON.parse(product.relatedProductIds || '[]'); return Array.isArray(parsed) ? parsed : []; } catch { return []; }
+    })();
+    setSelectedRelatedIds(relatedIds);
     setForm({
       name: product.name,
       slug: product.slug,
@@ -267,9 +313,13 @@ export function AdminProducts() {
       metaTitle: product.metaTitle || '',
       metaDescription: product.metaDescription || '',
       whatsappNumber: product.whatsappNumber || '',
+      stock: String(product.stock ?? 0),
+      lowStockThreshold: String(product.lowStockThreshold ?? 10),
+      relatedProductIds: product.relatedProductIds || '',
     });
     setSeoOpen(!!(product.metaTitle || product.metaDescription));
     setB2bOpen(!!(product.wholesalePrice || product.minOrderQty > 1 || product.whatsappNumber));
+    setEditTab('general');
     setFormOpen(true);
   };
 
@@ -317,6 +367,9 @@ export function AdminProducts() {
         metaTitle: form.metaTitle.trim() || null,
         metaDescription: form.metaDescription.trim() || null,
         whatsappNumber: form.whatsappNumber.trim() || null,
+        stock: parseInt(form.stock) || 0,
+        lowStockThreshold: parseInt(form.lowStockThreshold) || 10,
+        relatedProductIds: JSON.stringify(selectedRelatedIds),
       };
 
       const url = editingProduct
@@ -416,7 +469,7 @@ export function AdminProducts() {
     try {
       const res = await adminFetch(`/api/products/${deleteId}`, { method: 'DELETE' });
       if (res.ok) {
-        toast.success('Product deleted');
+        toast.success('Product moved to trash');
         setProducts(prev => prev.filter(p => p.id !== deleteId));
         setDeleteId(null);
       } else {
@@ -427,6 +480,43 @@ export function AdminProducts() {
       toast.error('Failed to delete product');
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleRestore = async (id: string) => {
+    try {
+      const res = await adminFetch(`/api/products/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ restore: true }),
+      });
+      if (res.ok) {
+        toast.success('Product restored');
+        setProducts(prev => prev.filter(p => p.id !== id));
+      } else {
+        toast.error('Failed to restore product');
+      }
+    } catch {
+      toast.error('Failed to restore product');
+    }
+  };
+
+  const handlePermanentDelete = async () => {
+    if (!permanentDeleteId) return;
+    setPermanentDeleting(true);
+    try {
+      const res = await adminFetch(`/api/products/${permanentDeleteId}?permanent=true`, { method: 'DELETE' });
+      if (res.ok) {
+        toast.success('Product permanently deleted');
+        setProducts(prev => prev.filter(p => p.id !== permanentDeleteId));
+        setPermanentDeleteId(null);
+      } else {
+        toast.error('Failed to delete product');
+      }
+    } catch {
+      toast.error('Failed to delete product');
+    } finally {
+      setPermanentDeleting(false);
     }
   };
 
@@ -470,6 +560,138 @@ export function AdminProducts() {
     }).format(price);
   };
 
+  const getStockBadge = (stock: number, threshold: number) => {
+    if (stock <= 0) {
+      return (
+        <Badge variant="secondary" className="bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">
+          Out of stock
+        </Badge>
+      );
+    }
+    if (stock <= threshold) {
+      return (
+        <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+          Low ({stock})
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+        {stock}
+      </Badge>
+    );
+  };
+
+  const handleCSVImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await adminFetch('/api/products/import', {
+        method: 'POST',
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(`Imported ${data.imported} product(s)`);
+        if (data.errors && data.errors.length > 0) {
+          toast.warning(`${data.errors.length} error(s) — check console`);
+          console.warn('CSV Import Errors:', data.errors);
+        }
+        fetchProducts();
+      } else {
+        const err = await res.json();
+        toast.error(err.error || 'Import failed');
+      }
+    } catch {
+      toast.error('Import failed');
+    } finally {
+      setImporting(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleCSVExport = async () => {
+    setExporting(true);
+    try {
+      const res = await adminFetch('/api/products/export');
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `products-export-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success('Products exported');
+      } else {
+        toast.error('Export failed');
+      }
+    } catch {
+      toast.error('Export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleInlineStockSave = async (productId: string) => {
+    const newStock = parseInt(inlineStock);
+    if (isNaN(newStock) || newStock < 0) {
+      toast.error('Enter a valid stock quantity');
+      return;
+    }
+    try {
+      const res = await adminFetch(`/api/products/${productId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stock: newStock }),
+      });
+      if (res.ok) {
+        toast.success('Stock updated');
+        setEditingStockId(null);
+        fetchProducts();
+      } else {
+        toast.error('Failed to update stock');
+      }
+    } catch {
+      toast.error('Failed to update stock');
+    }
+  };
+
+  const startInlineStockEdit = (product: Product) => {
+    setEditingStockId(product.id);
+    setInlineStock(String(product.stock));
+  };
+
+  const handleRelatedSearch = useCallback(async (query: string) => {
+    setRelatedSearch(query);
+    if (!query || query.length < 2) {
+      setRelatedResults([]);
+      return;
+    }
+    try {
+      const res = await adminFetch(`/api/products?all=true&search=${encodeURIComponent(query)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setRelatedResults((data.products || []).filter((p: Product) => !selectedRelatedIds.includes(p.id) && (!editingProduct || p.id !== editingProduct.id)));
+      }
+    } catch {
+      // ignore
+    }
+  }, [selectedRelatedIds, editingProduct]);
+
+  const handleAddRelated = (product: Product) => {
+    setSelectedRelatedIds(prev => [...prev, product.id]);
+    setRelatedResults(prev => prev.filter(p => p.id !== product.id));
+    setRelatedSearch('');
+  };
+
+  const handleRemoveRelated = (id: string) => {
+    setSelectedRelatedIds(prev => prev.filter(x => x !== id));
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -478,11 +700,40 @@ export function AdminProducts() {
           <h2 className="text-2xl font-bold tracking-tight">Products</h2>
           <p className="text-muted-foreground mt-1">Manage your product catalogue</p>
         </div>
-        <Button onClick={handleOpenAdd}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Product
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <label className="cursor-pointer">
+            <input type="file" accept=".csv" className="hidden" onChange={handleCSVImport} disabled={importing} />
+            <Button variant="outline" size="sm" disabled={importing} asChild>
+              <span>
+                <FileText className="mr-1.5 h-3.5 w-3.5" />
+                {importing ? 'Importing...' : 'Import CSV'}
+              </span>
+            </Button>
+          </label>
+          <Button variant="outline" size="sm" disabled={exporting} onClick={handleCSVExport}>
+            <Download className="mr-1.5 h-3.5 w-3.5" />
+            {exporting ? 'Exporting...' : 'Export CSV'}
+          </Button>
+          <Button onClick={handleOpenAdd}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Product
+          </Button>
+        </div>
       </div>
+
+      {/* Tabs: Active / Trash */}
+      <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setSelectedIds([]); }}>
+        <TabsList>
+          <TabsTrigger value="active">
+            <Package className="mr-2 h-4 w-4" />
+            Active
+          </TabsTrigger>
+          <TabsTrigger value="trashed">
+            <Trash className="mr-2 h-4 w-4" />
+            Trash
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {/* Search & Filter Bar */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -495,26 +746,58 @@ export function AdminProducts() {
             className="pl-9"
           />
         </div>
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-full sm:w-[200px]">
-            <SelectValue placeholder="All Categories" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            {categories.map((cat) => (
-              <SelectItem key={cat.id} value={cat.id}>
-                {cat.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {activeTab === 'active' && (
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>
+                  {cat.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
         <Button variant="outline" onClick={() => { setLoading(true); fetchProducts(); }}>
           <RefreshCw className="h-4 w-4" />
         </Button>
       </div>
 
-      {/* Bulk Actions Toolbar */}
-      {selectedIds.length > 0 && (
+      {/* Trash Bulk Actions */}
+      {activeTab === 'trashed' && selectedIds.length > 0 && (
+        <div className="flex items-center gap-3 rounded-lg border bg-muted/50 p-3">
+          <span className="text-sm font-medium">
+            {selectedIds.length} selected
+          </span>
+          <div className="flex gap-2 ml-auto">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={bulkLoading}
+              onClick={() => handleBulkAction('restore')}
+            >
+              <Undo2 className="mr-1.5 h-3.5 w-3.5" />
+              Restore
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+              disabled={bulkLoading}
+              onClick={() => handleBulkAction('permanent-delete')}
+            >
+              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+              Permanent Delete
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Actions Toolbar (Active tab) */}
+      {activeTab === 'active' && selectedIds.length > 0 && (
         <div className="flex items-center gap-3 rounded-lg border bg-muted/50 p-3">
           <span className="text-sm font-medium">
             {selectedIds.length} selected
@@ -587,6 +870,7 @@ export function AdminProducts() {
                   <TableHead className="hidden md:table-cell">Category</TableHead>
                   <TableHead>Price</TableHead>
                   <TableHead className="hidden xl:table-cell">Wholesale</TableHead>
+                  <TableHead className="hidden sm:table-cell">Stock</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="hidden lg:table-cell">Featured</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -659,6 +943,34 @@ export function AdminProducts() {
                         )}
                       </TableCell>
                       <TableCell>
+                        {editingStockId === product.id ? (
+                          <div className="flex items-center gap-1">
+                            <Input
+                              type="number"
+                              min="0"
+                              value={inlineStock}
+                              onChange={(e) => setInlineStock(e.target.value)}
+                              className="h-7 w-20 text-xs"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleInlineStockSave(product.id);
+                                if (e.key === 'Escape') setEditingStockId(null);
+                              }}
+                            />
+                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleInlineStockSave(product.id)}>
+                              <Check className="h-3 w-3 text-emerald-600" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditingStockId(null)}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <button onClick={() => startInlineStockEdit(product)} className="hover:opacity-80 transition-opacity">
+                            {getStockBadge(product.stock, product.lowStockThreshold)}
+                          </button>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         <Badge
                           variant="secondary"
                           className={
@@ -682,22 +994,47 @@ export function AdminProducts() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => handleOpenEdit(product)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                            onClick={() => setDeleteId(product.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          {activeTab === 'trashed' ? (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                                onClick={() => handleRestore(product.id)}
+                                title="Restore"
+                              >
+                                <Undo2 className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                                onClick={() => setPermanentDeleteId(product.id)}
+                                title="Permanent Delete"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleOpenEdit(product)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                                onClick={() => setDeleteId(product.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -710,14 +1047,24 @@ export function AdminProducts() {
       </Card>
 
       {/* Add/Edit Product Dialog */}
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
+      <Dialog open={formOpen} onOpenChange={(open) => { setFormOpen(open); if (!open) setEditTab('general'); }}>
         <DialogContent className="max-w-2xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>
               {editingProduct ? 'Edit Product' : 'Add Product'}
             </DialogTitle>
           </DialogHeader>
+          {editingProduct && (
+            <Tabs value={editTab} onValueChange={setEditTab}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="general">General</TabsTrigger>
+                <TabsTrigger value="variants">Variants</TabsTrigger>
+                <TabsTrigger value="related">Related</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          )}
           <ScrollArea className="max-h-[calc(90vh-140px)] pr-4">
+            {(!editingProduct || editTab === 'general') && (
             <div className="grid gap-4 py-4">
               {/* Name & Slug */}
               <div className="grid gap-4 sm:grid-cols-2">
@@ -1052,6 +1399,35 @@ export function AdminProducts() {
 
               <Separator />
 
+              {/* Stock & Low Stock Threshold */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="prod-stock">Stock</Label>
+                  <Input
+                    id="prod-stock"
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    value={form.stock}
+                    onChange={(e) => setForm(prev => ({ ...prev, stock: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="prod-low-threshold">Low Stock Threshold</Label>
+                  <Input
+                    id="prod-low-threshold"
+                    type="number"
+                    min="0"
+                    placeholder="10"
+                    value={form.lowStockThreshold}
+                    onChange={(e) => setForm(prev => ({ ...prev, lowStockThreshold: e.target.value }))}
+                  />
+                  <p className="text-xs text-muted-foreground">Stock at or below this shows "Low" warning</p>
+                </div>
+              </div>
+
+              <Separator />
+
               {/* SEO Section (Collapsible) */}
               <Collapsible open={seoOpen} onOpenChange={setSeoOpen}>
                 <CollapsibleTrigger asChild>
@@ -1111,6 +1487,71 @@ export function AdminProducts() {
                 </CollapsibleContent>
               </Collapsible>
             </div>
+            )}
+
+            {/* Variants Tab */}
+            {editingProduct && editTab === 'variants' && (
+              <div className="py-4">
+                <AdminProductVariants productId={editingProduct.id} lowStockThreshold={parseInt(form.lowStockThreshold) || 10} />
+              </div>
+            )}
+
+            {/* Related Products Tab */}
+            {editingProduct && editTab === 'related' && (
+              <div className="py-4 space-y-4">
+                <div className="space-y-2">
+                  <Label>Related Products</Label>
+                  <p className="text-xs text-muted-foreground">Search and add products that are related to this one.</p>
+                </div>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search products..."
+                    value={relatedSearch}
+                    onChange={(e) => handleRelatedSearch(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                {relatedResults.length > 0 && (
+                  <div className="rounded-md border max-h-40 overflow-y-auto">
+                    {relatedResults.map((rp) => (
+                      <button
+                        key={rp.id}
+                        type="button"
+                        className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted/50 text-left transition-colors border-b last:border-b-0"
+                        onClick={() => handleAddRelated(rp)}
+                      >
+                        {getFirstImage(rp) ? (
+                          <img src={getFirstImage(rp)} alt={rp.name} className="h-8 w-8 rounded object-cover bg-muted" />
+                        ) : (
+                          <div className="flex h-8 w-8 items-center justify-center rounded bg-muted"><ImageIcon className="h-3 w-3 text-muted-foreground" /></div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{rp.name}</p>
+                          <p className="text-xs text-muted-foreground">{rp.category?.name || 'Uncategorized'}</p>
+                        </div>
+                        <Plus className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {selectedRelatedIds.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-sm">Selected ({selectedRelatedIds.length})</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedRelatedIds.map((rid) => (
+                        <Badge key={rid} variant="secondary" className="pl-2 pr-1 gap-1">
+                          <span className="max-w-[150px] truncate">{products.find(p => p.id === rid)?.name || rid.substring(0, 8)}</span>
+                          <button type="button" onClick={() => handleRemoveRelated(rid)} className="hover:text-rose-600">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </ScrollArea>
           <DialogFooter>
             <Button variant="outline" onClick={() => setFormOpen(false)}>
@@ -1149,11 +1590,9 @@ export function AdminProducts() {
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Product</AlertDialogTitle>
+            <AlertDialogTitle>Move to Trash</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this product? This action cannot be undone.
-              Any enquiries associated with this product will have their product reference
-              removed.
+              Are you sure you want to move this product to trash? You can restore it later from the Trash tab.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1163,7 +1602,29 @@ export function AdminProducts() {
               disabled={deleting}
               className="bg-rose-600 hover:bg-rose-700"
             >
-              {deleting ? 'Deleting...' : 'Delete'}
+              {deleting ? 'Moving...' : 'Move to Trash'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Permanent Delete Confirmation */}
+      <AlertDialog open={!!permanentDeleteId} onOpenChange={() => setPermanentDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Permanently Delete Product</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This product and all its associated data will be permanently removed from the database.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handlePermanentDelete}
+              disabled={permanentDeleting}
+              className="bg-rose-600 hover:bg-rose-700"
+            >
+              {permanentDeleting ? 'Deleting...' : 'Permanent Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,6 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const body = await request.json();
+
+    const existing = await db.product.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
+
+    // Support restore from trash
+    if (body.restore) {
+      const product = await db.product.update({
+        where: { id },
+        data: { deletedAt: null },
+        include: { category: true },
+      });
+      return NextResponse.json({ product });
+    }
+
+    return NextResponse.json({ error: 'No valid action specified' }, { status: 400 });
+  } catch (error) {
+    console.error('Patch product error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -46,6 +76,16 @@ export async function PUT(
       );
     }
 
+    // Check slug uniqueness if slug is being updated
+    if (body.slug !== undefined && body.slug !== existing.slug) {
+      const slugExists = await db.product.findFirst({
+        where: { slug: body.slug, NOT: { id } },
+      });
+      if (slugExists) {
+        return NextResponse.json({ error: 'Slug already in use' }, { status: 409 });
+      }
+    }
+
     const product = await db.product.update({
       where: { id },
       data: {
@@ -83,6 +123,9 @@ export async function PUT(
         ...(body.categoryId !== undefined && {
           categoryId: body.categoryId || null,
         }),
+        ...(body.whatsappNumber !== undefined && {
+          whatsappNumber: body.whatsappNumber || null,
+        }),
         ...(body.isFeatured !== undefined && {
           isFeatured: body.isFeatured,
         }),
@@ -101,6 +144,19 @@ export async function PUT(
         ...(body.metaDescription !== undefined && {
           metaDescription: body.metaDescription || null,
         }),
+        ...(body.stock !== undefined && {
+          stock: typeof body.stock === 'number' ? body.stock : parseInt(body.stock) || 0,
+        }),
+        ...(body.lowStockThreshold !== undefined && {
+          lowStockThreshold: typeof body.lowStockThreshold === 'number'
+            ? body.lowStockThreshold
+            : parseInt(body.lowStockThreshold) || 10,
+        }),
+        ...(body.relatedProductIds !== undefined && {
+          relatedProductIds: typeof body.relatedProductIds === 'string'
+            ? body.relatedProductIds
+            : JSON.stringify(body.relatedProductIds || []),
+        }),
       },
       include: { category: true },
     });
@@ -116,11 +172,13 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const permanent = searchParams.get('permanent') === 'true';
 
     const existing = await db.product.findUnique({ where: { id } });
     if (!existing) {
@@ -130,9 +188,17 @@ export async function DELETE(
       );
     }
 
-    await db.product.delete({ where: { id } });
+    if (permanent) {
+      await db.product.delete({ where: { id } });
+      return NextResponse.json({ message: 'Product permanently deleted' });
+    }
 
-    return NextResponse.json({ message: 'Product deleted successfully' });
+    await db.product.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
+
+    return NextResponse.json({ message: 'Product moved to trash' });
   } catch (error) {
     console.error('Delete product error:', error);
     return NextResponse.json(

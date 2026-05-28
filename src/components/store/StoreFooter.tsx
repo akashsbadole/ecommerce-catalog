@@ -43,12 +43,22 @@ export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
 
     setSubscribing(true);
     try {
-      // Mock subscription - no newsletter API yet
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      toast.success('Subscribed successfully!');
-      setNewsletterEmail('');
+      const res = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: newsletterEmail.trim() }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success(data.message || 'Subscribed successfully!');
+        setNewsletterEmail('');
+      } else {
+        toast.error(data.error || 'Failed to subscribe. Please try again.');
+      }
     } catch {
-      toast.error('Failed to subscribe. Please try again.');
+      toast.error('Network error. Please try again.');
     } finally {
       setSubscribing(false);
     }

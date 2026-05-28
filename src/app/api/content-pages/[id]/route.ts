@@ -45,6 +45,16 @@ export async function PUT(
       );
     }
 
+    // Check slug uniqueness if slug is being updated
+    if (body.slug !== undefined && body.slug !== existing.slug) {
+      const slugExists = await db.contentPage.findFirst({
+        where: { slug: body.slug, NOT: { id } },
+      });
+      if (slugExists) {
+        return NextResponse.json({ error: 'Slug already in use' }, { status: 409 });
+      }
+    }
+
     const contentPage = await db.contentPage.update({
       where: { id },
       data: {

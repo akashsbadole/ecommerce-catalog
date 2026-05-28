@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!['publish', 'unpublish', 'delete'].includes(action)) {
+    if (!['publish', 'unpublish', 'delete', 'restore', 'permanent-delete'].includes(action)) {
       return NextResponse.json(
         { error: 'action must be publish, unpublish, or delete' },
         { status: 400 }
@@ -21,11 +21,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'delete') {
-      const result = await db.blogPost.deleteMany({
+      const result = await db.blogPost.updateMany({
         where: { id: { in: ids } },
+        data: { deletedAt: new Date() },
       });
       return NextResponse.json({
-        message: `${result.count} blog post(s) deleted`,
+        message: `${result.count} blog post(s) moved to trash`,
         count: result.count,
       });
     }
@@ -68,6 +69,27 @@ export async function POST(request: NextRequest) {
       });
       return NextResponse.json({
         message: `${result.count} blog post(s) unpublished`,
+        count: result.count,
+      });
+    }
+
+    if (action === 'restore') {
+      const result = await db.blogPost.updateMany({
+        where: { id: { in: ids } },
+        data: { deletedAt: null },
+      });
+      return NextResponse.json({
+        message: `${result.count} blog post(s) restored`,
+        count: result.count,
+      });
+    }
+
+    if (action === 'permanent-delete') {
+      const result = await db.blogPost.deleteMany({
+        where: { id: { in: ids } },
+      });
+      return NextResponse.json({
+        message: `${result.count} blog post(s) permanently deleted`,
         count: result.count,
       });
     }

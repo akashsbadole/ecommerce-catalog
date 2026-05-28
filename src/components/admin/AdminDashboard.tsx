@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ShoppingBag,
   LayoutDashboard,
@@ -17,9 +17,14 @@ import {
   ChevronRight,
   Users,
   ClipboardList,
+  Search,
+  Download,
+  KeyRound,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -27,6 +32,14 @@ import {
   SheetContent,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { AdminDashboardHome } from '@/components/admin/AdminDashboardHome';
 import { AdminProducts } from '@/components/admin/AdminProducts';
@@ -40,6 +53,8 @@ import { AdminBlog } from '@/components/admin/AdminBlog';
 import { AdminRedirects } from '@/components/admin/AdminRedirects';
 import { AdminUsers } from '@/components/admin/AdminUsers';
 import { AdminActivityLog } from '@/components/admin/AdminActivityLog';
+import { AdminDataExport } from '@/components/admin/AdminDataExport';
+import { AdminSearchDialog } from '@/components/admin/AdminSearchDialog';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { NotificationBell } from '@/components/admin/NotificationBell';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -63,6 +78,7 @@ const sidebarItems = [
   { id: 'redirects', label: 'Redirects', icon: ArrowRightLeft },
   { id: 'users', label: 'Users', icon: Users },
   { id: 'activity-log', label: 'Activity Log', icon: ClipboardList },
+  { id: 'data-export', label: 'Data Export', icon: Download },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
@@ -149,6 +165,15 @@ function SidebarContent({
           <Button
             variant="ghost"
             size="sm"
+            className="justify-start text-sm"
+            onClick={() => onNavigate('change-password')}
+          >
+            <KeyRound className="mr-2 h-4 w-4" />
+            Change Password
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             className="justify-start text-sm text-rose-600 hover:text-rose-700 hover:bg-rose-50"
             onClick={onLogout}
           >
@@ -165,6 +190,27 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
   const isMobile = useIsMobile();
   const [currentTab, setCurrentTab] = useState(activeTab);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [changePwdOpen, setChangePwdOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [savingPwd, setSavingPwd] = useState(false);
+
+  // Cmd+K / Ctrl+K shortcut
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        e.key === 'k'
+      ) {
+        e.preventDefault();
+        setSearchOpen((prev) => !prev);
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleTabChange = (tab: string) => {
     setCurrentTab(tab);
@@ -173,6 +219,57 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
 
   const handleQuickNav = (tab: string) => {
     setCurrentTab(tab);
+  };
+
+  const handleSearchNavigate = (tab: string, data?: unknown) => {
+    setCurrentTab(tab);
+    // If navigating to a specific entity, trigger onNavigate for sub-components
+    if (data) {
+      onNavigate(tab, data);
+    }
+  };
+
+  const handleChangePasswordOpen = () => {
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setChangePwdOpen(true);
+  };
+
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword) {
+      toast.error('All fields are required');
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast.error('New password must be at least 8 characters');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    setSavingPwd(true);
+    try {
+      const { adminFetch } = await import('@/lib/admin-fetch');
+      const res = await adminFetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      if (res.ok) {
+        toast.success('Password changed successfully');
+        setChangePwdOpen(false);
+      } else {
+        const err = await res.json();
+        toast.error(err.error || 'Failed to change password');
+      }
+    } catch {
+      toast.error('Failed to change password');
+    } finally {
+      setSavingPwd(false);
+    }
   };
 
   const renderContent = () => {
@@ -199,6 +296,8 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
         return <AdminUsers />;
       case 'activity-log':
         return <AdminActivityLog />;
+      case 'data-export':
+        return <AdminDataExport />;
       case 'settings':
         return <AdminSettings />;
       default:
@@ -217,7 +316,13 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
             userName={user?.name || 'Admin'}
             userEmail={user?.email || ''}
             onLogout={onLogout}
-            onNavigate={onNavigate}
+            onNavigate={(page) => {
+              if (page === 'change-password') {
+                handleChangePasswordOpen();
+              } else {
+                onNavigate(page);
+              }
+            }}
           />
         </aside>
       )}
@@ -240,7 +345,13 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
                   userName={user?.name || 'Admin'}
                   userEmail={user?.email || ''}
                   onLogout={onLogout}
-                  onNavigate={onNavigate}
+                  onNavigate={(page) => {
+                    if (page === 'change-password') {
+                      handleChangePasswordOpen();
+                    } else {
+                      onNavigate(page);
+                    }
+                  }}
                 />
               </SheetContent>
             </Sheet>
@@ -252,6 +363,15 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
             </div>
             <Badge variant="secondary" className="text-xs ml-1">Admin</Badge>
             <div className="ml-auto flex items-center gap-1">
+              {/* Search Button (mobile) */}
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Search"
+                onClick={() => setSearchOpen(true)}
+              >
+                <Search className="h-4 w-4" />
+              </Button>
               <NotificationBell />
               <Button
                 variant="ghost"
@@ -274,6 +394,63 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
           </div>
         </ScrollArea>
       </div>
+
+      {/* Global Search Dialog */}
+      <AdminSearchDialog
+        open={searchOpen}
+        onOpenChange={setSearchOpen}
+        onNavigate={handleSearchNavigate}
+      />
+
+      {/* Change Password Dialog */}
+      <Dialog open={changePwdOpen} onOpenChange={setChangePwdOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="current-pwd">Current Password</Label>
+              <Input
+                id="current-pwd"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Enter current password"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-pwd">New Password</Label>
+              <Input
+                id="new-pwd"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+              />
+              <p className="text-xs text-muted-foreground">Minimum 8 characters</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-pwd">Confirm New Password</Label>
+              <Input
+                id="confirm-pwd"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setChangePwdOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleChangePassword} disabled={savingPwd}>
+              {savingPwd ? 'Saving...' : 'Change Password'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

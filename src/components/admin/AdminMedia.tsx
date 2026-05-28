@@ -10,12 +10,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
@@ -35,12 +39,16 @@ import {
   ZoomIn,
   Edit3,
   FolderOpen,
+  FolderPlus,
+  Folder,
+  Move,
   Grid3X3,
   List,
   Info,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminFetch } from '@/lib/admin-fetch';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface MediaItem {
   id: string;
@@ -107,6 +115,15 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
   const limit = 30;
 
+  // Folder state
+  const [folders, setFolders] = useState<string[]>([]);
+  const [activeFolder, setActiveFolder] = useState<string | null>(null);
+  const [createFolderOpen, setCreateFolderOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [moveFileId, setMoveFileId] = useState<string | null>(null);
+  const [moveTargetFolder, setMoveTargetFolder] = useState('');
+
   const fetchMedia = useCallback(async (pageNum: number, searchQuery: string) => {
     setLoading(true);
     try {
@@ -115,6 +132,7 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
         limit: String(limit),
       });
       if (searchQuery) params.set('search', searchQuery);
+      if (activeFolder) params.set('folder', activeFolder);
       const res = await adminFetch(`/api/media?${params}`);
       if (res.ok) {
         const data: MediaResponse = await res.json();
@@ -127,7 +145,7 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeFolder]);
 
   useEffect(() => {
     fetchMedia(page, search);
@@ -140,6 +158,71 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
     searchTimeoutRef.current = setTimeout(() => {
       fetchMedia(1, value);
     }, 300);
+  };
+
+  const fetchFolders = useCallback(async () => {
+    try {
+      const res = await adminFetch('/api/media/folders');
+      if (res.ok) {
+        const data = await res.json();
+        setFolders(data.folders || []);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchFolders();
+  }, [fetchFolders]);
+
+  const handleSelectFolder = (folder: string | null) => {
+    setActiveFolder(folder);
+    setPage(1);
+  };
+
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) return;
+    const folderPath = newFolderName.trim().startsWith('/') ? newFolderName.trim() : `/${newFolderName.trim()}`;
+    try {
+      const res = await adminFetch('/api/media/folders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folder: folderPath }),
+      });
+      if (res.ok) {
+        toast.success('Folder created');
+        setCreateFolderOpen(false);
+        setNewFolderName('');
+        fetchFolders();
+      } else {
+        toast.error('Failed to create folder');
+      }
+    } catch {
+      toast.error('Failed to create folder');
+    }
+  };
+
+  const handleMoveFile = async () => {
+    if (!moveFileId || !moveTargetFolder) return;
+    try {
+      const res = await adminFetch('/api/media', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: moveFileId, folder: moveTargetFolder }),
+      });
+      if (res.ok) {
+        toast.success('File moved');
+        setMoveDialogOpen(false);
+        setMoveFileId(null);
+        fetchMedia(page, search);
+        fetchFolders();
+      } else {
+        toast.error('Failed to move file');
+      }
+    } catch {
+      toast.error('Failed to move file');
+    }
   };
 
   const totalPages = Math.ceil(total / limit);
@@ -250,6 +333,9 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
             {total} file{total !== 1 ? 's' : ''} total
+            {activeFolder && (
+              <Badge variant="outline" className="ml-2">{activeFolder}</Badge>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -271,6 +357,15 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
               <List className="h-4 w-4" />
             </Button>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCreateFolderOpen(true)}
+            className="gap-2"
+          >
+            <FolderPlus className="h-4 w-4" />
+            New Folder
+          </Button>
           <input
             ref={fileInputRef}
             type="file"
@@ -290,29 +385,67 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search files..."
-          value={search}
-          onChange={(e) => handleSearch(e.target.value)}
-          className="pl-10"
-        />
-        {search && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
-            onClick={() => handleSearch('')}
-          >
-            <X className="h-3 w-3" />
-          </Button>
-        )}
-      </div>
+      {/* Folder Sidebar + Content */}
+      <div className="flex gap-4">
+        {/* Folder sidebar */}
+        <div className="w-48 shrink-0 hidden md:block">
+          <div className="sticky top-0 space-y-1">
+            <button
+              onClick={() => handleSelectFolder(null)}
+              className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                !activeFolder
+                  ? 'bg-emerald-50 text-emerald-700'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
+            >
+              <FolderOpen className="h-4 w-4" />
+              All Files
+            </button>
+            {folders.map((folder) => (
+              <button
+                key={folder}
+                onClick={() => handleSelectFolder(folder)}
+                className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                  activeFolder === folder
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+              >
+                <Folder className="h-4 w-4" />
+                <span className="truncate">{folder.replace(/^\//, '') || '/'}</span>
+              </button>
+            ))}
+            {folders.length === 0 && (
+              <p className="px-3 py-2 text-xs text-muted-foreground">No folders yet</p>
+            )}
+          </div>
+        </div>
 
-      {/* Drop zone overlay hint */}
-      <div
+        {/* Main content */}
+        <div className="flex-1 min-w-0 space-y-4">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search files..."
+              value={search}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-10"
+            />
+            {search && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                onClick={() => handleSearch('')}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+
+          {/* Drop zone overlay hint */}
+          <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         className="min-h-[400px]"
@@ -407,6 +540,16 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
                           >
                             <Edit3 className="h-4 w-4 mr-2" />
                             Edit Alt Text
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setMoveFileId(item.id);
+                              setMoveTargetFolder(item.folder || '/');
+                              setMoveDialogOpen(true);
+                            }}
+                          >
+                            <Move className="h-4 w-4 mr-2" />
+                            Move to Folder
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => handleCopyUrl(item.url, item.id)}
@@ -520,6 +663,8 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
             ))}
           </div>
         )}
+      </div>
+        </div>
       </div>
 
       {/* Pagination */}
@@ -684,6 +829,80 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
               </Button>
               <Button onClick={handleUpdateAlt}>Save</Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Folder Dialog */}
+      <Dialog open={createFolderOpen} onOpenChange={setCreateFolderOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create New Folder</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              placeholder="/folder-name"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
+            />
+            <p className="text-xs text-muted-foreground">
+              Folder paths start with &quot;/&quot;. e.g., /products, /blog
+            </p>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setCreateFolderOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateFolder} disabled={!newFolderName.trim()}>
+                Create
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Move to Folder Dialog */}
+      <Dialog open={moveDialogOpen} onOpenChange={setMoveDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Move to Folder</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <button
+                onClick={() => setMoveTargetFolder('/')}
+                className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
+                  moveTargetFolder === '/'
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : 'text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                <FolderOpen className="h-4 w-4" />
+                Root (/)
+              </button>
+              {folders.map((folder) => (
+                <button
+                  key={folder}
+                  onClick={() => setMoveTargetFolder(folder)}
+                  className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
+                    moveTargetFolder === folder
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : 'text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  <Folder className="h-4 w-4" />
+                  {folder}
+                </button>
+              ))}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setMoveDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleMoveFile} disabled={!moveTargetFolder}>
+                Move
+              </Button>
+            </DialogFooter>
           </div>
         </DialogContent>
       </Dialog>

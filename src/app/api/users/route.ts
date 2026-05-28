@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { hash } from 'bcryptjs';
+import { userCreateSchema } from '@/lib/validations';
 
 export async function GET(request: NextRequest) {
   try {
@@ -79,24 +80,18 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, name, password, role } = body;
 
-    if (!email || !name || !password) {
+    const result = userCreateSchema.safeParse(body);
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'Email, name, and password are required' },
+        { error: 'Validation failed', details: result.error.flatten().fieldErrors },
         { status: 400 }
       );
     }
-
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: 'Password must be at least 6 characters' },
-        { status: 400 }
-      );
-    }
+    const validatedData = result.data;
 
     // Check if email already exists
-    const existing = await db.user.findUnique({ where: { email } });
+    const existing = await db.user.findUnique({ where: { email: validatedData.email } });
     if (existing) {
       return NextResponse.json(
         { error: 'A user with this email already exists' },
@@ -104,14 +99,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const hashedPassword = await hash(password, 12);
+    const hashedPassword = await hash(validatedData.password, 12);
 
     const user = await db.user.create({
       data: {
-        email: email.trim().toLowerCase(),
-        name: name.trim(),
+        email: validatedData.email.trim().toLowerCase(),
+        name: validatedData.name.trim(),
         password: hashedPassword,
-        role: role || 'clerk',
+        role: validatedData.role || 'clerk',
       },
       select: {
         id: true,

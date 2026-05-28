@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { logActivity } from '@/lib/activity-log';
+import { categorySchema } from '@/lib/validations';
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,25 +31,32 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, slug, description, image, sortOrder, isActive, metaTitle, metaDescription } = body;
 
-    if (!name || !slug) {
+    const result = categorySchema.safeParse(body);
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'Name and slug are required' },
+        { error: 'Validation failed', details: result.error.flatten().fieldErrors },
         { status: 400 }
       );
+    }
+    const validatedData = result.data;
+
+    // Check slug uniqueness
+    const existingSlug = await db.category.findUnique({ where: { slug: validatedData.slug } });
+    if (existingSlug) {
+      return NextResponse.json({ error: 'Slug already in use' }, { status: 409 });
     }
 
     const category = await db.category.create({
       data: {
-        name,
-        slug,
-        description: description || null,
-        image: image || null,
-        sortOrder: sortOrder ?? 0,
-        isActive: isActive ?? true,
-        metaTitle: metaTitle || null,
-        metaDescription: metaDescription || null,
+        name: validatedData.name,
+        slug: validatedData.slug,
+        description: validatedData.description || null,
+        image: validatedData.image || null,
+        sortOrder: validatedData.sortOrder ?? 0,
+        isActive: validatedData.isActive ?? true,
+        metaTitle: validatedData.metaTitle || null,
+        metaDescription: validatedData.metaDescription || null,
       },
     });
 

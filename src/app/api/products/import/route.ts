@@ -1,0 +1,162 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+
+// Simple CSV parser - handles quoted fields with commas
+function parseCSV(text: string): string[][] {
+  const rows: string[][] = [];
+  let current = '';
+  let row: string[] = [];
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    const next = text[i + 1];
+
+    if (inQuotes) {
+      if (ch === '"' && next === '"') {
+        current += '"';
+        i++;
+      } else if (ch === '"') {
+        inQuotes = false;
+      } else {
+        current += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ',') {
+        row.push(current.trim());
+        current = '';
+      } else if (ch === '\n' || (ch === '\r' && next === '\n')) {
+        row.push(current.trim());
+        current = '';
+        if (row.length > 0 && row.some(cell => cell !== '')) {
+          rows.push(row);
+        }
+        row = [];
+        if (ch === '\r') i++;
+      } else {
+        current += ch;
+      }
+    }
+  }
+
+  // Last field/row
+  if (current || row.length > 0) {
+    row.push(current.trim());
+    if (row.some(cell => cell !== '')) {
+      rows.push(row);
+    }
+  }
+
+  return rows;
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const formData = await request.formData();
+    const file = formData.get('file') as File | null;
+
+    if (!file) {
+      return NextResponse.json(
+        { error: 'No file uploaded' },
+        { status: 400 }
+      );
+    }
+
+    if (!file.name.endsWith('.csv')) {
+      return NextResponse.json(
+        { error: 'Only CSV files are accepted' },
+        { status: 400 }
+      );
+    }
+
+    const text = await file.text();
+    const rows = parseCSV(text);
+
+    if (rows.length < 2) {
+      return NextResponse.json(
+        { error: 'CSV must have a header row and at least one data row' },
+        { status: 400 }
+      );
+    }
+
+    const headers = rows[0].map(h => h.toLowerCase().trim());
+    const errors: string[] = [];
+    let imported = 0;
+
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (row.length === 0 || row.every(cell => cell === '')) continue;
+
+      const getValue = (field: string) => {
+        const idx = headers.indexOf(field.toLowerCase());
+        return idx >= 0 && idx < row.length ? row[idx] : '';
+      };
+
+      const name = getValue('name');
+      if (!name) {
+        errors.push(`Row ${i + 1}: Missing product name`);
+        continue;
+      }
+
+      const price = parseFloat(getValue('price'));
+      if (isNaN(price)) {
+        errors.push(`Row ${i + 1}: Invalid price`);
+        continue;
+      }
+
+      const slug = getValue('slug') || name
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/[\s_]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
+      const categoryId = getValue('categoryid') || null;
+
+      const data = {
+        name,
+        slug,
+        description: getValue('description') || null,
+        shortDescription: getValue('shortdescription') || null,
+        price,
+        comparePrice: parseFloat(getValue('compareprice')) || null,
+        wholesalePrice: parseFloat(getValue('wholesaleprice')) || null,
+        minOrderQty: parseInt(getValue('minorderqty')) || 1,
+        sku: getValue('sku') || null,
+        images: JSON.stringify([]),
+        categoryId,
+        whatsappNumber: getValue('whatsappnumber') || null,
+        isFeatured: getValue('isfeatured')?.toLowerCase() === 'true',
+        isActive: getValue('isactive')?.toLowerCase() !== 'false',
+        sortOrder: parseInt(getValue('sortorder')) || 0,
+        stock: parseInt(getValue('stock')) || 0,
+        lowStockThreshold: parseInt(getValue('lowstockthreshold')) || 10,
+        specifications: null,
+        metaTitle: null,
+        metaDescription: null,
+      };
+
+      try {
+        await db.product.create({ data });
+        imported++;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Unknown error';
+        errors.push(`Row ${i + 1}: ${msg}`);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      imported,
+      errors,
+    });
+  } catch (error) {
+    console.error('Import products error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}

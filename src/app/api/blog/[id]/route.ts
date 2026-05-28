@@ -46,6 +46,16 @@ export async function PUT(
       );
     }
 
+    // Check slug uniqueness if slug is being updated
+    if (body.slug !== undefined && body.slug !== existing.slug) {
+      const slugExists = await db.blogPost.findFirst({
+        where: { slug: body.slug, NOT: { id } },
+      });
+      if (slugExists) {
+        return NextResponse.json({ error: 'Slug already in use' }, { status: 409 });
+      }
+    }
+
     // If publishing for the first time, set publishedAt
     let publishedAt: Date | null | undefined = undefined;
     if (body.isPublished === true && !existing.publishedAt) {
@@ -97,12 +107,43 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  _request: NextRequest,
+export async function PATCH(
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
+    const body = await request.json();
+
+    const existing = await db.blogPost.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: 'Blog post not found' }, { status: 404 });
+    }
+
+    if (body.restore) {
+      const blogPost = await db.blogPost.update({
+        where: { id },
+        data: { deletedAt: null },
+        include: { author: { select: { id: true, name: true, email: true } } },
+      });
+      return NextResponse.json({ blogPost });
+    }
+
+    return NextResponse.json({ error: 'No valid action specified' }, { status: 400 });
+  } catch (error) {
+    console.error('Patch blog post error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const permanent = searchParams.get('permanent') === 'true';
 
     const existing = await db.blogPost.findUnique({ where: { id } });
     if (!existing) {
@@ -112,10 +153,18 @@ export async function DELETE(
       );
     }
 
-    await db.blogPost.delete({ where: { id } });
+    if (permanent) {
+      await db.blogPost.delete({ where: { id } });
+      return NextResponse.json({ message: 'Blog post permanently deleted' });
+    }
+
+    await db.blogPost.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
 
     return NextResponse.json({
-      message: 'Blog post deleted successfully',
+      message: 'Blog post moved to trash',
     });
   } catch (error) {
     console.error('Delete blog post error:', error);

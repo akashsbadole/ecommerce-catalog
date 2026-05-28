@@ -15,6 +15,9 @@ import {
   ChevronRight,
   Eye,
   EyeOff,
+  Undo2,
+  Trash,
+  BookOpen,
 } from 'lucide-react';
 
 const WysiwygEditor = dynamic(
@@ -70,6 +73,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { adminFetch } from '@/lib/admin-fetch';
 
 interface Author {
@@ -92,6 +96,7 @@ interface BlogPost {
   tags: string | null;
   isPublished: boolean;
   publishedAt: string | null;
+  deletedAt: string | null;
   createdAt: string;
   author?: Author | null;
 }
@@ -172,6 +177,11 @@ export function AdminBlog() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Trash tab state
+  const [activeTab, setActiveTab] = useState('active');
+  const [permanentDeleteId, setPermanentDeleteId] = useState<string | null>(null);
+  const [permanentDeleting, setPermanentDeleting] = useState(false);
+
   // Bulk action state
   const [bulkLoading, setBulkLoading] = useState(false);
 
@@ -179,6 +189,7 @@ export function AdminBlog() {
     try {
       setLoading(true);
       const params = new URLSearchParams({ all: 'true', page: String(page), limit: '12' });
+      if (activeTab === 'trashed') params.set('trashed', 'true');
       if (searchTerm) params.set('search', searchTerm);
       const res = await adminFetch(`/api/blog?${params.toString()}`);
       if (res.ok) {
@@ -191,7 +202,7 @@ export function AdminBlog() {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm]);
+  }, [searchTerm, activeTab]);
 
   const fetchAuthors = useCallback(async () => {
     try {
@@ -361,7 +372,7 @@ export function AdminBlog() {
     try {
       const res = await adminFetch(`/api/blog/${deleteId}`, { method: 'DELETE' });
       if (res.ok) {
-        toast.success('Post deleted');
+        toast.success('Post moved to trash');
         setPosts(prev => prev.filter(p => p.id !== deleteId));
         setDeleteId(null);
       } else {
@@ -375,6 +386,43 @@ export function AdminBlog() {
     }
   };
 
+  const handleRestore = async (id: string) => {
+    try {
+      const res = await adminFetch(`/api/blog/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ restore: true }),
+      });
+      if (res.ok) {
+        toast.success('Post restored');
+        setPosts(prev => prev.filter(p => p.id !== id));
+      } else {
+        toast.error('Failed to restore post');
+      }
+    } catch {
+      toast.error('Failed to restore post');
+    }
+  };
+
+  const handlePermanentDelete = async () => {
+    if (!permanentDeleteId) return;
+    setPermanentDeleting(true);
+    try {
+      const res = await adminFetch(`/api/blog/${permanentDeleteId}?permanent=true`, { method: 'DELETE' });
+      if (res.ok) {
+        toast.success('Post permanently deleted');
+        setPosts(prev => prev.filter(p => p.id !== permanentDeleteId));
+        setPermanentDeleteId(null);
+      } else {
+        toast.error('Failed to delete post');
+      }
+    } catch {
+      toast.error('Failed to delete post');
+    } finally {
+      setPermanentDeleting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -383,11 +431,27 @@ export function AdminBlog() {
           <h2 className="text-2xl font-bold tracking-tight">Blog Posts</h2>
           <p className="text-muted-foreground mt-1">Manage your blog posts and articles</p>
         </div>
-        <Button onClick={handleOpenAdd}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Post
-        </Button>
+        {activeTab === 'active' && (
+          <Button onClick={handleOpenAdd}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Post
+          </Button>
+        )}
       </div>
+
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setSelectedIds([]); }}>
+        <TabsList>
+          <TabsTrigger value="active">
+            <BookOpen className="mr-2 h-4 w-4" />
+            Active
+          </TabsTrigger>
+          <TabsTrigger value="trashed">
+            <Trash className="mr-2 h-4 w-4" />
+            Trash
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {/* Search & Filter Bar */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -539,22 +603,47 @@ export function AdminBlog() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleOpenEdit(post)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                          onClick={() => setDeleteId(post.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {activeTab === 'trashed' ? (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                              onClick={() => handleRestore(post.id)}
+                              title="Restore"
+                            >
+                              <Undo2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                              onClick={() => setPermanentDeleteId(post.id)}
+                              title="Permanent Delete"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => handleOpenEdit(post)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                              onClick={() => setDeleteId(post.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -814,13 +903,13 @@ export function AdminBlog() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
+      {/* Delete (Move to Trash) Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Blog Post</AlertDialogTitle>
+            <AlertDialogTitle>Move to Trash</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this blog post? This action cannot be undone.
+              Are you sure you want to move this blog post to trash? You can restore it later from the Trash tab.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -830,7 +919,29 @@ export function AdminBlog() {
               disabled={deleting}
               className="bg-rose-600 hover:bg-rose-700"
             >
-              {deleting ? 'Deleting...' : 'Delete'}
+              {deleting ? 'Moving...' : 'Move to Trash'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Permanent Delete Confirmation */}
+      <AlertDialog open={!!permanentDeleteId} onOpenChange={() => setPermanentDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Permanently Delete Blog Post</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This blog post will be permanently removed from the database.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handlePermanentDelete}
+              disabled={permanentDeleting}
+              className="bg-rose-600 hover:bg-rose-700"
+            >
+              {permanentDeleting ? 'Deleting...' : 'Permanent Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

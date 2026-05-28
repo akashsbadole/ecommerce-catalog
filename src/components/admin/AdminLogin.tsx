@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ShoppingBag, ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, Eye, EyeOff, Loader2, KeyRound, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -18,6 +18,12 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Forgot password state
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +63,37 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!forgotEmail) {
+      toast.error('Please enter your email address');
+      return;
+    }
+
+    setForgotLoading(true);
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+
+      if (res.ok) {
+        setForgotSent(true);
+        toast.success('If an account exists with that email, you will receive reset instructions.');
+      } else {
+        // Still show success to avoid revealing email existence
+        setForgotSent(true);
+      }
+    } catch {
+      // Still show success to avoid revealing email existence
+      setForgotSent(true);
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-muted/30 px-4">
       <div className="w-full max-w-md">
@@ -70,74 +107,175 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
           Back to Store
         </Button>
 
-        {/* Login Card */}
-        <Card>
-          <CardHeader className="text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 mb-2">
-              <ShoppingBag className="h-6 w-6 text-emerald-600" />
-            </div>
-            <CardTitle className="text-2xl">Admin Login</CardTitle>
-            <CardDescription>
-              Sign in to access the admin dashboard
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="admin-email">Email</Label>
-                <Input
-                  id="admin-email"
-                  type="email"
-                  placeholder="admin@stylestore.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoFocus
-                />
+        {!showForgot ? (
+          /* Login Card */
+          <Card>
+            <CardHeader className="text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 mb-2">
+                <ShoppingBag className="h-6 w-6 text-emerald-600" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="admin-password">Password</Label>
-                <div className="relative">
+              <CardTitle className="text-2xl">Admin Login</CardTitle>
+              <CardDescription>
+                Sign in to access the admin dashboard
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="admin-email">Email</Label>
                   <Input
-                    id="admin-password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    id="admin-email"
+                    type="email"
+                    placeholder="admin@stylestore.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="pr-10"
+                    autoFocus
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-password">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="admin-password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    'Sign In'
+                  )}
+                </Button>
+              </form>
+
+              {/* Forgot Password Link */}
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  onClick={() => setShowForgot(true)}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Forgot Password?
+                </button>
               </div>
+            </CardContent>
+          </Card>
+        ) : forgotSent ? (
+          /* Success Message */
+          <Card>
+            <CardHeader className="text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 mb-2">
+                <KeyRound className="h-6 w-6 text-emerald-600" />
+              </div>
+              <CardTitle className="text-2xl">Check Your Email</CardTitle>
+              <CardDescription>
+                If an account exists with that email, you will receive reset instructions.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <Button
-                type="submit"
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-                disabled={loading}
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setShowForgot(false);
+                  setForgotSent(false);
+                  setForgotEmail('');
+                }}
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  'Sign In'
-                )}
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Login
               </Button>
-            </form>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ) : (
+          /* Forgot Password Form */
+          <Card>
+            <CardHeader className="text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 mb-2">
+                <KeyRound className="h-6 w-6 text-emerald-600" />
+              </div>
+              <CardTitle className="text-2xl">Reset Password</CardTitle>
+              <CardDescription>
+                Enter your email to receive a password reset link
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="forgot-email">Email Address</Label>
+                  <Input
+                    id="forgot-email"
+                    type="email"
+                    placeholder="admin@stylestore.com"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    required
+                    autoFocus
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                  disabled={forgotLoading}
+                >
+                  {forgotLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      Send Reset Instructions
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              </form>
+
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForgot(false);
+                    setForgotEmail('');
+                  }}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ArrowLeft className="inline mr-1 h-3 w-3" />
+                  Back to Login
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
           StyleStore CMS &mdash; Admin Panel

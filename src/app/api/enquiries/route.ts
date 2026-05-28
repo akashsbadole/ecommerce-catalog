@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { createNotification } from '@/lib/notifications';
+import { enquirySchema } from '@/lib/validations';
 
 // Max 10 enquiry submissions per hour per IP (POST only)
 const ENQUIRY_RATE_LIMIT = { maxRequests: 10, windowMs: 60 * 60 * 1000, prefix: 'enquiries-post' };
@@ -10,22 +11,39 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '50', 10);
 
     const where: Record<string, unknown> = {};
     if (status) {
       where.status = status;
     }
 
-    const enquiries = await db.enquiry.findMany({
-      where,
-      include: {
-        product: { select: { id: true, name: true } },
-        user: { select: { id: true, name: true, email: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const skip = (Math.max(1, page) - 1) * Math.min(Math.max(1, limit), 100);
 
-    return NextResponse.json({ enquiries });
+    const [enquiries, total] = await Promise.all([
+      db.enquiry.findMany({
+        where,
+        include: {
+          product: { select: { id: true, name: true } },
+          user: { select: { id: true, name: true, email: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: Math.min(Math.max(1, limit), 100),
+      }),
+      db.enquiry.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      enquiries,
+      pagination: {
+        page: Math.max(1, page),
+        limit: Math.min(Math.max(1, limit), 100),
+        total,
+        totalPages: Math.ceil(total / Math.min(Math.max(1, limit), 100)),
+      },
+    });
   } catch (error) {
     console.error('Get enquiries error:', error);
     return NextResponse.json(
@@ -41,45 +59,32 @@ export async function POST(request: NextRequest) {
     const rateLimitResponse = checkRateLimit(request, ENQUIRY_RATE_LIMIT);
     if (rateLimitResponse) return rateLimitResponse;
     const body = await request.json();
-    const {
-      name,
-      email,
-      phone,
-      companyName,
-      companyEmail,
-      companyPhone,
-      companyAddress,
-      quantity,
-      subject,
-      message,
-      productId,
-      type,
-      userId,
-    } = body;
 
-    if (!name || !email || !subject || !message) {
+    const result = enquirySchema.safeParse(body);
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'Name, email, subject, and message are required' },
+        { error: 'Validation failed', details: result.error.flatten().fieldErrors },
         { status: 400 }
       );
     }
+    const validatedData = result.data;
 
     const enquiry = await db.enquiry.create({
       data: {
-        name,
-        email,
-        phone: phone || null,
-        companyName: companyName || null,
-        companyEmail: companyEmail || null,
-        companyPhone: companyPhone || null,
-        companyAddress: companyAddress || null,
-        quantity: quantity ?? null,
-        subject,
-        message,
-        productId: productId || null,
-        type: type || 'product',
+        name: validatedData.name,
+        email: validatedData.email,
+        phone: validatedData.phone || null,
+        companyName: validatedData.companyName || null,
+        companyEmail: validatedData.companyEmail || null,
+        companyPhone: validatedData.companyPhone || null,
+        companyAddress: validatedData.companyAddress || null,
+        quantity: validatedData.quantity ?? null,
+        subject: validatedData.subject,
+        message: validatedData.message,
+        productId: validatedData.productId || null,
+        type: validatedData.type || 'product',
         status: 'new',
-        userId: userId || null,
+        userId: (body as Record<string, unknown>).userId as string | undefined || null,
       },
     });
 
@@ -87,7 +92,7 @@ export async function POST(request: NextRequest) {
     try {
       await createNotification({
         title: 'New Enquiry',
-        message: `New enquiry from ${name}`,
+        message: `New enquiry from ${validatedData.name}`,
         type: 'info',
         link: 'enquiries',
       });

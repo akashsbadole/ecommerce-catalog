@@ -18,12 +18,16 @@ const PUBLIC_GET_PREFIXES = [
   '/api/blog',
   '/api/media',
   '/api/redirects',
+  '/api/health',
 ];
 
 // Public POST endpoints
 const PUBLIC_POST_PATHS = [
   '/api/enquiries',
   '/api/contact',
+  '/api/auth/forgot-password',
+  '/api/auth/reset-password',
+  '/api/newsletter/subscribe',
 ];
 
 // Role-based permission map

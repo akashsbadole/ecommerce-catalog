@@ -15,6 +15,18 @@ export async function POST(request: NextRequest) {
         await db.product.updateMany({ where: { id: { in: ids } }, data: { isActive: false } });
         break;
       case 'delete':
+        await db.product.updateMany({
+          where: { id: { in: ids } },
+          data: { deletedAt: new Date() },
+        });
+        break;
+      case 'restore':
+        await db.product.updateMany({
+          where: { id: { in: ids } },
+          data: { deletedAt: null },
+        });
+        break;
+      case 'permanent-delete':
         await db.product.deleteMany({ where: { id: { in: ids } } });
         break;
       default:

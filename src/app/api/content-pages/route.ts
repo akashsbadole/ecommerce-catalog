@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { contentPageSchema } from '@/lib/validations';
 
 export async function GET(request: NextRequest) {
   try {
@@ -40,38 +41,34 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const {
-      title,
-      slug,
-      content,
-      blocks,
-      heroImage,
-      metaTitle,
-      metaDescription,
-      ogImage,
-      isActive,
-      sortOrder,
-    } = body;
 
-    if (!title || !slug) {
+    const result = contentPageSchema.safeParse(body);
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'Title and slug are required' },
+        { error: 'Validation failed', details: result.error.flatten().fieldErrors },
         { status: 400 }
       );
+    }
+    const validatedData = result.data;
+
+    // Check slug uniqueness
+    const existingSlug = await db.contentPage.findUnique({ where: { slug: validatedData.slug } });
+    if (existingSlug) {
+      return NextResponse.json({ error: 'Slug already in use' }, { status: 409 });
     }
 
     const contentPage = await db.contentPage.create({
       data: {
-        title,
-        slug,
-        content: content || '',
-        blocks: blocks !== undefined ? JSON.stringify(blocks) : '[]',
-        heroImage: heroImage || null,
-        metaTitle: metaTitle || null,
-        metaDescription: metaDescription || null,
-        ogImage: ogImage || null,
-        isActive: isActive ?? true,
-        sortOrder: sortOrder ?? 0,
+        title: validatedData.title,
+        slug: validatedData.slug,
+        content: validatedData.content || '',
+        blocks: validatedData.blocks || '[]',
+        heroImage: validatedData.heroImage || null,
+        metaTitle: validatedData.metaTitle || null,
+        metaDescription: validatedData.metaDescription || null,
+        ogImage: validatedData.ogImage || null,
+        isActive: validatedData.isActive ?? true,
+        sortOrder: validatedData.sortOrder ?? 0,
       },
     });
 
