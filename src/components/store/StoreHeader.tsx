@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, ShoppingBag } from 'lucide-react';
+import { Menu, X, ShoppingBag, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -57,6 +57,15 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
           <Button
             variant="outline"
             size="sm"
+            className="text-sm border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950 dark:hover:text-emerald-300"
+            onClick={() => onNavigate('catalogue')}
+          >
+            <FileText className="mr-1.5 h-4 w-4" />
+            Request Quote
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             className="text-sm"
             onClick={() => onNavigate('admin-login')}
           >
@@ -91,6 +100,16 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                 </SheetClose>
               ))}
               <Separator className="my-2" />
+              <SheetClose asChild>
+                <Button
+                  variant="outline"
+                  className="justify-start text-base border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950 dark:hover:text-emerald-300"
+                  onClick={() => onNavigate('catalogue')}
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  Request Quote
+                </Button>
+              </SheetClose>
               <SheetClose asChild>
                 <Button
                   variant="outline"

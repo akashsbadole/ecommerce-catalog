@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, slug, description, image, sortOrder, isActive } = body;
+    const { name, slug, description, image, sortOrder, isActive, metaTitle, metaDescription } = body;
 
     if (!name || !slug) {
       return NextResponse.json(
@@ -46,6 +46,8 @@ export async function POST(request: NextRequest) {
         image: image || null,
         sortOrder: sortOrder ?? 0,
         isActive: isActive ?? true,
+        metaTitle: metaTitle || null,
+        metaDescription: metaDescription || null,
       },
     });
 

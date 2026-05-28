@@ -33,8 +33,21 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, email, phone, subject, message, productId, type, userId } =
-      body;
+    const {
+      name,
+      email,
+      phone,
+      companyName,
+      companyEmail,
+      companyPhone,
+      companyAddress,
+      quantity,
+      subject,
+      message,
+      productId,
+      type,
+      userId,
+    } = body;
 
     if (!name || !email || !subject || !message) {
       return NextResponse.json(
@@ -48,6 +61,11 @@ export async function POST(request: NextRequest) {
         name,
         email,
         phone: phone || null,
+        companyName: companyName || null,
+        companyEmail: companyEmail || null,
+        companyPhone: companyPhone || null,
+        companyAddress: companyAddress || null,
+        quantity: quantity ?? null,
         subject,
         message,
         productId: productId || null,

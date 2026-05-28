@@ -28,6 +28,12 @@ export async function PUT(
         ...(body.image !== undefined && { image: body.image }),
         ...(body.sortOrder !== undefined && { sortOrder: body.sortOrder }),
         ...(body.isActive !== undefined && { isActive: body.isActive }),
+        ...(body.metaTitle !== undefined && {
+          metaTitle: body.metaTitle || null,
+        }),
+        ...(body.metaDescription !== undefined && {
+          metaDescription: body.metaDescription || null,
+        }),
       },
     });
 

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Mail, Phone, MapPin, Send, Check, Clock } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Mail, Phone, MapPin, Send, Check, Clock, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import { ChevronRight } from 'lucide-react';
 
 interface ContactPageProps {
   settings?: Record<string, string> | null;
@@ -16,10 +22,13 @@ interface ContactPageProps {
 
 export function ContactPage({ settings }: ContactPageProps) {
   const [submitting, setSubmitting] = useState(false);
+  const [businessOpen, setBusinessOpen] = useState(false);
   const [form, setForm] = useState({
     name: '',
     email: '',
     phone: '',
+    companyName: '',
+    companyPhone: '',
     subject: '',
     message: '',
   });
@@ -28,6 +37,18 @@ export function ContactPage({ settings }: ContactPageProps) {
   const companyPhone = settings?.contact_phone || '+1 (555) 123-4567';
   const companyAddress = settings?.contact_address || '123 Style Avenue, Fashion District, NY 10001';
   const businessHours = settings?.business_hours || 'Mon-Fri: 9:00 AM - 6:00 PM';
+
+  // SEO: set document title and meta description
+  useEffect(() => {
+    document.title = 'Contact Us | StyleStore';
+    let metaEl = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
+    if (!metaEl) {
+      metaEl = document.createElement('meta');
+      metaEl.setAttribute('name', 'description');
+      document.head.appendChild(metaEl);
+    }
+    metaEl.setAttribute('content', 'Get in touch with StyleStore. Contact us for product enquiries, wholesale orders, and B2B partnerships.');
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +67,8 @@ export function ContactPage({ settings }: ContactPageProps) {
           name: form.name,
           email: form.email,
           phone: form.phone || null,
+          companyName: form.companyName || null,
+          companyPhone: form.companyPhone || null,
           subject: form.subject,
           message: form.message,
         }),
@@ -55,7 +78,8 @@ export function ContactPage({ settings }: ContactPageProps) {
         toast.success('Your message has been sent successfully! We\'ll get back to you soon.', {
           icon: <Check className="h-4 w-4 text-emerald-600" />,
         });
-        setForm({ name: '', email: '', phone: '', subject: '', message: '' });
+        setForm({ name: '', email: '', phone: '', companyName: '', companyPhone: '', subject: '', message: '' });
+        setBusinessOpen(false);
       } else {
         const data = await res.json();
         toast.error(data.error || 'Failed to send message');
@@ -178,6 +202,53 @@ export function ContactPage({ settings }: ContactPageProps) {
                   />
                 </div>
               </div>
+
+              {/* Collapsible Business Details */}
+              <Collapsible open={businessOpen} onOpenChange={setBusinessOpen}>
+                <CollapsibleTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full justify-between"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
+                      Business Details
+                      {(form.companyName || form.companyPhone) && (
+                        <span className="text-xs text-emerald-600 font-normal">(filled)</span>
+                      )}
+                    </span>
+                    <ChevronRight className="h-4 w-4 transition-transform duration-200" />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-3 pt-3">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="ct-company" className="flex items-center gap-1.5">
+                        <Building2 className="h-3.5 w-3.5" />
+                        Company Name
+                      </Label>
+                      <Input
+                        id="ct-company"
+                        placeholder="Acme Corp"
+                        value={form.companyName}
+                        onChange={(e) => setForm({ ...form, companyName: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="ct-company-phone">Company Phone</Label>
+                      <Input
+                        id="ct-company-phone"
+                        type="tel"
+                        placeholder="+1 (555) 000-0000"
+                        value={form.companyPhone}
+                        onChange={(e) => setForm({ ...form, companyPhone: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+
               <div className="space-y-2">
                 <Label htmlFor="ct-message">
                   Message <span className="text-rose-500">*</span>

@@ -53,6 +53,8 @@ export async function POST(request: NextRequest) {
       shortDescription,
       price,
       comparePrice,
+      wholesalePrice,
+      minOrderQty,
       sku,
       images,
       categoryId,
@@ -60,6 +62,8 @@ export async function POST(request: NextRequest) {
       isActive,
       sortOrder,
       specifications,
+      metaTitle,
+      metaDescription,
     } = body;
 
     if (!name || !slug || price === undefined) {
@@ -77,6 +81,8 @@ export async function POST(request: NextRequest) {
         shortDescription: shortDescription || null,
         price: parseFloat(price),
         comparePrice: comparePrice ? parseFloat(comparePrice) : null,
+        wholesalePrice: wholesalePrice ? parseFloat(wholesalePrice) : null,
+        minOrderQty: minOrderQty ?? 1,
         sku: sku || null,
         images: typeof images === 'string' ? images : JSON.stringify(images || []),
         categoryId: categoryId || null,
@@ -88,6 +94,8 @@ export async function POST(request: NextRequest) {
             ? specifications
             : JSON.stringify(specifications)
           : null,
+        metaTitle: metaTitle || null,
+        metaDescription: metaDescription || null,
       },
       include: { category: true },
     });

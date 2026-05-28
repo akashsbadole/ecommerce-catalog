@@ -11,6 +11,9 @@ import {
   Phone,
   Package,
   Clock,
+  Building2,
+  Hash,
+  MapPin,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -58,6 +61,11 @@ interface Enquiry {
   name: string;
   email: string;
   phone: string | null;
+  companyName: string | null;
+  companyEmail: string | null;
+  companyPhone: string | null;
+  companyAddress: string | null;
+  quantity: number | null;
   subject: string;
   message: string;
   type: string;
@@ -80,6 +88,13 @@ const statusColors: Record<string, string> = {
 const typeColors: Record<string, string> = {
   product: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
   contact: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
+  rfq: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+};
+
+const typeLabels: Record<string, string> = {
+  product: 'General',
+  contact: 'Contact',
+  rfq: 'RFQ',
 };
 
 export function AdminEnquiries() {
@@ -110,7 +125,8 @@ export function AdminEnquiries() {
             (e: Enquiry) =>
               e.name.toLowerCase().includes(lower) ||
               e.email.toLowerCase().includes(lower) ||
-              e.subject.toLowerCase().includes(lower)
+              e.subject.toLowerCase().includes(lower) ||
+              (e.companyName && e.companyName.toLowerCase().includes(lower))
           );
         }
         setEnquiries(items);
@@ -208,6 +224,10 @@ export function AdminEnquiries() {
     }
   };
 
+  const hasB2BFields = (enq: Enquiry) =>
+    enq.companyName || enq.companyEmail || enq.companyPhone ||
+    enq.companyAddress || enq.quantity;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -241,7 +261,7 @@ export function AdminEnquiries() {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Search by name, email, or subject..."
+          placeholder="Search by name, email, subject, or company..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-9"
@@ -285,7 +305,14 @@ export function AdminEnquiries() {
                   <TableRow key={enq.id}>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{enq.name}</p>
+                        <p className="font-medium">
+                          {enq.name}
+                          {enq.companyName && (
+                            <span className="text-xs text-muted-foreground block">
+                              {enq.companyName}
+                            </span>
+                          )}
+                        </p>
                         <p className="text-xs text-muted-foreground sm:hidden">
                           {enq.email}
                         </p>
@@ -302,7 +329,8 @@ export function AdminEnquiries() {
                         variant="secondary"
                         className={typeColors[enq.type] || ''}
                       >
-                        {enq.type}
+                        {enq.type === 'rfq' && <Hash className="mr-1 h-3 w-3" />}
+                        {typeLabels[enq.type] || enq.type}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -346,7 +374,7 @@ export function AdminEnquiries() {
 
       {/* View Enquiry Dialog */}
       <Dialog open={!!viewEnquiry} onOpenChange={() => setViewEnquiry(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{viewEnquiry?.subject}</DialogTitle>
           </DialogHeader>
@@ -368,10 +396,36 @@ export function AdminEnquiries() {
                 </Select>
               </div>
 
+              {/* Type & Product Badges */}
+              <div className="flex flex-wrap gap-2">
+                <Badge
+                  variant="secondary"
+                  className={typeColors[viewEnquiry.type] || ''}
+                >
+                  {viewEnquiry.type === 'rfq' && <Hash className="mr-1 h-3 w-3" />}
+                  {typeLabels[viewEnquiry.type] || viewEnquiry.type}
+                </Badge>
+                {viewEnquiry.product && (
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <Package className="h-3 w-3" />
+                    {viewEnquiry.product.name}
+                  </Badge>
+                )}
+                {viewEnquiry.quantity && (
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <Package className="h-3 w-3" />
+                    Qty: {viewEnquiry.quantity}
+                  </Badge>
+                )}
+              </div>
+
               <Separator />
 
               {/* Contact Info */}
               <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Contact Information
+                </p>
                 <div className="flex items-center gap-2 text-sm">
                   <span className="font-medium">{viewEnquiry.name}</span>
                 </div>
@@ -391,21 +445,47 @@ export function AdminEnquiries() {
                 </div>
               </div>
 
-              {/* Type & Product */}
-              <div className="flex flex-wrap gap-2">
-                <Badge
-                  variant="secondary"
-                  className={typeColors[viewEnquiry.type] || ''}
-                >
-                  {viewEnquiry.type}
-                </Badge>
-                {viewEnquiry.product && (
-                  <Badge variant="outline" className="flex items-center gap-1">
-                    <Package className="h-3 w-3" />
-                    {viewEnquiry.product.name}
-                  </Badge>
-                )}
-              </div>
+              {/* B2B Details */}
+              {hasB2BFields(viewEnquiry) && (
+                <>
+                  <Separator />
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Business Details
+                    </p>
+                    {viewEnquiry.companyName && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span>{viewEnquiry.companyName}</span>
+                      </div>
+                    )}
+                    {viewEnquiry.companyEmail && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Mail className="h-3.5 w-3.5" />
+                        {viewEnquiry.companyEmail}
+                      </div>
+                    )}
+                    {viewEnquiry.companyPhone && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Phone className="h-3.5 w-3.5" />
+                        {viewEnquiry.companyPhone}
+                      </div>
+                    )}
+                    {viewEnquiry.companyAddress && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <MapPin className="h-3.5 w-3.5" />
+                        {viewEnquiry.companyAddress}
+                      </div>
+                    )}
+                    {viewEnquiry.quantity && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Package className="h-3.5 w-3.5" />
+                        Quantity: {viewEnquiry.quantity} units
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
 
               <Separator />
 

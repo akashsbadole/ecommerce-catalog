@@ -10,6 +10,9 @@ import {
   Star,
   RefreshCw,
   ImageIcon,
+  ChevronDown,
+  SearchCode,
+  Package,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -20,6 +23,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import {
   Table,
   TableBody,
@@ -52,6 +56,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Category {
@@ -68,6 +77,8 @@ interface Product {
   shortDescription: string | null;
   price: number;
   comparePrice: number | null;
+  wholesalePrice: number | null;
+  minOrderQty: number;
   sku: string | null;
   images: string;
   categoryId: string | null;
@@ -75,6 +86,8 @@ interface Product {
   isActive: boolean;
   sortOrder: number;
   specifications: string | null;
+  metaTitle: string | null;
+  metaDescription: string | null;
   category?: Category | null;
   createdAt: string;
 }
@@ -86,6 +99,8 @@ interface ProductFormData {
   shortDescription: string;
   price: string;
   comparePrice: string;
+  wholesalePrice: string;
+  minOrderQty: string;
   sku: string;
   images: string;
   categoryId: string;
@@ -93,6 +108,8 @@ interface ProductFormData {
   isActive: boolean;
   sortOrder: string;
   specifications: string;
+  metaTitle: string;
+  metaDescription: string;
 }
 
 const emptyForm: ProductFormData = {
@@ -102,6 +119,8 @@ const emptyForm: ProductFormData = {
   shortDescription: '',
   price: '',
   comparePrice: '',
+  wholesalePrice: '',
+  minOrderQty: '1',
   sku: '',
   images: '',
   categoryId: '',
@@ -109,6 +128,8 @@ const emptyForm: ProductFormData = {
   isActive: true,
   sortOrder: '0',
   specifications: '',
+  metaTitle: '',
+  metaDescription: '',
 };
 
 function generateSlug(name: string): string {
@@ -148,6 +169,10 @@ export function AdminProducts() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [form, setForm] = useState<ProductFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
+
+  // Collapsible sections
+  const [seoOpen, setSeoOpen] = useState(false);
+  const [b2bOpen, setB2bOpen] = useState(false);
 
   // Delete dialog state
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -197,6 +222,8 @@ export function AdminProducts() {
   const handleOpenAdd = () => {
     setEditingProduct(null);
     setForm(emptyForm);
+    setSeoOpen(false);
+    setB2bOpen(false);
     setFormOpen(true);
   };
 
@@ -210,6 +237,8 @@ export function AdminProducts() {
       shortDescription: product.shortDescription || '',
       price: String(product.price),
       comparePrice: product.comparePrice ? String(product.comparePrice) : '',
+      wholesalePrice: product.wholesalePrice ? String(product.wholesalePrice) : '',
+      minOrderQty: String(product.minOrderQty || 1),
       sku: product.sku || '',
       images: imgs.join(', '),
       categoryId: product.categoryId || '',
@@ -217,7 +246,11 @@ export function AdminProducts() {
       isActive: product.isActive,
       sortOrder: String(product.sortOrder),
       specifications: product.specifications || '',
+      metaTitle: product.metaTitle || '',
+      metaDescription: product.metaDescription || '',
     });
+    setSeoOpen(!!(product.metaTitle || product.metaDescription));
+    setB2bOpen(!!(product.wholesalePrice || product.minOrderQty > 1));
     setFormOpen(true);
   };
 
@@ -253,6 +286,8 @@ export function AdminProducts() {
         shortDescription: form.shortDescription.trim() || null,
         price: form.price,
         comparePrice: form.comparePrice || null,
+        wholesalePrice: form.wholesalePrice || null,
+        minOrderQty: parseInt(form.minOrderQty) || 1,
         sku: form.sku.trim() || null,
         images: imagesArray,
         categoryId: form.categoryId || null,
@@ -260,6 +295,8 @@ export function AdminProducts() {
         isActive: form.isActive,
         sortOrder: parseInt(form.sortOrder) || 0,
         specifications: form.specifications.trim() || null,
+        metaTitle: form.metaTitle.trim() || null,
+        metaDescription: form.metaDescription.trim() || null,
       };
 
       const url = editingProduct
@@ -418,6 +455,7 @@ export function AdminProducts() {
                   <TableHead>Name</TableHead>
                   <TableHead className="hidden md:table-cell">Category</TableHead>
                   <TableHead>Price</TableHead>
+                  <TableHead className="hidden xl:table-cell">Wholesale</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="hidden lg:table-cell">Featured</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -465,6 +503,22 @@ export function AdminProducts() {
                             </span>
                           )}
                         </div>
+                      </TableCell>
+                      <TableCell className="hidden xl:table-cell">
+                        {product.wholesalePrice ? (
+                          <div className="flex flex-col">
+                            <span className="font-medium text-amber-700 dark:text-amber-400">
+                              {formatPrice(product.wholesalePrice)}
+                            </span>
+                            {product.minOrderQty > 1 && (
+                              <span className="text-xs text-muted-foreground">
+                                MOQ: {product.minOrderQty}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Badge
@@ -618,6 +672,62 @@ export function AdminProducts() {
                   />
                 </div>
               </div>
+
+              {/* B2B Section (Collapsible) */}
+              <Collapsible open={b2bOpen} onOpenChange={setB2bOpen}>
+                <CollapsibleTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full justify-between"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Package className="h-4 w-4" />
+                      B2B / Wholesale Settings
+                      {(form.wholesalePrice || parseInt(form.minOrderQty) > 1) && (
+                        <span className="text-xs text-emerald-600 font-normal">(configured)</span>
+                      )}
+                    </span>
+                    <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-4 pt-3">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="prod-wholesale">Wholesale Price</Label>
+                      <Input
+                        id="prod-wholesale"
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={form.wholesalePrice}
+                        onChange={(e) =>
+                          setForm(prev => ({ ...prev, wholesalePrice: e.target.value }))
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Leave empty to hide wholesale pricing
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="prod-moq">Min Order Quantity</Label>
+                      <Input
+                        id="prod-moq"
+                        type="number"
+                        min="1"
+                        placeholder="1"
+                        value={form.minOrderQty}
+                        onChange={(e) =>
+                          setForm(prev => ({ ...prev, minOrderQty: e.target.value }))
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Minimum units per order
+                      </p>
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
 
               {/* SKU & Category */}
               <div className="grid gap-4 sm:grid-cols-2">
@@ -790,6 +900,67 @@ export function AdminProducts() {
                   Enter valid JSON with key-value pairs for product specifications
                 </p>
               </div>
+
+              <Separator />
+
+              {/* SEO Section (Collapsible) */}
+              <Collapsible open={seoOpen} onOpenChange={setSeoOpen}>
+                <CollapsibleTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full justify-between"
+                  >
+                    <span className="flex items-center gap-2">
+                      <SearchCode className="h-4 w-4" />
+                      SEO Settings
+                      {(form.metaTitle || form.metaDescription) && (
+                        <span className="text-xs text-emerald-600 font-normal">(configured)</span>
+                      )}
+                    </span>
+                    <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-4 pt-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="prod-meta-title">Meta Title</Label>
+                    <Input
+                      id="prod-meta-title"
+                      placeholder="Product Name | Store Name"
+                      value={form.metaTitle}
+                      onChange={(e) =>
+                        setForm(prev => ({ ...prev, metaTitle: e.target.value }))
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Leave empty to use: Product Name | StyleStore
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="prod-meta-desc" className="flex items-center justify-between">
+                      <span>Meta Description</span>
+                      <span className="text-xs text-muted-foreground font-normal">
+                        {form.metaDescription.length}/160
+                      </span>
+                    </Label>
+                    <Textarea
+                      id="prod-meta-desc"
+                      placeholder="A brief description for search engines..."
+                      value={form.metaDescription}
+                      onChange={(e) => {
+                        if (e.target.value.length <= 160) {
+                          setForm(prev => ({ ...prev, metaDescription: e.target.value }));
+                        }
+                      }}
+                      rows={3}
+                      className={form.metaDescription.length >= 150 ? 'border-amber-400' : ''}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Recommended: 150-160 characters for optimal SEO
+                    </p>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             </div>
           </ScrollArea>
           <DialogFooter>

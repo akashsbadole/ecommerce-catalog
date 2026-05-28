@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { Search, ShoppingCart, X, SlidersHorizontal } from 'lucide-react';
+import { Search, ShoppingCart, X, SlidersHorizontal, Hash, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +24,8 @@ interface Product {
   shortDescription: string | null;
   price: number;
   comparePrice: number | null;
+  wholesalePrice: number | null;
+  minOrderQty: number;
   images: string;
   category: { id: string; name: string } | null;
   isFeatured: boolean;
@@ -40,6 +42,7 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [enquiryProduct, setEnquiryProduct] = useState<Product | null>(null);
+  const [enquiryMode, setEnquiryMode] = useState<'enquire' | 'rfq'>('enquire');
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -84,6 +87,18 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
     return () => clearTimeout(timer);
   }, [fetchProducts]);
 
+  // SEO: set document title and meta description on mount
+  useEffect(() => {
+    document.title = 'Product Catalogue | StyleStore';
+    let metaEl = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
+    if (!metaEl) {
+      metaEl = document.createElement('meta');
+      metaEl.setAttribute('name', 'description');
+      document.head.appendChild(metaEl);
+    }
+    metaEl.setAttribute('content', 'Browse our complete catalogue of premium products. Wholesale and bulk pricing available for B2B orders.');
+  }, []);
+
   const getFirstImage = (images: string) => {
     try {
       const arr = JSON.parse(images);
@@ -98,6 +113,11 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
       style: 'currency',
       currency: 'USD',
     }).format(price);
+  };
+
+  const handleEnquiryClick = (product: Product, mode: 'enquire' | 'rfq') => {
+    setEnquiryMode(mode);
+    setEnquiryProduct(product);
   };
 
   return (
@@ -221,6 +241,8 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
             const discountPercent = hasDiscount
               ? Math.round(((product.comparePrice! - product.price) / product.comparePrice!) * 100)
               : 0;
+            const hasMOQ = product.minOrderQty > 1;
+            const hasWholesale = !!product.wholesalePrice;
 
             return (
               <Card
@@ -247,6 +269,13 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
                   {hasDiscount && (
                     <Badge className="absolute top-3 left-3 bg-rose-500 text-white">
                       -{discountPercent}%
+                    </Badge>
+                  )}
+                  {/* MOQ badge */}
+                  {hasMOQ && (
+                    <Badge variant="secondary" className="absolute top-3 right-3 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs">
+                      <Package className="mr-1 h-3 w-3" />
+                      MOQ: {product.minOrderQty}
                     </Badge>
                   )}
                 </div>
@@ -277,6 +306,17 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
                       </span>
                     )}
                   </div>
+                  {/* Wholesale price display */}
+                  {hasWholesale && (
+                    <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
+                      Wholesale: {formatPrice(product.wholesalePrice!)}
+                      {hasMOQ && (
+                        <span className="text-muted-foreground font-normal">
+                          {' '}· Min. {product.minOrderQty} units
+                        </span>
+                      )}
+                    </p>
+                  )}
                   <div className="flex gap-2 pt-2">
                     <Button
                       size="sm"
@@ -284,16 +324,27 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
                       className="flex-1"
                       onClick={() => onNavigate('product', product.id)}
                     >
-                      View Details
+                      Details
                     </Button>
                     <Button
                       size="sm"
                       className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
-                      onClick={() => setEnquiryProduct(product)}
+                      onClick={() => handleEnquiryClick(product, 'enquire')}
                     >
                       Enquire
                     </Button>
                   </div>
+                  {hasWholesale && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full text-amber-700 border-amber-300 hover:bg-amber-50 dark:text-amber-400 dark:border-amber-700 dark:hover:bg-amber-950/30"
+                      onClick={() => handleEnquiryClick(product, 'rfq')}
+                    >
+                      <Hash className="mr-1.5 h-3.5 w-3.5" />
+                      Request Quote
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             );

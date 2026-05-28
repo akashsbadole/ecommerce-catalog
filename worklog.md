@@ -1,106 +1,60 @@
 ---
-Task ID: 1
-Agent: Main Agent
-Task: Plan architecture for CMS + E-Commerce Catalogue web application
-
-Work Log:
-- Analyzed user requirements: CMS with e-commerce catalogue, clerk login, mobile responsive, enquiries, contact form, email
-- Designed architecture: Next.js 16 App Router, SQLite + Prisma ORM, Tailwind CSS 4 + shadcn/ui
-- Planned 7 database models: User, Category, Product, Enquiry, Banner, SiteSetting, ContentPage
-- Planned 14 API routes for full CRUD operations
-- Designed SPA routing approach (single page with state-based navigation)
-
-Stage Summary:
-- Architecture finalized with all features mapped
-- Technology stack selected and confirmed
-
----
-Task ID: 2
-Agent: Main Agent
-Task: Initialize Next.js project with fullstack-dev skill
-
-Work Log:
-- Ran fullstack initialization script
-- Verified project structure and available shadcn/ui components
-- Confirmed Prisma, NextAuth, and all dependencies available
-
-Stage Summary:
-- Project initialized successfully at /home/z/my-project
-- 60+ shadcn/ui components available
-
----
-Task ID: 3
-Agent: Main Agent
-Task: Set up Prisma database schema and seed data
-
-Work Log:
-- Created comprehensive Prisma schema with 7 models
-- Generated 6 AI product images (headphones, smartwatch, bag, earbuds, lamp, speaker)
-- Ran db:push to create SQLite database
-- Created seed script with 2 users, 3 categories, 6 products, 3 banners, site settings, 2 content pages
-- Installed bcryptjs and nodemailer for auth and email
-
-Stage Summary:
-- Database created at db/custom.db
-- Seed data includes admin (admin@store.com/admin123) and clerk (clerk@store.com/clerk123)
-- 6 products with full descriptions, specifications, and AI-generated images
-
----
-Task ID: 4
+Task ID: prod-api
 Agent: Sub-agent (full-stack-developer)
-Task: Build all API routes and utility modules
+Task: Build SEO API routes, enhance existing API routes with B2B fields, upgrade email system
 
 Work Log:
-- Created lib/auth.ts with password comparison utilities
-- Created lib/email.ts with nodemailer integration and enquiry notifications
-- Built 14 API routes: auth (login/logout/me), products (CRUD), categories (CRUD), enquiries (CRUD), banners (CRUD), settings, contact, upload
-- All routes use Next.js App Router conventions with proper error handling
+- Updated products API (POST/PUT) with wholesalePrice, minOrderQty, metaTitle, metaDescription
+- Updated categories API (POST/PUT) with metaTitle, metaDescription
+- Updated enquiries API (POST/PUT) with companyName, companyEmail, companyPhone, companyAddress, quantity, type=rfq
+- Created /api/seo/sitemap returning dynamic XML sitemap with all pages
+- Created /api/seo/robots returning robots.txt with sitemap reference
+- Rewrote /src/lib/email.ts with professional HTML email templates
+- Added sendEnquiryNotificationToAdmin() with full B2B fields in branded HTML
+- Added sendEnquiryConfirmation() for auto-reply to customers
+- Updated /api/contact to send both admin notification + customer auto-reply
 
 Stage Summary:
-- 16 files created (2 utilities + 14 API routes)
-- All routes tested and working with correct HTTP responses
+- 4 API routes updated, 2 new API routes created
+- Production email with branded HTML templates, auto-reply, admin notification
+- All verified with curl tests
 
 ---
-Task ID: 6
+Task ID: prod-store
 Agent: Sub-agent (full-stack-developer)
-Task: Build storefront UI components and SPA router
+Task: Enhance all storefront and admin components with B2B features and SEO
 
 Work Log:
-- Created StoreHeader with responsive navigation and mobile hamburger menu
-- Created StoreFooter with 4-column responsive layout
-- Created HomePage with banner carousel, featured products, category highlights, CTA section
-- Created CataloguePage with search, category filters, responsive product grid
-- Created ProductDetailPage with image gallery, specs table, enquiry form
-- Created ContactPage with contact info cards and form
-- Created EnquiryModal dialog component
-- Created StoreLayout wrapper with settings management
-- Created AdminLogin page
-- Created AdminDashboard with sidebar layout and tab navigation
-- Updated page.tsx as SPA entry point with full routing logic
-- Updated layout.tsx to use Sonner Toaster
+- EnquiryModal: Added collapsible Business Details section, quantity input, enquiry type selector (General/RFQ)
+- ProductDetailPage: Added dynamic meta, JSON-LD Product schema, breadcrumbs, wholesale price display, MOQ, B2B enquiry form
+- CataloguePage: Added dynamic meta, MOQ badge, wholesale price on cards, Request Quote button
+- HomePage: Added dynamic meta, JSON-LD WebSite + Organization structured data, Request Quote button
+- ContactPage: Added collapsible business details (Company Name, Phone), dynamic meta
+- StoreLayout: Added JSON-LD Organization from settings
+- AdminProducts: Added collapsible B2B section (wholesale, MOQ), SEO section (meta title, meta description with counter)
+- AdminCategories: Added collapsible SEO section with character counter
+- AdminEnquiries: Added B2B detail view, RFQ badge, type labels
 
 Stage Summary:
-- 11 component files created for complete storefront + admin shell
-- SPA router with discriminated union Page type
-- Admin session persistence via localStorage
-- Mobile-first responsive design throughout
-
----
-Task ID: 7
-Agent: Sub-agent (full-stack-developer)
-Task: Build admin dashboard CRUD components
-
-Work Log:
-- Created AdminDashboardHome with 6 stat cards, recent enquiries, quick actions
-- Created AdminProducts with full CRUD, search, image upload, category select
-- Created AdminCategories with CRUD and product count display
-- Created AdminEnquiries with status filters, detail view, status management
-- Created AdminBanners with CRUD, image upload/preview
-- Created AdminSettings with 4 sections (General, Contact, Social, SMTP) and test email
-- Updated AdminDashboard to render all 6 tab components
-- Enhanced API routes with ?all=true for admin visibility
-
-Stage Summary:
-- 6 admin CRUD components created
-- Full admin dashboard operational with all tabs functional
+- 9 components updated with B2B + SEO features
 - ESLint passes with zero errors
+- All JSON-LD structured data injected via useEffect
+
+---
+Task ID: prod-config
+Agent: Sub-agent (full-stack-developer)
+Task: Production configuration, SEO admin settings, header enhancement
+
+Work Log:
+- Created .env.example with DATABASE_URL, NEXT_PUBLIC_SITE_URL, SMTP template
+- AdminSettings: Added SEO Settings card (meta title, description w/counter, GA ID, FB Pixel, canonical URL, SEO checklist)
+- AdminSettings: Added B2B Settings card (show company fields, require company, default MOQ, auto-reply toggle)
+- AdminDashboardHome: Added RFQ Requests stat card, SEO Settings quick action, 4-column grid layout
+- layout.tsx: Production metadata with title template, Viewport export, robots config, formatDetection
+- StoreHeader: Added "Request Quote" button (desktop nav + mobile menu), emerald outline styling
+
+Stage Summary:
+- Production .env.example created
+- 9 new site settings for SEO and B2B configuration
+- Admin dashboard with 7 stat cards including RFQ count
+- Professional header with Request Quote CTA

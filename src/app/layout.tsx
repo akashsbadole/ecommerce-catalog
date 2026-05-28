@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
@@ -13,25 +13,72 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#09090b" },
+  ],
+};
+
 export const metadata: Metadata = {
-  title: "Z.ai Code Scaffold - AI-Powered Development",
-  description: "Modern Next.js scaffold optimized for AI-powered development with Z.ai. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
-  keywords: ["Z.ai", "Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "AI development", "React"],
-  authors: [{ name: "Z.ai Team" }],
+  title: {
+    default: "StyleStore - Premium Products",
+    template: "%s | StyleStore",
+  },
+  description:
+    "Discover premium products at StyleStore. Browse our curated catalogue of high-quality items with competitive pricing and excellent customer service.",
+  keywords: [
+    "StyleStore",
+    "premium products",
+    "online catalogue",
+    "e-commerce",
+    "B2B",
+    "wholesale",
+  ],
+  authors: [{ name: "StyleStore Team" }],
+  creator: "StyleStore",
   icons: {
     icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
   },
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://your-domain.com"
+  ),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
-    url: "https://chat.z.ai",
-    siteName: "Z.ai",
+    title: "StyleStore - Premium Products",
+    description:
+      "Discover premium products at StyleStore. Browse our curated catalogue of high-quality items.",
+    url: process.env.NEXT_PUBLIC_SITE_URL || "https://your-domain.com",
+    siteName: "StyleStore",
     type: "website",
+    locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
+    title: "StyleStore - Premium Products",
+    description:
+      "Discover premium products at StyleStore. Browse our curated catalogue of high-quality items.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  formatDetection: {
+    email: true,
+    address: true,
+    telephone: true,
   },
 };
 
@@ -42,6 +89,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta name="format-detection" content="telephone=yes" />
+        <meta name="format-detection" content="email=yes" />
+        <meta name="format-detection" content="address=yes" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >

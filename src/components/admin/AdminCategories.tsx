@@ -8,6 +8,8 @@ import {
   RefreshCw,
   FolderOpen,
   AlertTriangle,
+  ChevronDown,
+  SearchCode,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -18,6 +20,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import {
   Table,
   TableBody,
@@ -43,6 +46,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
 interface Category {
   id: string;
@@ -52,6 +60,8 @@ interface Category {
   image: string | null;
   sortOrder: number;
   isActive: boolean;
+  metaTitle: string | null;
+  metaDescription: string | null;
   _count?: { products: number };
 }
 
@@ -62,6 +72,8 @@ interface CategoryFormData {
   image: string;
   sortOrder: string;
   isActive: boolean;
+  metaTitle: string;
+  metaDescription: string;
 }
 
 const emptyForm: CategoryFormData = {
@@ -71,6 +83,8 @@ const emptyForm: CategoryFormData = {
   image: '',
   sortOrder: '0',
   isActive: true,
+  metaTitle: '',
+  metaDescription: '',
 };
 
 function generateSlug(name: string): string {
@@ -90,6 +104,7 @@ export function AdminCategories() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [form, setForm] = useState<CategoryFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [seoOpen, setSeoOpen] = useState(false);
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -116,6 +131,7 @@ export function AdminCategories() {
   const handleOpenAdd = () => {
     setEditingCategory(null);
     setForm(emptyForm);
+    setSeoOpen(false);
     setFormOpen(true);
   };
 
@@ -128,7 +144,10 @@ export function AdminCategories() {
       image: cat.image || '',
       sortOrder: String(cat.sortOrder),
       isActive: cat.isActive,
+      metaTitle: cat.metaTitle || '',
+      metaDescription: cat.metaDescription || '',
     });
+    setSeoOpen(!!(cat.metaTitle || cat.metaDescription));
     setFormOpen(true);
   };
 
@@ -155,6 +174,8 @@ export function AdminCategories() {
         image: form.image.trim() || null,
         sortOrder: parseInt(form.sortOrder) || 0,
         isActive: form.isActive,
+        metaTitle: form.metaTitle.trim() || null,
+        metaDescription: form.metaDescription.trim() || null,
       };
 
       const url = editingCategory
@@ -322,13 +343,13 @@ export function AdminCategories() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>
               {editingCategory ? 'Edit Category' : 'Add Category'}
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-4 max-h-[calc(90vh-140px)] overflow-y-auto">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="cat-name">
@@ -413,6 +434,67 @@ export function AdminCategories() {
                 Active
               </Label>
             </div>
+
+            <Separator />
+
+            {/* SEO Section (Collapsible) */}
+            <Collapsible open={seoOpen} onOpenChange={setSeoOpen}>
+              <CollapsibleTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-between"
+                >
+                  <span className="flex items-center gap-2">
+                    <SearchCode className="h-4 w-4" />
+                    SEO Settings
+                    {(form.metaTitle || form.metaDescription) && (
+                      <span className="text-xs text-emerald-600 font-normal">(configured)</span>
+                    )}
+                  </span>
+                  <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-3">
+                <div className="space-y-2">
+                  <Label htmlFor="cat-meta-title">Meta Title</Label>
+                  <Input
+                    id="cat-meta-title"
+                    placeholder="Category Name | Store Name"
+                    value={form.metaTitle}
+                    onChange={(e) =>
+                      setForm(prev => ({ ...prev, metaTitle: e.target.value }))
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Leave empty to use: Category Name | StyleStore
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cat-meta-desc" className="flex items-center justify-between">
+                    <span>Meta Description</span>
+                    <span className="text-xs text-muted-foreground font-normal">
+                      {form.metaDescription.length}/160
+                    </span>
+                  </Label>
+                  <Textarea
+                    id="cat-meta-desc"
+                    placeholder="A brief description for search engines..."
+                    value={form.metaDescription}
+                    onChange={(e) => {
+                      if (e.target.value.length <= 160) {
+                        setForm(prev => ({ ...prev, metaDescription: e.target.value }));
+                      }
+                    }}
+                    rows={3}
+                    className={form.metaDescription.length >= 150 ? 'border-amber-400' : ''}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Recommended: 150-160 characters for optimal SEO
+                  </p>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setFormOpen(false)}>

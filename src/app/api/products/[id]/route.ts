@@ -65,6 +65,14 @@ export async function PUT(
             ? parseFloat(body.comparePrice)
             : null,
         }),
+        ...(body.wholesalePrice !== undefined && {
+          wholesalePrice: body.wholesalePrice
+            ? parseFloat(body.wholesalePrice)
+            : null,
+        }),
+        ...(body.minOrderQty !== undefined && {
+          minOrderQty: body.minOrderQty,
+        }),
         ...(body.sku !== undefined && { sku: body.sku }),
         ...(body.images !== undefined && {
           images:
@@ -86,6 +94,12 @@ export async function PUT(
               ? body.specifications
               : JSON.stringify(body.specifications)
             : null,
+        }),
+        ...(body.metaTitle !== undefined && {
+          metaTitle: body.metaTitle || null,
+        }),
+        ...(body.metaDescription !== undefined && {
+          metaDescription: body.metaDescription || null,
         }),
       },
       include: { category: true },

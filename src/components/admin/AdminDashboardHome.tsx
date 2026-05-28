@@ -8,8 +8,10 @@ import {
   ImageIcon,
   BarChart3,
   Star,
+  Search,
   Clock,
   Eye,
+  FileText,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -50,6 +52,7 @@ export function AdminDashboardHome({ onNavigate }: { onNavigate?: (tab: string) 
     newEnquiries: 0,
     totalEnquiries: 0,
     totalBanners: 0,
+    rfqRequests: 0,
   });
   const [recentEnquiries, setRecentEnquiries] = useState<EnquiryRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,6 +91,7 @@ export function AdminDashboardHome({ onNavigate }: { onNavigate?: (tab: string) 
             ...prev,
             totalEnquiries: all.length,
             newEnquiries: all.filter((e: { status: string }) => e.status === 'new').length,
+            rfqRequests: all.filter((e: { type: string }) => e.type === 'rfq').length,
           }));
           setRecentEnquiries(all.slice(0, 5));
         }
@@ -114,6 +118,7 @@ export function AdminDashboardHome({ onNavigate }: { onNavigate?: (tab: string) 
     { label: 'Categories', value: stats.totalCategories, icon: FolderOpen, color: 'text-violet-600', bg: 'bg-violet-50 dark:bg-violet-950/40' },
     { label: 'New Enquiries', value: stats.newEnquiries, icon: MessageSquare, color: 'bg-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/40' },
     { label: 'Total Enquiries', value: stats.totalEnquiries, icon: Star, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-950/40' },
+    { label: 'RFQ Requests', value: stats.rfqRequests, icon: FileText, color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-950/40' },
     { label: 'Banners', value: stats.totalBanners, icon: ImageIcon, color: 'text-sky-600', bg: 'bg-sky-50 dark:bg-sky-950/40' },
   ];
 
@@ -134,6 +139,7 @@ export function AdminDashboardHome({ onNavigate }: { onNavigate?: (tab: string) 
     { id: 'categories', label: 'Manage Categories', icon: FolderOpen },
     { id: 'enquiries', label: 'View Enquiries', icon: MessageSquare },
     { id: 'banners', label: 'Manage Banners', icon: ImageIcon },
+    { id: 'settings', label: 'SEO Settings', icon: Search },
     { id: 'settings', label: 'Site Settings', icon: Star },
   ];
 
@@ -145,9 +151,9 @@ export function AdminDashboardHome({ onNavigate }: { onNavigate?: (tab: string) 
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {loading
-          ? Array.from({ length: 6 }).map((_, i) => (
+          ? Array.from({ length: 7 }).map((_, i) => (
               <Card key={i}>
                 <CardContent className="pt-6">
                   <Skeleton className="h-4 w-24 mb-3" />
@@ -247,11 +253,11 @@ export function AdminDashboardHome({ onNavigate }: { onNavigate?: (tab: string) 
               Navigate to different sections using the sidebar or click a shortcut below.
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {quickActions.map((action) => {
+              {quickActions.map((action, index) => {
                 const Icon = action.icon;
                 return (
                   <Button
-                    key={action.id}
+                    key={`${action.id}-${index}`}
                     variant="outline"
                     size="sm"
                     className="h-auto flex-col gap-2 py-4"

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { ArrowRight, ShoppingCart, ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { ArrowRight, ShoppingCart, ChevronLeft, ChevronRight, Star, Hash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +36,8 @@ interface Product {
   shortDescription: string | null;
   price: number;
   comparePrice: number | null;
+  wholesalePrice: number | null;
+  minOrderQty: number;
   images: string;
   category: { id: string; name: string } | null;
   isFeatured: boolean;
@@ -84,6 +86,69 @@ export function HomePage({ onNavigate }: HomePageProps) {
     fetchData();
   }, [fetchData]);
 
+  // SEO: set document title and meta description
+  useEffect(() => {
+    document.title = 'StyleStore - Premium Products';
+    let metaEl = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
+    if (!metaEl) {
+      metaEl = document.createElement('meta');
+      metaEl.setAttribute('name', 'description');
+      document.head.appendChild(metaEl);
+    }
+    metaEl.setAttribute('content', 'Discover premium products at StyleStore. Wholesale and B2B pricing available. Browse our curated collection of electronics, accessories and more.');
+
+    // JSON-LD: WebSite structured data
+    const websiteJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'StyleStore',
+      url: typeof window !== 'undefined' ? window.location.origin : '',
+      description: 'Premium Products & B2B Wholesale',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: typeof window !== 'undefined' ? `${window.location.origin}/catalogue?search={search_term_string}` : '',
+        },
+        'query-input': 'required name=search_term_string',
+      },
+    };
+
+    const orgJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: 'StyleStore',
+      description: 'Premium Products & B2B Wholesale Supplier',
+      url: typeof window !== 'undefined' ? window.location.origin : '',
+      logo: typeof window !== 'undefined' ? `${window.location.origin}/logo.png` : '',
+      contactPoint: {
+        '@type': 'ContactPoint',
+        contactType: 'sales',
+        availableLanguage: ['English'],
+      },
+    };
+
+    const injectScript = (id: string, data: Record<string, unknown>) => {
+      const existing = document.getElementById(id);
+      if (existing) existing.remove();
+      const script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.textContent = JSON.stringify(data);
+      script.id = id;
+      document.head.appendChild(script);
+    };
+
+    injectScript('homepage-website-jsonld', websiteJsonLd);
+    injectScript('homepage-org-jsonld', orgJsonLd);
+
+    return () => {
+      const el1 = document.getElementById('homepage-website-jsonld');
+      const el2 = document.getElementById('homepage-org-jsonld');
+      if (el1) el1.remove();
+      if (el2) el2.remove();
+    };
+  }, []);
+
   // Auto-rotate banner
   useEffect(() => {
     if (banners.length <= 1) return;
@@ -107,14 +172,6 @@ export function HomePage({ onNavigate }: HomePageProps) {
       style: 'currency',
       currency: 'USD',
     }).format(price);
-  };
-
-  const getCategoryImage = (category: Category) => {
-    if (category.image) return category.image;
-    // Generate a placeholder color based on category name
-    const colors = ['bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-amber-500', 'bg-rose-500'];
-    const idx = category.name.length % colors.length;
-    return null;
   };
 
   return (
@@ -158,11 +215,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
                           size="lg"
                           className="mt-6 bg-white text-emerald-700 hover:bg-white/90"
                           onClick={() => {
-                            if (banner.link) {
-                              onNavigate('catalogue');
-                            } else {
-                              onNavigate('catalogue');
-                            }
+                            onNavigate('catalogue');
                           }}
                         >
                           {banner.linkText}
@@ -331,6 +384,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
               const discountPercent = hasDiscount
                 ? Math.round(((product.comparePrice! - product.price) / product.comparePrice!) * 100)
                 : 0;
+              const hasWholesale = !!product.wholesalePrice;
 
               return (
                 <Card
@@ -388,17 +442,38 @@ export function HomePage({ onNavigate }: HomePageProps) {
                         </span>
                       )}
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full mt-2"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEnquiryProduct(product);
-                      }}
-                    >
-                      Enquire
-                    </Button>
+                    {hasWholesale && (
+                      <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
+                        Wholesale: {formatPrice(product.wholesalePrice!)}
+                      </p>
+                    )}
+                    <div className="flex gap-2 pt-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEnquiryProduct(product);
+                        }}
+                      >
+                        Enquire
+                      </Button>
+                      {hasWholesale && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 text-amber-700 border-amber-300 hover:bg-amber-50 dark:text-amber-400 dark:border-amber-700 dark:hover:bg-amber-950/30"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEnquiryProduct(product);
+                          }}
+                        >
+                          <Hash className="mr-1 h-3 w-3" />
+                          Quote
+                        </Button>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               );

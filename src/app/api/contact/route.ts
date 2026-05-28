@@ -1,11 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { sendEnquiryNotification } from '@/lib/email';
+import { sendEnquiryNotificationToAdmin, sendEnquiryConfirmation } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, email, phone, subject, message, productId } = body;
+    const {
+      name,
+      email,
+      phone,
+      companyName,
+      companyEmail,
+      companyPhone,
+      companyAddress,
+      quantity,
+      subject,
+      message,
+      productId,
+      type,
+    } = body;
 
     if (!name || !email || !subject || !message) {
       return NextResponse.json(
@@ -14,30 +27,64 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Look up product name if productId is provided
+    let productName: string | undefined;
+    if (productId) {
+      const product = await db.product.findUnique({
+        where: { id: productId },
+        select: { name: true },
+      });
+      productName = product?.name;
+    }
+
     const enquiry = await db.enquiry.create({
       data: {
         name,
         email,
         phone: phone || null,
+        companyName: companyName || null,
+        companyEmail: companyEmail || null,
+        companyPhone: companyPhone || null,
+        companyAddress: companyAddress || null,
+        quantity: quantity ?? null,
         subject,
         message,
         productId: productId || null,
-        type: 'contact',
+        type: type || 'contact',
         status: 'new',
       },
     });
 
-    // Try to send email notification — return success even if email fails
+    // Send emails — non-blocking, return success regardless of email delivery status
     try {
-      await sendEnquiryNotification({
+      await sendEnquiryNotificationToAdmin({
+        name,
+        email,
+        phone: phone || undefined,
+        companyName: companyName || undefined,
+        companyEmail: companyEmail || undefined,
+        companyPhone: companyPhone || undefined,
+        companyAddress: companyAddress || undefined,
+        quantity: quantity ?? undefined,
+        subject,
+        message,
+        type: type || 'contact',
+        productName,
+      });
+    } catch {
+      console.log('Admin email notification failed, enquiry still saved');
+    }
+
+    try {
+      await sendEnquiryConfirmation({
         name,
         email,
         subject,
-        message,
-        type: 'contact',
+        type: type || 'contact',
+        productName,
       });
     } catch {
-      console.log('Email notification failed, enquiry still saved');
+      console.log('Customer confirmation email failed, enquiry still saved');
     }
 
     return NextResponse.json(

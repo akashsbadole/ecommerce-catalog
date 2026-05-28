@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, ReactNode, cloneElement, isValidElement } from 'react';
 import { StoreHeader } from './StoreHeader';
 import { StoreFooter } from './StoreFooter';
 
 interface StoreLayoutProps {
   currentPage: string;
   onNavigate: (page: string, data?: unknown) => void;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export function StoreLayout({ currentPage, onNavigate, children }: StoreLayoutProps) {
@@ -39,6 +39,50 @@ export function StoreLayout({ currentPage, onNavigate, children }: StoreLayoutPr
     };
   }, []);
 
+  // Inject JSON-LD Organization structured data when settings are loaded
+  useEffect(() => {
+    if (!settings) return;
+
+    const siteName = settings.site_name || 'StyleStore';
+    const siteDesc = settings.site_description || 'Premium Products & B2B Wholesale Supplier';
+    const contactEmail = settings.contact_email || '';
+    const contactPhone = settings.contact_phone || '';
+
+    const orgJsonLd: Record<string, unknown> = {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: siteName,
+      description: siteDesc,
+      url: typeof window !== 'undefined' ? window.location.origin : '',
+    };
+
+    if (settings.site_logo) {
+      orgJsonLd.logo = settings.site_logo;
+    }
+
+    const contactPoint: Record<string, unknown> = {
+      '@type': 'ContactPoint',
+      contactType: 'sales',
+      availableLanguage: ['English'],
+    };
+    if (contactEmail) contactPoint.email = contactEmail;
+    if (contactPhone) contactPoint.telephone = contactPhone;
+    orgJsonLd.contactPoint = contactPoint;
+
+    const existing = document.getElementById('layout-org-jsonld');
+    if (existing) existing.remove();
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.textContent = JSON.stringify(orgJsonLd);
+    script.id = 'layout-org-jsonld';
+    document.head.appendChild(script);
+
+    return () => {
+      const el = document.getElementById('layout-org-jsonld');
+      if (el) el.remove();
+    };
+  }, [settings]);
+
   // Scroll to top on navigation
   useEffect(() => {
     if (prevPageRef.current !== currentPage) {
@@ -53,7 +97,11 @@ export function StoreLayout({ currentPage, onNavigate, children }: StoreLayoutPr
 
       <main className="flex-1">
         <div className="container mx-auto px-4 py-8">
-          {children}
+          {settings
+            ? isValidElement(children)
+              ? cloneElement(children, { settings })
+              : children
+            : children}
         </div>
       </main>
 

@@ -11,11 +11,16 @@ import {
   Share2,
   Server,
   Loader2,
+  Search,
+  Building2,
+  Info,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -40,6 +45,15 @@ const defaultSettings: Settings = {
   smtp_user: '',
   smtp_pass: '',
   email_from: '',
+  seo_default_title: '',
+  seo_default_description: '',
+  seo_ga_id: '',
+  seo_fb_pixel: '',
+  seo_canonical_url: '',
+  b2b_show_company_fields: 'true',
+  b2b_require_company: 'true',
+  b2b_default_moq: '1',
+  b2b_auto_reply: 'true',
 };
 
 export function AdminSettings() {
@@ -115,7 +129,7 @@ export function AdminSettings() {
           <Skeleton className="mt-2 h-4 w-72" />
         </div>
         <div className="grid gap-6">
-          {[1, 2, 3, 4].map((i) => (
+          {[1, 2, 3, 4, 5, 6].map((i) => (
             <Card key={i}>
               <CardContent className="pt-6 space-y-4">
                 {Array.from({ length: 3 }).map((_, j) => (
@@ -128,6 +142,9 @@ export function AdminSettings() {
       </div>
     );
   }
+
+  const metaDescLength = settings.seo_default_description?.length || 0;
+  const metaDescColor = metaDescLength > 160 ? 'text-rose-500' : metaDescLength > 140 ? 'text-amber-500' : 'text-muted-foreground';
 
   return (
     <div className="space-y-6">
@@ -274,6 +291,185 @@ export function AdminSettings() {
               value={settings.twitter_url}
               onChange={(e) => handleSettingChange('twitter_url', e.target.value)}
               placeholder="https://twitter.com/yourpage"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* SEO Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Search className="h-4 w-4" />
+            SEO Settings
+          </CardTitle>
+          <CardDescription>
+            Search engine optimization and analytics configuration
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="seo_default_title">Default Meta Title</Label>
+            <Input
+              id="seo_default_title"
+              value={settings.seo_default_title}
+              onChange={(e) => handleSettingChange('seo_default_title', e.target.value)}
+              placeholder="StyleStore - Premium Products"
+            />
+            <p className="text-xs text-muted-foreground">
+              Used as the default page title across the site. Best practice: 50-60 characters.
+            </p>
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="seo_default_description">Default Meta Description</Label>
+              <span className={`text-xs font-medium ${metaDescColor}`}>
+                {metaDescLength}/160
+              </span>
+            </div>
+            <Textarea
+              id="seo_default_description"
+              value={settings.seo_default_description}
+              onChange={(e) => handleSettingChange('seo_default_description', e.target.value)}
+              placeholder="Brief description for search engines..."
+              rows={3}
+              className="resize-none"
+            />
+            <p className="text-xs text-muted-foreground">
+              Describes your page in search results. Keep under 160 characters for optimal display.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="seo_ga_id">Google Analytics ID</Label>
+            <Input
+              id="seo_ga_id"
+              value={settings.seo_ga_id}
+              onChange={(e) => handleSettingChange('seo_ga_id', e.target.value)}
+              placeholder="G-XXXXXXXXXX"
+            />
+            <p className="text-xs text-muted-foreground">
+              Your Google Analytics 4 measurement ID.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="seo_fb_pixel">Facebook Pixel ID</Label>
+            <Input
+              id="seo_fb_pixel"
+              value={settings.seo_fb_pixel}
+              onChange={(e) => handleSettingChange('seo_fb_pixel', e.target.value)}
+              placeholder="XXXXXXXXXXXXXXX"
+            />
+            <p className="text-xs text-muted-foreground">
+              Your Meta (Facebook) Pixel ID for tracking conversions.
+            </p>
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="seo_canonical_url">Canonical URL</Label>
+            <Input
+              id="seo_canonical_url"
+              value={settings.seo_canonical_url}
+              onChange={(e) => handleSettingChange('seo_canonical_url', e.target.value)}
+              placeholder="https://your-domain.com"
+            />
+            <p className="text-xs text-muted-foreground">
+              The primary URL for your site. Used in sitemap, canonical tags, and OG URLs.
+            </p>
+          </div>
+
+          <div className="sm:col-span-2 rounded-lg border border-dashed border-muted-foreground/30 bg-muted/30 p-4">
+            <div className="flex gap-3">
+              <Info className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+              <div className="space-y-1 text-xs text-muted-foreground">
+                <p className="font-medium text-foreground">SEO Deployment Checklist</p>
+                <ul className="list-disc list-inside space-y-0.5">
+                  <li>Set <code className="bg-muted px-1 py-0.5 rounded text-xs">NEXT_PUBLIC_SITE_URL</code> in your <code className="bg-muted px-1 py-0.5 rounded text-xs">.env</code> to your production domain</li>
+                  <li>Verify your domain in Google Search Console</li>
+                  <li>Submit your sitemap at <code className="bg-muted px-1 py-0.5 rounded text-xs">/sitemap.xml</code></li>
+                  <li>Configure robots.txt via the public folder</li>
+                  <li>Add structured data (JSON-LD) for rich results</li>
+                  <li>Test with Google&apos;s Rich Results Test tool</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* B2B Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Building2 className="h-4 w-4" />
+            B2B Settings
+          </CardTitle>
+          <CardDescription>
+            Configure business-to-business enquiry and quotation behavior
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-6 sm:grid-cols-2">
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="b2b_show_company_fields" className="cursor-pointer">
+                Show Company Fields
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Display company name field on enquiry forms
+              </p>
+            </div>
+            <Switch
+              id="b2b_show_company_fields"
+              checked={settings.b2b_show_company_fields === 'true'}
+              onCheckedChange={(checked) =>
+                handleSettingChange('b2b_show_company_fields', String(checked))
+              }
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="b2b_require_company" className="cursor-pointer">
+                Require Company Name
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Make company name mandatory for RFQ submissions
+              </p>
+            </div>
+            <Switch
+              id="b2b_require_company"
+              checked={settings.b2b_require_company === 'true'}
+              onCheckedChange={(checked) =>
+                handleSettingChange('b2b_require_company', String(checked))
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="b2b_default_moq">Default Minimum Order Quantity</Label>
+            <Input
+              id="b2b_default_moq"
+              type="number"
+              min="1"
+              value={settings.b2b_default_moq}
+              onChange={(e) => handleSettingChange('b2b_default_moq', e.target.value)}
+              placeholder="1"
+            />
+            <p className="text-xs text-muted-foreground">
+              Default MOQ displayed on product enquiry forms
+            </p>
+          </div>
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="b2b_auto_reply" className="cursor-pointer">
+                Auto-Reply to Customer
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Automatically send confirmation email to enquirers
+              </p>
+            </div>
+            <Switch
+              id="b2b_auto_reply"
+              checked={settings.b2b_auto_reply === 'true'}
+              onCheckedChange={(checked) =>
+                handleSettingChange('b2b_auto_reply', String(checked))
+              }
             />
           </div>
         </CardContent>
