@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import DOMPurify from 'dompurify';
 import {
   Image,
   LayoutGrid,
@@ -21,6 +22,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { PageBlock } from '@/lib/page-blocks';
+
+// Allowed HTML tags and attributes for sanitized content
+const SANITIZE_OPTIONS = {
+  ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'div', 'span', 'pre', 'code', 'figure', 'figcaption', 'sup', 'sub'],
+  ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'style', 'target', 'rel', 'colspan', 'rowspan'],
+};
 
 // Dynamic icon resolver
 function LucideIcon({ name, className }: { name: string; className?: string }) {
@@ -229,7 +236,7 @@ function TextBlock({ data }: { data: Record<string, unknown> }) {
           prose-headings:font-bold prose-headings:tracking-tight
           prose-p:text-foreground/80 prose-a:text-primary
           prose-img:rounded-lg"
-        dangerouslySetInnerHTML={{ __html: content }}
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content, SANITIZE_OPTIONS) }}
       />
     </section>
   );

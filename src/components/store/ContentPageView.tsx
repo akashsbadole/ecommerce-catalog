@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import DOMPurify from 'dompurify';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle } from 'lucide-react';
 import { PageBlockRenderer } from '@/components/store/PageBlockRenderer';
@@ -158,6 +159,15 @@ export function ContentPageView({ slug, onNavigate }: ContentPageViewProps) {
     );
   }
 
+  // Sanitize HTML content to prevent XSS
+  const sanitizedContent = useMemo(() => {
+    if (!page) return '';
+    return DOMPurify.sanitize(page.content, {
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'div', 'span', 'pre', 'code', 'figure', 'figcaption', 'sup', 'sub'],
+      ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'style', 'target', 'rel', 'colspan', 'rowspan'],
+    });
+  }, [page?.content]);
+
   // Fallback to HTML content
   return (
     <article className="max-w-4xl mx-auto px-4 py-8">
@@ -183,7 +193,7 @@ export function ContentPageView({ slug, onNavigate }: ContentPageViewProps) {
           prose-headings:font-bold prose-headings:tracking-tight
           prose-p:text-foreground/80 prose-a:text-primary
           prose-img:rounded-lg"
-        dangerouslySetInnerHTML={{ __html: page.content }}
+        dangerouslySetInnerHTML={{ __html: sanitizedContent }}
       />
     </article>
   );

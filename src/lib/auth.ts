@@ -19,9 +19,10 @@ export interface JWTPayload {
   exp?: number;
 }
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'fallback-secret-change-me'
-);
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is not set. Generate one with: openssl rand -hex 32');
+}
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 
 export async function generateToken(user: { id: string; email: string; role: string }): Promise<string> {
   return new SignJWT({ userId: user.id, email: user.email, role: user.role })

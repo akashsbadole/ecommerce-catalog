@@ -48,9 +48,12 @@ const ROLE_PERMISSIONS: Record<string, {
       '/api/settings',
       '/api/media',
       '/api/redirects',
+      '/api/notifications',
+      '/api/activity-logs',
     ],
     write: [
       '/api/enquiries',
+      '/api/notifications',
     ],
   },
 };
