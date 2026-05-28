@@ -1,0 +1,37 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { unlink } from 'fs/promises';
+import path from 'path';
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const media = await db.media.findUnique({ where: { id } });
+    if (!media) {
+      return NextResponse.json({ error: 'Media not found' }, { status: 404 });
+    }
+
+    // Delete files
+    const filesToDelete = [media.url];
+    try {
+      const thumbs = JSON.parse(media.thumbnails);
+      filesToDelete.push(...Object.values(thumbs));
+    } catch {}
+
+    for (const filePath of filesToDelete) {
+      try {
+        const fullPath = path.join(process.cwd(), 'public', filePath);
+        await unlink(fullPath);
+      } catch {}
+    }
+
+    await db.media.delete({ where: { id } });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Delete media error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

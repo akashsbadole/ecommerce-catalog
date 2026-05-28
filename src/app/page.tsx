@@ -6,6 +6,9 @@ import { HomePage } from '@/components/store/HomePage';
 import { CataloguePage } from '@/components/store/CataloguePage';
 import { ProductDetailPage } from '@/components/store/ProductDetailPage';
 import { ContactPage } from '@/components/store/ContactPage';
+import { ContentPageView } from '@/components/store/ContentPageView';
+import { BlogPage } from '@/components/store/BlogPage';
+import { BlogPostView } from '@/components/store/BlogPostView';
 import { AdminLogin } from '@/components/admin/AdminLogin';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
 
@@ -14,6 +17,9 @@ type Page =
   | { type: 'catalogue' }
   | { type: 'product'; productId: string }
   | { type: 'contact' }
+  | { type: 'content-page'; slug: string }
+  | { type: 'blog' }
+  | { type: 'blog-post'; postId: string }
   | { type: 'admin-login' }
   | { type: 'admin'; activeTab: string };
 
@@ -58,6 +64,9 @@ export default function MainApp() {
       case 'catalogue': setCurrentPage({ type: 'catalogue' }); break;
       case 'product': setCurrentPage({ type: 'product', productId: data as string }); break;
       case 'contact': setCurrentPage({ type: 'contact' }); break;
+      case 'content-page': setCurrentPage({ type: 'content-page', slug: data as string }); break;
+      case 'blog': setCurrentPage({ type: 'blog' }); break;
+      case 'blog-post': setCurrentPage({ type: 'blog-post', postId: data as string }); break;
       case 'admin-login': setCurrentPage({ type: 'admin-login' }); break;
       case 'admin':
         setIsAdmin(true);
@@ -66,11 +75,11 @@ export default function MainApp() {
     }
   };
 
-  const handleAdminLogin = (user: { id: string; email: string; name: string; role: string }) => {
+  const handleAdminLogin = (user: { id: string; email: string; name: string; role: string }, token?: string) => {
     setAdminUser(user);
     setIsAdmin(true);
     localStorage.setItem('admin_user', JSON.stringify(user));
-    localStorage.setItem('admin_token', 'token-' + user.id);
+    localStorage.setItem('admin_token', token || 'token-' + user.id);
     handleNavigate('admin', 'dashboard');
   };
 
@@ -109,6 +118,12 @@ export default function MainApp() {
         return <ProductDetailPage productId={currentPage.productId} onNavigate={handleNavigate} />;
       case 'contact':
         return <ContactPage />;
+      case 'content-page':
+        return <ContentPageView slug={currentPage.slug} onNavigate={handleNavigate} />;
+      case 'blog':
+        return <BlogPage onNavigate={handleNavigate} />;
+      case 'blog-post':
+        return <BlogPostView postId={currentPage.postId} onNavigate={handleNavigate} />;
       default:
         return <HomePage onNavigate={handleNavigate} />;
     }

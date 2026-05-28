@@ -18,29 +18,30 @@ model User {
   updatedAt     DateTime @updatedAt
 
   enquiries     Enquiry[]
+  blogPosts     BlogPost[]
 }
 
 model Category {
-  id            String   @id @default(cuid())
-  name          String
-  slug          String   @unique
-  description   String?
-  image         String?
-  sortOrder     Int      @default(0)
-  isActive      Boolean  @default(true)
-  metaTitle     String?
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  description     String?
+  image           String?
+  sortOrder       Int      @default(0)
+  isActive        Boolean  @default(true)
+  metaTitle       String?
   metaDescription String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  products      Product[]
+  products        Product[]
 }
 
 model Product {
   id              String   @id @default(cuid())
   name            String
   slug            String   @unique
-  description     String?
+  description     String?  // HTML from WYSIWYG
   shortDescription String?
   price           Float
   comparePrice    Float?
@@ -49,6 +50,7 @@ model Product {
   sku             String?
   images          String   @default("[]") // JSON array of image URLs
   categoryId      String?
+  whatsappNumber  String?  // WhatsApp number for this product
   isFeatured      Boolean  @default(false)
   isActive        Boolean  @default(true)
   sortOrder       Int      @default(0)
@@ -109,10 +111,59 @@ model ContentPage {
   id              String   @id @default(cuid())
   title           String
   slug            String   @unique
-  content         String   @default("")
+  content         String   @default("") // HTML from WYSIWYG
+  heroImage       String?
   metaTitle       String?
   metaDescription String?
+  ogImage         String?
   isActive        Boolean  @default(true)
+  sortOrder       Int      @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+model BlogPost {
+  id              String   @id @default(cuid())
+  title           String
+  slug            String   @unique
+  excerpt         String?
+  content         String   @default("") // HTML from WYSIWYG
+  coverImage      String?
+  authorId        String?
+  metaTitle       String?
+  metaDescription String?
+  ogImage         String?
+  tags            String?  // JSON array
+  isPublished     Boolean  @default(false)
+  publishedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  author          User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+}
+
+model Media {
+  id            String   @id @default(cuid())
+  filename      String
+  originalName  String
+  mimeType      String
+  size          Int
+  width         Int?
+  height        Int?
+  alt           String?
+  url           String   // path like /uploads/xxx.jpg
+  thumbnails    String   @default("{}") // JSON of {small: url, medium: url, large: url}
+  folder        String   @default("/")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Redirect {
+  id            String   @id @default(cuid())
+  from          String   @unique  // source path e.g. /old-page
+  to            String             // destination URL e.g. /new-page
+  type          String   @default("301") // 301, 302
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

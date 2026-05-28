@@ -13,6 +13,8 @@ import {
   ChevronDown,
   SearchCode,
   Package,
+  EyeOff,
+  Eye,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -62,6 +64,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface Category {
   id: string;
@@ -88,6 +91,7 @@ interface Product {
   specifications: string | null;
   metaTitle: string | null;
   metaDescription: string | null;
+  whatsappNumber: string | null;
   category?: Category | null;
   createdAt: string;
 }
@@ -110,6 +114,7 @@ interface ProductFormData {
   specifications: string;
   metaTitle: string;
   metaDescription: string;
+  whatsappNumber: string;
 }
 
 const emptyForm: ProductFormData = {
@@ -130,6 +135,7 @@ const emptyForm: ProductFormData = {
   specifications: '',
   metaTitle: '',
   metaDescription: '',
+  whatsappNumber: '',
 };
 
 function generateSlug(name: string): string {
@@ -180,6 +186,11 @@ export function AdminProducts() {
 
   // Upload state
   const [uploading, setUploading] = useState(false);
+
+  // Bulk selection state
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkAction, setBulkAction] = useState<string | null>(null);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -248,9 +259,10 @@ export function AdminProducts() {
       specifications: product.specifications || '',
       metaTitle: product.metaTitle || '',
       metaDescription: product.metaDescription || '',
+      whatsappNumber: product.whatsappNumber || '',
     });
     setSeoOpen(!!(product.metaTitle || product.metaDescription));
-    setB2bOpen(!!(product.wholesalePrice || product.minOrderQty > 1));
+    setB2bOpen(!!(product.wholesalePrice || product.minOrderQty > 1 || product.whatsappNumber));
     setFormOpen(true);
   };
 
@@ -297,6 +309,7 @@ export function AdminProducts() {
         specifications: form.specifications.trim() || null,
         metaTitle: form.metaTitle.trim() || null,
         metaDescription: form.metaDescription.trim() || null,
+        whatsappNumber: form.whatsappNumber.trim() || null,
       };
 
       const url = editingProduct
@@ -322,6 +335,71 @@ export function AdminProducts() {
       toast.error('Failed to save product');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.length === products.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(products.map(p => p.id));
+    }
+  };
+
+  const handleSelectOne = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkAction = async (action: string) => {
+    if (selectedIds.length === 0) return;
+    if (action === 'delete') {
+      setBulkAction(action);
+      return;
+    }
+    setBulkLoading(true);
+    try {
+      const res = await fetch('/api/products/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: selectedIds, action }),
+      });
+      if (res.ok) {
+        toast.success(`${action === 'publish' ? 'Published' : 'Unpublished'} ${selectedIds.length} product(s)`);
+        setSelectedIds([]);
+        fetchProducts();
+      } else {
+        toast.error('Bulk action failed');
+      }
+    } catch {
+      toast.error('Bulk action failed');
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    setBulkLoading(true);
+    try {
+      const res = await fetch('/api/products/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: selectedIds, action: 'delete' }),
+      });
+      if (res.ok) {
+        toast.success(`Deleted ${selectedIds.length} product(s)`);
+        setSelectedIds([]);
+        setBulkAction(null);
+        fetchProducts();
+      } else {
+        toast.error('Bulk delete failed');
+      }
+    } catch {
+      toast.error('Bulk delete failed');
+    } finally {
+      setBulkLoading(false);
     }
   };
 
@@ -428,6 +506,45 @@ export function AdminProducts() {
         </Button>
       </div>
 
+      {/* Bulk Actions Toolbar */}
+      {selectedIds.length > 0 && (
+        <div className="flex items-center gap-3 rounded-lg border bg-muted/50 p-3">
+          <span className="text-sm font-medium">
+            {selectedIds.length} selected
+          </span>
+          <div className="flex gap-2 ml-auto">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleBulkAction('publish')}
+              disabled={bulkLoading}
+            >
+              <Eye className="mr-1.5 h-3.5 w-3.5" />
+              Publish
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleBulkAction('unpublish')}
+              disabled={bulkLoading}
+            >
+              <EyeOff className="mr-1.5 h-3.5 w-3.5" />
+              Unpublish
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+              onClick={() => handleBulkAction('delete')}
+              disabled={bulkLoading}
+            >
+              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+              Delete
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Products Table */}
       <Card>
         {loading ? (
@@ -451,6 +568,13 @@ export function AdminProducts() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={products.length > 0 && selectedIds.length === products.length}
+                      onCheckedChange={handleSelectAll}
+                      aria-label="Select all"
+                    />
+                  </TableHead>
                   <TableHead className="w-16">Image</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead className="hidden md:table-cell">Category</TableHead>
@@ -465,7 +589,14 @@ export function AdminProducts() {
                 {products.map((product) => {
                   const firstImg = getFirstImage(product);
                   return (
-                    <TableRow key={product.id}>
+                    <TableRow key={product.id} className={selectedIds.includes(product.id) ? 'bg-muted/50' : ''}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedIds.includes(product.id)}
+                          onCheckedChange={() => handleSelectOne(product.id)}
+                          aria-label={`Select ${product.name}`}
+                        />
+                      </TableCell>
                       <TableCell>
                         {firstImg ? (
                           <img
@@ -693,6 +824,21 @@ export function AdminProducts() {
                 </CollapsibleTrigger>
                 <CollapsibleContent className="space-y-4 pt-3">
                   <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="prod-whatsapp">WhatsApp Number</Label>
+                      <Input
+                        id="prod-whatsapp"
+                        type="tel"
+                        placeholder="+1234567890"
+                        value={form.whatsappNumber}
+                        onChange={(e) =>
+                          setForm(prev => ({ ...prev, whatsappNumber: e.target.value }))
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        WhatsApp number for product inquiries
+                      </p>
+                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="prod-wholesale">Wholesale Price</Label>
                       <Input
@@ -973,6 +1119,28 @@ export function AdminProducts() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk Delete Confirmation */}
+      <AlertDialog open={bulkAction === 'delete'} onOpenChange={() => setBulkAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedIds.length} Product(s)</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selectedIds.length} selected product(s)? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              disabled={bulkLoading}
+              className="bg-rose-600 hover:bg-rose-700"
+            >
+              {bulkLoading ? 'Deleting...' : 'Delete All'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>

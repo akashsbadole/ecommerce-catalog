@@ -8,6 +8,9 @@ import {
   FolderOpen,
   MessageSquare,
   Image as ImageIcon,
+  FileText,
+  BookOpen,
+  ArrowRightLeft,
   Settings,
   LogOut,
   Menu,
@@ -29,6 +32,10 @@ import { AdminCategories } from '@/components/admin/AdminCategories';
 import { AdminEnquiries } from '@/components/admin/AdminEnquiries';
 import { AdminBanners } from '@/components/admin/AdminBanners';
 import { AdminSettings } from '@/components/admin/AdminSettings';
+import { AdminMedia } from '@/components/admin/AdminMedia';
+import { AdminPages } from '@/components/admin/AdminPages';
+import { AdminBlog } from '@/components/admin/AdminBlog';
+import { AdminRedirects } from '@/components/admin/AdminRedirects';
 
 interface AdminDashboardProps {
   user: { id: string; email: string; name: string; role: string } | null;
@@ -42,7 +49,11 @@ const sidebarItems = [
   { id: 'products', label: 'Products', icon: Package },
   { id: 'categories', label: 'Categories', icon: FolderOpen },
   { id: 'enquiries', label: 'Enquiries', icon: MessageSquare },
+  { id: 'media', label: 'Media', icon: ImageIcon },
+  { id: 'pages', label: 'Pages', icon: FileText },
+  { id: 'blog', label: 'Blog', icon: BookOpen },
   { id: 'banners', label: 'Banners', icon: ImageIcon },
+  { id: 'redirects', label: 'Redirects', icon: ArrowRightLeft },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
@@ -161,6 +172,14 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
         return <AdminEnquiries />;
       case 'banners':
         return <AdminBanners />;
+      case 'media':
+        return <AdminMedia />;
+      case 'pages':
+        return <AdminPages />;
+      case 'blog':
+        return <AdminBlog />;
+      case 'redirects':
+        return <AdminRedirects />;
       case 'settings':
         return <AdminSettings />;
       default:

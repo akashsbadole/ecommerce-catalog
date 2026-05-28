@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 interface AdminLoginProps {
-  onLogin: (user: { id: string; email: string; name: string; role: string }) => void;
+  onLogin: (user: { id: string; email: string; name: string; role: string }, token?: string) => void;
   onNavigate: (page: string) => void;
 }
 
@@ -37,12 +37,14 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
 
       if (res.ok) {
         const data = await res.json();
-        onLogin({
+        const user = {
           id: data.user?.id || data.id,
           email: data.user?.email || data.email,
           name: data.user?.name || data.name,
           role: data.user?.role || data.role || 'admin',
-        });
+        };
+        const token = data.token || null;
+        onLogin(user, token || undefined);
         toast.success('Welcome back!');
       } else {
         const data = await res.json();

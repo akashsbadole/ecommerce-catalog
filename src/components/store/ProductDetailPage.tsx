@@ -13,6 +13,7 @@ import {
   Package,
   Building2,
   Minus,
+  MessageCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -56,6 +57,7 @@ interface Product {
   minOrderQty: number;
   sku: string | null;
   images: string;
+  whatsappNumber: string | null;
   category: { id: string; name: string; slug: string } | null;
   isFeatured: boolean;
   specifications: string | null;
@@ -74,6 +76,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
   const [selectedImage, setSelectedImage] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [businessOpen, setBusinessOpen] = useState(false);
+  const [siteSettings, setSiteSettings] = useState<Record<string, string> | null>(null);
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -86,6 +89,22 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
     companyPhone: '',
     companyAddress: '',
   });
+
+  // Fetch site settings for WhatsApp fallback
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch('/api/settings');
+        if (res.ok) {
+          const data = await res.json();
+          setSiteSettings(data.settings || {});
+        }
+      } catch {
+        // ignore settings fetch failure
+      }
+    };
+    fetchSettings();
+  }, []);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -676,25 +695,36 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                 required
               />
             </div>
-            <Button
-              type="submit"
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-              disabled={submitting}
-            >
-              {submitting ? (
-                'Submitting...'
-              ) : isRFQ ? (
-                <>
-                  <Hash className="mr-2 h-4 w-4" />
-                  Request Quote
-                </>
-              ) : (
-                <>
-                  <Send className="mr-2 h-4 w-4" />
-                  Submit Enquiry
-                </>
-              )}
-            </Button>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Button
+                type="submit"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                disabled={submitting}
+              >
+                {submitting ? (
+                  'Submitting...'
+                ) : isRFQ ? (
+                  <>
+                    <Hash className="mr-2 h-4 w-4" />
+                    Request Quote
+                  </>
+                ) : (
+                  <>
+                    <Send className="mr-2 h-4 w-4" />
+                    Submit Enquiry
+                  </>
+                )}
+              </Button>
+              <a
+                href={`https://wa.me/${(product.whatsappNumber || siteSettings?.whatsapp_number || '').replace(/[^0-9+]/g, '')}?text=${encodeURIComponent(`Hi, I'm interested in ${product.name}. Please share more details.`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center rounded-md bg-[#25D366] px-4 py-2 text-sm font-medium text-white hover:bg-[#20bd5a] transition-colors disabled:opacity-50 disabled:pointer-events-none"
+              >
+                <MessageCircle className="mr-2 h-4 w-4" />
+                WhatsApp
+              </a>
+            </div>
           </form>
         </CardContent>
       </Card>

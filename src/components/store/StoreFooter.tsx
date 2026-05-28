@@ -4,7 +4,7 @@ import { Mail, Phone, MapPin, ShoppingBag, Facebook, Twitter, Instagram, Linkedi
 import { Separator } from '@/components/ui/separator';
 
 interface StoreFooterProps {
-  onNavigate: (page: string) => void;
+  onNavigate: (page: string, data?: unknown) => void;
   settings?: Record<string, string> | null;
 }
 
@@ -53,11 +53,13 @@ export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
               {[
                 { label: 'Home', page: 'home' },
                 { label: 'Catalogue', page: 'catalogue' },
+                { label: 'About Us', page: 'content-page', data: 'about-us' },
+                { label: 'Blog', page: 'blog' },
                 { label: 'Contact Us', page: 'contact' },
               ].map((link) => (
-                <li key={link.page}>
+                <li key={link.label}>
                   <button
-                    onClick={() => onNavigate(link.page)}
+                    onClick={() => onNavigate(link.page, (link as Record<string, string>).data)}
                     className="text-sm text-muted-foreground transition-colors hover:text-foreground hover:underline"
                   >
                     {link.label}
