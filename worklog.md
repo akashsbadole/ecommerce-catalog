@@ -271,3 +271,30 @@ Stage Summary:
 - All admin API calls now properly send JWT Bearer tokens
 - Duplicate fetch utility files consolidated
 - Existing features verified: WYSIWYG, RBAC middleware, User Management, Redirects, Theme Toggle all working
+---
+Task ID: 2
+Agent: Main Agent
+Task: Fix medium priority items - WYSIWYG upload, Blog authors, Security, TypeScript
+
+Work Log:
+- WYSIWYG inline image upload: Replaced placeholder `imageUploadHandler` in WysiwygEditor.tsx with real implementation that uploads to `/api/upload` with auth token, returns URL on success
+- Blog author dropdown: Changed AdminBlog.tsx `fetchAuthors()` from `/api/auth/me` (only current user) to `/api/users?all=true` (all active users). Added `?all=true` support to `/api/users` GET route
+- JWT security: Generated cryptographically random 64-char hex secret replacing weak default
+- React StrictMode: Enabled `reactStrictMode: true` in next.config.ts, removed `ignoreBuildErrors: true`
+- Image remote patterns: Added wildcard HTTPS and localhost image patterns to next.config.ts
+- Fixed tsconfig.json: Excluded stale directories (examples, skills, download, agent-ctx) from TypeScript compilation
+- Fixed 5 TypeScript errors:
+  - `media/[id]/route.ts`: Cast `Object.values(thumbs)` to `string[]`
+  - `upload/route.ts`: Changed `sharp.Metadata` to `Partial<sharp.Metadata>`, typed `results` array, cast thumbnail values
+  - `WysiwygEditor.tsx`: Added empty children to `DiffSourceToggleWrapper`
+  - `ContentPageView.tsx`: Added `onNavigate` prop to interface
+  - `StoreLayout.tsx`: Cast `cloneElement` children type
+- Verified: WhatsApp button already exists on ProductDetailPage.tsx (lines 718-726)
+- Verified: Frontend search already works (StoreHeader.tsx with Cmd+K, CataloguePage.tsx with inline search)
+
+Stage Summary:
+- WYSIWYG editor now supports direct image upload (not just URL paste)
+- Blog post author dropdown now shows all active users
+- JWT secret upgraded from weak to cryptographically secure 64-char hex
+- React StrictMode enabled for development best practices
+- All TypeScript errors resolved — build passes with zero errors

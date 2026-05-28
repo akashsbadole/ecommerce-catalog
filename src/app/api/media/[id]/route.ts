@@ -18,7 +18,7 @@ export async function DELETE(
     const filesToDelete = [media.url];
     try {
       const thumbs = JSON.parse(media.thumbnails);
-      filesToDelete.push(...Object.values(thumbs));
+      filesToDelete.push(...(Object.values(thumbs) as string[]));
     } catch {}
 
     for (const filePath of filesToDelete) {

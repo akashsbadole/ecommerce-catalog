@@ -195,16 +195,18 @@ export function AdminBlog() {
 
   const fetchAuthors = useCallback(async () => {
     try {
-      const res = await adminFetch('/api/auth/me');
+      const res = await adminFetch('/api/users?all=true');
       if (res.ok) {
         const data = await res.json();
-        // Collect all users — we only have the current user from this endpoint
-        if (data.user) {
-          setAuthors([{ id: data.user.id, name: data.user.name, email: data.user.email }]);
-        }
+        const users = data.users || [];
+        setAuthors(users.map((u: { id: string; name: string; email: string }) => ({
+          id: u.id,
+          name: u.name,
+          email: u.email,
+        })));
       }
     } catch {
-      // ignore
+      // ignore — author dropdown will just be empty
     }
   }, []);
 

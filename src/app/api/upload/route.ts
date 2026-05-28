@@ -57,7 +57,7 @@ async function processImage(
   const url = `/uploads/${filename}`;
 
   // Get original dimensions
-  let metadata: sharp.Metadata = {};
+  let metadata: Partial<sharp.Metadata> = {};
   let width: number | null = null;
   let height: number | null = null;
 
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No files provided' }, { status: 400 });
     }
 
-    const results = [];
+    const results: Awaited<ReturnType<typeof processImage>>[] = [];
 
     for (const file of files) {
       // Validate file type
@@ -220,7 +220,7 @@ export async function DELETE(request: NextRequest) {
     const filesToDelete = [media.url];
     try {
       const thumbs = JSON.parse(media.thumbnails);
-      filesToDelete.push(...Object.values(thumbs));
+      filesToDelete.push(...(Object.values(thumbs) as string[]));
     } catch {}
 
     for (const filePath of filesToDelete) {

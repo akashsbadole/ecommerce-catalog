@@ -10,6 +10,8 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search');
     const role = searchParams.get('role');
 
+    const all = searchParams.get('all') === 'true';
+
     const where: Record<string, unknown> = {};
 
     if (search) {
@@ -21,6 +23,24 @@ export async function GET(request: NextRequest) {
 
     if (role) {
       where.role = role;
+    }
+
+    if (all) {
+      // Return all active users (for dropdowns like author select)
+      const users = await db.user.findMany({
+        where: { isActive: true },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          isActive: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: { name: 'asc' },
+      });
+      return NextResponse.json({ users });
     }
 
     const [users, total] = await Promise.all([

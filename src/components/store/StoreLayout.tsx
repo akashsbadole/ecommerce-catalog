@@ -99,7 +99,7 @@ export function StoreLayout({ currentPage, onNavigate, children }: StoreLayoutPr
         <div className="container mx-auto px-4 py-8">
           {settings
             ? isValidElement(children)
-              ? cloneElement(children, { settings })
+              ? cloneElement(children as React.ReactElement<Record<string, unknown>>, { settings })
               : children
             : children}
         </div>

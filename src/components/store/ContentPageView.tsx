@@ -17,9 +17,10 @@ interface ContentPageData {
 
 interface ContentPageViewProps {
   slug: string;
+  onNavigate?: (page: string, data?: unknown) => void;
 }
 
-export function ContentPageView({ slug }: ContentPageViewProps) {
+export function ContentPageView({ slug, onNavigate }: ContentPageViewProps) {
   const [page, setPage] = useState<ContentPageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

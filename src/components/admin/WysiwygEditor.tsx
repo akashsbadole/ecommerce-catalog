@@ -70,10 +70,38 @@ export default function WysiwygEditor({
           linkDialogPlugin(),
           imagePlugin({
             imageAutocompleteSuggestions: [],
-            imageUploadHandler: async () => {
-              // We don't support file upload in the editor itself
-              // Users can paste image URLs via InsertImage dialog
-              return Promise.reject('File upload not supported. Use Insert Image to add a URL.');
+            imageUploadHandler: async (image) => {
+              try {
+                const formData = new FormData();
+                formData.append('file', image);
+
+                const token = typeof window !== 'undefined'
+                  ? localStorage.getItem('admin_token')
+                  : null;
+
+                const headers: Record<string, string> = {};
+                if (token) {
+                  headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                const res = await fetch('/api/upload', {
+                  method: 'POST',
+                  headers,
+                  body: formData,
+                });
+
+                if (!res.ok) {
+                  const err = await res.json().catch(() => ({}));
+                  throw new Error(err.error || 'Upload failed');
+                }
+
+                const data = await res.json();
+                return data.url;
+              } catch (err) {
+                throw new Error(
+                  err instanceof Error ? err.message : 'Image upload failed'
+                );
+              }
             },
           }),
           tablePlugin(),
@@ -110,7 +138,9 @@ export default function WysiwygEditor({
                 <InsertCodeBlock />
                 <InsertThematicBreak />
                 <div className="h-4 w-px bg-border mx-1" />
-                <DiffSourceToggleWrapper />
+                <DiffSourceToggleWrapper>
+                  <></>
+                </DiffSourceToggleWrapper>
               </>
             ),
           }),
