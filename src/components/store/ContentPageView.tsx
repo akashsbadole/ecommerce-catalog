@@ -3,12 +3,15 @@
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle } from 'lucide-react';
+import { PageBlockRenderer } from '@/components/store/PageBlockRenderer';
+import type { PageBlock } from '@/lib/page-blocks';
 
 interface ContentPageData {
   id: string;
   title: string;
   slug: string;
   content: string;
+  blocks: string;
   heroImage: string | null;
   metaTitle: string | null;
   metaDescription: string | null;
@@ -98,6 +101,19 @@ export function ContentPageView({ slug, onNavigate }: ContentPageViewProps) {
     };
   }, [page]);
 
+  // Parse blocks
+  const parsedBlocks: PageBlock[] = (() => {
+    if (!page) return [];
+    try {
+      const raw = page.blocks || '[]';
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      return [];
+    } catch {
+      return [];
+    }
+  })();
+
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
@@ -131,6 +147,18 @@ export function ContentPageView({ slug, onNavigate }: ContentPageViewProps) {
     );
   }
 
+  // Render blocks if available
+  if (parsedBlocks.length > 0) {
+    return (
+      <article className="w-full">
+        {parsedBlocks.map((block) => (
+          <PageBlockRenderer key={block.id} block={block} onNavigate={onNavigate} />
+        ))}
+      </article>
+    );
+  }
+
+  // Fallback to HTML content
   return (
     <article className="max-w-4xl mx-auto px-4 py-8">
       {/* Hero Section */}

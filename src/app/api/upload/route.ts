@@ -5,6 +5,10 @@ import path from 'path';
 import sharp from 'sharp';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '@/lib/db';
+import { checkRateLimit } from '@/lib/rate-limit';
+
+// Max 20 uploads per hour per IP (POST only)
+const UPLOAD_RATE_LIMIT = { maxRequests: 20, windowMs: 60 * 60 * 1000, prefix: 'upload-post' };
 
 const UPLOADS_DIR = path.join(process.cwd(), 'public', 'uploads');
 
@@ -71,10 +75,10 @@ async function processImage(
   // Save original file
   await writeFile(filePath, buffer);
 
-  // Generate thumbnails for raster images (skip SVG)
+  // Generate thumbnails for raster images (skip SVG and GIF)
   const thumbnails: Record<string, string> = {};
 
-  if (mimeType !== 'image/svg+xml' && width && height) {
+  if (mimeType !== 'image/svg+xml' && mimeType !== 'image/gif' && width && height) {
     for (const [sizeName, maxSize] of Object.entries(SIZES)) {
       try {
         const thumbFilename = `${timestamp}-${random}-${sizeName}${ext}`;
@@ -82,12 +86,31 @@ async function processImage(
         const thumbUrl = `/uploads/${thumbFilename}`;
 
         await sharp(buffer)
+          .rotate() // auto-strip EXIF, auto-orient
           .resize(maxSize, maxSize, { fit: 'inside', withoutEnlargement: true })
           .toFile(thumbPath);
 
         thumbnails[sizeName] = thumbUrl;
       } catch (err) {
         console.error(`Failed to create ${sizeName} thumbnail:`, err);
+      }
+    }
+
+    // Generate WebP version for non-SVG, non-GIF images (JPEG, PNG)
+    if (mimeType === 'image/jpeg' || mimeType === 'image/png') {
+      try {
+        const webpFilename = `${timestamp}-${random}.webp`;
+        const webpPath = path.join(UPLOADS_DIR, webpFilename);
+        const webpUrl = `/uploads/${webpFilename}`;
+
+        await sharp(buffer)
+          .rotate() // auto-strip EXIF, auto-orient
+          .webp({ quality: 80 })
+          .toFile(webpPath);
+
+        thumbnails['webp'] = webpUrl;
+      } catch (err) {
+        console.error('Failed to create WebP version:', err);
       }
     }
   }
@@ -111,6 +134,9 @@ async function processImage(
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const rateLimitResponse = checkRateLimit(request, UPLOAD_RATE_LIMIT);
+    if (rateLimitResponse) return rateLimitResponse;
     const formData = await request.formData();
     const files: File[] = [];
 

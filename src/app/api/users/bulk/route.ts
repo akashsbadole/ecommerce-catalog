@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { createNotification } from '@/lib/notifications';
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,6 +24,14 @@ export async function POST(request: NextRequest) {
         const result = await db.user.deleteMany({
           where: { id: { in: safeIds } },
         });
+        try {
+          await createNotification({
+            title: 'Bulk User Delete',
+            message: `Deleted ${result.count} user(s)`,
+            type: 'warning',
+            link: 'users',
+          });
+        } catch { /* ignore */ }
         return NextResponse.json({ message: `Deleted ${result.count} user(s)` });
       }
       case 'activate': {
@@ -30,6 +39,14 @@ export async function POST(request: NextRequest) {
           where: { id: { in: ids } },
           data: { isActive: true },
         });
+        try {
+          await createNotification({
+            title: 'Bulk User Activate',
+            message: `Activated ${result.count} user(s)`,
+            type: 'success',
+            link: 'users',
+          });
+        } catch { /* ignore */ }
         return NextResponse.json({ message: `Activated ${result.count} user(s)` });
       }
       case 'deactivate': {
@@ -39,6 +56,14 @@ export async function POST(request: NextRequest) {
           where: { id: { in: safeIds } },
           data: { isActive: false },
         });
+        try {
+          await createNotification({
+            title: 'Bulk User Deactivate',
+            message: `Deactivated ${result.count} user(s)`,
+            type: 'warning',
+            link: 'users',
+          });
+        } catch { /* ignore */ }
         return NextResponse.json({ message: `Deactivated ${result.count} user(s)` });
       }
       default:

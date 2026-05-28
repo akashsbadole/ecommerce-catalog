@@ -10,6 +10,8 @@ import {
   AlertTriangle,
   ChevronDown,
   SearchCode,
+  Power,
+  PowerOff,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -51,6 +53,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { Checkbox } from '@/components/ui/checkbox';
 import { adminFetch } from '@/lib/admin-fetch';
 
 interface Category {
@@ -110,6 +113,11 @@ export function AdminCategories() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteCategory, setDeleteCategory] = useState<Category | null>(null);
+
+  // Bulk selection state
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkAction, setBulkAction] = useState<string | null>(null);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -205,6 +213,71 @@ export function AdminCategories() {
     }
   };
 
+  const handleSelectAll = () => {
+    if (selectedIds.length === categories.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(categories.map(c => c.id));
+    }
+  };
+
+  const handleSelectOne = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkAction = async (action: string) => {
+    if (selectedIds.length === 0) return;
+    if (action === 'delete') {
+      setBulkAction(action);
+      return;
+    }
+    setBulkLoading(true);
+    try {
+      const res = await adminFetch('/api/categories/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: selectedIds, action }),
+      });
+      if (res.ok) {
+        toast.success(`${action === 'activate' ? 'Activated' : 'Deactivated'} ${selectedIds.length} categor${selectedIds.length === 1 ? 'y' : 'ies'}`);
+        setSelectedIds([]);
+        fetchCategories();
+      } else {
+        toast.error('Bulk action failed');
+      }
+    } catch {
+      toast.error('Bulk action failed');
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    setBulkLoading(true);
+    try {
+      const res = await adminFetch('/api/categories/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: selectedIds, action: 'delete' }),
+      });
+      if (res.ok) {
+        toast.success(`Deleted ${selectedIds.length} categor${selectedIds.length === 1 ? 'y' : 'ies'}`);
+        setSelectedIds([]);
+        setBulkAction(null);
+        fetchCategories();
+      } else {
+        toast.error('Bulk delete failed');
+      }
+    } catch {
+      toast.error('Bulk delete failed');
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
   const handleDeleteClick = (cat: Category) => {
     setDeleteId(cat.id);
     setDeleteCategory(cat);
@@ -245,6 +318,47 @@ export function AdminCategories() {
         </Button>
       </div>
 
+      {/* Bulk Actions Toolbar */}
+      {selectedIds.length > 0 && (
+        <div className="flex items-center gap-3 rounded-lg border bg-muted/50 p-3">
+          <span className="text-sm font-medium">
+            {selectedIds.length} selected
+          </span>
+          <div className="flex gap-2 ml-auto">
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+              onClick={() => handleBulkAction('activate')}
+              disabled={bulkLoading}
+            >
+              <Power className="mr-1.5 h-3.5 w-3.5" />
+              Activate
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+              onClick={() => handleBulkAction('deactivate')}
+              disabled={bulkLoading}
+            >
+              <PowerOff className="mr-1.5 h-3.5 w-3.5" />
+              Deactivate
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+              onClick={() => handleBulkAction('delete')}
+              disabled={bulkLoading}
+            >
+              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+              Delete
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Categories Table */}
       <Card>
         {loading ? (
@@ -266,6 +380,13 @@ export function AdminCategories() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={categories.length > 0 && selectedIds.length === categories.length}
+                      onCheckedChange={handleSelectAll}
+                      aria-label="Select all"
+                    />
+                  </TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead className="hidden sm:table-cell">Slug</TableHead>
                   <TableHead className="hidden md:table-cell">Description</TableHead>
@@ -276,7 +397,14 @@ export function AdminCategories() {
               </TableHeader>
               <TableBody>
                 {categories.map((cat) => (
-                  <TableRow key={cat.id}>
+                  <TableRow key={cat.id} className={selectedIds.includes(cat.id) ? 'bg-muted/50' : ''}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.includes(cat.id)}
+                        onCheckedChange={() => handleSelectOne(cat.id)}
+                        aria-label={`Select ${cat.name}`}
+                      />
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         {cat.image ? (
@@ -539,6 +667,32 @@ export function AdminCategories() {
               className="bg-rose-600 hover:bg-rose-700"
             >
               {deleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirmation */}
+      <AlertDialog open={bulkAction === 'delete'} onOpenChange={() => setBulkAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Bulk Delete Categories
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selectedIds.length} selected categor{selectedIds.length === 1 ? 'y' : 'ies'}?
+              This action cannot be undone. Products in these categories will have their category removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              disabled={bulkLoading}
+              className="bg-rose-600 hover:bg-rose-700"
+            >
+              {bulkLoading ? 'Deleting...' : `Delete ${selectedIds.length} Categor${selectedIds.length === 1 ? 'y' : 'ies'}`}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

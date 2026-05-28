@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendEnquiryNotificationToAdmin, sendEnquiryConfirmation } from '@/lib/email';
+import { checkRateLimit } from '@/lib/rate-limit';
+
+// Max 10 contact form submissions per hour per IP
+const CONTACT_RATE_LIMIT = { maxRequests: 10, windowMs: 60 * 60 * 1000, prefix: 'contact' };
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const rateLimitResponse = checkRateLimit(request, CONTACT_RATE_LIMIT);
+    if (rateLimitResponse) return rateLimitResponse;
     const body = await request.json();
     const {
       name,

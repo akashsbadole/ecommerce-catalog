@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { logActivity } from '@/lib/activity-log';
 
 export async function GET(request: NextRequest) {
   try {
@@ -99,6 +100,20 @@ export async function POST(request: NextRequest) {
       },
       include: { category: true },
     });
+
+    // Log product creation
+    const userId = request.headers.get('x-user-id') || undefined;
+    const userName = request.headers.get('x-user-email') || undefined;
+    const ipAddress = request.headers.get('x-forwarded-for') || undefined;
+    logActivity({
+      action: 'product.create',
+      entity: 'Product',
+      entityId: product.id,
+      userId,
+      userName,
+      ipAddress,
+      details: { name: product.name, price: product.price },
+    }).catch(() => {});
 
     return NextResponse.json({ product }, { status: 201 });
   } catch (error) {

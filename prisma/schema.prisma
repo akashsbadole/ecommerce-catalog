@@ -19,6 +19,7 @@ model User {
 
   enquiries     Enquiry[]
   blogPosts     BlogPost[]
+  activityLogs  ActivityLog[]
 }
 
 model Category {
@@ -112,6 +113,7 @@ model ContentPage {
   title           String
   slug            String   @unique
   content         String   @default("") // HTML from WYSIWYG
+  blocks          String   @default("[]") // JSON array of page blocks
   heroImage       String?
   metaTitle       String?
   metaDescription String?
@@ -166,4 +168,37 @@ model Redirect {
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String?  // null = broadcast to all users
+  title     String
+  message   String
+  type      String   @default("info") // info, success, warning, error
+  isRead    Boolean  @default(false)
+  link      String?  // optional navigation link
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  userName  String?
+  action    String   // e.g., "product.create", "category.delete", "user.login"
+  entity    String?  // e.g., "Product", "Category", "User"
+  entityId  String?
+  details   String?  // JSON string with extra context
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([action])
+  @@index([entity])
+  @@index([createdAt])
 }

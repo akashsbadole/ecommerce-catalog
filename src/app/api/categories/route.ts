@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { logActivity } from '@/lib/activity-log';
 
 export async function GET(request: NextRequest) {
   try {
@@ -50,6 +51,20 @@ export async function POST(request: NextRequest) {
         metaDescription: metaDescription || null,
       },
     });
+
+    // Log category creation
+    const userId = request.headers.get('x-user-id') || undefined;
+    const userName = request.headers.get('x-user-email') || undefined;
+    const ipAddress = request.headers.get('x-forwarded-for') || undefined;
+    logActivity({
+      action: 'category.create',
+      entity: 'Category',
+      entityId: category.id,
+      userId,
+      userName,
+      ipAddress,
+      details: { name: category.name },
+    }).catch(() => {});
 
     return NextResponse.json({ category }, { status: 201 });
   } catch (error) {

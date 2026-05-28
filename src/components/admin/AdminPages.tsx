@@ -11,12 +11,21 @@ import {
   FileText,
   ChevronDown,
   SearchCode,
+  Blocks,
+  Save,
+  ArrowLeft,
 } from 'lucide-react';
+
+const PageBuilder = dynamic(
+  () => import('@/components/admin/PageBuilder').then(m => ({ default: m.PageBuilder })),
+  { ssr: false, loading: () => <div className="min-h-[400px] rounded-md border border-input bg-muted/30 animate-pulse" /> }
+);
 
 const WysiwygEditor = dynamic(
   () => import('@/components/admin/WysiwygEditor'),
   { ssr: false, loading: () => <div className="min-h-[300px] rounded-md border border-input bg-muted/30 animate-pulse" /> }
 );
+
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,12 +68,14 @@ import {
 } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { adminFetch } from '@/lib/admin-fetch';
+import type { PageBlock } from '@/lib/page-blocks';
 
 interface ContentPage {
   id: string;
   title: string;
   slug: string;
   content: string;
+  blocks: string;
   heroImage: string | null;
   metaTitle: string | null;
   metaDescription: string | null;
@@ -78,6 +89,7 @@ interface PageFormData {
   title: string;
   slug: string;
   content: string;
+  blocks: PageBlock[];
   heroImage: string;
   metaTitle: string;
   metaDescription: string;
@@ -90,6 +102,7 @@ const emptyForm: PageFormData = {
   title: '',
   slug: '',
   content: '',
+  blocks: [],
   heroImage: '',
   metaTitle: '',
   metaDescription: '',
@@ -121,6 +134,13 @@ export function AdminPages() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Builder mode
+  const [builderMode, setBuilderMode] = useState(false);
+  const [builderPageId, setBuilderPageId] = useState<string | null>(null);
+  const [builderPageTitle, setBuilderPageTitle] = useState('');
+  const [builderBlocks, setBuilderBlocks] = useState<PageBlock[]>([]);
+  const [builderSaving, setBuilderSaving] = useState(false);
+
   const fetchPages = useCallback(async () => {
     try {
       const params = new URLSearchParams({ all: 'true' });
@@ -151,10 +171,19 @@ export function AdminPages() {
 
   const handleOpenEdit = (page: ContentPage) => {
     setEditingPage(page);
+    let parsedBlocks: PageBlock[] = [];
+    try {
+      const raw = page.blocks || '[]';
+      parsedBlocks = JSON.parse(raw);
+      if (!Array.isArray(parsedBlocks)) parsedBlocks = [];
+    } catch {
+      parsedBlocks = [];
+    }
     setForm({
       title: page.title,
       slug: page.slug,
       content: page.content || '',
+      blocks: parsedBlocks,
       heroImage: page.heroImage || '',
       metaTitle: page.metaTitle || '',
       metaDescription: page.metaDescription || '',
@@ -164,6 +193,47 @@ export function AdminPages() {
     });
     setSeoOpen(!!(page.metaTitle || page.metaDescription));
     setFormOpen(true);
+  };
+
+  const handleOpenBuilder = (page: ContentPage) => {
+    setBuilderPageId(page.id);
+    setBuilderPageTitle(page.title);
+    try {
+      const raw = page.blocks || '[]';
+      const parsed = JSON.parse(raw);
+      setBuilderBlocks(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      setBuilderBlocks([]);
+    }
+    setBuilderMode(true);
+  };
+
+  const handleExitBuilder = () => {
+    setBuilderMode(false);
+    setBuilderPageId(null);
+    setBuilderBlocks([]);
+  };
+
+  const handleBuilderSave = async () => {
+    if (!builderPageId) return;
+    setBuilderSaving(true);
+    try {
+      const res = await adminFetch(`/api/content-pages/${builderPageId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blocks: builderBlocks }),
+      });
+      if (res.ok) {
+        toast.success('Page blocks saved');
+      } else {
+        const err = await res.json();
+        toast.error(err.error || 'Failed to save blocks');
+      }
+    } catch {
+      toast.error('Failed to save blocks');
+    } finally {
+      setBuilderSaving(false);
+    }
   };
 
   const handleTitleChange = (title: string) => {
@@ -186,6 +256,7 @@ export function AdminPages() {
         title: form.title.trim(),
         slug: form.slug.trim() || generateSlug(form.title),
         content: form.content.trim() || '',
+        blocks: form.blocks,
         heroImage: form.heroImage.trim() || null,
         metaTitle: form.metaTitle.trim() || null,
         metaDescription: form.metaDescription.trim() || null,
@@ -239,6 +310,38 @@ export function AdminPages() {
       setDeleting(false);
     }
   };
+
+  // Builder mode view
+  if (builderMode) {
+    return (
+      <div className="space-y-6">
+        {/* Builder Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="icon" onClick={handleExitBuilder}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">Page Builder</h2>
+              <p className="text-muted-foreground mt-1">
+                Editing: <span className="font-medium text-foreground">{builderPageTitle}</span>
+              </p>
+            </div>
+          </div>
+          <Button onClick={handleBuilderSave} disabled={builderSaving}>
+            <Save className="mr-2 h-4 w-4" />
+            {builderSaving ? 'Saving...' : 'Save Blocks'}
+          </Button>
+        </div>
+
+        {/* Builder Component */}
+        <PageBuilder
+          blocks={builderBlocks}
+          onChange={setBuilderBlocks}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -335,7 +438,17 @@ export function AdminPages() {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8"
+                          onClick={() => handleOpenBuilder(page)}
+                          title="Open Page Builder"
+                        >
+                          <Blocks className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
                           onClick={() => handleOpenEdit(page)}
+                          title="Edit Page"
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -344,6 +457,7 @@ export function AdminPages() {
                           size="icon"
                           className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
                           onClick={() => setDeleteId(page.id)}
+                          title="Delete Page"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

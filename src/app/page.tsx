@@ -125,7 +125,33 @@ export default function MainApp() {
       case 'blog-post':
         return <BlogPostView postId={currentPage.postId} onNavigate={handleNavigate} />;
       default:
-        return <HomePage onNavigate={handleNavigate} />;
+        return (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="relative">
+              <span className="text-[8rem] font-black leading-none tracking-tighter text-emerald-100 dark:text-emerald-900/30 select-none sm:text-[10rem]">
+                404
+              </span>
+            </div>
+            <h1 className="mt-4 text-2xl font-bold tracking-tight">Page not found</h1>
+            <p className="mt-2 text-muted-foreground max-w-md">
+              The page you&apos;re looking for doesn&apos;t exist or has been moved.
+            </p>
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={() => handleNavigate('home')}
+                className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors"
+              >
+                Back to Home
+              </button>
+              <button
+                onClick={() => handleNavigate('catalogue')}
+                className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
+              >
+                Browse Catalogue
+              </button>
+            </div>
+          </div>
+        );
     }
   };
 

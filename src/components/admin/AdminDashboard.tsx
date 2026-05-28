@@ -16,6 +16,7 @@ import {
   Menu,
   ChevronRight,
   Users,
+  ClipboardList,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -38,7 +39,10 @@ import { AdminPages } from '@/components/admin/AdminPages';
 import { AdminBlog } from '@/components/admin/AdminBlog';
 import { AdminRedirects } from '@/components/admin/AdminRedirects';
 import { AdminUsers } from '@/components/admin/AdminUsers';
+import { AdminActivityLog } from '@/components/admin/AdminActivityLog';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { NotificationBell } from '@/components/admin/NotificationBell';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 interface AdminDashboardProps {
   user: { id: string; email: string; name: string; role: string } | null;
@@ -58,6 +62,7 @@ const sidebarItems = [
   { id: 'banners', label: 'Banners', icon: ImageIcon },
   { id: 'redirects', label: 'Redirects', icon: ArrowRightLeft },
   { id: 'users', label: 'Users', icon: Users },
+  { id: 'activity-log', label: 'Activity Log', icon: ClipboardList },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
@@ -125,7 +130,10 @@ function SidebarContent({
             <p className="text-sm font-medium">{userName}</p>
             <p className="text-xs text-muted-foreground">{userEmail}</p>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+            <ThemeToggle />
+          </div>
         </div>
         <Separator />
         <div className="flex flex-col gap-1">
@@ -189,6 +197,8 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
         return <AdminRedirects />;
       case 'users':
         return <AdminUsers />;
+      case 'activity-log':
+        return <AdminActivityLog />;
       case 'settings':
         return <AdminSettings />;
       default:
@@ -241,21 +251,26 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
               </span>
             </div>
             <Badge variant="secondary" className="text-xs ml-1">Admin</Badge>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="ml-auto text-rose-600"
-              onClick={onLogout}
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
+            <div className="ml-auto flex items-center gap-1">
+              <NotificationBell />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-rose-600"
+                onClick={onLogout}
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
           </header>
         )}
 
         {/* Page Content */}
         <ScrollArea className="flex-1">
           <div className="p-4 sm:p-6 lg:p-8">
-            {renderContent()}
+            <ErrorBoundary>
+              {renderContent()}
+            </ErrorBoundary>
           </div>
         </ScrollArea>
       </div>

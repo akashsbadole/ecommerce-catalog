@@ -1,300 +1,273 @@
----
-Task ID: prod-api
-Agent: Sub-agent (full-stack-developer)
-Task: Build SEO API routes, enhance existing API routes with B2B fields, upgrade email system
-
-Work Log:
-- Updated products API (POST/PUT) with wholesalePrice, minOrderQty, metaTitle, metaDescription
-- Updated categories API (POST/PUT) with metaTitle, metaDescription
-- Updated enquiries API (POST/PUT) with companyName, companyEmail, companyPhone, companyAddress, quantity, type=rfq
-- Created /api/seo/sitemap returning dynamic XML sitemap with all pages
-- Created /api/seo/robots returning robots.txt with sitemap reference
-- Rewrote /src/lib/email.ts with professional HTML email templates
-- Added sendEnquiryNotificationToAdmin() with full B2B fields in branded HTML
-- Added sendEnquiryConfirmation() for auto-reply to customers
-- Updated /api/contact to send both admin notification + customer auto-reply
-
-Stage Summary:
-- 4 API routes updated, 2 new API routes created
-- Production email with branded HTML templates, auto-reply, admin notification
-- All verified with curl tests
+# Work Log
 
 ---
-Task ID: prod-store
-Agent: Sub-agent (full-stack-developer)
-Task: Enhance all storefront and admin components with B2B features and SEO
+Task ID: MP-1, MP-2, MP-3
+Agent: full-stack-developer (rate-limit-404-errorboundary)
+Task: API Rate Limiting, Custom 404 Page, Error Boundary
 
 Work Log:
-- EnquiryModal: Added collapsible Business Details section, quantity input, enquiry type selector (General/RFQ)
-- ProductDetailPage: Added dynamic meta, JSON-LD Product schema, breadcrumbs, wholesale price display, MOQ, B2B enquiry form
-- CataloguePage: Added dynamic meta, MOQ badge, wholesale price on cards, Request Quote button
-- HomePage: Added dynamic meta, JSON-LD WebSite + Organization structured data, Request Quote button
-- ContactPage: Added collapsible business details (Company Name, Phone), dynamic meta
-- StoreLayout: Added JSON-LD Organization from settings
-- AdminProducts: Added collapsible B2B section (wholesale, MOQ), SEO section (meta title, meta description with counter)
-- AdminCategories: Added collapsible SEO section with character counter
-- AdminEnquiries: Added B2B detail view, RFQ badge, type labels
+- Created `src/lib/rate-limit.ts` — in-memory sliding window rate limiter using Map, IP-based, cleanup every 10min
+- Applied rate limiting: /api/auth/login (5/15min), /api/contact (10/hour), /api/enquiries (10/hour), /api/upload (20/hour)
+- Created `src/app/not-found.tsx` — beautiful 404 page with emerald accent, AlertTriangle icon, Back to Home + Browse Catalogue buttons
+- Created `src/app/global-error.tsx` — global error boundary with 'use client', friendly error message, Try Again reset button
+- Updated `src/app/page.tsx` — default case in renderPage() now shows inline 404 component instead of redirecting to home
+- Created `src/components/ErrorBoundary.tsx` — React class component with getDerivedStateFromError + componentDidCatch
+- Updated `src/components/admin/AdminDashboard.tsx` — wrapped renderContent() with ErrorBoundary
 
 Stage Summary:
-- 9 components updated with B2B + SEO features
-- ESLint passes with zero errors
-- All JSON-LD structured data injected via useEffect
+- Rate limiting protects 4 public endpoints from brute force/spam
+- Custom 404 for both Next.js routing and SPA client-side routing
+- Error Boundary prevents admin dashboard crashes from propagating
+- Build: SUCCESS, zero errors
 
 ---
-Task ID: prod-config
-Agent: Sub-agent (full-stack-developer)
-Task: Production configuration, SEO admin settings, header enhancement
+Task ID: MP-4, MP-5
+Agent: full-stack-developer (categories-bulk-audit-log)
+Task: Categories Bulk Operations, Audit/Activity Log System
 
 Work Log:
-- Created .env.example with DATABASE_URL, NEXT_PUBLIC_SITE_URL, SMTP template
-- AdminSettings: Added SEO Settings card (meta title, description w/counter, GA ID, FB Pixel, canonical URL, SEO checklist)
-- AdminSettings: Added B2B Settings card (show company fields, require company, default MOQ, auto-reply toggle)
-- AdminDashboardHome: Added RFQ Requests stat card, SEO Settings quick action, 4-column grid layout
-- layout.tsx: Production metadata with title template, Viewport export, robots config, formatDetection
-- StoreHeader: Added "Request Quote" button (desktop nav + mobile menu), emerald outline styling
+- Created `src/app/api/categories/bulk/route.ts` — POST endpoint for activate/deactivate/delete bulk actions
+- Updated `src/components/admin/AdminCategories.tsx` — added checkbox column, select all, bulk actions toolbar (activate/deactivate/delete)
+- Added ActivityLog model to prisma/schema.prisma with indexes on action, entity, createdAt
+- Added activityLogs relation to User model
+- Ran `npx prisma db push` to sync
+- Created `src/lib/activity-log.ts` — logActivity() utility with LogAction type (30+ action types)
+- Created `src/app/api/activity-logs/route.ts` — GET with pagination, entity/action filtering, search
+- Created `src/components/admin/AdminActivityLog.tsx` — full viewer with entity filter, colored badges, expandable JSON, pagination
+- Updated `src/components/admin/AdminDashboard.tsx` — added Activity Log sidebar item with ClipboardList icon
+- Added activity logging to: auth/login (user.login), products (product.create), categories (category.create), blog (blog.create)
 
 Stage Summary:
-- Production .env.example created
-- 9 new site settings for SEO and B2B configuration
-- Admin dashboard with 7 stat cards including RFQ count
-- Professional header with Request Quote CTA
+- Categories now have bulk operations matching Products/Blog pattern
+- Full audit log system: Prisma model, API, admin viewer, 4 auto-logging endpoints
+- Build: SUCCESS, zero errors
 
 ---
-Task ID: 1
-Agent: auth-media-agent
-Task: JWT Auth + Middleware + Media Library
+Task ID: MP-6, MP-7, LP-1
+Agent: full-stack-developer (blog-footer-notifications)
+Task: Blog Tag Filtering, StoreFooter Fix, In-App Notifications
 
 Work Log:
-- Replaced mock token auth with proper JWT (HS256) using jose library
-- Updated /api/auth/me to verify Bearer token instead of relying on middleware header
-- Created Next.js middleware for API route protection with public path allowlist
-- Created /api/upload endpoint with sharp image resizing (thumbnail, small, medium, large)
-- Created /api/media GET (paginated, searchable) and PUT (update alt/folder) routes
-- Created /api/media/[id] DELETE route with file cleanup
-- Created AdminMedia component with grid/list views, upload, drag-drop, search, pagination, preview dialog, alt text editing, copy URL
+- Updated `src/app/api/blog/route.ts` — added tag query param filtering
+- Updated `src/components/store/BlogPage.tsx` — tag filter bar, search input, client-side filtering
+- Updated `src/components/store/StoreFooter.tsx` — connected social URLs to settings, functional Customer Service links, newsletter form, WhatsApp link
+- Added Notification model to prisma/schema.prisma
+- Created `src/app/api/notifications/route.ts` — GET (list + unreadCount) + POST (admin create)
+- Created `src/app/api/notifications/[id]/route.ts` — PUT (mark read) + DELETE (admin)
+- Created `src/app/api/notifications/read-all/route.ts` — PUT (mark all read)
+- Created `src/lib/notifications.ts` — createNotification() utility
+- Created `src/components/admin/NotificationBell.tsx` — bell icon with unread badge, popover, 60s polling
+- Updated AdminDashboard with NotificationBell in desktop sidebar + mobile header
+- Auto-notifications on new enquiry (broadcast) and bulk user operations
 
 Stage Summary:
-- JWT auth with proper tokens, middleware protection, role-based headers
-- Media library with upload, resize, gallery UI, search, pagination
-- Files created/modified: lib/auth.ts, middleware.ts, api/auth/me/route.ts, api/upload/route.ts, api/media/route.ts, api/media/[id]/route.ts, components/admin/AdminMedia.tsx
-- ESLint passes with zero errors
+- Blog storefront has tag filtering and search
+- Footer fully functional: social links, customer service pages, newsletter form
+- Complete notification system: model, API, bell UI, auto-creation on events
+- Build: SUCCESS, zero errors
 
 ---
-Task ID: 3
-Agent: b2b-frontend-agent
-Task: B2B Frontend Enhancements
+Task ID: LP-2, LP-3, LP-4
+Agent: full-stack-developer (page-builder-webp-loading)
+Task: DnD Page Builder, WebP Conversion, Loading/Error States
 
 Work Log:
-- Added WhatsApp button to product detail page (green #25D366, pre-filled message, fallback to site settings)
-- Added bulk operations to admin products (checkbox select, select all, publish/unpublish/delete with confirmation)
-- Created /api/products/bulk endpoint for bulk publish/unpublish/delete operations
-- Added WhatsApp Number field to product B2B form section in AdminProducts
-- Added Cmd+K / Ctrl+K search dialog to store header with debounced product search
-- Added new sidebar tabs to admin dashboard (Media, Pages, Blog, Redirects)
-- Created placeholder components: AdminMedia, AdminPages, AdminBlog, AdminRedirects
-- Created ContentPageView component for static content pages
-- Created BlogPage component for blog listing
-- Created BlogPostView component for individual blog posts
-- Updated main app router with new page types (content-page, blog, blog-post)
-- Updated store footer with About Us and Blog quick links
-- Updated AdminLogin to pass real JWT token from login response
-- Updated handleAdminLogin in page.tsx to accept and store real JWT
-- Created authFetch helper at src/lib/fetch.ts for Bearer token injection
-- Updated StoreFooter onNavigate type to support data parameter
+- Added `blocks String @default("[]")` to ContentPage in prisma/schema.prisma
+- Created `src/lib/page-blocks.ts` — 10 block types with defaults
+- Created `src/components/store/PageBlockRenderer.tsx` — storefront renderer for all blocks
+- Created `src/components/admin/PageBuilder.tsx` — @dnd-kit visual builder with add/edit/delete/reorder
+- Updated AdminPages.tsx — builder mode with Blocks button per page
+- Updated content-pages API routes — blocks field in create/update
+- Updated ContentPageView.tsx — renders blocks via PageBlockRenderer, falls back to HTML
+- Updated upload API — WebP auto-conversion for JPEG/PNG, EXIF stripping via .rotate()
+- Created `src/app/loading.tsx` — centered spinner with StyleStore branding
+- Created `src/app/error.tsx` — error page with Try Again + Go Home buttons
 
 Stage Summary:
-- WhatsApp integration on product pages with pre-filled messages
-- Bulk product management with checkbox selection and actions
-- Global search with keyboard shortcut (Cmd+K) and debounced results
-- Extended admin navigation with 4 new sidebar tabs
-- SPA routing extended for content pages, blog listing, and blog posts
-- ESLint passes with zero errors
+- Visual drag-and-drop page builder with 10 block types
+- WebP auto-conversion reduces image sizes
+- Proper loading/error states for Next.js streaming
+- Build: SUCCESS
 
 ---
-Task ID: 2
-Agent: cms-pages-agent
-Task: CMS Pages, Blog, and Redirects Management
+Task ID: BUILD-FINAL
+Agent: Main Agent
+Task: Final build verification after all medium + low priority features
 
 Work Log:
-- Created Content Pages CRUD API (GET list with search/slug filter, POST create, GET/PUT/DELETE by id)
-- Created Blog Posts CRUD API (GET list with pagination/search/published filter, POST create with auto-publish date, GET/PUT/DELETE by id)
-- Created Blog bulk operations endpoint (publish/unpublish/delete)
-- Created Redirects CRUD API (GET list, POST create, PUT/DELETE by id)
-- Created Redirects bulk delete endpoint
-- Created AdminPages component for content page management (table, add/edit dialog with hero image, content textarea, collapsible SEO section, delete confirmation)
-- Created AdminBlog component with bulk select/publish/unpublish/delete, pagination, search, tags, author select
-- Created AdminRedirects component for URL redirect management (table, add/edit dialog with type select, test redirect button, bulk delete, SEO best practices note)
-- Created public ContentPageView component (fetch by slug, hero section, HTML content rendering, dynamic meta/OG tags)
-- Created public BlogPage component (published posts grid with cover images, pagination)
-- Created public BlogPostView component (full post with cover, author, date, tags, excerpt, dynamic meta/OG tags)
+- Ran `npx prisma db push` — schema in sync
+- Ran `npx next build` — all 36+ routes compiled successfully
+- Zero errors, zero warnings
+- All new API routes verified: /api/categories/bulk, /api/activity-logs, /api/notifications, /api/notifications/[id], /api/notifications/read-all
 
 Stage Summary:
-- Full CMS page management (About, custom pages with SEO)
-- Blog system with publish/unpublish workflow and bulk operations
-- URL redirect management (301/302) with SEO best practices
-- 8 API route files and 6 component files created
-- All files in api/ and components/ directories
-- ESLint passes with zero errors
+- Total features implemented this session: 11 (7 medium + 4 low priority)
+- Total new files created: ~20
+- Total files modified: ~15
+- Production build: SUCCESS
+- All routes: 36+ API endpoints, 12+ admin tabs, 8+ public pages
 
----
-Task ID: 4
-Agent: main
-Task: Final integration and build verification
+## LP-2: Drag-and-Drop Page Builder
 
-Work Log:
-- Fixed AdminMedia default export to named export
-- Fixed BlogPage to use onNavigate instead of Link for SPA routing
-- Fixed BlogPostView to use onNavigate instead of Link for SPA routing
-- Updated seed with whatsapp_number site setting
-- Resolved SQLite createMany skipDuplicates error
-- Verified all API endpoints working (JWT, Products, Blog, ContentPages, Redirects, Media)
-- Build passes with zero errors
+### Changes Made:
 
-Stage Summary:
-- All 7 high-priority features implemented and verified
-- Build: SUCCESS, Lint: CLEAN
-- 30+ API routes, 10+ admin tabs, 8+ public pages
+1. **Prisma Schema** (`prisma/schema.prisma`):
+   - Added `blocks String @default("[]")` field to ContentPage model
+   - Ran `npx prisma db push` to sync database
 
----
-Task ID: 5, 6, 9
-Agent: main
-Task: WYSIWYG Editor, Admin Users Management, Theme Toggle
+2. **Block Types** (`src/lib/page-blocks.ts` - NEW):
+   - Defined `BlockType` union type with 10 block types: hero, features, cta, testimonials, image-gallery, text, spacer, divider, products, faq
+   - Defined `PageBlock` interface with id, type, and data fields
+   - Created `BLOCK_DEFAULTS` with label, icon, and default data for each block type
+   - Added `createBlock()` helper function
 
-Work Log:
+3. **Block Renderer** (`src/components/store/PageBlockRenderer.tsx` - NEW):
+   - Renders all 10 block types with proper Tailwind styling
+   - Hero: Full-width banner with bg image, gradient fallback, title, subtitle, CTA button
+   - Features: Responsive grid with icon cards
+   - CTA: Colored banner with configurable background colors (emerald, rose, amber, slate)
+   - Testimonials: Quote cards with avatar support
+   - Image Gallery: Responsive image grid
+   - Text: HTML content with prose styling
+   - Spacer: Configurable height div
+   - Divider: Solid/dashed/dotted horizontal rule
+   - Products: Fetches and displays featured products from API
+   - FAQ: Accordion-style expandable questions
+   - Dynamic Lucide icon resolution via `LucideIcon` component
 
-Task 5 - WYSIWYG Editor:
-- Created `/src/components/admin/WysiwygEditor.tsx` using @mdxeditor/editor with 'use client' directive
-- Editor supports: bold, italic, underline, strikethrough, headings, lists, links, images, tables, code blocks, thematic breaks, markdown shortcuts
-- Accepts `value`, `onChange`, `placeholder`, `minHeight`, `readOnly` props
-- Uses emerald accent color for toolbar styling
-- Integrated into AdminPages.tsx - replaced content Textarea with WysiwygEditor via dynamic import (ssr: false)
-- Integrated into AdminBlog.tsx - replaced content Textarea with WysiwygEditor via dynamic import (ssr: false, minHeight 400px)
-- Integrated into AdminProducts.tsx - replaced description Textarea with WysiwygEditor via dynamic import (ssr: false)
+4. **Page Builder Admin** (`src/components/admin/PageBuilder.tsx` - NEW):
+   - Uses @dnd-kit/core DndContext with PointerSensor and KeyboardSensor
+   - Uses @dnd-kit/sortable SortableContext with verticalListSortingStrategy
+   - Left sidebar: "Add Block" panel with all block types, click to add at end
+   - Main area: Sortable block cards with drag handle, up/down arrows, edit, delete
+   - Edit dialog: Form fields per block type (hero config, features list, testimonials, FAQ items, etc.)
+   - Delete confirmation with AlertDialog
+   - Clear All button
 
-Task 6 - Admin Users Management:
-- Created `/api/users/route.ts` - GET list (search, role filter) + POST create (bcrypt password hashing, duplicate email check)
-- Created `/api/users/[id]/route.ts` - GET by id, PUT update (name, email, role, isActive, optional password reset), DELETE
-- Created `/api/users/bulk/route.ts` - POST bulk actions (activate, deactivate, delete)
-- Created `/src/components/admin/AdminUsers.tsx` - full CRUD UI with search, table, add/edit dialog, delete confirmation, bulk select + actions
-- Shows role badges: admin=emerald with ShieldCheck icon, clerk=sky-blue with UserCog icon
-- Added 'Users' tab to AdminDashboard sidebarItems with Users icon
-- Registered AdminUsers in renderContent switch case
+5. **Admin Pages Integration** (`src/components/admin/AdminPages.tsx` - MODIFIED):
+   - Added builder mode state (builderMode, builderPageId, builderBlocks, builderSaving)
+   - Added builder icon (Blocks) button to each page row for opening the page builder
+   - Builder mode shows: back button, page title, save button, and PageBuilder component
+   - handleOpenBuilder parses blocks JSON from page data
+   - handleBuilderSave sends blocks to API via PUT request
+   - ContentPage and PageFormData interfaces updated to include `blocks` field
 
-Task 9 - Theme Toggle (Dark/Light Mode):
-- Created `/src/components/ThemeProvider.tsx` wrapping next-themes ThemeProvider with class attribute, system default
-- Created `/src/components/ThemeToggle.tsx` - dropdown with Light/Dark/System options, Sun/Moon icons with rotation animation
-- Updated `/src/app/layout.tsx` to wrap children with ThemeProvider
-- Added ThemeToggle to StoreHeader.tsx (desktop nav, after Admin button)
-- Added ThemeToggle to AdminDashboard.tsx sidebar footer area (beside user info)
+6. **API Updates**:
+   - `src/app/api/content-pages/route.ts` (POST): Added `blocks` field to create operation
+   - `src/app/api/content-pages/[id]/route.ts` (PUT): Added `blocks` field to update operation
 
-Stage Summary:
-- WYSIWYG rich text editor integrated across 3 admin pages using dynamic SSR-disabled imports
-- Full admin user management with CRUD API, search, bulk operations, role badges
-- Dark/light/system theme toggle available on storefront header and admin sidebar
-- ESLint: CLEAN (zero errors), Dev server compiles successfully
+7. **Storefront View** (`src/components/store/ContentPageView.tsx` - MODIFIED):
+   - Added `blocks` field to ContentPageData interface
+   - Parses blocks JSON from page data
+   - If blocks exist and non-empty, renders using PageBlockRenderer
+   - Falls back to existing HTML content rendering otherwise
 
----
-Task ID: 2, 3, 4, 7, 8
-Agent: main
-Task: Upload API, adminFetch helper, RBAC middleware, redirect handling, Users CRUD API
+## LP-3: WebP Auto-Conversion
 
-Work Log:
+### Changes Made:
 
-Task 2 - Upload API with Image Resizing:
-- Created `/api/upload/route.ts` with POST (single/multi file), PUT (update alt/folder), DELETE handlers
-- Uses sharp for image resizing to thumbnail (200x200), small (400x400), medium (800x800), large (1200x1200)
-- SVG files skip thumbnail generation
-- Validates file types (jpeg, png, gif, webp, svg) and enforces 10MB size limit
-- Generates unique filenames using timestamp + uuidv4 random string
-- Records each upload in Media table via Prisma with thumbnails JSON
-- Saves files to `/public/uploads/` directory (auto-creates if missing)
+1. **Upload API** (`src/app/api/upload/route.ts` - MODIFIED):
+   - Added `.rotate()` to thumbnail generation pipeline for EXIF stripping and auto-orientation
+   - Added GIF exclusion from thumbnail generation (mimeType !== 'image/gif')
+   - Added WebP version generation for JPEG and PNG images
+   - WebP saved as `{timestamp}-{random}.webp` alongside original
+   - WebP URL added to thumbnails object as `webp` key
+   - Original `url` still points to original format
 
-Task 3 - adminFetch Helper:
-- Created `/src/lib/admin-fetch.ts` as a wrapper around fetch() that auto-injects JWT Bearer token from localStorage
-- Updated ALL 8 admin components to use `adminFetch` instead of plain `fetch` for every API call:
-  - AdminProducts.tsx (GET, POST, PUT, DELETE, bulk)
-  - AdminCategories.tsx (GET, POST, PUT, DELETE)
-  - AdminBanners.tsx (GET, POST, PUT, DELETE, toggle)
-  - AdminEnquiries.tsx (GET, PUT, DELETE)
-  - AdminSettings.tsx (GET, PUT, POST)
-  - AdminPages.tsx (GET, POST, PUT, DELETE)
-  - AdminBlog.tsx (GET, POST, PUT, DELETE, bulk)
-  - AdminRedirects.tsx (GET, POST, PUT, DELETE, bulk)
+## LP-4: Global Loading and Error States
 
-Task 4 - RBAC Middleware:
-- Updated `/src/middleware.ts` with role-based permission map
-- `admin` role: full access to all endpoints (wildcard)
-- `clerk` role: read access to products, categories, enquiries, banners, blog, content-pages, settings, media, redirects; write access only to enquiries
-- Middleware now returns 403 Forbidden for insufficient permissions
-- Matcher expanded from `/api/:path*` to `/:path*` to handle redirects on page routes
+### Changes Made:
 
-Task 7 - Redirect Handling:
-- Created `/api/redirects/check/route.ts` - lightweight GET endpoint that checks `?path=/some-path` and returns redirect target + type
-- Updated middleware to check non-API paths against redirect database before rendering pages
-- In-memory redirect cache with 5-minute TTL for performance (1-minute negative cache)
-- Supports both 301 (permanent) and 302 (temporary) redirect types
+1. **Loading Component** (`src/app/loading.tsx` - NEW):
+   - Full-page centered loading spinner
+   - Spinning border animation with emerald accent color
+   - ShoppingBag icon centered in spinner
+   - "StyleStore" branding text with "Loading..." subtitle
 
-Task 8 - Users CRUD API:
-- Created `/api/users/route.ts` - GET (list with search, role filter, pagination) + POST (create with bcrypt hashing)
-- Created `/api/users/[id]/route.ts` - GET (single user), PUT (update name/email/role/isActive/password), DELETE (prevent self-deletion)
-- Created `/api/users/bulk/route.ts` - POST bulk actions (delete, activate, deactivate with self-protection)
-- All routes follow existing patterns (check x-user-role from middleware headers)
+2. **Error Component** (`src/app/error.tsx` - NEW):
+   - 'use client' directive for React error boundary
+   - AlertTriangle icon in rose-colored circle
+   - "Something went wrong" heading
+   - Error description text
+   - "Try Again" button calling reset()
+   - "Go Home" button navigating to root
 
-Stage Summary:
-- Upload API with image resizing (4 sizes), validation, and Media DB records
-- adminFetch helper adopted across all 8 admin components for consistent auth
-- RBAC middleware with admin/clerk role permissions and 403 enforcement
-- Redirect handling in middleware with in-memory cache and 5-minute TTL
-- Full Users CRUD API (list, create, update, delete, bulk operations)
+## MP-6: Blog Tag Filtering on Storefront
+
+### Changes Made:
+
+1. **Blog API Route** (`src/app/api/blog/route.ts` - MODIFIED):
+   - Added `tag` query parameter support to GET handler
+   - When `tag` is provided, filters posts where `tags` JSON column contains the tag string using `{ contains: tag }`
+   - Changed from `include` to explicit `select` with all fields including `tags` for proper field inclusion in response
+
+2. **BlogPage Component** (`src/components/store/BlogPage.tsx` - MODIFIED):
+   - Added `tags: string | null` field to BlogPost interface
+   - Added `selectedTag: string | null` and `allTags: string[]` state
+   - Added `searchQuery` state with search Input component (filters by title client-side)
+   - After fetching posts, extracts all unique tags using `parseTags()` helper function
+   - Added tag filter bar with clickable Badge components showing all available tags + "All" badge
+   - Selected tag has emerald/primary styling; unselected tags have outline/secondary hover effects
+   - Each badge shows post count in parentheses
+   - Tags displayed on blog post cards as secondary badges
+   - "Clear filters" button shown when no results match criteria
+   - Client-side filtering using `useMemo` for both tag and search query
+
+## MP-7: Fix StoreFooter
+
+### Changes Made:
+
+1. **StoreFooter** (`src/components/store/StoreFooter.tsx` - MODIFIED):
+   - Connected social media links to settings: `facebook_url`, `twitter_url`, `instagram_url`, `linkedin_url`
+   - Added `target="_blank"` and `rel="noopener noreferrer"` to all social links
+   - Replaced dead Customer Service text spans with functional buttons using `onNavigate` to content pages
+   - Customer service links: About Us, Shipping Info, Returns & Exchanges, Privacy Policy, Terms of Service
+   - Added Newsletter Subscription form section with email input + "Subscribe" button with Mail icon
+   - Uses `sonner` toast for subscription success feedback (mock implementation)
+   - Made contact info links clickable: email with `mailto:`, phone with `tel:`
+   - Added WhatsApp link in contact section when `whatsapp_number` is available from settings
+   - Newsletter section styled with border + background in rounded-lg card between grid and separator
+   - Added `subscribing` loading state to prevent double submission
+   - Added `MessageCircle` icon import for WhatsApp display
+
+## LP-1: In-App Notification System
+
+### Changes Made:
+
+1. **Prisma Schema** (`prisma/schema.prisma` - MODIFIED):
+   - Added `Notification` model with fields: id, userId (nullable for broadcast), title, message, type (info/success/warning/error), isRead, link, createdAt
+   - Added indexes on userId, isRead, and createdAt
+   - Ran `npx prisma db push` to sync database
+
+2. **Notification API Routes** (NEW):
+   - `src/app/api/notifications/route.ts`: GET (list with pagination, unreadOnly filter, user-specific + broadcasts) + POST (admin-only create)
+   - `src/app/api/notifications/[id]/route.ts`: PUT (mark as read, ownership verification) + DELETE (admin-only)
+   - `src/app/api/notifications/read-all/route.ts`: PUT (mark all notifications as read for current user)
+
+3. **Notification Utility** (`src/lib/notifications.ts` - NEW):
+   - `createNotification()` function for programmatic notification creation
+   - Used by API routes to auto-create notifications on key events
+
+4. **NotificationBell Component** (`src/components/admin/NotificationBell.tsx` - NEW):
+   - Bell icon with unread count badge (rose-colored, capped at 99+)
+   - Popover showing recent notifications with ScrollArea (max-h-96)
+   - Type-specific icons: Info (blue), CheckCircle (emerald), AlertTriangle (amber), XCircle (rose)
+   - Unread notifications highlighted with emerald background tint and green dot indicator
+   - "Mark all as read" button using `/api/notifications/read-all` endpoint
+   - Individual mark-as-read with Check icon on hover
+   - Polls for new notifications every 60 seconds using useEffect + setInterval
+   - Refreshes data when popover opens
+   - Time ago display using `date-fns` formatDistanceToNow
+
+5. **AdminDashboard Integration** (`src/components/admin/AdminDashboard.tsx` - MODIFIED):
+   - Imported and added NotificationBell to desktop sidebar (next to ThemeToggle in user info section)
+   - Added NotificationBell to mobile header (between Admin badge and LogOut button)
+
+6. **Auto-create Notifications** (MODIFIED):
+   - `src/app/api/enquiries/route.ts`: After creating enquiry, creates broadcast notification "New Enquiry" with link to enquiries
+   - `src/app/api/users/bulk/route.ts`: After bulk delete/activate/deactivate operations, creates appropriate notification with type warning/success
+
+### Build & Verification:
+- Fixed pre-existing duplicate `import dynamic` in AdminPages.tsx
 - ESLint: CLEAN (zero errors)
----
-Task ID: 1
-Agent: Main Agent
-Task: Fix critical missing items - Auth tokens, Upload security, Fetch consolidation
-
-Work Log:
-- Audited full project state: discovered all features already exist but had critical auth bugs
-- Fixed AdminUsers.tsx: replaced 5 raw `fetch()` calls with `adminFetch()` + added import
-- Fixed AdminMedia.tsx: replaced 4 raw `fetch()` calls with `adminFetch()` + added import
-- Fixed AdminDashboardHome.tsx: replaced 4 raw `fetch()` calls with `adminFetch()` + added import
-- Fixed AdminBlog.tsx: replaced 1 raw `fetch()` (`/api/auth/me`) with `adminFetch()`
-- Fixed AdminBanners.tsx: replaced 1 raw `fetch()` (`/api/upload`) with `adminFetch()`
-- Fixed AdminProducts.tsx: replaced 1 raw `fetch()` (`/api/upload`) with `adminFetch()`
-- Secured Upload API: removed `/api/upload` from PUBLIC_POST_PATHS in middleware (was publicly accessible)
-- Consolidated duplicate fetch helpers: `fetch.ts` is now single source of truth, `admin-fetch.ts` re-exports
-- Verified: only AdminLogin.tsx has raw `fetch()` (intentional - no token before login)
-- Build passed with zero errors
-
-Stage Summary:
-- Total raw `fetch()` calls fixed: 16 (across 6 files)
-- Upload endpoint now requires authentication (security fix)
-- All admin API calls now properly send JWT Bearer tokens
-- Duplicate fetch utility files consolidated
-- Existing features verified: WYSIWYG, RBAC middleware, User Management, Redirects, Theme Toggle all working
----
-Task ID: 2
-Agent: Main Agent
-Task: Fix medium priority items - WYSIWYG upload, Blog authors, Security, TypeScript
-
-Work Log:
-- WYSIWYG inline image upload: Replaced placeholder `imageUploadHandler` in WysiwygEditor.tsx with real implementation that uploads to `/api/upload` with auth token, returns URL on success
-- Blog author dropdown: Changed AdminBlog.tsx `fetchAuthors()` from `/api/auth/me` (only current user) to `/api/users?all=true` (all active users). Added `?all=true` support to `/api/users` GET route
-- JWT security: Generated cryptographically random 64-char hex secret replacing weak default
-- React StrictMode: Enabled `reactStrictMode: true` in next.config.ts, removed `ignoreBuildErrors: true`
-- Image remote patterns: Added wildcard HTTPS and localhost image patterns to next.config.ts
-- Fixed tsconfig.json: Excluded stale directories (examples, skills, download, agent-ctx) from TypeScript compilation
-- Fixed 5 TypeScript errors:
-  - `media/[id]/route.ts`: Cast `Object.values(thumbs)` to `string[]`
-  - `upload/route.ts`: Changed `sharp.Metadata` to `Partial<sharp.Metadata>`, typed `results` array, cast thumbnail values
-  - `WysiwygEditor.tsx`: Added empty children to `DiffSourceToggleWrapper`
-  - `ContentPageView.tsx`: Added `onNavigate` prop to interface
-  - `StoreLayout.tsx`: Cast `cloneElement` children type
-- Verified: WhatsApp button already exists on ProductDetailPage.tsx (lines 718-726)
-- Verified: Frontend search already works (StoreHeader.tsx with Cmd+K, CataloguePage.tsx with inline search)
-
-Stage Summary:
-- WYSIWYG editor now supports direct image upload (not just URL paste)
-- Blog post author dropdown now shows all active users
-- JWT secret upgraded from weak to cryptographically secure 64-char hex
-- React StrictMode enabled for development best practices
-- All TypeScript errors resolved — build passes with zero errors
+- Build: SUCCESS - All API routes verified including /api/notifications, /api/notifications/[id], /api/notifications/read-all

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { logActivity } from '@/lib/activity-log';
 
 export async function GET(request: NextRequest) {
   try {
@@ -7,6 +8,7 @@ export async function GET(request: NextRequest) {
     const all = searchParams.get('all');
     const published = searchParams.get('published');
     const search = searchParams.get('search');
+    const tag = searchParams.get('tag');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
 
@@ -25,10 +27,31 @@ export async function GET(request: NextRequest) {
       ];
     }
 
+    if (tag) {
+      where.tags = { contains: tag };
+    }
+
     const [blogPosts, total] = await Promise.all([
       db.blogPost.findMany({
         where,
-        include: { author: { select: { id: true, name: true, email: true } } },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          excerpt: true,
+          content: true,
+          coverImage: true,
+          authorId: true,
+          metaTitle: true,
+          metaDescription: true,
+          ogImage: true,
+          tags: true,
+          isPublished: true,
+          publishedAt: true,
+          createdAt: true,
+          updatedAt: true,
+          author: { select: { id: true, name: true, email: true } },
+        },
         orderBy: published === 'true' || !all
           ? { publishedAt: 'desc' }
           : { createdAt: 'desc' },
@@ -97,6 +120,20 @@ export async function POST(request: NextRequest) {
       },
       include: { author: { select: { id: true, name: true, email: true } } },
     });
+
+    // Log blog creation
+    const userId = request.headers.get('x-user-id') || undefined;
+    const userName = request.headers.get('x-user-email') || undefined;
+    const ipAddress = request.headers.get('x-forwarded-for') || undefined;
+    logActivity({
+      action: 'blog.create',
+      entity: 'Blog',
+      entityId: blogPost.id,
+      userId,
+      userName,
+      ipAddress,
+      details: { title: blogPost.title, isPublished: blogPost.isPublished },
+    }).catch(() => {});
 
     return NextResponse.json({ blogPost }, { status: 201 });
   } catch (error) {

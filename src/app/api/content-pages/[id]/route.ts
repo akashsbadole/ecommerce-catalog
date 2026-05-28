@@ -65,6 +65,9 @@ export async function PUT(
         }),
         ...(body.isActive !== undefined && { isActive: body.isActive }),
         ...(body.sortOrder !== undefined && { sortOrder: body.sortOrder }),
+        ...(body.blocks !== undefined && {
+          blocks: typeof body.blocks === 'string' ? body.blocks : JSON.stringify(body.blocks),
+        }),
       },
     });
 
