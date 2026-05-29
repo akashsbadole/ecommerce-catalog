@@ -44,7 +44,7 @@ function LucideIcon({ name, className }: { name: string; className?: string }) {
 }
 
 interface BlockRendererProps {
-  block: PageBlock;
+  block?: PageBlock;
   onNavigate?: (page: string, data?: unknown) => void;
 }
 
@@ -533,7 +533,18 @@ function AboutBlock({ data, onNavigate }: { data: Record<string, unknown>; onNav
   );
 }
 
-export function PageBlockRenderer({ block, onNavigate }: BlockRendererProps) {
+export function PageBlockRenderer({ block, blocks, onNavigate }: BlockRendererProps & { blocks?: PageBlock[] }) {
+  if (blocks) {
+    return (
+      <>
+        {blocks.map((b) => (
+          <PageBlockRenderer key={b.id} block={b} onNavigate={onNavigate} />
+        ))}
+      </>
+    );
+  }
+
+  if (!block) return null;
   const { type, data } = block;
 
   switch (type) {

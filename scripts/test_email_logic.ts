@@ -1,4 +1,4 @@
-import { sendEmail } from './src/lib/email';
+import { sendEmail } from '../src/lib/email';
 
 async function testEmail() {
   console.log('Testing email sending...');

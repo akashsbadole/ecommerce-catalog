@@ -9,6 +9,7 @@ export type Page =
   | { type: 'content-page'; slug: string }
   | { type: 'blog' }
   | { type: 'blog-post'; postId: string }
+  | { type: 'portal' }
   | { type: 'admin-login' }
   | { type: 'admin'; activeTab: string };
 
@@ -29,7 +30,14 @@ interface AppState {
   adminUser: AdminUser | null;
   adminToken: string | null;
   auth: {
-    user: (AdminUser & { tier?: string; isVerified?: boolean }) | null;
+    user: (AdminUser & {
+      tier?: string;
+      isVerified?: boolean;
+      companyName?: string | null;
+      taxId?: string | null;
+      businessPhone?: string | null;
+      businessAddress?: string | null;
+    }) | null;
     token: string | null;
   };
   setAdminLogin: (user: AdminUser, token: string) => void;
@@ -59,6 +67,7 @@ export const useAppStore = create<AppState>()(
           case 'content-page': set({ currentPage: { type: 'content-page', slug: data as string } }); break;
           case 'blog': set({ currentPage: { type: 'blog' } }); break;
           case 'blog-post': set({ currentPage: { type: 'blog-post', postId: data as string } }); break;
+          case 'portal': set({ currentPage: { type: 'portal' } }); break;
           case 'admin-login': set({ currentPage: { type: 'admin-login' } }); break;
           case 'admin':
             set({
