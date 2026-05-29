@@ -26,23 +26,28 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "StyleStore - Premium Products",
-    template: "%s | StyleStore",
+    default: "Purva Bites - Premium Roasted Makhana, Dry Fruits & Healthy Snacks",
+    template: "%s | Purva Bites",
   },
   description:
-    "Discover premium products at StyleStore. Browse our curated catalogue of high-quality items with competitive pricing and excellent customer service.",
+    "Purva Bites is a premier manufacturer and dealer of high-quality roasted makhana, premium dry fruits, flavored khakhra, flavored bhakhri and healthy snacks.",
   keywords: [
-    "StyleStore",
-    "premium products",
-    "online catalogue",
-    "e-commerce",
-    "B2B",
-    "wholesale",
+    "Purva Bites",
+    "roasted makhana",
+    "premium dry fruits",
+    "flavored khakhra",
+    "flavored bhakhri",
+    "healthy snacks",
+    "snack manufacturer",
+    "makhana",
+    "khakhra",
+    "bhakhri",
   ],
-  authors: [{ name: "StyleStore Team" }],
-  creator: "StyleStore",
+  authors: [{ name: "Purva Bites" }],
+  creator: "Purva Bites",
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/logo.png",
+    apple: "/logo.png",
   },
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || "https://your-domain.com"
@@ -51,19 +56,19 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "StyleStore - Premium Products",
+    title: "Purva Bites - Premium Roasted Makhana, Dry Fruits & Healthy Snacks",
     description:
-      "Discover premium products at StyleStore. Browse our curated catalogue of high-quality items.",
+      "Purva Bites is a premier manufacturer and dealer of high-quality roasted makhana, premium dry fruits, flavored khakhra, flavored bhakhri and healthy snacks.",
     url: process.env.NEXT_PUBLIC_SITE_URL || "https://your-domain.com",
-    siteName: "StyleStore",
+    siteName: "Purva Bites",
     type: "website",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "StyleStore - Premium Products",
+    title: "Purva Bites - Premium Roasted Makhana, Dry Fruits & Healthy Snacks",
     description:
-      "Discover premium products at StyleStore. Browse our curated catalogue of high-quality items.",
+      "Purva Bites is a premier manufacturer and dealer of high-quality roasted makhana, premium dry fruits, flavored khakhra, flavored bhakhri and healthy snacks.",
   },
   robots: {
     index: true,
