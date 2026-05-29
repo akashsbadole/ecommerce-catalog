@@ -175,6 +175,13 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
                 </Button>
               </form>
 
+              {/* Demo Credentials */}
+              <div className="mt-6 rounded-lg border border-dashed border-emerald-200 bg-emerald-50/50 p-3 text-xs text-muted-foreground">
+                <p className="mb-1 font-medium text-emerald-700">Demo Credentials</p>
+                <p>Admin: <span className="font-mono">admin@store.com</span> / <span className="font-mono">admin123</span></p>
+                <p>Clerk: <span className="font-mono">clerk@store.com</span> / <span className="font-mono">clerk123</span></p>
+              </div>
+
               {/* Forgot Password Link */}
               <div className="mt-4 text-center">
                 <button
