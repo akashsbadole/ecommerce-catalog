@@ -11,6 +11,7 @@ import { BlogPage } from '@/components/store/BlogPage';
 import { BlogPostView } from '@/components/store/BlogPostView';
 import { AdminLogin } from '@/components/admin/AdminLogin';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
+import BuyerPortalPage from '@/app/portal/page';
 
 export default function MainApp() {
   const {
@@ -65,6 +66,8 @@ export default function MainApp() {
         return <BlogPage onNavigate={navigate} />;
       case 'blog-post':
         return <BlogPostView postId={currentPage.postId} onNavigate={navigate} />;
+      case 'portal':
+        return <BuyerPortalPage />;
       default:
         return (
           <div className="flex flex-col items-center justify-center py-20 text-center">

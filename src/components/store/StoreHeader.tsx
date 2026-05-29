@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import { Menu, X, ShoppingBag, FileText, Search } from 'lucide-react';
+import { Menu, X, ShoppingBag, FileText, Search, User, LogOut, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useAppStore } from '@/lib/store';
 import {
   Sheet,
   SheetContent,
@@ -42,6 +43,7 @@ const navLinks = [
 ];
 
 export function StoreHeader({ onNavigate }: StoreHeaderProps) {
+  const { auth, logout, settings } = useAppStore();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -172,14 +174,48 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
               <FileText className="mr-1.5 h-4 w-4" />
               Request Quote
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-sm"
-              onClick={() => onNavigate('admin-login')}
-            >
-              Admin
-            </Button>
+            {auth.user ? (
+              <div className="flex items-center gap-2">
+                {settings?.b2b_enable_buyer_portal === 'true' && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-sm flex items-center gap-1.5"
+                    onClick={() => onNavigate('portal')}
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    Portal
+                  </Button>
+                )}
+                {(auth.user.role === 'admin' || auth.user.role === 'clerk') && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-sm flex items-center gap-1.5"
+                    onClick={() => onNavigate('admin')}
+                  >
+                    Admin
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-sm text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                  onClick={() => logout()}
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-sm"
+                onClick={() => onNavigate('admin-login')}
+              >
+                Login
+              </Button>
+            )}
             <ThemeToggle />
           </nav>
 
@@ -230,15 +266,53 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                     Request Quote
                   </Button>
                 </SheetClose>
-                <SheetClose asChild>
-                  <Button
-                    variant="outline"
-                    className="justify-start text-base"
-                    onClick={() => onNavigate('admin-login')}
-                  >
-                    Admin Panel
-                  </Button>
-                </SheetClose>
+                {auth.user ? (
+                  <>
+                    {settings?.b2b_enable_buyer_portal === 'true' && (
+                      <SheetClose asChild>
+                        <Button
+                          variant="ghost"
+                          className="justify-start text-base"
+                          onClick={() => onNavigate('portal')}
+                        >
+                          <LayoutDashboard className="mr-2 h-4 w-4" />
+                          Buyer Portal
+                        </Button>
+                      </SheetClose>
+                    )}
+                    {(auth.user.role === 'admin' || auth.user.role === 'clerk') && (
+                      <SheetClose asChild>
+                        <Button
+                          variant="ghost"
+                          className="justify-start text-base"
+                          onClick={() => onNavigate('admin')}
+                        >
+                          Admin Panel
+                        </Button>
+                      </SheetClose>
+                    )}
+                    <SheetClose asChild>
+                      <Button
+                        variant="ghost"
+                        className="justify-start text-base text-rose-500"
+                        onClick={() => logout()}
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Logout
+                      </Button>
+                    </SheetClose>
+                  </>
+                ) : (
+                  <SheetClose asChild>
+                    <Button
+                      variant="outline"
+                      className="justify-start text-base"
+                      onClick={() => onNavigate('admin-login')}
+                    >
+                      Login / Partner Access
+                    </Button>
+                  </SheetClose>
+                )}
               </nav>
             </SheetContent>
           </Sheet>

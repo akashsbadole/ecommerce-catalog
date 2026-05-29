@@ -55,6 +55,9 @@ const defaultSettings: Settings = {
   b2b_require_company: 'true',
   b2b_default_moq: '1',
   b2b_auto_reply: 'true',
+  b2b_enable_tiered_pricing: 'false',
+  b2b_enable_buyer_portal: 'false',
+  b2b_verify_new_accounts: 'false',
 };
 
 export function AdminSettings() {
@@ -470,6 +473,57 @@ export function AdminSettings() {
               checked={settings.b2b_auto_reply === 'true'}
               onCheckedChange={(checked) =>
                 handleSettingChange('b2b_auto_reply', String(checked))
+              }
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="b2b_enable_tiered_pricing" className="cursor-pointer">
+                Enable Tiered Pricing
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Show different prices based on customer tier (Standard, Gold, etc.)
+              </p>
+            </div>
+            <Switch
+              id="b2b_enable_tiered_pricing"
+              checked={settings.b2b_enable_tiered_pricing === 'true'}
+              onCheckedChange={(checked) =>
+                handleSettingChange('b2b_enable_tiered_pricing', String(checked))
+              }
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="b2b_enable_buyer_portal" className="cursor-pointer">
+                Enable Buyer Portal
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Allow customers to login and view their personalized dashboard
+              </p>
+            </div>
+            <Switch
+              id="b2b_enable_buyer_portal"
+              checked={settings.b2b_enable_buyer_portal === 'true'}
+              onCheckedChange={(checked) =>
+                handleSettingChange('b2b_enable_buyer_portal', String(checked))
+              }
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="b2b_verify_new_accounts" className="cursor-pointer">
+                Verify New Accounts
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Manually approve B2B accounts before they can see tiered pricing
+              </p>
+            </div>
+            <Switch
+              id="b2b_verify_new_accounts"
+              checked={settings.b2b_verify_new_accounts === 'true'}
+              onCheckedChange={(checked) =>
+                handleSettingChange('b2b_verify_new_accounts', String(checked))
               }
             />
           </div>

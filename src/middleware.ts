@@ -174,6 +174,7 @@ export async function middleware(request: NextRequest) {
   const token = authHeader.split(' ')[1];
   const payload = await verifyToken(token);
   if (!payload) {
+    console.log('Middleware: Invalid token', token);
     return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
   }
 

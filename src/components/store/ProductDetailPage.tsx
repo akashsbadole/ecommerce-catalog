@@ -45,6 +45,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { SocialShare } from './SocialShare';
+import { useAppStore } from '@/lib/store';
+import { calculateTieredPrice, formatPrice as libFormatPrice } from '@/lib/pricing';
+import { generateProductSchema } from '@/lib/seo/schema-generator';
 
 interface ProductVariant {
   id: string;
@@ -88,6 +91,8 @@ interface ProductDetailPageProps {
 }
 
 export function ProductDetailPage({ productId, onNavigate }: ProductDetailPageProps) {
+  const auth = useAppStore((state) => state.auth);
+  const settings = useAppStore((state) => state.settings);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -210,29 +215,8 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
     metaEl.setAttribute('content', metaDesc);
 
     // JSON-LD structured data
-    const images = getImages(product.images);
-    const jsonLd = {
-      '@context': 'https://schema.org',
-      '@type': 'Product',
-      name: product.name,
-      description: product.description || product.shortDescription || '',
-      sku: product.sku || undefined,
-      image: images.length > 0 ? images : undefined,
-      offers: {
-        '@type': 'Offer',
-        price: product.price,
-        priceCurrency: 'USD',
-        availability: 'https://schema.org/InStock',
-      },
-    };
-    if (product.wholesalePrice) {
-      (jsonLd.offers as Record<string, unknown>).priceSpecification = {
-        '@type': 'PriceSpecification',
-        price: product.wholesalePrice,
-        priceCurrency: 'USD',
-        name: 'Wholesale price',
-      };
-    }
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://purvabites.com';
+    const jsonLd = generateProductSchema(product, siteUrl);
 
     const scriptEl = document.createElement('script');
     scriptEl.type = 'application/ld+json';
@@ -266,11 +250,16 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
     }
   };
 
+  const userTier = auth.user?.tier;
+
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(price);
+    return libFormatPrice(price, siteSettings?.currency || 'USD');
+  };
+
+  const getEffectivePrice = (basePrice: number) => {
+    const isTieredEnabled = settings?.b2b_enable_tiered_pricing === 'true';
+    if (!isTieredEnabled) return basePrice;
+    return calculateTieredPrice(basePrice, userTier);
   };
 
   const isRFQ = form.enquiryType === 'rfq';
@@ -487,28 +476,35 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
           </div>
 
           {/* Pricing */}
-          <div className="flex items-center gap-3">
-            <span className="text-3xl font-bold text-emerald-600">
-              {selectedVariant?.price ? formatPrice(selectedVariant.price) : formatPrice(product.price)}
-            </span>
-            {(() => {
-              const cp = selectedVariant?.comparePrice || product.comparePrice;
-              const sp = selectedVariant?.price || product.price;
-              if (cp && cp > sp) {
-                const pct = Math.round(((cp - sp) / cp) * 100);
-                return (
-                  <>
-                    <span className="text-xl text-muted-foreground line-through">
-                      {formatPrice(cp)}
-                    </span>
-                    <Badge variant="secondary" className="bg-rose-100 text-rose-700">
-                      Save {pct}%
-                    </Badge>
-                  </>
-                );
-              }
-              return null;
-            })()}
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl font-bold text-emerald-600">
+                {formatPrice(getEffectivePrice(selectedVariant?.price || product.price))}
+              </span>
+              {(() => {
+                const cp = selectedVariant?.comparePrice || product.comparePrice;
+                const sp = getEffectivePrice(selectedVariant?.price || product.price);
+                if (cp && cp > sp) {
+                  const pct = Math.round(((cp - sp) / cp) * 100);
+                  return (
+                    <>
+                      <span className="text-xl text-muted-foreground line-through">
+                        {formatPrice(cp)}
+                      </span>
+                      <Badge variant="secondary" className="bg-rose-100 text-rose-700">
+                        Save {pct}%
+                      </Badge>
+                    </>
+                  );
+                }
+                return null;
+              })()}
+            </div>
+            {settings?.b2b_enable_tiered_pricing === 'true' && userTier && userTier !== 'standard' && (
+              <p className="text-xs font-medium text-emerald-600">
+                Exclusive {userTier} tier price applied
+              </p>
+            )}
           </div>
 
           {/* Variant Selector */}

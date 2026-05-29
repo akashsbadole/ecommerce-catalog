@@ -57,6 +57,8 @@ export async function POST(request: NextRequest) {
         isActive: validatedData.isActive ?? true,
         metaTitle: validatedData.metaTitle || null,
         metaDescription: validatedData.metaDescription || null,
+        customSchema: body.customSchema || null,
+        parentId: body.parentId || null,
       },
     });
 

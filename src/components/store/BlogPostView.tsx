@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { PageBlockRenderer } from './PageBlockRenderer';
+import { generateArticleSchema } from '@/lib/seo/schema-generator';
 
 interface BlogPostData {
   id: string;
@@ -101,6 +102,24 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
     if (post.publishedAt) {
       setOgTag('article:published_time', new Date(post.publishedAt).toISOString());
     }
+
+    // JSON-LD
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://purvabites.com';
+    const jsonLd = generateArticleSchema(post, siteUrl);
+    const scriptId = 'blog-jsonld';
+    const existingScript = document.getElementById(scriptId);
+    if (existingScript) existingScript.remove();
+
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.id = scriptId;
+    script.textContent = JSON.stringify(jsonLd);
+    document.head.appendChild(script);
+
+    return () => {
+      const el = document.getElementById(scriptId);
+      if (el) el.remove();
+    };
   }, [post]);
 
   function parseTags(tags: string | null): string[] {

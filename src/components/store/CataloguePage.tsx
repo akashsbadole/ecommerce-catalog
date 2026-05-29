@@ -17,6 +17,8 @@ import {
 } from '@/components/ui/select';
 import { EnquiryModal } from './EnquiryModal';
 import { QuickViewModal } from './QuickViewModal';
+import { useAppStore } from '@/lib/store';
+import { calculateTieredPrice, formatPrice as libFormatPrice } from '@/lib/pricing';
 
 interface Category {
   id: string;
@@ -46,6 +48,7 @@ interface CataloguePageProps {
 const ITEMS_PER_PAGE_OPTIONS = [12, 24, 48];
 
 export function CataloguePage({ onNavigate }: CataloguePageProps) {
+  const { auth, settings } = useAppStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -137,11 +140,16 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
     }
   };
 
+  const userTier = auth.user?.tier;
+
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(price);
+    return libFormatPrice(price, settings?.currency || 'USD');
+  };
+
+  const getEffectivePrice = (basePrice: number) => {
+    const isTieredEnabled = settings?.b2b_enable_tiered_pricing === 'true';
+    if (!isTieredEnabled) return basePrice;
+    return calculateTieredPrice(basePrice, userTier);
   };
 
   const handleEnquiryClick = (product: Product, mode: 'enquire' | 'rfq') => {
@@ -378,14 +386,19 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
                         {product.shortDescription}
                       </p>
                     )}
-                    <div className="flex items-center gap-2 pt-1">
-                      <span className="text-lg font-bold text-emerald-600">
-                        {formatPrice(product.price)}
-                      </span>
-                      {hasDiscount && (
-                        <span className="text-sm text-muted-foreground line-through">
-                          {formatPrice(product.comparePrice!)}
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center gap-2 pt-1">
+                        <span className="text-lg font-bold text-emerald-600">
+                          {formatPrice(getEffectivePrice(product.price))}
                         </span>
+                        {hasDiscount && (
+                          <span className="text-sm text-muted-foreground line-through">
+                            {formatPrice(product.comparePrice!)}
+                          </span>
+                        )}
+                      </div>
+                      {settings?.b2b_enable_tiered_pricing === 'true' && userTier && userTier !== 'standard' && (
+                        <p className="text-[10px] font-medium text-emerald-600">Tier price applied</p>
                       )}
                     </div>
                     {/* Wholesale price display */}

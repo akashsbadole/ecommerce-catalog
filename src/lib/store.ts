@@ -24,12 +24,18 @@ interface AppState {
   currentPage: Page;
   navigate: (page: string, data?: unknown) => void;
 
-  // Admin Auth
+  // Auth
   isAdmin: boolean;
   adminUser: AdminUser | null;
   adminToken: string | null;
+  auth: {
+    user: (AdminUser & { tier?: string; isVerified?: boolean }) | null;
+    token: string | null;
+  };
   setAdminLogin: (user: AdminUser, token: string) => void;
   setAdminLogout: () => void;
+  login: (user: any, token: string) => void;
+  logout: () => void;
 
   // Global Settings
   settings: Record<string, string> | null;
@@ -66,12 +72,28 @@ export const useAppStore = create<AppState>()(
       isAdmin: false,
       adminUser: null,
       adminToken: null,
+      auth: { user: null, token: null },
       setAdminLogin: (user, token) => set({
         isAdmin: true,
         adminUser: user,
         adminToken: token,
+        auth: { user, token },
       }),
       setAdminLogout: () => set({
+        isAdmin: false,
+        adminUser: null,
+        adminToken: null,
+        auth: { user: null, token: null },
+        currentPage: { type: 'home' },
+      }),
+      login: (user, token) => set({
+        auth: { user, token },
+        isAdmin: user.role === 'admin' || user.role === 'clerk',
+        adminUser: (user.role === 'admin' || user.role === 'clerk') ? user : null,
+        adminToken: (user.role === 'admin' || user.role === 'clerk') ? token : null,
+      }),
+      logout: () => set({
+        auth: { user: null, token: null },
         isAdmin: false,
         adminUser: null,
         adminToken: null,
@@ -98,6 +120,7 @@ export const useAppStore = create<AppState>()(
         isAdmin: state.isAdmin,
         adminUser: state.adminUser,
         adminToken: state.adminToken,
+        auth: state.auth,
       }),
     }
   )

@@ -53,6 +53,13 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { adminFetch } from '@/lib/admin-fetch';
 
@@ -66,6 +73,8 @@ interface Category {
   isActive: boolean;
   metaTitle: string | null;
   metaDescription: string | null;
+  customSchema?: string | null;
+  parentId?: string | null;
   _count?: { products: number };
 }
 
@@ -78,6 +87,8 @@ interface CategoryFormData {
   isActive: boolean;
   metaTitle: string;
   metaDescription: string;
+  customSchema: string;
+  parentId: string;
 }
 
 const emptyForm: CategoryFormData = {
@@ -89,6 +100,8 @@ const emptyForm: CategoryFormData = {
   isActive: true,
   metaTitle: '',
   metaDescription: '',
+  customSchema: '',
+  parentId: '',
 };
 
 function generateSlug(name: string): string {
@@ -155,6 +168,8 @@ export function AdminCategories() {
       isActive: cat.isActive,
       metaTitle: cat.metaTitle || '',
       metaDescription: cat.metaDescription || '',
+      customSchema: cat.customSchema || '',
+      parentId: cat.parentId || '',
     });
     setSeoOpen(!!(cat.metaTitle || cat.metaDescription));
     setFormOpen(true);
@@ -185,6 +200,8 @@ export function AdminCategories() {
         isActive: form.isActive,
         metaTitle: form.metaTitle.trim() || null,
         metaDescription: form.metaDescription.trim() || null,
+        customSchema: form.customSchema.trim() || null,
+        parentId: form.parentId || null,
       };
 
       const url = editingCategory
@@ -536,17 +553,38 @@ export function AdminCategories() {
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="cat-sort">Sort Order</Label>
-              <Input
-                id="cat-sort"
-                type="number"
-                placeholder="0"
-                value={form.sortOrder}
-                onChange={(e) =>
-                  setForm(prev => ({ ...prev, sortOrder: e.target.value }))
-                }
-              />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="cat-sort">Sort Order</Label>
+                <Input
+                  id="cat-sort"
+                  type="number"
+                  placeholder="0"
+                  value={form.sortOrder}
+                  onChange={(e) =>
+                    setForm(prev => ({ ...prev, sortOrder: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cat-parent">Parent Category</Label>
+                <Select
+                  value={form.parentId}
+                  onValueChange={(val) => setForm(prev => ({ ...prev, parentId: val }))}
+                >
+                  <SelectTrigger id="cat-parent">
+                    <SelectValue placeholder="No Parent" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No Parent</SelectItem>
+                    {categories
+                      .filter(c => c.id !== editingCategory?.id)
+                      .map(c => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
@@ -621,6 +659,19 @@ export function AdminCategories() {
                   <p className="text-xs text-muted-foreground">
                     Recommended: 150-160 characters for optimal SEO
                   </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cat-custom-schema">Custom JSON-LD Schema</Label>
+                  <Textarea
+                    id="cat-custom-schema"
+                    placeholder='{"@context": "https://schema.org", "@type": "CollectionPage", ...}'
+                    value={form.customSchema}
+                    onChange={(e) =>
+                      setForm(prev => ({ ...prev, customSchema: e.target.value }))
+                    }
+                    rows={3}
+                    className="font-mono text-xs"
+                  />
                 </div>
               </CollapsibleContent>
             </Collapsible>

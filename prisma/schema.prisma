@@ -51,6 +51,7 @@ model BlogPost {
   ogImage         String?
   blocks          String    @default("[]")
   tags            String?
+  customSchema    String?   @default("{}")
   isPublished     Boolean   @default(false)
   publishedAt     DateTime?
   createdAt       DateTime  @default(now())
@@ -67,13 +68,17 @@ model Category {
   slug            String    @unique
   description     String?
   image           String?
+  parentId        String?
   sortOrder       Int       @default(0)
   isActive        Boolean   @default(true)
   metaTitle       String?
   metaDescription String?
+  customSchema    String?   @default("{}")
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @default(now())
   Product         Product[]
+  parent          Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
+  children        Category[] @relation("CategoryToCategory")
 }
 
 model ContentPage {
@@ -86,10 +91,11 @@ model ContentPage {
   metaTitle       String?
   metaDescription String?
   ogImage         String?
+  customSchema    String?  @default("{}")
   isActive        Boolean  @default(true)
   sortOrder       Int      @default(0)
   createdAt       DateTime @default(now())
-  updatedAt       DateTime  @default(now())
+  updatedAt       DateTime @default(now())
 }
 
 model Enquiry {
@@ -187,6 +193,7 @@ model Product {
   specifications    String?
   metaTitle         String?
   metaDescription   String?
+  customSchema      String?          @default("{}")
   deletedAt         DateTime?
   stock             Int              @default(0)
   lowStockThreshold Int              @default(10)
@@ -196,8 +203,20 @@ model Product {
   Enquiry           Enquiry[]
   Category          Category?        @relation(fields: [categoryId], references: [id])
   ProductVariant    ProductVariant[]
+  ProductTier       ProductTier[]
 
   @@index([deletedAt])
+}
+
+model ProductTier {
+  id        String   @id @default(cuid())
+  productId String
+  tierName  String
+  minQty    Int
+  price     Float
+  Product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
 }
 
 model ProductVariant {
@@ -243,6 +262,12 @@ model User {
   password           String
   role               String               @default("clerk")
   isActive           Boolean              @default(true)
+  companyName        String?
+  taxId              String?
+  businessAddress    String?
+  isVerified         Boolean              @default(false)
+  tier               String               @default("standard") // standard, silver, gold, platinum
+  documents          String               @default("[]") // JSON array of document URLs
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @default(now())
   ActivityLog        ActivityLog[]
