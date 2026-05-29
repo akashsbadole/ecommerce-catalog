@@ -41,6 +41,7 @@
     "examples",
     "skills",
     "download",
-    "agent-ctx"
+    "agent-ctx",
+    "prisma"
   ]
 }

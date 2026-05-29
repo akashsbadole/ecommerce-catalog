@@ -263,7 +263,7 @@ function ProductsBlock({ data, onNavigate }: { data: Record<string, unknown>; on
     price: number;
     comparePrice: number | null;
     images: string;
-    category: { id: string; name: string } | null;
+    Category: { id: string; name: string } | null;
   }>>([]);
   const [loading, setLoading] = useState(true);
 
@@ -343,9 +343,9 @@ function ProductsBlock({ data, onNavigate }: { data: Record<string, unknown>; on
                   )}
                 </div>
                 <CardContent className="p-4 space-y-2">
-                  {product.category && (
+                  {product.Category && (
                     <span className="text-xs text-muted-foreground uppercase tracking-wider">
-                      {product.category.name}
+                      {product.Category.name}
                     </span>
                   )}
                   <h3 className="font-semibold text-sm line-clamp-1 group-hover:text-emerald-600 transition-colors">

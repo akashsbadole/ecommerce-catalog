@@ -98,7 +98,7 @@ interface BlogPost {
   publishedAt: string | null;
   deletedAt: string | null;
   createdAt: string;
-  author?: Author | null;
+  User?: Author | null;
 }
 
 interface BlogFormData {
@@ -564,7 +564,7 @@ export function AdminBlog() {
                       </div>
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-muted-foreground">
-                      {post.author?.name || '—'}
+                      {post.User?.name || '—'}
                     </TableCell>
                     <TableCell>
                       <Badge

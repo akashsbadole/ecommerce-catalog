@@ -26,7 +26,7 @@ interface Product {
   wholesalePrice: number | null;
   minOrderQty: number;
   images: string;
-  category: { id: string; name: string } | null;
+  Category: { id: string; name: string } | null;
   isFeatured: boolean;
 }
 
@@ -114,9 +114,9 @@ export function QuickViewModal({
             </div>
 
             {/* Category */}
-            {product.category && (
+            {product.Category && (
               <span className="text-xs text-emerald-600 uppercase tracking-wider font-medium">
-                {product.category.name}
+                {product.Category.name}
               </span>
             )}
 

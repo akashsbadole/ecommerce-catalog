@@ -10,7 +10,7 @@ export async function GET(
 
     const blogPost = await db.blogPost.findUnique({
       where: { id },
-      include: { author: { select: { id: true, name: true, email: true } } },
+      include: { User: { select: { id: true, name: true, email: true } } },
     });
 
     if (!blogPost) {
@@ -94,7 +94,7 @@ export async function PUT(
         ...(body.isPublished !== undefined && { isPublished: body.isPublished }),
         ...(publishedAt !== undefined && { publishedAt }),
       },
-      include: { author: { select: { id: true, name: true, email: true } } },
+      include: { User: { select: { id: true, name: true, email: true } } },
     });
 
     return NextResponse.json({ blogPost });
@@ -124,7 +124,7 @@ export async function PATCH(
       const blogPost = await db.blogPost.update({
         where: { id },
         data: { deletedAt: null },
-        include: { author: { select: { id: true, name: true, email: true } } },
+        include: { User: { select: { id: true, name: true, email: true } } },
       });
       return NextResponse.json({ blogPost });
     }

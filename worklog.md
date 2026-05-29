@@ -635,3 +635,35 @@ After thorough audit, found that all 4 features were already implemented in the 
 - `npx prisma db push` — schema already in sync
 - `npx next build` — all 52 routes compiled successfully, zero errors
 - Pre-existing ESLint issues in CookieConsent.tsx (unrelated to changes)
+
+---
+Task ID: FIX-APP-NOT-VISIBLE
+Agent: Main Agent
+Task: Fix web application not visible — diagnose and resolve all startup issues
+
+Work Log:
+- **ROOT CAUSE 1**: Missing JWT_SECRET in .env file — middleware imports auth.ts which throws at module load when JWT_SECRET is missing, blocking ALL requests
+- **FIX 1**: Added JWT_SECRET, JWT_EXPIRES_IN, NEXT_PUBLIC_SITE_URL to .env
+- **ROOT CAUSE 2**: Middleware imports PrismaClient directly, but Next.js 16 middleware runs on Edge Runtime where Prisma+SQLite is not supported
+- **FIX 2**: Created src/lib/auth-edge.ts — Edge-compatible module with only jose (JWT verify), no bcryptjs/Prisma
+- **FIX 2b**: Updated middleware.ts to import from auth-edge instead of auth
+- **FIX 2c**: Changed redirect check from direct Prisma query to fetch('/api/redirects/check') with 2s timeout
+- **ROOT CAUSE 3**: Prisma schema @id fields without @default() — TypeScript requires explicit IDs on all create operations
+- **FIX 3**: Added @default(cuid()) to all 15 model @id fields + changed @default(now()) to all updatedAt fields
+- **ROOT CAUSE 4**: Prisma include relation names using lowercase (category, author, user, product) instead of PascalCase model names
+- **FIX 4**: Fixed all Prisma includes across 10+ API route files: category→Category, author→User, user→User, product→Product
+- **FIX 4b**: Fixed all _count relation names: products→Product, enquiries→Enquiry, blogPosts→BlogPost
+- **FIX 4c**: Fixed 14 frontend component files (store/ + admin/) to use PascalCase property names in TypeScript interfaces and data access
+- **ROOT CAUSE 5**: tsconfig.json included prisma/seed.ts in TypeScript check, causing build failure
+- **FIX 5**: Added "prisma" to tsconfig.json exclude list
+- **BUILD**: Production build successful — 52 routes, zero errors
+- **SERVER**: Started via node .next/standalone/server.js (standalone mode)
+
+Stage Summary:
+- 5 root causes identified and fixed
+- Application now builds successfully (52 routes, zero TypeScript errors)
+- Production server running on port 3000 via standalone mode
+- Health check: HTTP 200
+- Admin login: Working (admin@store.com / admin123)
+- Products API: 6 products with categories
+- Homepage: Full HTML rendered with header, products, footer, newsletter

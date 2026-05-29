@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     // Find the reset token
     const resetToken = await db.passwordResetToken.findUnique({
       where: { token },
-      include: { user: true },
+      include: { User: true },
     });
 
     if (!resetToken) {

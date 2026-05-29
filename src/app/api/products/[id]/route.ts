@@ -19,7 +19,7 @@ export async function PATCH(
       const product = await db.product.update({
         where: { id },
         data: { deletedAt: null },
-        include: { category: true },
+        include: { Category: true },
       });
       return NextResponse.json({ product });
     }
@@ -40,7 +40,7 @@ export async function GET(
 
     const product = await db.product.findUnique({
       where: { id },
-      include: { category: true },
+      include: { Category: true },
     });
 
     if (!product) {
@@ -158,7 +158,7 @@ export async function PUT(
             : JSON.stringify(body.relatedProductIds || []),
         }),
       },
-      include: { category: true },
+      include: { Category: true },
     });
 
     return NextResponse.json({ product });

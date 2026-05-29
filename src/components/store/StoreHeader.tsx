@@ -32,7 +32,7 @@ interface SearchResult {
   slug: string;
   price: number;
   images: string;
-  category: { id: string; name: string } | null;
+  Category: { id: string; name: string } | null;
 }
 
 const navLinks = [
@@ -320,7 +320,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{product.name}</p>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          {product.category && <span>{product.category.name}</span>}
+                          {product.Category && <span>{product.Category.name}</span>}
                           <span>{formatPrice(product.price)}</span>
                         </div>
                       </div>

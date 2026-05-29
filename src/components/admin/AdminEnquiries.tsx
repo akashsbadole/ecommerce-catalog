@@ -79,7 +79,7 @@ interface Enquiry {
   productId: string | null;
   createdAt: string;
   updatedAt: string;
-  product?: { id: string; name: string } | null;
+  Product?: { id: string; name: string } | null;
 }
 
 interface PaginationInfo {
@@ -624,10 +624,10 @@ export function AdminEnquiries() {
                   {viewEnquiry.type === 'rfq' && <Hash className="mr-1 h-3 w-3" />}
                   {typeLabels[viewEnquiry.type] || viewEnquiry.type}
                 </Badge>
-                {viewEnquiry.product && (
+                {viewEnquiry.Product && (
                   <Badge variant="outline" className="flex items-center gap-1">
                     <Package className="h-3 w-3" />
-                    {viewEnquiry.product.name}
+                    {viewEnquiry.Product.name}
                   </Badge>
                 )}
                 {viewEnquiry.quantity && (

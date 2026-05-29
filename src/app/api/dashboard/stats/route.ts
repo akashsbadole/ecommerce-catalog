@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     const recentActivity = await db.activityLog.findMany({
       take: 10,
       include: {
-        user: { select: { id: true, name: true, email: true } },
+        User: { select: { id: true, name: true, email: true } },
       },
       orderBy: { createdAt: 'desc' },
     });

@@ -35,7 +35,7 @@ interface Product {
   wholesalePrice: number | null;
   minOrderQty: number;
   images: string;
-  category: { id: string; name: string } | null;
+  Category: { id: string; name: string } | null;
   isFeatured: boolean;
 }
 
@@ -362,9 +362,9 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
                     </Button>
                   </div>
                   <CardContent className="p-4 space-y-2">
-                    {product.category && (
+                    {product.Category && (
                       <span className="text-xs text-muted-foreground uppercase tracking-wider">
-                        {product.category.name}
+                        {product.Category.name}
                       </span>
                     )}
                     <h3

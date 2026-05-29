@@ -5,7 +5,7 @@ export async function GET(_request: NextRequest) {
   try {
     const products = await db.product.findMany({
       where: { deletedAt: null },
-      include: { category: true },
+      include: { Category: true },
       orderBy: { sortOrder: 'asc' },
     });
 
@@ -48,7 +48,7 @@ export async function GET(_request: NextRequest) {
       escapeCSVField(p.minOrderQty),
       escapeCSVField(p.sku),
       escapeCSVField(p.categoryId),
-      escapeCSVField(p.category?.name || ''),
+      escapeCSVField(p.Category?.name || ''),
       escapeCSVField(p.isFeatured),
       escapeCSVField(p.isActive),
       escapeCSVField(p.sortOrder),

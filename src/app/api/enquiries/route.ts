@@ -25,8 +25,8 @@ export async function GET(request: NextRequest) {
       db.enquiry.findMany({
         where,
         include: {
-          product: { select: { id: true, name: true } },
-          user: { select: { id: true, name: true, email: true } },
+          Product: { select: { id: true, name: true } },
+          User: { select: { id: true, name: true, email: true } },
         },
         orderBy: { createdAt: 'desc' },
         skip,

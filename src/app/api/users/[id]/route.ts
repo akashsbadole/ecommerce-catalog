@@ -17,7 +17,7 @@ export async function GET(
         isActive: true,
         createdAt: true,
         updatedAt: true,
-        _count: { select: { enquiries: true, blogPosts: true } },
+        _count: { select: { Enquiry: true, BlogPost: true } },
       },
     });
 

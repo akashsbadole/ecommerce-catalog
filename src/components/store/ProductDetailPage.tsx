@@ -72,7 +72,7 @@ interface Product {
   sku: string | null;
   images: string;
   whatsappNumber: string | null;
-  category: { id: string; name: string; slug: string } | null;
+  Category: { id: string; name: string; slug: string } | null;
   isFeatured: boolean;
   specifications: string | null;
   metaTitle: string | null;
@@ -396,10 +396,10 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
         >
           Catalogue
         </button>
-        {product.category && (
+        {product.Category && (
           <>
             <ChevronRight className="h-3.5 w-3.5" />
-            <span className="text-muted-foreground">{product.category.name}</span>
+            <span className="text-muted-foreground">{product.Category.name}</span>
           </>
         )}
         <ChevronRight className="h-3.5 w-3.5" />
@@ -469,12 +469,12 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
 
         {/* Product Info */}
         <div className="flex flex-col gap-6">
-          {product.category && (
+          {product.Category && (
             <button
               onClick={() => onNavigate('catalogue')}
               className="text-sm text-emerald-600 hover:text-emerald-700 uppercase tracking-wider w-fit transition-colors"
             >
-              {product.category.name}
+              {product.Category.name}
             </button>
           )}
           <div>
@@ -918,8 +918,8 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                   <div className="p-3">
                     <p className="font-medium text-sm truncate">{rp.name}</p>
                     <p className="text-emerald-600 font-semibold text-sm mt-1">{formatPrice(rp.price)}</p>
-                    {rp.category && (
-                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{rp.category.name}</p>
+                    {rp.Category && (
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{rp.Category.name}</p>
                     )}
                   </div>
                 </button>

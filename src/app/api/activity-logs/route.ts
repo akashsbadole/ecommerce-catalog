@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       db.activityLog.findMany({
         where,
         include: {
-          user: {
+          User: {
             select: { id: true, name: true, email: true },
           },
         },

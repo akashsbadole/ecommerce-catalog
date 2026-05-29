@@ -44,10 +44,10 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
       if (res.ok) {
         const data = await res.json();
         const user = {
-          id: data.user?.id || data.id,
-          email: data.user?.email || data.email,
-          name: data.user?.name || data.name,
-          role: data.user?.role || data.role || 'admin',
+          id: data.User?.id || data.id,
+          email: data.User?.email || data.email,
+          name: data.User?.name || data.name,
+          role: data.User?.role || data.role || 'admin',
         };
         const token = data.token || null;
         onLogin(user, token || undefined);

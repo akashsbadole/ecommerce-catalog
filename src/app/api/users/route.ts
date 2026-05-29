@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
           isActive: true,
           createdAt: true,
           updatedAt: true,
-          _count: { select: { enquiries: true, blogPosts: true } },
+          _count: { select: { Enquiry: true, BlogPost: true } },
         },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,

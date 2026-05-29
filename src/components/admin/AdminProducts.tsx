@@ -112,7 +112,7 @@ interface Product {
   stock: number;
   lowStockThreshold: number;
   relatedProductIds: string;
-  category?: Category | null;
+  Category?: Category | null;
   createdAt: string;
 }
 
@@ -905,13 +905,13 @@ export function AdminProducts() {
                         <div>
                           <p className="font-medium">{product.name}</p>
                           <p className="text-xs text-muted-foreground sm:hidden">
-                            {product.category?.name || 'Uncategorized'}
+                            {product.Category?.name || 'Uncategorized'}
                           </p>
                         </div>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
                         <Badge variant="outline">
-                          {product.category?.name || 'Uncategorized'}
+                          {product.Category?.name || 'Uncategorized'}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -1528,7 +1528,7 @@ export function AdminProducts() {
                         )}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{rp.name}</p>
-                          <p className="text-xs text-muted-foreground">{rp.category?.name || 'Uncategorized'}</p>
+                          <p className="text-xs text-muted-foreground">{rp.Category?.name || 'Uncategorized'}</p>
                         </div>
                         <Plus className="h-4 w-4 text-muted-foreground" />
                       </button>

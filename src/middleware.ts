@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
-import { PrismaClient } from '@prisma/client';
+import { verifyToken } from '@/lib/auth-edge';
 
 const PUBLIC_API_PATHS = [
   '/api/auth/login',
@@ -70,7 +69,7 @@ const ROLE_PERMISSIONS: Record<string, {
   },
 };
 
-// In-memory redirect cache with TTL
+// In-memory redirect cache with TTL (Edge-compatible)
 interface CachedRedirect {
   to: string;
   type: string;
@@ -79,15 +78,6 @@ interface CachedRedirect {
 
 const redirectCache = new Map<string, CachedRedirect>();
 const REDIRECT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-// Singleton Prisma client for middleware (Edge compatible)
-let prisma: PrismaClient | null = null;
-function getPrisma() {
-  if (!prisma) {
-    prisma = new PrismaClient();
-  }
-  return prisma;
-}
 
 function checkPermission(role: string, method: string, pathname: string): boolean {
   const permissions = ROLE_PERMISSIONS[role];
@@ -101,34 +91,36 @@ function checkPermission(role: string, method: string, pathname: string): boolea
   return allowedList.some(prefix => pathname.startsWith(prefix));
 }
 
-async function checkRedirect(pathname: string): Promise<CachedRedirect | null> {
+async function checkRedirect(pathname: string, request: NextRequest): Promise<CachedRedirect | null> {
   // Check cache first
   const cached = redirectCache.get(pathname);
   if (cached && cached.expiresAt > Date.now()) {
-    return cached;
+    return cached.to ? cached : null;
   }
 
   try {
-    // Direct DB query instead of HTTP fetch to avoid loop/deadlock
-    const db = getPrisma();
-    const redirect = await db.redirect.findFirst({
-      where: {
-        from: pathname,
-        isActive: true,
-      },
+    // Fetch redirect check API (runs on Node.js runtime, not Edge)
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `http://localhost:${request.nextUrl.port || 3000}`;
+    const checkUrl = `${baseUrl}/api/redirects/check?path=${encodeURIComponent(pathname)}`;
+    const res = await fetch(checkUrl, {
+      headers: { 'x-internal-request': 'true' },
+      signal: AbortSignal.timeout(2000), // 2s timeout to avoid hanging
     });
 
-    if (redirect) {
-      const result: CachedRedirect = {
-        to: redirect.to,
-        type: redirect.type,
-        expiresAt: Date.now() + REDIRECT_CACHE_TTL,
-      };
-      redirectCache.set(pathname, result);
-      return result;
+    if (res.ok) {
+      const data = await res.json();
+      if (data.found && data.to) {
+        const result: CachedRedirect = {
+          to: data.to,
+          type: data.type || '301',
+          expiresAt: Date.now() + REDIRECT_CACHE_TTL,
+        };
+        redirectCache.set(pathname, result);
+        return result;
+      }
     }
-  } catch (error) {
-    console.error('Redirect check failed:', error);
+  } catch {
+    // Silently fail - don't block the request if redirect check fails
   }
 
   // Cache negative result for shorter time
@@ -145,8 +137,8 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // For non-API routes, check redirects first
-  if (!pathname.startsWith('/api/') && !pathname.startsWith('/_next/') && !pathname.includes('.')) {
-    const redirect = await checkRedirect(pathname);
+  if (!pathname.startsWith('/api/') && !pathname.startsWith('/_next/') && !pathname.startsWith('/_proxy/') && !pathname.includes('.')) {
+    const redirect = await checkRedirect(pathname, request);
     if (redirect && redirect.to) {
       const status = redirect.type === '302' ? 302 : 301;
       const url = request.nextUrl.clone();

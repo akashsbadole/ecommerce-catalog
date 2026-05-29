@@ -7,121 +7,79 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  name          String
-  password      String
-  role          String   @default("clerk") // admin, clerk
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  userName  String?
+  action    String
+  entity    String?
+  entityId  String?
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+  User      User?    @relation(fields: [userId], references: [id])
 
-  enquiries          Enquiry[]
-  blogPosts          BlogPost[]
-  activityLogs       ActivityLog[]
-  passwordResetTokens PasswordResetToken[]
+  @@index([createdAt])
+  @@index([entity])
+  @@index([action])
 }
 
-model Category {
-  id              String   @id @default(cuid())
-  name            String
-  slug            String   @unique
-  description     String?
-  image           String?
-  sortOrder       Int      @default(0)
-  isActive        Boolean  @default(true)
-  metaTitle       String?
-  metaDescription String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  products        Product[]
+model Banner {
+  id        String   @id @default(cuid())
+  title     String
+  subtitle  String?
+  image     String?
+  link      String?
+  linkText  String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
-model Product {
-  id              String   @id @default(cuid())
-  name            String
-  slug            String   @unique
-  description     String?  // HTML from WYSIWYG
-  shortDescription String?
-  price           Float
-  comparePrice    Float?
-  wholesalePrice  Float?
-  minOrderQty     Int      @default(1)
-  sku             String?
-  images          String   @default("[]") // JSON array of image URLs
-  categoryId      String?
-  whatsappNumber  String?  // WhatsApp number for this product
-  isFeatured      Boolean  @default(false)
-  isActive        Boolean  @default(true)
-  sortOrder       Int      @default(0)
-  specifications  String?  // JSON object of specs
+model BlogPost {
+  id              String    @id @default(cuid())
+  title           String
+  slug            String    @unique
+  excerpt         String?
+  content         String    @default("")
+  coverImage      String?
+  authorId        String?
   metaTitle       String?
   metaDescription String?
+  ogImage         String?
+  tags            String?
+  isPublished     Boolean   @default(false)
+  publishedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now())
   deletedAt       DateTime?
-  stock           Int      @default(0)
-  lowStockThreshold Int    @default(10)
-  relatedProductIds String @default("[]") // JSON array of related product IDs
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  category        Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  enquiries       Enquiry[]
-  variants        ProductVariant[]
+  User            User?     @relation(fields: [authorId], references: [id])
 
   @@index([deletedAt])
 }
 
-model Enquiry {
-  id              String   @id @default(cuid())
+model Category {
+  id              String    @id @default(cuid())
   name            String
-  email           String
-  phone           String?
-  companyName     String?
-  companyEmail    String?
-  companyPhone    String?
-  companyAddress  String?
-  quantity        Int?
-  subject         String
-  message         String
-  productId       String?
-  type            String   @default("product") // product, contact, rfq
-  status          String   @default("new") // new, read, replied, closed
-  userId          String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  product         Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
-}
-
-model Banner {
-  id            String   @id @default(cuid())
-  title         String
-  subtitle      String?
-  image         String?
-  link          String?
-  linkText      String?
-  sortOrder     Int      @default(0)
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-
-model SiteSetting {
-  id            String   @id @default(cuid())
-  key           String   @unique
-  value         String
-  updatedAt     DateTime @updatedAt
+  slug            String    @unique
+  description     String?
+  image           String?
+  sortOrder       Int       @default(0)
+  isActive        Boolean   @default(true)
+  metaTitle       String?
+  metaDescription String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now())
+  Product         Product[]
 }
 
 model ContentPage {
   id              String   @id @default(cuid())
   title           String
   slug            String   @unique
-  content         String   @default("") // HTML from WYSIWYG
-  blocks          String   @default("[]") // JSON array of page blocks
+  content         String   @default("")
+  blocks          String   @default("[]")
   heroImage       String?
   metaTitle       String?
   metaDescription String?
@@ -129,123 +87,45 @@ model ContentPage {
   isActive        Boolean  @default(true)
   sortOrder       Int      @default(0)
   createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  updatedAt       DateTime  @default(now())
 }
 
-model BlogPost {
-  id              String   @id @default(cuid())
-  title           String
-  slug            String   @unique
-  excerpt         String?
-  content         String   @default("") // HTML from WYSIWYG
-  coverImage      String?
-  authorId        String?
-  metaTitle       String?
-  metaDescription String?
-  ogImage         String?
-  tags            String?  // JSON array
-  isPublished     Boolean  @default(false)
-  publishedAt     DateTime?
-  deletedAt       DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  @@index([deletedAt])
-
-  author          User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+model Enquiry {
+  id             String   @id @default(cuid())
+  name           String
+  email          String
+  phone          String?
+  companyName    String?
+  companyEmail   String?
+  companyPhone   String?
+  companyAddress String?
+  quantity       Int?
+  subject        String
+  message        String
+  productId      String?
+  type           String   @default("product")
+  status         String   @default("new")
+  userId         String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now())
+  Product        Product? @relation(fields: [productId], references: [id])
+  User           User?    @relation(fields: [userId], references: [id])
 }
 
 model Media {
-  id            String   @id @default(cuid())
-  filename      String
-  originalName  String
-  mimeType      String
-  size          Int
-  width         Int?
-  height        Int?
-  alt           String?
-  url           String   // path like /uploads/xxx.jpg
-  thumbnails    String   @default("{}") // JSON of {small: url, medium: url, large: url}
-  folder        String   @default("/")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-
-model Redirect {
-  id            String   @id @default(cuid())
-  from          String   @unique  // source path e.g. /old-page
-  to            String             // destination URL e.g. /new-page
-  type          String   @default("301") // 301, 302
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-
-model Notification {
-  id        String   @id @default(cuid())
-  userId    String?  // null = broadcast to all users
-  title     String
-  message   String
-  type      String   @default("info") // info, success, warning, error
-  isRead    Boolean  @default(false)
-  link      String?  // optional navigation link
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-  @@index([isRead])
-  @@index([createdAt])
-}
-
-model PasswordResetToken {
-  id        String   @id @default(cuid())
-  userId    String
-  token     String   @unique
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime @default(now())
-
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([token])
-  @@index([expiresAt])
-}
-
-model ProductVariant {
-  id            String   @id @default(cuid())
-  productId     String
-  name          String   // e.g., "Red / Large", "XL"
-  sku           String?
-  price         Float?
-  comparePrice  Float?
-  wholesalePrice Float?
-  stock         Int      @default(0)
-  images        String   @default("[]") // JSON array
-  sortOrder     Int      @default(0)
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@index([productId])
-}
-
-model ActivityLog {
-  id        String   @id @default(cuid())
-  userId    String?
-  userName  String?
-  action    String   // e.g., "product.create", "category.delete", "user.login"
-  entity    String?  // e.g., "Product", "Category", "User"
-  entityId  String?
-  details   String?  // JSON string with extra context
-  ipAddress String?
-  createdAt DateTime @default(now())
-
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  @@index([action])
-  @@index([entity])
-  @@index([createdAt])
+  id           String   @id @default(cuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  width        Int?
+  height       Int?
+  alt          String?
+  url          String
+  thumbnails   String   @default("{}")
+  folder       String   @default("/")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now())
 }
 
 model NewsletterSubscriber {
@@ -255,4 +135,116 @@ model NewsletterSubscriber {
   createdAt DateTime @default(now())
 
   @@index([email])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String?
+  title     String
+  message   String
+  type      String   @default("info")
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([isRead])
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  User      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@index([token])
+}
+
+model Product {
+  id                String           @id @default(cuid())
+  name              String
+  slug              String           @unique
+  description       String?
+  shortDescription  String?
+  price             Float
+  comparePrice      Float?
+  wholesalePrice    Float?
+  minOrderQty       Int              @default(1)
+  sku               String?
+  images            String           @default("[]")
+  categoryId        String?
+  whatsappNumber    String?
+  isFeatured        Boolean          @default(false)
+  isActive          Boolean          @default(true)
+  sortOrder         Int              @default(0)
+  specifications    String?
+  metaTitle         String?
+  metaDescription   String?
+  deletedAt         DateTime?
+  stock             Int              @default(0)
+  lowStockThreshold Int              @default(10)
+  relatedProductIds String           @default("[]")
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @default(now())
+  Enquiry           Enquiry[]
+  Category          Category?        @relation(fields: [categoryId], references: [id])
+  ProductVariant    ProductVariant[]
+
+  @@index([deletedAt])
+}
+
+model ProductVariant {
+  id             String   @id @default(cuid())
+  productId      String
+  name           String
+  sku            String?
+  price          Float?
+  comparePrice   Float?
+  wholesalePrice Float?
+  stock          Int      @default(0)
+  images         String   @default("[]")
+  sortOrder      Int      @default(0)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now())
+  Product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model Redirect {
+  id        String   @id @default(cuid())
+  from      String   @unique
+  to        String
+  type      String   @default("301")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model SiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @default(now())
+}
+
+model User {
+  id                 String               @id @default(cuid())
+  email              String               @unique
+  name               String
+  password           String
+  role               String               @default("clerk")
+  isActive           Boolean              @default(true)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @default(now())
+  ActivityLog        ActivityLog[]
+  BlogPost           BlogPost[]
+  Enquiry            Enquiry[]
+  PasswordResetToken PasswordResetToken[]
 }

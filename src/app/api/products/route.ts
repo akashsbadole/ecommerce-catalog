@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     const products = await db.product.findMany({
       where,
-      include: { category: true },
+      include: { Category: true },
       orderBy: { sortOrder: 'asc' },
     });
 
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
         lowStockThreshold: typeof body.lowStockThreshold === 'number' ? body.lowStockThreshold : (parseInt(body.lowStockThreshold) || 10),
         relatedProductIds: typeof body.relatedProductIds === 'string' ? body.relatedProductIds : '[]',
       },
-      include: { category: true },
+      include: { Category: true },
     });
 
     // Log product creation

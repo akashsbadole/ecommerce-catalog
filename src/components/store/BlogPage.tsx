@@ -16,7 +16,7 @@ interface BlogPost {
   isPublished: boolean;
   publishedAt: string | null;
   tags: string | null;
-  author?: { id: string; name: string; email: string } | null;
+  User?: { id: string; name: string; email: string } | null;
 }
 
 interface BlogPageProps {
@@ -270,10 +270,10 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
                         })}
                       </span>
                     )}
-                    {post.author && (
+                    {post.User && (
                       <span className="flex items-center gap-1">
                         <User className="h-3 w-3" />
-                        {post.author.name}
+                        {post.User.name}
                       </span>
                     )}
                   </div>

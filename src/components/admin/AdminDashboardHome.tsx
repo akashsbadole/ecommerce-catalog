@@ -36,7 +36,7 @@ interface EnquiryRow {
   type: string;
   status: string;
   createdAt: string;
-  product?: { id: string; name: string } | null;
+  Product?: { id: string; name: string } | null;
 }
 
 interface DashboardStats {

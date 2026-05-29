@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const categories = await db.category.findMany({
       where,
       orderBy: { sortOrder: 'asc' },
-      include: all ? { _count: { select: { products: true } } } : undefined,
+      include: all ? { _count: { select: { Product: true } } } : undefined,
     });
 
     return NextResponse.json({ categories });

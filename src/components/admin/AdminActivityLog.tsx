@@ -40,7 +40,7 @@ interface ActivityLogEntry {
   details: string | null;
   ipAddress: string | null;
   createdAt: string;
-  user?: { id: string; name: string; email: string } | null;
+  User?: { id: string; name: string; email: string } | null;
 }
 
 function getActionBadgeClasses(action: string): string {
@@ -211,7 +211,7 @@ export function AdminActivityLog() {
                         <TableCell>
                           <div className="flex flex-col">
                             <span className="text-sm font-medium">
-                              {log.userName || log.user?.name || 'System'}
+                              {log.userName || log.User?.name || 'System'}
                             </span>
                             {log.ipAddress && (
                               <span className="text-xs text-muted-foreground">

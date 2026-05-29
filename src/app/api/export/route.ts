@@ -35,12 +35,12 @@ export async function GET(request: NextRequest) {
       case 'products': {
         const products = await db.product.findMany({
           where: { deletedAt: null },
-          include: { category: true },
+          include: { Category: true },
           orderBy: { createdAt: 'desc' },
         });
         csvContent = toCsvRow(['ID', 'Name', 'Slug', 'SKU', 'Price', 'Compare Price', 'Wholesale Price', 'Min Order Qty', 'Category', 'Active', 'Featured', 'Created At']);
         for (const p of products) {
-          csvContent += toCsvRow([p.id, p.name, p.slug, p.sku || '', p.price, p.comparePrice || '', p.wholesalePrice || '', p.minOrderQty, p.category?.name || '', p.isActive, p.isFeatured, p.createdAt.toISOString()]);
+          csvContent += toCsvRow([p.id, p.name, p.slug, p.sku || '', p.price, p.comparePrice || '', p.wholesalePrice || '', p.minOrderQty, p.Category?.name || '', p.isActive, p.isFeatured, p.createdAt.toISOString()]);
         }
         filename = `products-${new Date().toISOString().slice(0, 10)}.csv`;
         break;
@@ -59,13 +59,13 @@ export async function GET(request: NextRequest) {
       case 'blog': {
         const posts = await db.blogPost.findMany({
           where: { deletedAt: null },
-          include: { author: { select: { name: true } } },
+          include: { User: { select: { name: true } } },
           orderBy: { createdAt: 'desc' },
         });
         csvContent = toCsvRow(['ID', 'Title', 'Slug', 'Author', 'Published', 'Tags', 'Created At']);
         for (const p of posts) {
           const tags = p.tags ? JSON.parse(p.tags).join('; ') : '';
-          csvContent += toCsvRow([p.id, p.title, p.slug, p.author?.name || '', p.isPublished, tags, p.createdAt.toISOString()]);
+          csvContent += toCsvRow([p.id, p.title, p.slug, p.User?.name || '', p.isPublished, tags, p.createdAt.toISOString()]);
         }
         filename = `blog-posts-${new Date().toISOString().slice(0, 10)}.csv`;
         break;
@@ -73,12 +73,12 @@ export async function GET(request: NextRequest) {
 
       case 'enquiries': {
         const enquiries = await db.enquiry.findMany({
-          include: { product: { select: { name: true } }, user: { select: { name: true } } },
+          include: { Product: { select: { name: true } }, User: { select: { name: true } } },
           orderBy: { createdAt: 'desc' },
         });
         csvContent = toCsvRow(['ID', 'Name', 'Email', 'Phone', 'Company', 'Subject', 'Type', 'Status', 'Product', 'Message', 'Created At']);
         for (const e of enquiries) {
-          csvContent += toCsvRow([e.id, e.name, e.email, e.phone || '', e.companyName || '', e.subject, e.type, e.status, e.product?.name || '', e.message.replace(/\n/g, ' '), e.createdAt.toISOString()]);
+          csvContent += toCsvRow([e.id, e.name, e.email, e.phone || '', e.companyName || '', e.subject, e.type, e.status, e.Product?.name || '', e.message.replace(/\n/g, ' '), e.createdAt.toISOString()]);
         }
         filename = `enquiries-${new Date().toISOString().slice(0, 10)}.csv`;
         break;
