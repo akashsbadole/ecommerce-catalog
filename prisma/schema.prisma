@@ -49,6 +49,7 @@ model BlogPost {
   metaTitle       String?
   metaDescription String?
   ogImage         String?
+  blocks          String    @default("[]")
   tags            String?
   isPublished     Boolean   @default(false)
   publishedAt     DateTime?

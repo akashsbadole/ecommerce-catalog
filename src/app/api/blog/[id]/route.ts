@@ -88,6 +88,9 @@ export async function PUT(
         ...(body.ogImage !== undefined && {
           ogImage: body.ogImage || null,
         }),
+        ...(body.blocks !== undefined && {
+          blocks: typeof body.blocks === 'string' ? body.blocks : JSON.stringify(body.blocks),
+        }),
         ...(body.tags !== undefined && {
           tags: body.tags ? JSON.stringify(body.tags) : null,
         }),

@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState, useRef, ReactNode, cloneElement, isValidElement } from 'react';
+import { useEffect, useRef, ReactNode, cloneElement, isValidElement } from 'react';
+import { useAppStore } from '@/lib/store';
 import { StoreHeader } from './StoreHeader';
 import { StoreFooter } from './StoreFooter';
 import { BackToTop } from './BackToTop';
@@ -13,33 +14,15 @@ interface StoreLayoutProps {
 }
 
 export function StoreLayout({ currentPage, onNavigate, children }: StoreLayoutProps) {
-  const [settings, setSettings] = useState<Record<string, string> | null>(null);
+  const { settings, fetchSettings } = useAppStore();
   const prevPageRef = useRef(currentPage);
 
-  // Fetch settings on mount
+  // Fetch settings on mount if not already loaded
   useEffect(() => {
-    let cancelled = false;
-    const controller = new AbortController();
-
-    (async () => {
-      try {
-        const res = await fetch('/api/settings', { signal: controller.signal });
-        if (res.ok && !cancelled) {
-          const data = await res.json();
-          setSettings(data.settings || {});
-        }
-      } catch (error) {
-        if (!cancelled) {
-          console.error('Failed to fetch settings:', error);
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-      controller.abort();
-    };
-  }, []);
+    if (!settings) {
+      fetchSettings();
+    }
+  }, [settings, fetchSettings]);
 
   // Inject JSON-LD Organization structured data when settings are loaded
   useEffect(() => {
