@@ -904,8 +904,8 @@ export function AdminProducts() {
                       <TableCell>
                         <div>
                           <p className="font-medium">{product.name}</p>
-                          <p className="text-xs text-muted-foreground sm:hidden">
-                            {product.Category?.name || 'Uncategorized'}
+                          <p className="text-xs text-muted-foreground">
+                            /{product.slug}
                           </p>
                         </div>
                       </TableCell>
