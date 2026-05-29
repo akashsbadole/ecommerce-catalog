@@ -35,8 +35,10 @@ async function main() {
   console.log('Created clerk:', clerk.email);
 
   // Create categories
-  const electronics = await db.category.create({
-    data: {
+  const electronics = await db.category.upsert({
+    where: { slug: 'electronics' },
+    update: {},
+    create: {
       name: 'Electronics',
       slug: 'electronics',
       description: 'Latest electronic gadgets and devices',
@@ -45,8 +47,10 @@ async function main() {
     },
   });
 
-  const accessories = await db.category.create({
-    data: {
+  const accessories = await db.category.upsert({
+    where: { slug: 'accessories' },
+    update: {},
+    create: {
       name: 'Accessories',
       slug: 'accessories',
       description: 'Premium accessories for everyday use',
@@ -55,8 +59,10 @@ async function main() {
     },
   });
 
-  const home = await db.category.create({
-    data: {
+  const home = await db.category.upsert({
+    where: { slug: 'home-living' },
+    update: {},
+    create: {
       name: 'Home & Living',
       slug: 'home-living',
       description: 'Modern home and living products',
@@ -222,10 +228,164 @@ async function main() {
         'Charging': 'USB-C',
       }),
     },
+    {
+      name: 'UltraSlim Laptop',
+      slug: 'ultraslim-laptop',
+      description: '<h2>Power Meets Portability</h2><p>The UltraSlim Laptop packs desktop-class performance into a 2.5lb chassis. Featuring the latest processor, 16GB RAM, and a stunning 14" 4K OLED display.</p><h3>Specs</h3><ul><li>14" 4K OLED</li><li>16GB RAM / 512GB SSD</li><li>12hr battery life</li><li>Thunderbolt 4</li></ul>',
+      shortDescription: 'Lightweight laptop with 4K OLED and 12hr battery',
+      price: 1299.99,
+      comparePrice: 1599.99,
+      wholesalePrice: 999.99,
+      minOrderQty: 2,
+      sku: 'LT-ULTRA-007',
+      images: JSON.stringify(['/products/laptop.png']),
+      categoryId: electronics.id,
+      isFeatured: true,
+      isActive: true,
+      sortOrder: 7,
+      specifications: JSON.stringify({
+        'Processor': 'Intel Core i7',
+        'RAM': '16GB DDR5',
+        'Storage': '512GB SSD',
+        'Display': '14" 4K OLED',
+        'Battery': '12 hours',
+        'Weight': '2.5 lbs',
+        'Ports': 'Thunderbolt 4, USB-C',
+      }),
+    },
+    {
+      name: 'Mechanical Keyboard Pro',
+      slug: 'mechanical-keyboard-pro',
+      description: '<h2>Type with Precision</h2><p>Experience ultimate typing comfort with hot-swappable switches, per-key RGB, and a航空-grade aluminum frame. Perfect for developers and enthusiasts.</p>',
+      shortDescription: 'Hot-swappable mechanical keyboard with RGB',
+      price: 149.99,
+      comparePrice: 199.99,
+      wholesalePrice: 89.99,
+      minOrderQty: 10,
+      sku: 'KB-MECH-008',
+      images: JSON.stringify(['/products/keyboard.png']),
+      categoryId: electronics.id,
+      isFeatured: false,
+      isActive: true,
+      sortOrder: 8,
+      specifications: JSON.stringify({
+        'Switches': 'Hot-swappable (Gateron)',
+        'Layout': '75%',
+        'Backlight': 'Per-key RGB',
+        'Frame': 'Aluminum',
+        'Connection': 'USB-C / Bluetooth 5.1',
+        'Battery': '4000mAh',
+        'Keycaps': 'PBT Double-shot',
+      }),
+    },
+    {
+      name: 'Ergonomic Office Chair',
+      slug: 'ergonomic-office-chair',
+      description: '<h2>Work in Comfort</h2><p>Premium ergonomic chair with adjustable lumbar support, 4D armrests, breathable mesh back, and memory foam seat cushion for all-day comfort.</p>',
+      shortDescription: 'Premium ergonomic chair with lumbar support',
+      price: 449.99,
+      comparePrice: 599.99,
+      wholesalePrice: 299.99,
+      minOrderQty: 5,
+      sku: 'CH-ERGO-009',
+      images: JSON.stringify(['/products/chair.png']),
+      categoryId: home.id,
+      isFeatured: false,
+      isActive: true,
+      sortOrder: 9,
+      specifications: JSON.stringify({
+        'Material': 'Mesh back + Memory foam seat',
+        'Lumbar Support': 'Adjustable',
+        'Armrests': '4D',
+        'Weight Capacity': '300 lbs',
+        'Seat Height': '15" - 20"',
+        'Recline': '90° - 135°',
+        'Warranty': '5 years',
+      }),
+    },
+    {
+      name: 'Premium Cotton T-Shirt',
+      slug: 'premium-cotton-tshirt',
+      description: '<h2>Everyday Essential</h2><p>Crafted from 100% organic ring-spun cotton, this premium t-shirt offers exceptional softness and durability. Available in multiple colors.</p>',
+      shortDescription: 'Organic cotton premium t-shirt',
+      price: 34.99,
+      comparePrice: 49.99,
+      wholesalePrice: 19.99,
+      minOrderQty: 25,
+      sku: 'TS-PREMIUM-010',
+      images: JSON.stringify(['/products/tshirt.png']),
+      categoryId: accessories.id,
+      isFeatured: false,
+      isActive: true,
+      sortOrder: 10,
+      specifications: JSON.stringify({
+        'Material': '100% Organic Cotton',
+        'Weight': '180 GSM',
+        'Fit': 'Regular',
+        'Sizes': 'S - 3XL',
+        'Colors': 'Black, White, Navy, Gray',
+        'Care': 'Machine washable',
+        'Certification': 'OEKO-TEX',
+      }),
+    },
+    {
+      name: 'Smart LED Monitor 27"',
+      slug: 'smart-led-monitor-27',
+      description: '<h2>Immersive Visuals</h2><p>27" 4K UHD monitor with USB-C hub, built-in speakers, and eye-care technology. Ideal for creative professionals and productivity.</p>',
+      shortDescription: '27" 4K UHD monitor with USB-C hub',
+      price: 379.99,
+      comparePrice: 499.99,
+      wholesalePrice: 259.99,
+      minOrderQty: 3,
+      sku: 'MN-SMART-011',
+      images: JSON.stringify(['/products/monitor.png']),
+      categoryId: electronics.id,
+      isFeatured: true,
+      isActive: true,
+      sortOrder: 11,
+      specifications: JSON.stringify({
+        'Size': '27"',
+        'Resolution': '4K UHD (3840x2160)',
+        'Panel Type': 'IPS',
+        'Refresh Rate': '75Hz',
+        'Brightness': '350 nits',
+        'Ports': 'USB-C, HDMI 2.1, DP 1.4',
+        'Speakers': 'Built-in 5W x2',
+      }),
+    },
+    {
+      name: 'Ceramic Coffee Mug Set',
+      slug: 'ceramic-coffee-mug-set',
+      description: '<h2>Sip in Style</h2><p>Set of 4 handcrafted ceramic mugs with minimalist matte finish. Microwave and dishwasher safe. Perfect for home or office.</p>',
+      shortDescription: 'Set of 4 handcrafted ceramic mugs',
+      price: 39.99,
+      comparePrice: 54.99,
+      wholesalePrice: 22.99,
+      minOrderQty: 20,
+      sku: 'MG-CERAMIC-012',
+      images: JSON.stringify(['/products/mugs.png']),
+      categoryId: home.id,
+      isFeatured: false,
+      isActive: true,
+      sortOrder: 12,
+      specifications: JSON.stringify({
+        'Material': 'Premium Ceramic',
+        'Capacity': '350ml each',
+        'Set Size': '4 mugs',
+        'Finish': 'Matte glaze',
+        'Dishwasher Safe': 'Yes',
+        'Microwave Safe': 'Yes',
+        'Colors': 'Assorted earth tones',
+      }),
+    },
   ];
 
   for (const product of products) {
-    await db.product.create({ data: product });
+    await db.product.upsert({
+      where: { slug: product.slug },
+      update: {},
+      create: product,
+    });
   }
   console.log(`Created ${products.length} products`);
 
@@ -260,6 +420,7 @@ async function main() {
     },
   ];
 
+  await db.banner.deleteMany();
   for (const banner of banners) {
     await db.banner.create({ data: banner });
   }
@@ -304,8 +465,8 @@ async function main() {
   console.log('Created site settings');
 
   // Create content pages
-  await db.contentPage.create({
-    data: {
+  const pages = [
+    {
       title: 'About Us',
       slug: 'about-us',
       heroImage: '/products/smartwatch.png',
@@ -315,10 +476,7 @@ async function main() {
       isActive: true,
       sortOrder: 1,
     },
-  });
-
-  await db.contentPage.create({
-    data: {
+    {
       title: 'Shipping & Returns',
       slug: 'shipping-returns',
       content: '<h2>Shipping Policy</h2><h3>Free Shipping</h3><p>We offer free shipping on all orders over $100. Standard delivery takes 3-5 business days, while express delivery takes 1-2 business days.</p><h3>International Shipping</h3><p>We ship worldwide. International delivery typically takes 7-14 business days depending on your location.</p><h2>Returns Policy</h2><p>We accept returns within 30 days of purchase for unused items in original packaging. Contact our support team for return authorization.</p><h3>How to Return</h3><ol><li>Contact our support team with your order number</li><li>Receive a return authorization label</li><li>Pack the item securely</li><li>Drop off at your nearest shipping point</li></ol>',
@@ -327,23 +485,26 @@ async function main() {
       isActive: true,
       sortOrder: 2,
     },
-  });
-
-  await db.contentPage.create({
-    data: {
+    {
       title: 'Terms & Conditions',
       slug: 'terms-conditions',
       content: '<h2>Terms and Conditions</h2><p>By accessing and using this website, you agree to be bound by these terms and conditions.</p><h3>Use of Website</h3><p>All content on this website is for general information purposes only. We reserve the right to modify content at any time.</p><h3>Orders and Pricing</h3><p>All prices are displayed in USD and are subject to change without notice. We reserve the right to refuse any order.</p><h3>Privacy</h3><p>We respect your privacy and handle your personal information in accordance with our Privacy Policy.</p>',
       isActive: true,
       sortOrder: 3,
     },
-  });
-
+  ];
+  for (const page of pages) {
+    await db.contentPage.upsert({
+      where: { slug: page.slug },
+      update: {},
+      create: page,
+    });
+  }
   console.log('Created 3 content pages');
 
   // Create blog posts
-  await db.blogPost.create({
-    data: {
+  const posts = [
+    {
       title: '5 Must-Have Tech Accessories for 2025',
       slug: 'must-have-tech-accessories-2025',
       excerpt: 'Discover the essential tech accessories that will elevate your daily workflow and lifestyle this year.',
@@ -356,10 +517,7 @@ async function main() {
       metaTitle: '5 Must-Have Tech Accessories for 2025 | StyleStore Blog',
       metaDescription: 'Discover the essential tech accessories that will elevate your daily workflow and lifestyle this year.',
     },
-  });
-
-  await db.blogPost.create({
-    data: {
+    {
       title: 'Wholesale Buying Guide: Tips for B2B Buyers',
       slug: 'wholesale-buying-guide-b2b',
       excerpt: 'Essential tips and strategies for businesses looking to purchase products at wholesale prices.',
@@ -372,10 +530,7 @@ async function main() {
       metaTitle: 'Wholesale Buying Guide for B2B Buyers | StyleStore Blog',
       metaDescription: 'Essential tips and strategies for businesses looking to purchase products at wholesale prices.',
     },
-  });
-
-  await db.blogPost.create({
-    data: {
+    {
       title: 'How to Choose the Right Headphones',
       slug: 'how-to-choose-right-headphones',
       excerpt: 'A comprehensive guide to finding the perfect headphones for your needs, from budget options to premium picks.',
@@ -387,8 +542,14 @@ async function main() {
       metaTitle: 'How to Choose the Right Headphones | StyleStore Blog',
       metaDescription: 'A comprehensive guide to finding the perfect headphones for your needs.',
     },
-  });
-
+  ];
+  for (const post of posts) {
+    await db.blogPost.upsert({
+      where: { slug: post.slug },
+      update: {},
+      create: post,
+    });
+  }
   console.log('Created 3 blog posts');
 
   // Create sample redirects
@@ -396,7 +557,11 @@ async function main() {
     { from: '/old-about', to: '/about-us', type: '301', isActive: true },
     { from: '/products-old', to: '/catalogue', type: '301', isActive: true },
   ]) {
-    await db.redirect.create({ data: redirect });
+    await db.redirect.upsert({
+      where: { from: redirect.from },
+      update: {},
+      create: redirect,
+    });
   }
   console.log('Created redirects');
 
