@@ -1,4 +1,4 @@
-export type BlockType = 'hero' | 'features' | 'cta' | 'testimonials' | 'image-gallery' | 'text' | 'spacer' | 'divider' | 'products' | 'faq';
+export type BlockType = 'hero' | 'features' | 'cta' | 'testimonials' | 'image-gallery' | 'text' | 'spacer' | 'divider' | 'products' | 'faq' | 'slider' | 'product-carousel' | 'about';
 
 export interface PageBlock {
   id: string;
@@ -93,6 +93,38 @@ export const BLOCK_DEFAULTS: Record<BlockType, { label: string; icon: string; de
     defaultData: {
       title: 'Frequently Asked Questions',
       items: [{ question: 'Question?', answer: 'Answer.' }],
+    },
+  },
+  slider: {
+    label: 'Image Slider',
+    icon: 'GalleryHorizontal',
+    defaultData: {
+      items: [
+        { image: '', title: 'Slide 1', subtitle: 'Description 1', link: '' }
+      ],
+      autoplay: true,
+      interval: 5000,
+    },
+  },
+  'product-carousel': {
+    label: 'Product Carousel',
+    icon: 'Layers',
+    defaultData: {
+      title: 'Our Products',
+      maxProducts: 10,
+      categoryId: '',
+    },
+  },
+  about: {
+    label: 'About Section',
+    icon: 'User',
+    defaultData: {
+      title: 'About Us',
+      content: '<p>Tell your story here...</p>',
+      image: '',
+      imagePosition: 'left',
+      buttonText: 'Read More',
+      buttonLink: '',
     },
   },
 };

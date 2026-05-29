@@ -38,6 +38,9 @@ import {
   ChevronDown,
   ChevronUp,
   X,
+  GalleryHorizontal,
+  Layers,
+  User,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -77,6 +80,9 @@ const BLOCK_ICONS: Record<string, React.ComponentType<{ className?: string }>> =
   divider: Minus,
   products: Package,
   faq: HelpCircle,
+  slider: GalleryHorizontal,
+  'product-carousel': Layers,
+  about: User,
 };
 
 interface PageBuilderProps {
@@ -717,6 +723,177 @@ function BlockEditDialog({
                   <Plus className="mr-2 h-4 w-4" />
                   Add Question
                 </Button>
+              </>
+            )}
+
+            {block.type === 'slider' && (
+              <>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="slider-autoplay"
+                      checked={!!localData.autoplay}
+                      onCheckedChange={(val) => updateField('autoplay', !!val)}
+                    />
+                    <Label htmlFor="slider-autoplay">Autoplay</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label>Interval (ms)</Label>
+                    <Input
+                      type="number"
+                      className="w-24 h-8"
+                      value={(localData.interval as number) || 5000}
+                      onChange={(e) => updateField('interval', Number(e.target.value))}
+                    />
+                  </div>
+                </div>
+                <Separator />
+                <Label className="text-base font-semibold">Slides</Label>
+                {((localData.items as Array<Record<string, string>>) || []).map((slide, i) => (
+                  <Card key={i} className="p-4 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Slide {i + 1}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-rose-600"
+                        onClick={() => {
+                          const slides = [...((localData.items as Array<unknown>) || [])];
+                          slides.splice(i, 1);
+                          updateField('items', slides);
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <Input
+                      placeholder="Image URL"
+                      value={slide.image}
+                      onChange={(e) => {
+                        const slides = [...((localData.items as Array<Record<string, string>>) || [])];
+                        slides[i] = { ...slides[i], image: e.target.value };
+                        updateField('items', slides);
+                      }}
+                    />
+                    <Input
+                      placeholder="Title"
+                      value={slide.title}
+                      onChange={(e) => {
+                        const slides = [...((localData.items as Array<Record<string, string>>) || [])];
+                        slides[i] = { ...slides[i], title: e.target.value };
+                        updateField('items', slides);
+                      }}
+                    />
+                    <Input
+                      placeholder="Subtitle"
+                      value={slide.subtitle}
+                      onChange={(e) => {
+                        const slides = [...((localData.items as Array<Record<string, string>>) || [])];
+                        slides[i] = { ...slides[i], subtitle: e.target.value };
+                        updateField('items', slides);
+                      }}
+                    />
+                    <Input
+                      placeholder="Link (optional)"
+                      value={slide.link}
+                      onChange={(e) => {
+                        const slides = [...((localData.items as Array<Record<string, string>>) || [])];
+                        slides[i] = { ...slides[i], link: e.target.value };
+                        updateField('items', slides);
+                      }}
+                    />
+                  </Card>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const slides = [...((localData.items as Array<Record<string, string>>) || []), { image: '', title: 'Slide', subtitle: '', link: '' }];
+                    updateField('items', slides);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Slide
+                </Button>
+              </>
+            )}
+
+            {block.type === 'product-carousel' && (
+              <>
+                <div className="space-y-2">
+                  <Label>Title</Label>
+                  <Input
+                    value={(localData.title as string) || ''}
+                    onChange={(e) => updateField('title', e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Max Products</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={(localData.maxProducts as number) || 10}
+                      onChange={(e) => updateField('maxProducts', Number(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Category ID (optional)</Label>
+                    <Input
+                      value={(localData.categoryId as string) || ''}
+                      onChange={(e) => updateField('categoryId', e.target.value)}
+                      placeholder="Leave empty for featured"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {block.type === 'about' && (
+              <>
+                <div className="space-y-2">
+                  <Label>Title</Label>
+                  <Input
+                    value={(localData.title as string) || ''}
+                    onChange={(e) => updateField('title', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Content (HTML)</Label>
+                  <Textarea
+                    rows={6}
+                    value={(localData.content as string) || ''}
+                    onChange={(e) => updateField('content', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Image URL</Label>
+                  <Input
+                    value={(localData.image as string) || ''}
+                    onChange={(e) => updateField('image', e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Image Position</Label>
+                    <select
+                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
+                      value={(localData.imagePosition as string) || 'left'}
+                      onChange={(e) => updateField('imagePosition', e.target.value)}
+                    >
+                      <option value="left">Left</option>
+                      <option value="right">Right</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Button Text</Label>
+                    <Input
+                      value={(localData.buttonText as string) || ''}
+                      onChange={(e) => updateField('buttonText', e.target.value)}
+                    />
+                  </div>
+                </div>
               </>
             )}
           </div>

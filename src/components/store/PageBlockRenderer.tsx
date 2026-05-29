@@ -16,6 +16,11 @@ import {
   Star,
   ChevronDown,
   ShoppingCart,
+  ChevronLeft,
+  ChevronRight,
+  GalleryHorizontal,
+  Layers,
+  User,
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -425,7 +430,108 @@ const BLOCK_ICONS: Record<string, React.ComponentType<{ className?: string }>> =
   divider: Minus,
   products: Package,
   faq: HelpCircle,
+  slider: GalleryHorizontal,
+  'product-carousel': Layers,
+  about: User,
 };
+
+function SliderBlock({ data, onNavigate }: { data: Record<string, unknown>; onNavigate?: (page: string, data?: unknown) => void }) {
+  const items = (data.items as Array<{ image: string; title: string; subtitle: string; link: string }>) || [];
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    if (data.autoplay && items.length > 1) {
+      const timer = setInterval(() => {
+        setActiveIndex((prev) => (prev + 1) % items.length);
+      }, (data.interval as number) || 5000);
+      return () => clearInterval(timer);
+    }
+  }, [items.length, data.autoplay, data.interval]);
+
+  if (items.length === 0) return null;
+
+  return (
+    <div className="relative h-[300px] sm:h-[450px] w-full overflow-hidden rounded-xl">
+      {items.map((item, i) => (
+        <div
+          key={i}
+          className={`absolute inset-0 transition-opacity duration-1000 ${
+            i === activeIndex ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          {item.image ? (
+            <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
+          ) : (
+            <div className="h-full w-full bg-emerald-700" />
+          )}
+          <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white text-center p-6">
+            <h2 className="text-3xl font-bold sm:text-5xl">{item.title}</h2>
+            <p className="mt-4 text-lg text-white/90 max-w-2xl">{item.subtitle}</p>
+            {item.link && (
+              <Button
+                className="mt-8 bg-emerald-600 hover:bg-emerald-700"
+                onClick={() => onNavigate && onNavigate('catalogue')}
+              >
+                View Collection
+              </Button>
+            )}
+          </div>
+        </div>
+      ))}
+      {items.length > 1 && (
+        <>
+          <button
+            className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/20 text-white hover:bg-black/40"
+            onClick={() => setActiveIndex((prev) => (prev - 1 + items.length) % items.length)}
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          <button
+            className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/20 text-white hover:bg-black/40"
+            onClick={() => setActiveIndex((prev) => (prev + 1) % items.length)}
+          >
+            <ChevronRight className="h-6 w-6" />
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+function AboutBlock({ data, onNavigate }: { data: Record<string, unknown>; onNavigate?: (page: string, data?: unknown) => void }) {
+  const title = (data.title as string) || '';
+  const content = (data.content as string) || '';
+  const image = (data.image as string) || '';
+  const imagePosition = (data.imagePosition as string) || 'left';
+  const buttonText = (data.buttonText as string) || '';
+
+  return (
+    <section className="py-12">
+      <div className={`flex flex-col ${imagePosition === 'right' ? 'lg:flex-row-reverse' : 'lg:flex-row'} gap-12 items-center`}>
+        <div className="flex-1 space-y-6">
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{title}</h2>
+          <div
+            className="prose prose-neutral dark:prose-invert"
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content, SANITIZE_OPTIONS) }}
+          />
+          {buttonText && (
+            <Button
+              variant="outline"
+              onClick={() => onNavigate && onNavigate('contact')}
+            >
+              {buttonText}
+            </Button>
+          )}
+        </div>
+        {image && (
+          <div className="flex-1 w-full max-w-xl">
+            <img src={image} alt={title} className="rounded-2xl shadow-xl w-full object-cover aspect-4/3" />
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
 
 export function PageBlockRenderer({ block, onNavigate }: BlockRendererProps) {
   const { type, data } = block;
@@ -448,9 +554,14 @@ export function PageBlockRenderer({ block, onNavigate }: BlockRendererProps) {
     case 'divider':
       return <DividerBlock data={data} />;
     case 'products':
+    case 'product-carousel':
       return <ProductsBlock data={data} onNavigate={onNavigate} />;
     case 'faq':
       return <FaqBlock data={data} />;
+    case 'slider':
+      return <SliderBlock data={data} onNavigate={onNavigate} />;
+    case 'about':
+      return <AboutBlock data={data} onNavigate={onNavigate} />;
     default:
       return null;
   }
