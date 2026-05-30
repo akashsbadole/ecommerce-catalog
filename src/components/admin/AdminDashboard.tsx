@@ -57,7 +57,6 @@ import { AdminActivityLog } from '@/components/admin/AdminActivityLog';
 import { AdminDataExport } from '@/components/admin/AdminDataExport';
 import { AdminSearchDialog } from '@/components/admin/AdminSearchDialog';
 import { AdminAnalytics } from '@/components/admin/AdminAnalytics';
-import { AdminMenus } from '@/components/admin/AdminMenus';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { NotificationBell } from '@/components/admin/NotificationBell';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -78,7 +77,6 @@ const sidebarItems = [
   { id: 'media', label: 'Media', icon: ImageIcon },
   { id: 'pages', label: 'Pages', icon: FileText },
   { id: 'blog', label: 'Blog', icon: BookOpen },
-  { id: 'menus', label: 'Menus', icon: Menu },
   { id: 'banners', label: 'Banners', icon: ImageIcon },
   { id: 'redirects', label: 'Redirects', icon: ArrowRightLeft },
   { id: 'users', label: 'Users', icon: Users },
@@ -289,8 +287,6 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
         return <AdminCategories />;
       case 'enquiries':
         return <AdminEnquiries />;
-      case 'menus':
-        return <AdminMenus />;
       case 'banners':
         return <AdminBanners />;
       case 'media':

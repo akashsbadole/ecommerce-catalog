@@ -74,9 +74,8 @@ export async function PUT(
     return NextResponse.json({ category });
   } catch (error) {
     console.error('Update category error:', error);
-    const message = error instanceof Error ? error.message : 'Internal server error';
     return NextResponse.json(
-      { error: message },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
