@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback } from "react";
-import dynamic from "next/dynamic";
+import { useState, useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import {
   Plus,
   Search,
@@ -14,42 +14,28 @@ import {
   Blocks,
   Save,
   ArrowLeft,
-  LayoutGrid,
-} from "lucide-react";
+} from 'lucide-react';
 
 const PageBuilder = dynamic(
-  () =>
-    import("@/components/admin/PageBuilder").then((m) => ({
-      default: m.PageBuilder,
-    })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="min-h-[400px] rounded-md border border-input bg-muted/30 animate-pulse" />
-    ),
-  },
+  () => import('@/components/admin/PageBuilder').then(m => ({ default: m.PageBuilder })),
+  { ssr: false, loading: () => <div className="min-h-[400px] rounded-md border border-input bg-muted/30 animate-pulse" /> }
 );
 
 const WysiwygEditor = dynamic(
-  () => import("@/components/admin/WysiwygEditor"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="min-h-[300px] rounded-md border border-input bg-muted/30 animate-pulse" />
-    ),
-  },
+  () => import('@/components/admin/WysiwygEditor'),
+  { ssr: false, loading: () => <div className="min-h-[300px] rounded-md border border-input bg-muted/30 animate-pulse" /> }
 );
 
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import {
   Table,
   TableBody,
@@ -57,14 +43,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -74,17 +60,15 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MediaPickerField } from "@/components/admin/MediaPickerField";
-import { adminFetch } from "@/lib/admin-fetch";
-import type { PageBlock } from "@/lib/page-blocks";
+} from '@/components/ui/collapsible';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { adminFetch } from '@/lib/admin-fetch';
+import type { PageBlock } from '@/lib/page-blocks';
 
 interface ContentPage {
   id: string;
@@ -115,31 +99,31 @@ interface PageFormData {
 }
 
 const emptyForm: PageFormData = {
-  title: "",
-  slug: "",
-  content: "",
+  title: '',
+  slug: '',
+  content: '',
   blocks: [],
-  heroImage: "",
-  metaTitle: "",
-  metaDescription: "",
-  ogImage: "",
+  heroImage: '',
+  metaTitle: '',
+  metaDescription: '',
+  ogImage: '',
   isActive: true,
-  sortOrder: "0",
+  sortOrder: '0',
 };
 
 function generateSlug(name: string): string {
   return name
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/[\s_]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
 export function AdminPages() {
   const [pages, setPages] = useState<ContentPage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingPage, setEditingPage] = useState<ContentPage | null>(null);
@@ -153,21 +137,21 @@ export function AdminPages() {
   // Builder mode
   const [builderMode, setBuilderMode] = useState(false);
   const [builderPageId, setBuilderPageId] = useState<string | null>(null);
-  const [builderPageTitle, setBuilderPageTitle] = useState("");
+  const [builderPageTitle, setBuilderPageTitle] = useState('');
   const [builderBlocks, setBuilderBlocks] = useState<PageBlock[]>([]);
   const [builderSaving, setBuilderSaving] = useState(false);
 
   const fetchPages = useCallback(async () => {
     try {
-      const params = new URLSearchParams({ all: "true" });
-      if (searchTerm) params.set("search", searchTerm);
+      const params = new URLSearchParams({ all: 'true' });
+      if (searchTerm) params.set('search', searchTerm);
       const res = await adminFetch(`/api/content-pages?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setPages(data.contentPages || []);
       }
     } catch {
-      toast.error("Failed to load pages");
+      toast.error('Failed to load pages');
     } finally {
       setLoading(false);
     }
@@ -189,7 +173,7 @@ export function AdminPages() {
     setEditingPage(page);
     let parsedBlocks: PageBlock[] = [];
     try {
-      const raw = page.blocks || "[]";
+      const raw = page.blocks || '[]';
       parsedBlocks = JSON.parse(raw);
       if (!Array.isArray(parsedBlocks)) parsedBlocks = [];
     } catch {
@@ -198,12 +182,12 @@ export function AdminPages() {
     setForm({
       title: page.title,
       slug: page.slug,
-      content: page.content || "",
+      content: page.content || '',
       blocks: parsedBlocks,
-      heroImage: page.heroImage || "",
-      metaTitle: page.metaTitle || "",
-      metaDescription: page.metaDescription || "",
-      ogImage: page.ogImage || "",
+      heroImage: page.heroImage || '',
+      metaTitle: page.metaTitle || '',
+      metaDescription: page.metaDescription || '',
+      ogImage: page.ogImage || '',
       isActive: page.isActive,
       sortOrder: String(page.sortOrder),
     });
@@ -215,7 +199,7 @@ export function AdminPages() {
     setBuilderPageId(page.id);
     setBuilderPageTitle(page.title);
     try {
-      const raw = page.blocks || "[]";
+      const raw = page.blocks || '[]';
       const parsed = JSON.parse(raw);
       setBuilderBlocks(Array.isArray(parsed) ? parsed : []);
     } catch {
@@ -235,25 +219,25 @@ export function AdminPages() {
     setBuilderSaving(true);
     try {
       const res = await adminFetch(`/api/content-pages/${builderPageId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ blocks: builderBlocks }),
       });
       if (res.ok) {
-        toast.success("Page blocks saved");
+        toast.success('Page blocks saved');
       } else {
         const err = await res.json();
-        toast.error(err.error || "Failed to save blocks");
+        toast.error(err.error || 'Failed to save blocks');
       }
     } catch {
-      toast.error("Failed to save blocks");
+      toast.error('Failed to save blocks');
     } finally {
       setBuilderSaving(false);
     }
   };
 
   const handleTitleChange = (title: string) => {
-    setForm((prev) => ({
+    setForm(prev => ({
       ...prev,
       title,
       slug: editingPage ? prev.slug : generateSlug(title),
@@ -262,7 +246,7 @@ export function AdminPages() {
 
   const handleSave = async () => {
     if (!form.title.trim()) {
-      toast.error("Page title is required");
+      toast.error('Page title is required');
       return;
     }
 
@@ -271,7 +255,7 @@ export function AdminPages() {
       const payload = {
         title: form.title.trim(),
         slug: form.slug.trim() || generateSlug(form.title),
-        content: form.content.trim() || "",
+        content: form.content.trim() || '',
         blocks: form.blocks,
         heroImage: form.heroImage.trim() || null,
         metaTitle: form.metaTitle.trim() || null,
@@ -283,25 +267,25 @@ export function AdminPages() {
 
       const url = editingPage
         ? `/api/content-pages/${editingPage.id}`
-        : "/api/content-pages";
-      const method = editingPage ? "PUT" : "POST";
+        : '/api/content-pages';
+      const method = editingPage ? 'PUT' : 'POST';
 
       const res = await adminFetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
       if (res.ok) {
-        toast.success(editingPage ? "Page updated" : "Page created");
+        toast.success(editingPage ? 'Page updated' : 'Page created');
         setFormOpen(false);
         fetchPages();
       } else {
         const err = await res.json();
-        toast.error(err.error || "Failed to save page");
+        toast.error(err.error || 'Failed to save page');
       }
     } catch {
-      toast.error("Failed to save page");
+      toast.error('Failed to save page');
     } finally {
       setSaving(false);
     }
@@ -311,19 +295,17 @@ export function AdminPages() {
     if (!deleteId) return;
     setDeleting(true);
     try {
-      const res = await adminFetch(`/api/content-pages/${deleteId}`, {
-        method: "DELETE",
-      });
+      const res = await adminFetch(`/api/content-pages/${deleteId}`, { method: 'DELETE' });
       if (res.ok) {
-        toast.success("Page deleted");
-        setPages((prev) => prev.filter((p) => p.id !== deleteId));
+        toast.success('Page deleted');
+        setPages(prev => prev.filter(p => p.id !== deleteId));
         setDeleteId(null);
       } else {
         const err = await res.json();
-        toast.error(err.error || "Failed to delete page");
+        toast.error(err.error || 'Failed to delete page');
       }
     } catch {
-      toast.error("Failed to delete page");
+      toast.error('Failed to delete page');
     } finally {
       setDeleting(false);
     }
@@ -340,25 +322,23 @@ export function AdminPages() {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h2 className="text-2xl font-bold tracking-tight">
-                Page Builder
-              </h2>
+              <h2 className="text-2xl font-bold tracking-tight">Page Builder</h2>
               <p className="text-muted-foreground mt-1">
-                Editing:{" "}
-                <span className="font-medium text-foreground">
-                  {builderPageTitle}
-                </span>
+                Editing: <span className="font-medium text-foreground">{builderPageTitle}</span>
               </p>
             </div>
           </div>
           <Button onClick={handleBuilderSave} disabled={builderSaving}>
             <Save className="mr-2 h-4 w-4" />
-            {builderSaving ? "Saving..." : "Save Blocks"}
+            {builderSaving ? 'Saving...' : 'Save Blocks'}
           </Button>
         </div>
 
         {/* Builder Component */}
-        <PageBuilder blocks={builderBlocks} onChange={setBuilderBlocks} />
+        <PageBuilder
+          blocks={builderBlocks}
+          onChange={setBuilderBlocks}
+        />
       </div>
     );
   }
@@ -369,9 +349,7 @@ export function AdminPages() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Content Pages</h2>
-          <p className="text-muted-foreground mt-1">
-            Manage pages like About, Terms, FAQ, etc.
-          </p>
+          <p className="text-muted-foreground mt-1">Manage pages like About, Terms, FAQ, etc.</p>
         </div>
         <Button onClick={handleOpenAdd}>
           <Plus className="mr-2 h-4 w-4" />
@@ -390,13 +368,7 @@ export function AdminPages() {
             className="pl-9"
           />
         </div>
-        <Button
-          variant="outline"
-          onClick={() => {
-            setLoading(true);
-            fetchPages();
-          }}
-        >
+        <Button variant="outline" onClick={() => { setLoading(true); fetchPages(); }}>
           <RefreshCw className="h-4 w-4" />
         </Button>
       </div>
@@ -415,8 +387,8 @@ export function AdminPages() {
             <h3 className="mt-4 text-lg font-medium">No pages found</h3>
             <p className="mt-1 text-sm text-muted-foreground">
               {searchTerm
-                ? "Try adjusting your search"
-                : "Create your first content page to get started"}
+                ? 'Try adjusting your search'
+                : 'Create your first content page to get started'}
             </p>
           </div>
         ) : (
@@ -453,11 +425,11 @@ export function AdminPages() {
                         variant="secondary"
                         className={
                           page.isActive
-                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                            : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
+                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                            : 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400'
                         }
                       >
-                        {page.isActive ? "Active" : "Inactive"}
+                        {page.isActive ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -501,230 +473,179 @@ export function AdminPages() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="!w-[95vw] max-h-[90vh]">
+        <DialogContent className="max-w-2xl max-h-[90vh]">
           <DialogHeader>
-            <DialogTitle>{editingPage ? "Edit Page" : "Add Page"}</DialogTitle>
+            <DialogTitle>
+              {editingPage ? 'Edit Page' : 'Add Page'}
+            </DialogTitle>
           </DialogHeader>
-          <Tabs defaultValue="content" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="content">Content</TabsTrigger>
-              <TabsTrigger value="builder">
-                <LayoutGrid className="mr-2 h-4 w-4" />
-                Page Builder
-              </TabsTrigger>
-              <TabsTrigger value="settings">Settings</TabsTrigger>
-            </TabsList>
+          <ScrollArea className="max-h-[calc(90vh-140px)] pr-4">
+            <div className="grid gap-4 py-4">
+              {/* Title & Slug */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="page-title">
+                    Title <span className="text-rose-500">*</span>
+                  </Label>
+                  <Input
+                    id="page-title"
+                    placeholder="Page title"
+                    value={form.title}
+                    onChange={(e) => handleTitleChange(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="page-slug">Slug</Label>
+                  <Input
+                    id="page-slug"
+                    placeholder="page-slug"
+                    value={form.slug}
+                    onChange={(e) =>
+                      setForm(prev => ({ ...prev, slug: e.target.value }))
+                    }
+                  />
+                </div>
+              </div>
 
-            <TabsContent value="content" className="pt-4">
-              <ScrollArea className="max-h-[calc(90vh-260px)] pr-4">
-                <div className="grid gap-4">
-                  {/* Title & Slug */}
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="page-title">
-                        Title <span className="text-rose-500">*</span>
-                      </Label>
-                      <Input
-                        id="page-title"
-                        placeholder="Page title"
-                        value={form.title}
-                        onChange={(e) => handleTitleChange(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="page-slug">Slug</Label>
-                      <Input
-                        id="page-slug"
-                        placeholder="page-slug"
-                        value={form.slug}
-                        onChange={(e) =>
-                          setForm((prev) => ({ ...prev, slug: e.target.value }))
-                        }
-                      />
-                    </div>
-                  </div>
+              {/* Hero Image */}
+              <div className="space-y-2">
+                <Label htmlFor="page-hero">Hero Image URL</Label>
+                <Input
+                  id="page-hero"
+                  placeholder="https://example.com/hero.jpg"
+                  value={form.heroImage}
+                  onChange={(e) =>
+                    setForm(prev => ({ ...prev, heroImage: e.target.value }))
+                  }
+                />
+                {form.heroImage && (
+                  <img
+                    src={form.heroImage}
+                    alt="Hero preview"
+                    className="h-32 w-full rounded-md object-cover bg-muted"
+                  />
+                )}
+              </div>
 
-                  {/* Hero Image */}
+              {/* Content */}
+              <div className="space-y-2">
+                <Label>Content</Label>
+                <WysiwygEditor
+                  value={form.content}
+                  onChange={(val) => setForm(prev => ({ ...prev, content: val }))}
+                  placeholder="Write page content here..."
+                />
+              </div>
+
+              {/* Sort Order */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="page-sort">Sort Order</Label>
+                  <Input
+                    id="page-sort"
+                    type="number"
+                    placeholder="0"
+                    value={form.sortOrder}
+                    onChange={(e) =>
+                      setForm(prev => ({ ...prev, sortOrder: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="flex items-center gap-2 pt-7">
+                  <Switch
+                    checked={form.isActive}
+                    onCheckedChange={(checked) =>
+                      setForm(prev => ({ ...prev, isActive: checked }))
+                    }
+                  />
+                  <Label
+                    className="cursor-pointer"
+                    onClick={() => setForm(prev => ({ ...prev, isActive: !prev.isActive }))}
+                  >
+                    Active
+                  </Label>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* SEO Section (Collapsible) */}
+              <Collapsible open={seoOpen} onOpenChange={setSeoOpen}>
+                <CollapsibleTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full justify-between"
+                  >
+                    <span className="flex items-center gap-2">
+                      <SearchCode className="h-4 w-4" />
+                      SEO Settings
+                      {(form.metaTitle || form.metaDescription) && (
+                        <span className="text-xs text-emerald-600 font-normal">(configured)</span>
+                      )}
+                    </span>
+                    <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-4 pt-3">
                   <div className="space-y-2">
-                    <Label>Hero Image</Label>
-                    <MediaPickerField
-                      value={form.heroImage}
-                      onChange={(val) =>
-                        setForm((prev) => ({ ...prev, heroImage: val }))
+                    <Label htmlFor="page-meta-title">Meta Title</Label>
+                    <Input
+                      id="page-meta-title"
+                      placeholder="Page Title | Site Name"
+                      value={form.metaTitle}
+                      onChange={(e) =>
+                        setForm(prev => ({ ...prev, metaTitle: e.target.value }))
                       }
-                      placeholder="https://example.com/hero.jpg"
                     />
                   </div>
-
-                  {/* Content */}
                   <div className="space-y-2">
-                    <Label>Content</Label>
-                    <WysiwygEditor
-                      value={form.content}
-                      onChange={(val) =>
-                        setForm((prev) => ({ ...prev, content: val }))
-                      }
-                      placeholder="Write page content here..."
+                    <Label htmlFor="page-meta-desc" className="flex items-center justify-between">
+                      <span>Meta Description</span>
+                      <span className="text-xs text-muted-foreground font-normal">
+                        {form.metaDescription.length}/160
+                      </span>
+                    </Label>
+                    <Textarea
+                      id="page-meta-desc"
+                      placeholder="A brief description for search engines..."
+                      value={form.metaDescription}
+                      onChange={(e) => {
+                        if (e.target.value.length <= 160) {
+                          setForm(prev => ({ ...prev, metaDescription: e.target.value }));
+                        }
+                      }}
+                      rows={3}
+                      className={form.metaDescription.length >= 150 ? 'border-amber-400' : ''}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Recommended: 150-160 characters for optimal SEO
+                    </p>
                   </div>
-                </div>
-              </ScrollArea>
-            </TabsContent>
-
-            <TabsContent value="builder" className="pt-4">
-              <p className="text-sm text-muted-foreground mb-4">
-                Build your page structure with blocks. Note: content added in
-                the "Content" tab (WYSIWYG) will appear after these blocks on
-                the page.
-              </p>
-              <PageBuilder
-                blocks={form.blocks}
-                onChange={(blocks) => setForm((prev) => ({ ...prev, blocks }))}
-              />
-            </TabsContent>
-
-            <TabsContent value="settings" className="pt-4">
-              <ScrollArea className="max-h-[calc(90vh-260px)] pr-4">
-                <div className="grid gap-4">
-                  {/* Sort Order */}
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="page-sort">Sort Order</Label>
-                      <Input
-                        id="page-sort"
-                        type="number"
-                        placeholder="0"
-                        value={form.sortOrder}
-                        onChange={(e) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            sortOrder: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center gap-2 pt-7">
-                      <Switch
-                        checked={form.isActive}
-                        onCheckedChange={(checked) =>
-                          setForm((prev) => ({ ...prev, isActive: checked }))
-                        }
-                      />
-                      <Label
-                        className="cursor-pointer"
-                        onClick={() =>
-                          setForm((prev) => ({
-                            ...prev,
-                            isActive: !prev.isActive,
-                          }))
-                        }
-                      >
-                        Active
-                      </Label>
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="page-og-image">OG Image URL</Label>
+                    <Input
+                      id="page-og-image"
+                      placeholder="https://example.com/og-image.jpg"
+                      value={form.ogImage}
+                      onChange={(e) =>
+                        setForm(prev => ({ ...prev, ogImage: e.target.value }))
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Image shown when this page is shared on social media (recommended 1200×630px)
+                    </p>
                   </div>
-
-                  <Separator />
-
-                  {/* SEO Section (Collapsible) */}
-                  <Collapsible open={seoOpen} onOpenChange={setSeoOpen}>
-                    <CollapsibleTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full justify-between"
-                      >
-                        <span className="flex items-center gap-2">
-                          <SearchCode className="h-4 w-4" />
-                          SEO Settings
-                          {(form.metaTitle || form.metaDescription) && (
-                            <span className="text-xs text-emerald-600 font-normal">
-                              (configured)
-                            </span>
-                          )}
-                        </span>
-                        <ChevronDown className="h-4 w-4 transition-transform duration-200" />
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="space-y-4 pt-3">
-                      <div className="space-y-2">
-                        <Label htmlFor="page-meta-title">Meta Title</Label>
-                        <Input
-                          id="page-meta-title"
-                          placeholder="Page Title | Site Name"
-                          value={form.metaTitle}
-                          onChange={(e) =>
-                            setForm((prev) => ({
-                              ...prev,
-                              metaTitle: e.target.value,
-                            }))
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="page-meta-desc"
-                          className="flex items-center justify-between"
-                        >
-                          <span>Meta Description</span>
-                          <span className="text-xs text-muted-foreground font-normal">
-                            {form.metaDescription.length}/160
-                          </span>
-                        </Label>
-                        <Textarea
-                          id="page-meta-desc"
-                          placeholder="A brief description for search engines..."
-                          value={form.metaDescription}
-                          onChange={(e) => {
-                            if (e.target.value.length <= 160) {
-                              setForm((prev) => ({
-                                ...prev,
-                                metaDescription: e.target.value,
-                              }));
-                            }
-                          }}
-                          rows={3}
-                          className={
-                            form.metaDescription.length >= 150
-                              ? "border-amber-400"
-                              : ""
-                          }
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Recommended: 150-160 characters for optimal SEO
-                        </p>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>OG Image</Label>
-                        <MediaPickerField
-                          value={form.ogImage}
-                          onChange={(val) =>
-                            setForm((prev) => ({ ...prev, ogImage: val }))
-                          }
-                          placeholder="https://example.com/og-image.jpg"
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Image shown when this page is shared on social media
-                          (recommended 1200×630px)
-                        </p>
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                </div>
-              </ScrollArea>
-            </TabsContent>
-          </Tabs>
-
-          <DialogFooter className="mt-4">
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+          </ScrollArea>
+          <DialogFooter>
             <Button variant="outline" onClick={() => setFormOpen(false)}>
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={saving}>
-              {saving
-                ? "Saving..."
-                : editingPage
-                  ? "Update Page"
-                  : "Create Page"}
+              {saving ? 'Saving...' : editingPage ? 'Update Page' : 'Create Page'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -736,8 +657,7 @@ export function AdminPages() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Page</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this page? This action cannot be
-              undone.
+              Are you sure you want to delete this page? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -747,7 +667,7 @@ export function AdminPages() {
               disabled={deleting}
               className="bg-rose-600 hover:bg-rose-700"
             >
-              {deleting ? "Deleting..." : "Delete"}
+              {deleting ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import {
   ShoppingBag,
   LayoutDashboard,
@@ -21,41 +21,45 @@ import {
   Search,
   Download,
   KeyRound,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { toast } from "sonner";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { AdminDashboardHome } from "@/components/admin/AdminDashboardHome";
-import { AdminProducts } from "@/components/admin/AdminProducts";
-import { AdminCategories } from "@/components/admin/AdminCategories";
-import { AdminEnquiries } from "@/components/admin/AdminEnquiries";
-import { AdminBanners } from "@/components/admin/AdminBanners";
-import { AdminSettings } from "@/components/admin/AdminSettings";
-import { AdminMedia } from "@/components/admin/AdminMedia";
-import { AdminPages } from "@/components/admin/AdminPages";
-import { AdminBlog } from "@/components/admin/AdminBlog";
-import { AdminRedirects } from "@/components/admin/AdminRedirects";
-import { AdminUsers } from "@/components/admin/AdminUsers";
-import { AdminActivityLog } from "@/components/admin/AdminActivityLog";
-import { AdminDataExport } from "@/components/admin/AdminDataExport";
-import { AdminSearchDialog } from "@/components/admin/AdminSearchDialog";
-import { AdminAnalytics } from "@/components/admin/AdminAnalytics";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { NotificationBell } from "@/components/admin/NotificationBell";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+} from '@/components/ui/dialog';
+import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { AdminDashboardHome } from '@/components/admin/AdminDashboardHome';
+import { AdminProducts } from '@/components/admin/AdminProducts';
+import { AdminCategories } from '@/components/admin/AdminCategories';
+import { AdminEnquiries } from '@/components/admin/AdminEnquiries';
+import { AdminBanners } from '@/components/admin/AdminBanners';
+import { AdminSettings } from '@/components/admin/AdminSettings';
+import { AdminMedia } from '@/components/admin/AdminMedia';
+import { AdminPages } from '@/components/admin/AdminPages';
+import { AdminBlog } from '@/components/admin/AdminBlog';
+import { AdminRedirects } from '@/components/admin/AdminRedirects';
+import { AdminUsers } from '@/components/admin/AdminUsers';
+import { AdminActivityLog } from '@/components/admin/AdminActivityLog';
+import { AdminDataExport } from '@/components/admin/AdminDataExport';
+import { AdminSearchDialog } from '@/components/admin/AdminSearchDialog';
+import { AdminAnalytics } from '@/components/admin/AdminAnalytics';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { NotificationBell } from '@/components/admin/NotificationBell';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 interface AdminDashboardProps {
   user: { id: string; email: string; name: string; role: string } | null;
@@ -65,20 +69,20 @@ interface AdminDashboardProps {
 }
 
 const sidebarItems = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { id: "analytics", label: "Analytics", icon: BarChart3 },
-  { id: "products", label: "Products", icon: Package },
-  { id: "categories", label: "Categories", icon: FolderOpen },
-  { id: "enquiries", label: "Enquiries", icon: MessageSquare },
-  { id: "media", label: "Media", icon: ImageIcon },
-  { id: "pages", label: "Pages", icon: FileText },
-  { id: "blog", label: "Blog", icon: BookOpen },
-  { id: "banners", label: "Banners", icon: ImageIcon },
-  { id: "redirects", label: "Redirects", icon: ArrowRightLeft },
-  { id: "users", label: "Users", icon: Users },
-  { id: "activity-log", label: "Activity Log", icon: ClipboardList },
-  { id: "data-export", label: "Data Export", icon: Download },
-  { id: "settings", label: "Settings", icon: Settings },
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+  { id: 'products', label: 'Products', icon: Package },
+  { id: 'categories', label: 'Categories', icon: FolderOpen },
+  { id: 'enquiries', label: 'Enquiries', icon: MessageSquare },
+  { id: 'media', label: 'Media', icon: ImageIcon },
+  { id: 'pages', label: 'Pages', icon: FileText },
+  { id: 'blog', label: 'Blog', icon: BookOpen },
+  { id: 'banners', label: 'Banners', icon: ImageIcon },
+  { id: 'redirects', label: 'Redirects', icon: ArrowRightLeft },
+  { id: 'users', label: 'Users', icon: Users },
+  { id: 'activity-log', label: 'Activity Log', icon: ClipboardList },
+  { id: 'data-export', label: 'Data Export', icon: Download },
+  { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
 function SidebarContent({
@@ -104,20 +108,14 @@ function SidebarContent({
         <span className="text-lg font-bold">
           Style<span className="text-emerald-600">Store</span>
         </span>
-        <Badge variant="secondary" className="ml-auto text-xs">
-          Admin
-        </Badge>
+        <Badge variant="secondary" className="ml-auto text-xs">Admin</Badge>
       </div>
 
       <Separator />
 
       {/* Navigation */}
       <ScrollArea className="flex-1 px-3 py-4">
-        <nav
-          className="flex flex-col gap-1"
-          role="navigation"
-          aria-label="Admin navigation"
-        >
+        <nav className="flex flex-col gap-1" role="navigation" aria-label="Admin navigation">
           {sidebarItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -127,13 +125,15 @@ function SidebarContent({
                 onClick={() => onTabChange(item.id)}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   isActive
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
                 <Icon className="h-4 w-4" />
                 {item.label}
-                {isActive && <ChevronRight className="ml-auto h-4 w-4" />}
+                {isActive && (
+                  <ChevronRight className="ml-auto h-4 w-4" />
+                )}
               </button>
             );
           })}
@@ -160,7 +160,7 @@ function SidebarContent({
             variant="ghost"
             size="sm"
             className="justify-start text-sm"
-            onClick={() => onNavigate("home")}
+            onClick={() => onNavigate('home')}
           >
             <ShoppingBag className="mr-2 h-4 w-4" />
             View Store
@@ -169,7 +169,7 @@ function SidebarContent({
             variant="ghost"
             size="sm"
             className="justify-start text-sm"
-            onClick={() => onNavigate("change-password")}
+            onClick={() => onNavigate('change-password')}
           >
             <KeyRound className="mr-2 h-4 w-4" />
             Change Password
@@ -189,32 +189,30 @@ function SidebarContent({
   );
 }
 
-export function AdminDashboard({
-  user,
-  activeTab,
-  onNavigate,
-  onLogout,
-}: AdminDashboardProps) {
+export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminDashboardProps) {
   const isMobile = useIsMobile();
   const [currentTab, setCurrentTab] = useState(activeTab);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [changePwdOpen, setChangePwdOpen] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [savingPwd, setSavingPwd] = useState(false);
 
   // Cmd+K / Ctrl+K shortcut
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        e.key === 'k'
+      ) {
         e.preventDefault();
         setSearchOpen((prev) => !prev);
       }
     }
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const handleTabChange = (tab: string) => {
@@ -235,43 +233,43 @@ export function AdminDashboard({
   };
 
   const handleChangePasswordOpen = () => {
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
     setChangePwdOpen(true);
   };
 
   const handleChangePassword = async () => {
     if (!currentPassword || !newPassword) {
-      toast.error("All fields are required");
+      toast.error('All fields are required');
       return;
     }
     if (newPassword.length < 8) {
-      toast.error("New password must be at least 8 characters");
+      toast.error('New password must be at least 8 characters');
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error('Passwords do not match');
       return;
     }
 
     setSavingPwd(true);
     try {
-      const { adminFetch } = await import("@/lib/admin-fetch");
-      const res = await adminFetch("/api/auth/change-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const { adminFetch } = await import('@/lib/admin-fetch');
+      const res = await adminFetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ currentPassword, newPassword }),
       });
       if (res.ok) {
-        toast.success("Password changed successfully");
+        toast.success('Password changed successfully');
         setChangePwdOpen(false);
       } else {
         const err = await res.json();
-        toast.error(err.error || "Failed to change password");
+        toast.error(err.error || 'Failed to change password');
       }
     } catch {
-      toast.error("Failed to change password");
+      toast.error('Failed to change password');
     } finally {
       setSavingPwd(false);
     }
@@ -279,33 +277,33 @@ export function AdminDashboard({
 
   const renderContent = () => {
     switch (currentTab) {
-      case "dashboard":
+      case 'dashboard':
         return <AdminDashboardHome onNavigate={handleQuickNav} />;
-      case "analytics":
+      case 'analytics':
         return <AdminAnalytics />;
-      case "products":
+      case 'products':
         return <AdminProducts />;
-      case "categories":
+      case 'categories':
         return <AdminCategories />;
-      case "enquiries":
+      case 'enquiries':
         return <AdminEnquiries />;
-      case "banners":
+      case 'banners':
         return <AdminBanners />;
-      case "media":
+      case 'media':
         return <AdminMedia />;
-      case "pages":
+      case 'pages':
         return <AdminPages />;
-      case "blog":
+      case 'blog':
         return <AdminBlog />;
-      case "redirects":
+      case 'redirects':
         return <AdminRedirects />;
-      case "users":
+      case 'users':
         return <AdminUsers />;
-      case "activity-log":
+      case 'activity-log':
         return <AdminActivityLog />;
-      case "data-export":
+      case 'data-export':
         return <AdminDataExport />;
-      case "settings":
+      case 'settings':
         return <AdminSettings />;
       default:
         return <AdminDashboardHome onNavigate={handleQuickNav} />;
@@ -320,11 +318,11 @@ export function AdminDashboard({
           <SidebarContent
             activeTab={currentTab}
             onTabChange={handleTabChange}
-            userName={user?.name || "Admin"}
-            userEmail={user?.email || ""}
+            userName={user?.name || 'Admin'}
+            userEmail={user?.email || ''}
             onLogout={onLogout}
             onNavigate={(page) => {
-              if (page === "change-password") {
+              if (page === 'change-password') {
                 handleChangePasswordOpen();
               } else {
                 onNavigate(page);
@@ -349,11 +347,11 @@ export function AdminDashboard({
                 <SidebarContent
                   activeTab={currentTab}
                   onTabChange={handleTabChange}
-                  userName={user?.name || "Admin"}
-                  userEmail={user?.email || ""}
+                  userName={user?.name || 'Admin'}
+                  userEmail={user?.email || ''}
                   onLogout={onLogout}
                   onNavigate={(page) => {
-                    if (page === "change-password") {
+                    if (page === 'change-password') {
                       handleChangePasswordOpen();
                     } else {
                       onNavigate(page);
@@ -368,9 +366,7 @@ export function AdminDashboard({
                 Style<span className="text-emerald-600">Store</span>
               </span>
             </div>
-            <Badge variant="secondary" className="text-xs ml-1">
-              Admin
-            </Badge>
+            <Badge variant="secondary" className="text-xs ml-1">Admin</Badge>
             <div className="ml-auto flex items-center gap-1">
               {/* Search Button (mobile) */}
               <Button
@@ -397,7 +393,9 @@ export function AdminDashboard({
         {/* Page Content */}
         <ScrollArea className="flex-1">
           <div className="p-4 sm:p-6 lg:p-8">
-            <ErrorBoundary>{renderContent()}</ErrorBoundary>
+            <ErrorBoundary>
+              {renderContent()}
+            </ErrorBoundary>
           </div>
         </ScrollArea>
       </div>
@@ -435,9 +433,7 @@ export function AdminDashboard({
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Enter new password"
               />
-              <p className="text-xs text-muted-foreground">
-                Minimum 8 characters
-              </p>
+              <p className="text-xs text-muted-foreground">Minimum 8 characters</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm-pwd">Confirm New Password</Label>
@@ -455,7 +451,7 @@ export function AdminDashboard({
               Cancel
             </Button>
             <Button onClick={handleChangePassword} disabled={savingPwd}>
-              {savingPwd ? "Saving..." : "Change Password"}
+              {savingPwd ? 'Saving...' : 'Change Password'}
             </Button>
           </DialogFooter>
         </DialogContent>
