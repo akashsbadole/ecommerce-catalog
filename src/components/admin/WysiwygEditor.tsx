@@ -59,7 +59,7 @@ export default function WysiwygEditor({
         onChange={onChange}
         placeholder={placeholder}
         readOnly={readOnly}
-        contentEditableClassName="prose prose-sm sm:prose-base max-w-none dark:prose-invert focus:outline-none min-h-[300px] px-4 py-3"
+        contentEditableClassName="prose prose-sm sm:prose-base max-w-none dark:prose-invert focus:outline-none min-h-[300px] px-4 py-3 text-foreground"
         plugins={[
           headingsPlugin(),
           listsPlugin(),

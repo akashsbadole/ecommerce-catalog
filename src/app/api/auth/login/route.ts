@@ -44,7 +44,13 @@ export async function POST(request: NextRequest) {
       details: { email: authResult.user.email, role: authResult.user.role },
     }).catch(() => {});
 
-    return NextResponse.json(authResult);
+    const response = NextResponse.json(authResult);
+    response.cookies.set('admin_token', authResult.token, {
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60,
+      sameSite: 'lax',
+    });
+    return response;
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(

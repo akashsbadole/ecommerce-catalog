@@ -1,6 +1,8 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useAppStore } from '@/lib/store';
+import { usePathname } from 'next/navigation';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { HomePage } from '@/components/store/HomePage';
 import { CataloguePage } from '@/components/store/CataloguePage';
@@ -9,8 +11,6 @@ import { ContactPage } from '@/components/store/ContactPage';
 import { ContentPageView } from '@/components/store/ContentPageView';
 import { BlogPage } from '@/components/store/BlogPage';
 import { BlogPostView } from '@/components/store/BlogPostView';
-import { AdminLogin } from '@/components/admin/AdminLogin';
-import { AdminDashboard } from '@/components/admin/AdminDashboard';
 import BuyerPortalPage from '@/app/portal/page';
 
 export default function MainApp() {
@@ -23,31 +23,48 @@ export default function MainApp() {
     setAdminLogout
   } = useAppStore();
 
-  const handleAdminLogin = (user: { id: string; email: string; name: string; role: string }, token?: string) => {
-    setAdminLogin(user, token || 'token-' + user.id);
-    navigate('admin', 'dashboard');
-  };
+  // Check if we're on an admin route - if so, don't render store UI
+  const pathname = usePathname();
+  const isAdminRoute = pathname === '/admin' || pathname.startsWith('/admin/');
 
-  const handleAdminLogout = () => {
-    setAdminLogout();
-    navigate('home');
-  };
+  // Route from URL on initial load and handle browser back/forward
+  useEffect(() => {
+    const routeFromPath = (path: string) => {
+      if (path === '/' || path === '') return;
+      const segments = path.split('/').filter(Boolean);
+      if (segments[0] === 'catalogue') {
+        if (segments[1]) navigate('product', segments[1]);
+        else navigate('catalogue');
+      } else if (segments[0] === 'blog') {
+        if (segments[1]) navigate('blog-post', segments[1]);
+        else navigate('blog');
+      } else if (segments[0] === 'contact') {
+        navigate('contact');
+      } else if (segments[0] === 'portal') {
+        navigate('portal');
+      } else {
+        navigate('content-page', segments.join('/'));
+      }
+    };
 
-  // Admin pages (no store layout)
-  if (currentPage.type === 'admin-login') {
-    return <AdminLogin onLogin={handleAdminLogin} onNavigate={navigate} />;
-  }
+    // Initial route from URL
+    if (!isAdminRoute && pathname !== '/') {
+      routeFromPath(pathname);
+    }
 
-  if (currentPage.type === 'admin' && isAdmin) {
-    return (
-      <AdminDashboard
-        user={adminUser}
-        activeTab={currentPage.activeTab}
-        onNavigate={navigate}
-        onLogout={handleAdminLogout}
-      />
-    );
-  }
+    // Handle browser back/forward
+    const handlePopState = () => {
+      const currentPath = window.location.pathname;
+      if (currentPath === '/' || currentPath === '') {
+        navigate('home');
+      } else if (!currentPath.startsWith('/admin')) {
+        routeFromPath(currentPath);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // Public pages (wrapped in store layout)
   const renderPage = () => {
@@ -98,6 +115,11 @@ export default function MainApp() {
         );
     }
   };
+
+  // Don't render store layout if on admin route (handled by /app/admin)
+  if (isAdminRoute) {
+    return null;
+  }
 
   return (
     <StoreLayout currentPage={currentPage.type} onNavigate={navigate}>
