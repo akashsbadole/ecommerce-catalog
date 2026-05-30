@@ -36,11 +36,17 @@ interface SearchResult {
   Category: { id: string; name: string } | null;
 }
 
-const navLinks = [
-  { label: 'Home', page: 'home' },
-  { label: 'Catalogue', page: 'catalogue' },
-  { label: 'Contact', page: 'contact' },
-];
+interface MenuItem {
+  id: string;
+  label: string;
+  slug: string;
+  parentId: string | null;
+  externalUrl: string | null;
+  page: string | null;
+  order: number;
+  isActive: boolean;
+  children?: MenuItem[];
+}
 
 export function StoreHeader({ onNavigate }: StoreHeaderProps) {
   const { auth, logout, settings } = useAppStore();
@@ -49,8 +55,18 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetch('/api/menus')
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (data?.menus) setMenuItems(data.menus);
+      })
+      .catch(() => {});
+  }, []);
 
   // Cmd+K / Ctrl+K keyboard shortcut
   useEffect(() => {
@@ -141,16 +157,26 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1" role="navigation" aria-label="Main navigation">
-            {navLinks.map((link) => (
-              <Button
-                key={link.page}
-                variant="ghost"
-                className="text-sm font-medium"
-                onClick={() => onNavigate(link.page)}
-              >
-                {link.label}
-              </Button>
-            ))}
+            {menuItems.filter((m) => !m.parentId && m.isActive).map((link) => {
+              const handleClick = () => {
+                if (link.externalUrl) {
+                  window.open(link.externalUrl, '_blank', 'noopener');
+                } else if (link.page) {
+                  onNavigate(link.page);
+                }
+              };
+              const hasChildren = link.children && link.children.some((c) => c.isActive);
+              return (
+                <Button
+                  key={link.id}
+                  variant="ghost"
+                  className="text-sm font-medium"
+                  onClick={handleClick}
+                >
+                  {link.label}
+                </Button>
+              );
+            })}
             <Separator orientation="vertical" className="mx-2 h-6" />
             {/* Search Button */}
             <Button
@@ -234,17 +260,26 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                 </SheetTitle>
               </SheetHeader>
               <nav className="flex flex-col gap-2 px-4 pt-4" role="navigation" aria-label="Mobile navigation">
-                {navLinks.map((link) => (
-                  <SheetClose asChild key={link.page}>
-                    <Button
-                      variant="ghost"
-                      className="justify-start text-base"
-                      onClick={() => onNavigate(link.page)}
-                    >
-                      {link.label}
-                    </Button>
-                  </SheetClose>
-                ))}
+                {menuItems.filter((m) => !m.parentId && m.isActive).map((link) => {
+                  const handleClick = () => {
+                    if (link.externalUrl) {
+                      window.open(link.externalUrl, '_blank', 'noopener');
+                    } else if (link.page) {
+                      onNavigate(link.page);
+                    }
+                  };
+                  return (
+                    <SheetClose asChild key={link.id}>
+                      <Button
+                        variant="ghost"
+                        className="justify-start text-base"
+                        onClick={handleClick}
+                      >
+                        {link.label}
+                      </Button>
+                    </SheetClose>
+                  );
+                })}
                 <Separator className="my-2" />
                 <SheetClose asChild>
                   <Button

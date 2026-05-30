@@ -10,7 +10,8 @@ type LogAction =
   | 'banner.create' | 'banner.update' | 'banner.delete'
   | 'media.upload' | 'media.delete'
   | 'redirect.create' | 'redirect.update' | 'redirect.delete'
-  | 'settings.update';
+  | 'settings.update'
+  | 'menu.create' | 'menu.update' | 'menu.delete';
 
 export async function logActivity(params: {
   action: LogAction;

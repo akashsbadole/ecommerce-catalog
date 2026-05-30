@@ -23,7 +23,7 @@ interface AdminUser {
 interface AppState {
   // Navigation
   currentPage: Page;
-  navigate: (page: string, data?: unknown) => void;
+  navigate: (page: string, data?: unknown, replace?: boolean) => void;
 
   // Auth
   isAdmin: boolean;
@@ -51,11 +51,41 @@ interface AppState {
   fetchSettings: () => Promise<void>;
 }
 
+function pageToUrl(page: string, data?: unknown): string {
+  switch (page) {
+    case 'home': return '/';
+    case 'catalogue': return '/catalogue';
+    case 'product': return `/product/${data}`;
+    case 'contact': return '/contact';
+    case 'content-page': return `/page/${data}`;
+    case 'blog': return '/blog';
+    case 'blog-post': return `/blog/${data}`;
+    case 'portal': return '/portal';
+    case 'admin-login': return '/admin';
+    case 'admin': return `/admin/${data || 'dashboard'}`;
+    default: return '/';
+  }
+}
+
+export function urlToPage(pathname: string): { page: string; data?: unknown } {
+  const parts = pathname.split('/').filter(Boolean);
+  if (parts.length === 0) return { page: 'home' };
+  if (parts[0] === 'admin') return { page: parts[1] ? 'admin' : 'admin-login', data: parts[1] || undefined };
+  if (parts[0] === 'product' && parts[1]) return { page: 'product', data: parts[1] };
+  if (parts[0] === 'page' && parts[1]) return { page: 'content-page', data: parts[1] };
+  if (parts[0] === 'blog-post' && parts[1]) return { page: 'blog-post', data: parts[1] };
+  if (parts[0] === 'catalogue') return { page: 'catalogue' };
+  if (parts[0] === 'contact') return { page: 'contact' };
+  if (parts[0] === 'blog') return { page: parts[1] ? 'blog-post' : 'blog', data: parts[1] || undefined };
+  if (parts[0] === 'portal') return { page: 'portal' };
+  return { page: 'home' };
+}
+
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       currentPage: { type: 'home' },
-      navigate: (page: string, data?: unknown) => {
+      navigate: (page: string, data?: unknown, replace?: boolean) => {
         if (typeof window !== 'undefined') {
           window.scrollTo(0, 0);
         }
@@ -75,6 +105,14 @@ export const useAppStore = create<AppState>()(
               currentPage: { type: 'admin', activeTab: (data as string) || 'dashboard' }
             });
             break;
+        }
+        if (typeof window !== 'undefined') {
+          const url = pageToUrl(page, data);
+          if (replace) {
+            window.history.replaceState({ page, data }, '', url);
+          } else {
+            window.history.pushState({ page, data }, '', url);
+          }
         }
       },
 

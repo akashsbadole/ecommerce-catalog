@@ -1,6 +1,7 @@
 'use client';
 
-import { useAppStore } from '@/lib/store';
+import { useEffect, useRef } from 'react';
+import { useAppStore, urlToPage } from '@/lib/store';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { HomePage } from '@/components/store/HomePage';
 import { CataloguePage } from '@/components/store/CataloguePage';
@@ -23,6 +24,24 @@ export default function MainApp() {
     setAdminLogout
   } = useAppStore();
 
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
+
+    const { page, data } = urlToPage(window.location.pathname);
+    navigate(page, data, true);
+
+    const handlePop = () => {
+      const { page: p, data: d } = urlToPage(window.location.pathname);
+      navigate(p, d, true);
+    };
+
+    window.addEventListener('popstate', handlePop);
+    return () => window.removeEventListener('popstate', handlePop);
+  }, [navigate]);
+
   const handleAdminLogin = (user: { id: string; email: string; name: string; role: string }, token?: string) => {
     setAdminLogin(user, token || 'token-' + user.id);
     navigate('admin', 'dashboard');
@@ -33,7 +52,6 @@ export default function MainApp() {
     navigate('home');
   };
 
-  // Admin pages (no store layout)
   if (currentPage.type === 'admin-login') {
     return <AdminLogin onLogin={handleAdminLogin} onNavigate={navigate} />;
   }
@@ -49,7 +67,6 @@ export default function MainApp() {
     );
   }
 
-  // Public pages (wrapped in store layout)
   const renderPage = () => {
     switch (currentPage.type) {
       case 'home':

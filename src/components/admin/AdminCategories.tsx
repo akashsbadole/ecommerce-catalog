@@ -569,14 +569,14 @@ export function AdminCategories() {
               <div className="space-y-2">
                 <Label htmlFor="cat-parent">Parent Category</Label>
                 <Select
-                  value={form.parentId}
-                  onValueChange={(val) => setForm(prev => ({ ...prev, parentId: val }))}
+                  value={form.parentId === '' ? '__none__' : form.parentId}
+                  onValueChange={(val) => setForm(prev => ({ ...prev, parentId: val === '__none__' ? '' : val }))}
                 >
                   <SelectTrigger id="cat-parent">
                     <SelectValue placeholder="No Parent" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No Parent</SelectItem>
+                    <SelectItem value="__none__">No Parent</SelectItem>
                     {categories
                       .filter(c => c.id !== editingCategory?.id)
                       .map(c => (
