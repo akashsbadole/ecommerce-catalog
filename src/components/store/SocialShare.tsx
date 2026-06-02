@@ -70,7 +70,7 @@ export function SocialShare({ url, title }: SocialShareProps) {
         size="icon"
         className={`h-9 w-9 transition-colors ${
           copied
-            ? 'text-emerald-600'
+            ? 'text-primary'
             : 'text-muted-foreground hover:text-foreground'
         }`}
         onClick={handleCopyLink}

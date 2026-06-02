@@ -82,7 +82,7 @@ export function QuickViewModal({
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Eye className="h-5 w-5 text-emerald-600" />
+              <Eye className="h-5 w-5 text-primary" />
               Quick View
             </DialogTitle>
             <DialogDescription className="sr-only">
@@ -115,7 +115,7 @@ export function QuickViewModal({
 
             {/* Category */}
             {product.Category && (
-              <span className="text-xs text-emerald-600 uppercase tracking-wider font-medium">
+              <span className="text-xs text-primary uppercase tracking-wider font-medium">
                 {product.Category.name}
               </span>
             )}
@@ -135,7 +135,7 @@ export function QuickViewModal({
             {/* Pricing */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold text-emerald-600">
+                <span className="text-2xl font-bold text-primary">
                   {formatPrice(product.price)}
                 </span>
                 {hasDiscount && (
@@ -157,7 +157,7 @@ export function QuickViewModal({
 
           <DialogFooter className="flex-col gap-2 sm:flex-col">
             <Button
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="w-full bg-primary hover:bg-primary/80 text-white"
               onClick={handleViewDetails}
             >
               View Details

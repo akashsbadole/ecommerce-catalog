@@ -84,13 +84,17 @@ export const useAppStore = create<AppState>()(
             if (typeof window !== "undefined")
               window.history.pushState({}, "", "/contact");
             break;
-          case "content-page":
+          case "content-page": {
+            const rawSlug = (data as string) || "";
+            const slug = rawSlug.replace(/^\/+/, "");
+            if (!slug) break;
             set({
-              currentPage: { type: "content-page", slug: data as string },
+              currentPage: { type: "content-page", slug },
             });
             if (typeof window !== "undefined")
-              window.history.pushState({}, "", `/${data as string}`);
+              window.history.pushState({}, "", `/${slug}`);
             break;
+          }
           case "blog":
             set({ currentPage: { type: "blog" } });
             if (typeof window !== "undefined")

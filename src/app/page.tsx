@@ -7,7 +7,7 @@ import { StoreLayout } from '@/components/store/StoreLayout';
 import { HomePage } from '@/components/store/HomePage';
 import { CataloguePage } from '@/components/store/CataloguePage';
 import { ProductDetailPage } from '@/components/store/ProductDetailPage';
-import { ContactPage } from '@/components/store/ContactPage';
+import { CmsPage } from '@/components/store/CmsPage';
 import { ContentPageView } from '@/components/store/ContentPageView';
 import { BlogPage } from '@/components/store/BlogPage';
 import { BlogPostView } from '@/components/store/BlogPostView';
@@ -27,6 +27,9 @@ export default function MainApp() {
   const pathname = usePathname();
   const isAdminRoute = pathname === '/admin' || pathname.startsWith('/admin/');
 
+  // CMS-driven page slugs
+  const CMS_PAGES = ['about-us', 'manufacturing', 'contact', 'products', 'catalogue'];
+
   // Route from URL on initial load and handle browser back/forward
   useEffect(() => {
     const routeFromPath = (path: string) => {
@@ -38,10 +41,10 @@ export default function MainApp() {
       } else if (segments[0] === 'blog') {
         if (segments[1]) navigate('blog-post', segments[1]);
         else navigate('blog');
-      } else if (segments[0] === 'contact') {
-        navigate('contact');
       } else if (segments[0] === 'portal') {
         navigate('portal');
+      } else if (CMS_PAGES.includes(segments[0])) {
+        navigate('content-page', segments[0]);
       } else {
         navigate('content-page', segments.join('/'));
       }
@@ -75,10 +78,8 @@ export default function MainApp() {
         return <CataloguePage onNavigate={navigate} />;
       case 'product':
         return <ProductDetailPage productId={currentPage.productId} onNavigate={navigate} />;
-      case 'contact':
-        return <ContactPage />;
       case 'content-page':
-        return <ContentPageView slug={currentPage.slug} onNavigate={navigate} />;
+        return <CmsPage slug={currentPage.slug} onNavigate={navigate} />;
       case 'blog':
         return <BlogPage onNavigate={navigate} />;
       case 'blog-post':
@@ -100,7 +101,7 @@ export default function MainApp() {
             <div className="mt-6 flex gap-3">
               <button
                 onClick={() => navigate('home')}
-                className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors"
+                className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
               >
                 Back to Home
               </button>

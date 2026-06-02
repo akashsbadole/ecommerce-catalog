@@ -76,7 +76,7 @@ export function ContactPage({ settings }: ContactPageProps) {
 
       if (res.ok) {
         toast.success('Your message has been sent successfully! We\'ll get back to you soon.', {
-          icon: <Check className="h-4 w-4 text-emerald-600" />,
+          icon: <Check className="h-4 w-4 text-primary" />,
         });
         setForm({ name: '', email: '', phone: '', companyName: '', companyPhone: '', subject: '', message: '' });
         setBusinessOpen(false);
@@ -106,8 +106,8 @@ export function ContactPage({ settings }: ContactPageProps) {
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="text-center">
           <CardContent className="pt-6 flex flex-col items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-              <Mail className="h-5 w-5 text-emerald-600" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <Mail className="h-5 w-5 text-primary" />
             </div>
             <div>
               <h3 className="font-semibold text-sm">Email Us</h3>
@@ -117,8 +117,8 @@ export function ContactPage({ settings }: ContactPageProps) {
         </Card>
         <Card className="text-center">
           <CardContent className="pt-6 flex flex-col items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-              <Phone className="h-5 w-5 text-emerald-600" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <Phone className="h-5 w-5 text-primary" />
             </div>
             <div>
               <h3 className="font-semibold text-sm">Call Us</h3>
@@ -128,8 +128,8 @@ export function ContactPage({ settings }: ContactPageProps) {
         </Card>
         <Card className="text-center">
           <CardContent className="pt-6 flex flex-col items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-              <Clock className="h-5 w-5 text-emerald-600" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <Clock className="h-5 w-5 text-primary" />
             </div>
             <div>
               <h3 className="font-semibold text-sm">Business Hours</h3>
@@ -145,7 +145,7 @@ export function ContactPage({ settings }: ContactPageProps) {
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Send className="h-5 w-5 text-emerald-600" />
+              <Send className="h-5 w-5 text-primary" />
               Send us a Message
             </CardTitle>
           </CardHeader>
@@ -215,7 +215,7 @@ export function ContactPage({ settings }: ContactPageProps) {
                       <Building2 className="h-4 w-4" />
                       Business Details
                       {(form.companyName || form.companyPhone) && (
-                        <span className="text-xs text-emerald-600 font-normal">(filled)</span>
+                        <span className="text-xs text-primary font-normal">(filled)</span>
                       )}
                     </span>
                     <ChevronRight className="h-4 w-4 transition-transform duration-200" />
@@ -264,7 +264,7 @@ export function ContactPage({ settings }: ContactPageProps) {
               </div>
               <Button
                 type="submit"
-                className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="w-full sm:w-auto bg-primary hover:bg-primary/80 text-white"
                 disabled={submitting}
               >
                 {submitting ? (
@@ -288,12 +288,12 @@ export function ContactPage({ settings }: ContactPageProps) {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-start gap-3">
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 <p className="text-sm text-muted-foreground">{companyAddress}</p>
               </div>
               <Separator />
               <div className="flex items-start gap-3">
-                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 <div>
                   <p className="text-sm text-muted-foreground">{companyEmail}</p>
                   <p className="text-xs text-muted-foreground mt-1">We reply within 24 hours</p>
@@ -301,7 +301,7 @@ export function ContactPage({ settings }: ContactPageProps) {
               </div>
               <Separator />
               <div className="flex items-start gap-3">
-                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 <div>
                   <p className="text-sm text-muted-foreground">{companyPhone}</p>
                   <p className="text-xs text-muted-foreground mt-1">Mon-Fri from 9am to 6pm</p>

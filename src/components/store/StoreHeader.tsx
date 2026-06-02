@@ -47,8 +47,11 @@ interface SearchResult {
 
 const navLinks = [
   { label: "Home", page: "home" },
+  { label: "About us", page: "content-page", slug: "about-us" },
+  { label: "Manufacturing", page: "content-page", slug: "manufacturing" },
+  { label: "Products", page: "content-page", slug: "products" },
   { label: "Catalogue", page: "catalogue" },
-  { label: "Contact", page: "contact" },
+  { label: "Contact", page: "content-page", slug: "contact" },
 ];
 
 export function StoreHeader({ onNavigate }: StoreHeaderProps) {
@@ -76,13 +79,17 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
   // Focus input when dialog opens
   useEffect(() => {
     if (searchOpen) {
-      setTimeout(() => {
+      const timer = window.setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
-    } else {
+      return () => window.clearTimeout(timer);
+    }
+
+    const resetTimer = window.setTimeout(() => {
       setSearchQuery("");
       setSearchResults([]);
-    }
+    }, 0);
+    return () => window.clearTimeout(resetTimer);
   }, [searchOpen]);
 
   const doSearch = useCallback(async (query: string) => {
@@ -144,9 +151,9 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
             onClick={() => onNavigate("home")}
             className="flex items-center gap-2 transition-opacity hover:opacity-80"
           >
-            <ShoppingBag className="h-6 w-6 text-emerald-600" />
+            <ShoppingBag className="h-6 w-6 text-primary" />
             <span className="text-xl font-bold tracking-tight">
-              Style<span className="text-emerald-600">Store</span>
+              Style<span className="text-primary">Store</span>
             </span>
           </button>
 
@@ -158,10 +165,10 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
           >
             {navLinks.map((link) => (
               <Button
-                key={link.page}
+                key={link.slug || link.page}
                 variant="ghost"
                 className="text-sm font-medium"
-                onClick={() => onNavigate(link.page)}
+                onClick={() => onNavigate(link.page, link.slug)}
               >
                 {link.label}
               </Button>
@@ -183,7 +190,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
             <Button
               variant="outline"
               size="sm"
-              className="text-sm border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950 dark:hover:text-emerald-300"
+              className="text-sm border-primary/20 text-primary/80 hover:bg-primary/5 hover:text-primary-dark dark:border-primary-dark dark:text-primary/40 dark:hover:bg-primary-dark dark:hover:text-primary/30"
               onClick={() => onNavigate("catalogue")}
             >
               <FileText className="mr-1.5 h-4 w-4" />
@@ -244,7 +251,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
             <SheetContent side="right" className="w-72">
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2">
-                  <ShoppingBag className="h-5 w-5 text-emerald-600" />
+                  <ShoppingBag className="h-5 w-5 text-primary" />
                   StyleStore
                 </SheetTitle>
               </SheetHeader>
@@ -254,11 +261,11 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                 aria-label="Mobile navigation"
               >
                 {navLinks.map((link) => (
-                  <SheetClose asChild key={link.page}>
+                  <SheetClose asChild key={link.slug || link.page}>
                     <Button
                       variant="ghost"
                       className="justify-start text-base"
-                      onClick={() => onNavigate(link.page)}
+                      onClick={() => onNavigate(link.page, link.slug)}
                     >
                       {link.label}
                     </Button>
@@ -278,7 +285,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                 <SheetClose asChild>
                   <Button
                     variant="outline"
-                    className="justify-start text-base border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950 dark:hover:text-emerald-300"
+                    className="justify-start text-base border-primary/20 text-primary/80 hover:bg-primary/5 hover:text-primary-dark dark:border-primary-dark dark:text-primary/40 dark:hover:bg-primary-dark dark:hover:text-primary/30"
                     onClick={() => onNavigate("catalogue")}
                   >
                     <FileText className="mr-2 h-4 w-4" />

@@ -307,7 +307,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
             ? 'Quote request submitted! Our sales team will respond shortly.'
             : 'Your enquiry has been submitted successfully!',
           {
-            icon: <Check className="h-4 w-4 text-emerald-600" />,
+            icon: <Check className="h-4 w-4 text-primary" />,
           }
         );
         setForm({
@@ -439,7 +439,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                   onClick={() => setSelectedImage(idx)}
                   className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
                     idx === selectedImage
-                      ? 'border-emerald-600'
+                      ? 'border-primary'
                       : 'border-transparent hover:border-gray-300'
                   }`}
                 >
@@ -461,7 +461,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
           {product.Category && (
             <button
               onClick={() => onNavigate('catalogue')}
-              className="text-sm text-emerald-600 hover:text-emerald-700 uppercase tracking-wider w-fit transition-colors"
+              className="text-sm text-primary hover:text-primary/80 uppercase tracking-wider w-fit transition-colors"
             >
               {product.Category.name}
             </button>
@@ -478,7 +478,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
           {/* Pricing */}
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-3">
-              <span className="text-3xl font-bold text-emerald-600">
+              <span className="text-3xl font-bold text-primary">
                 {formatPrice(getEffectivePrice(selectedVariant?.price || product.price))}
               </span>
               {(() => {
@@ -501,7 +501,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
               })()}
             </div>
             {settings?.b2b_enable_tiered_pricing === 'true' && userTier && userTier !== 'standard' && (
-              <p className="text-xs font-medium text-emerald-600">
+              <p className="text-xs font-medium text-primary">
                 Exclusive {userTier} tier price applied
               </p>
             )}
@@ -519,7 +519,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                     size="sm"
                     className={
                       selectedVariant?.id === v.id
-                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                        ? 'bg-primary hover:bg-primary/80 text-white'
                         : ''
                     }
                     onClick={() => {
@@ -568,7 +568,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                 if (stock <= threshold) {
                   return <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Only {stock} left in stock</Badge>;
                 }
-                return <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">In Stock</Badge>;
+                return <Badge variant="secondary" className="bg-primary/10 text-primary/80 dark:bg-primary-dark/30 dark:text-primary/40">In Stock</Badge>;
               })()}
             </div>
           )}
@@ -584,7 +584,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                 ) : stock <= threshold ? (
                   <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Only {stock} left</Badge>
                 ) : (
-                  <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">In Stock</Badge>
+                  <Badge variant="secondary" className="bg-primary/10 text-primary/80 dark:bg-primary-dark/30 dark:text-primary/40">In Stock</Badge>
                 )}
               </div>
             );
@@ -611,7 +611,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                     <div className="flex items-baseline justify-between">
                       <p className="font-semibold text-amber-900 dark:text-amber-100 text-sm">Wholesale Pricing</p>
                       {product.wholesalePrice && (
-                        <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                        <p className="text-lg font-bold text-primary dark:text-primary/40">
                           {formatPrice(product.wholesalePrice)}
                           <span className="text-xs font-normal text-muted-foreground ml-1">/ unit</span>
                         </p>
@@ -619,15 +619,15 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                     </div>
                     <div className="mt-2 space-y-1.5">
                       <p className="text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
-                        <Check className="h-3 w-3 text-emerald-500" />
+                        <Check className="h-3 w-3 text-primary/50" />
                         Minimum order quantity: <span className="font-bold">{product.minOrderQty} units</span>
                       </p>
                       <p className="text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
-                        <Check className="h-3 w-3 text-emerald-500" />
+                        <Check className="h-3 w-3 text-primary/50" />
                         Custom branding & private labeling available
                       </p>
                       <p className="text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
-                        <Check className="h-3 w-3 text-emerald-500" />
+                        <Check className="h-3 w-3 text-primary/50" />
                         Global logistics and door-step delivery
                       </p>
                     </div>
@@ -716,10 +716,10 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
 
       {/* Enquiry Form */}
       <Separator id="enquiry-section" />
-      <Card className="max-w-2xl mx-auto w-full shadow-lg border-emerald-100 dark:border-emerald-900/30">
+      <Card className="max-w-2xl mx-auto w-full shadow-lg border-primary/10 dark:border-primary-dark/30">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Send className="h-5 w-5 text-emerald-600" />
+            <Send className="h-5 w-5 text-primary" />
             Make an Enquiry
           </CardTitle>
         </CardHeader>
@@ -822,7 +822,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                     <Building2 className="h-4 w-4" />
                     Business Details
                     {(form.companyName || form.companyEmail) && (
-                      <span className="text-xs text-emerald-600 font-normal">(filled)</span>
+                      <span className="text-xs text-primary font-normal">(filled)</span>
                     )}
                   </span>
                   <ChevronRight className="h-4 w-4 transition-transform duration-200" />
@@ -895,7 +895,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
             <div className="grid gap-3 sm:grid-cols-2">
               <Button
                 type="submit"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="bg-primary hover:bg-primary/80 text-white"
                 disabled={submitting}
               >
                 {submitting ? (
@@ -956,7 +956,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                   </div>
                   <div className="p-3">
                     <p className="font-medium text-sm truncate">{rp.name}</p>
-                    <p className="text-emerald-600 font-semibold text-sm mt-1">{formatPrice(rp.price)}</p>
+                    <p className="text-primary font-semibold text-sm mt-1">{formatPrice(rp.price)}</p>
                     {rp.Category && (
                       <p className="text-xs text-muted-foreground mt-0.5 truncate">{rp.Category.name}</p>
                     )}

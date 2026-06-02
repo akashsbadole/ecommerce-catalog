@@ -170,7 +170,7 @@ function HeroBlock({
           className="absolute inset-0 w-full h-full object-cover"
         />
       ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-800" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary/80" />
       )}
       <div className="absolute inset-0 bg-black/30" />
       <div
@@ -185,7 +185,7 @@ function HeroBlock({
         {buttonText && (
           <Button
             size="lg"
-            className="mt-6 bg-white text-emerald-700 hover:bg-white/90"
+            className="mt-6 bg-white text-primary/80 hover:bg-white/90"
             onClick={() =>
               onNavigate &&
               buttonLink &&
@@ -231,10 +231,10 @@ function FeaturesBlock({ data }: { data: Record<string, unknown> }) {
       <div className={`grid gap-6 ${gridCols[columns] || gridCols[3]}`}>
         {features.map((feature, i) => (
           <Card key={i} className="text-center p-6">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/30">
               <LucideIcon
                 name={feature.icon || "Star"}
-                className="h-6 w-6 text-emerald-600"
+                className="h-6 w-6 text-primary"
               />
             </div>
             <h3 className="font-semibold">{feature.title}</h3>
@@ -264,7 +264,7 @@ function CtaBlock({
   const backgroundColor = (data.backgroundColor as string) || "emerald";
 
   const bgClasses: Record<string, string> = {
-    emerald: "bg-gradient-to-br from-emerald-600 to-teal-700",
+    emerald: "bg-gradient-to-br from-primary to-primary/80",
     rose: "bg-gradient-to-br from-rose-600 to-pink-700",
     amber: "bg-gradient-to-br from-amber-600 to-orange-700",
     slate: "bg-gradient-to-br from-slate-700 to-slate-900",
@@ -281,7 +281,7 @@ function CtaBlock({
       {buttonText && (
         <Button
           size="lg"
-          className="mt-6 bg-white text-emerald-700 hover:bg-white/90"
+          className="mt-6 bg-white text-primary/80 hover:bg-white/90"
           onClick={() =>
             onNavigate &&
             buttonLink &&
@@ -320,7 +320,7 @@ function TestimonialsBlock({ data }: { data: Record<string, unknown> }) {
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {testimonials.map((t, i) => (
           <Card key={i} className="p-6">
-            <Quote className="h-8 w-8 text-emerald-200 dark:text-emerald-800 mb-4" />
+            <Quote className="h-8 w-8 text-primary/20 dark:text-primary-dark mb-4" />
             <p className="text-foreground/80 italic">&ldquo;{t.quote}&rdquo;</p>
             <div className="mt-4 flex items-center gap-3">
               {t.avatar ? (
@@ -330,8 +330,8 @@ function TestimonialsBlock({ data }: { data: Record<string, unknown> }) {
                   className="h-10 w-10 rounded-full object-cover"
                 />
               ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
-                  <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/30">
+                  <span className="text-sm font-semibold text-primary/80 dark:text-primary/40">
                     {t.name.charAt(0)}
                   </span>
                 </div>
@@ -528,11 +528,11 @@ function ProductsBlock({
                       {product.Category.name}
                     </span>
                   )}
-                  <h3 className="font-semibold text-sm line-clamp-1 group-hover:text-emerald-600 transition-colors">
+                  <h3 className="font-semibold text-sm line-clamp-1 group-hover:text-primary transition-colors">
                     {product.name}
                   </h3>
                   <div className="flex items-center gap-2 pt-1">
-                    <span className="text-lg font-bold text-emerald-600">
+                    <span className="text-lg font-bold text-primary">
                       {formatPrice(product.price)}
                     </span>
                     {product.comparePrice &&
@@ -1464,7 +1464,7 @@ function BlogGridBlock({
                     onClick={() =>
                       onNavigate?.("blog-post", { postId: post.id })
                     }
-                    className="text-sm text-emerald-600 hover:text-emerald-700 font-medium mt-2 inline-flex items-center gap-1"
+                    className="text-sm text-primary hover:text-primary/80 font-medium mt-2 inline-flex items-center gap-1"
                   >
                     Read more <ArrowRight className="h-3 w-3" />
                   </button>
@@ -1498,7 +1498,7 @@ function BlogGridBlock({
                       onClick={() =>
                         onNavigate?.("blog-post", { postId: post.id })
                       }
-                      className="text-sm text-emerald-600 hover:text-emerald-700 font-medium mt-3 inline-flex items-center gap-1"
+                      className="text-sm text-primary hover:text-primary/80 font-medium mt-3 inline-flex items-center gap-1"
                     >
                       Read more <ArrowRight className="h-3 w-3" />
                     </button>
@@ -1544,7 +1544,7 @@ function BlogGridBlock({
                       onClick={() =>
                         onNavigate?.("blog-post", { postId: post.id })
                       }
-                      className="text-sm text-emerald-600 hover:text-emerald-700 font-medium inline-flex items-center gap-1"
+                      className="text-sm text-primary hover:text-primary/80 font-medium inline-flex items-center gap-1"
                     >
                       Read more <ArrowRight className="h-3 w-3" />
                     </button>
@@ -1558,7 +1558,7 @@ function BlogGridBlock({
         <div className="text-center mt-10">
           <button
             onClick={() => onNavigate?.("blog")}
-            className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition-colors"
+            className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-white hover:bg-primary/80 transition-colors"
           >
             View all posts <ArrowRight className="h-4 w-4" />
           </button>
@@ -1608,12 +1608,12 @@ function PricingTableBlock({
               key={i}
               className={`rounded-xl border bg-card p-6 flex flex-col relative ${
                 tier.highlighted
-                  ? "border-emerald-500 shadow-lg ring-1 ring-emerald-500 scale-105 md:scale-110 z-10"
+                  ? "border-primary/50 shadow-lg ring-1 ring-primary/50 scale-105 md:scale-110 z-10"
                   : "shadow-sm"
               }`}
             >
               {tier.highlighted && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-xs font-semibold px-4 py-1 rounded-full">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-xs font-semibold px-4 py-1 rounded-full">
                   Most Popular
                 </div>
               )}
@@ -1629,7 +1629,7 @@ function PricingTableBlock({
               <ul className="mt-6 space-y-3 flex-1">
                 {(tier.features || []).map((feature, j) => (
                   <li key={j} className="flex items-start gap-2 text-sm">
-                    <Check className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                    <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                     <span>{feature}</span>
                   </li>
                 ))}
@@ -1645,7 +1645,7 @@ function PricingTableBlock({
                 }}
                 className={`mt-6 w-full rounded-md px-4 py-2.5 text-sm font-medium transition-colors ${
                   tier.highlighted
-                    ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                    ? "bg-primary text-white hover:bg-primary/80"
                     : "bg-muted text-foreground hover:bg-accent"
                 }`}
               >
@@ -1705,7 +1705,7 @@ function SliderBlock({
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="h-full w-full bg-emerald-700" />
+            <div className="h-full w-full bg-primary/80" />
           )}
           <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white text-center p-6">
             <h2 className="text-3xl font-bold sm:text-5xl">{item.title}</h2>
@@ -1714,7 +1714,7 @@ function SliderBlock({
             </p>
             {item.link && (
               <Button
-                className="mt-8 bg-emerald-600 hover:bg-emerald-700"
+                className="mt-8 bg-primary hover:bg-primary/80"
                 onClick={() => onNavigate && onNavigate("catalogue")}
               >
                 View Collection

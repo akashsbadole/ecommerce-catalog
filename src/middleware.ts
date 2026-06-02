@@ -37,6 +37,7 @@ const PUBLIC_POST_PATHS = [
   '/api/auth/reset-password',
   '/api/auth/change-password',
   '/api/newsletter/subscribe',
+  '/api/content-pages/seed',
 ];
 
 // Role-based permission map

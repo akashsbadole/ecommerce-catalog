@@ -203,7 +203,7 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
         <div className="flex flex-wrap justify-center items-center gap-6 text-sm text-muted-foreground">
           {post.publishedAt && (
             <span className="flex items-center gap-1.5">
-              <Calendar className="h-4 w-4 text-emerald-600" />
+              <Calendar className="h-4 w-4 text-primary" />
               {new Date(post.publishedAt).toLocaleDateString('en-US', {
                 month: 'long',
                 day: 'numeric',
@@ -213,7 +213,7 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
           )}
           {post.User && (
             <span className="flex items-center gap-1.5">
-              <User className="h-4 w-4 text-emerald-600" />
+              <User className="h-4 w-4 text-primary" />
               {post.User.name}
             </span>
           )}
@@ -222,7 +222,7 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
         {tags.length > 0 && (
           <div className="flex flex-wrap justify-center gap-2 mt-6">
             {tags.map((tag, i) => (
-              <Badge key={i} variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+              <Badge key={i} variant="outline" className="bg-primary/5 text-primary/80 border-primary/20">
                 {tag}
               </Badge>
             ))}
@@ -233,7 +233,7 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
       {/* Excerpt */}
       {post.excerpt && (
         <div className="max-w-2xl mx-auto mb-12">
-          <p className="text-xl text-muted-foreground font-medium italic leading-relaxed text-center border-y py-6 border-emerald-100">
+          <p className="text-xl text-muted-foreground font-medium italic leading-relaxed text-center border-y py-6 border-primary/10">
             &ldquo;{post.excerpt}&rdquo;
           </p>
         </div>

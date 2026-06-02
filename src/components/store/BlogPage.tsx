@@ -167,8 +167,8 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
               variant={selectedTag === null ? 'default' : 'outline'}
               className={`cursor-pointer select-none transition-colors ${
                 selectedTag === null
-                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                  : 'hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300'
+                  ? 'bg-primary hover:bg-primary/80 text-white'
+                  : 'hover:bg-primary/5 hover:text-primary/80 hover:border-primary/30'
               }`}
               onClick={() => setSelectedTag(null)}
             >
@@ -180,8 +180,8 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
                 variant={selectedTag === tag ? 'default' : 'outline'}
                 className={`cursor-pointer select-none transition-colors ${
                   selectedTag === tag
-                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                    : 'hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300'
+                    ? 'bg-primary hover:bg-primary/80 text-white'
+                    : 'hover:bg-primary/5 hover:text-primary/80 hover:border-primary/30'
                 }`}
                 onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
               >
@@ -205,7 +205,7 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
                   setSearchQuery('');
                   setSelectedTag(null);
                 }}
-                className="text-emerald-600 hover:text-emerald-700 text-sm mt-2 underline"
+                className="text-primary hover:text-primary/80 text-sm mt-2 underline"
               >
                 Clear filters
               </button>
