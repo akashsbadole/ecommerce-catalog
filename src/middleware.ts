@@ -76,6 +76,7 @@ const ROLE_PERMISSIONS: Record<string, {
       '/api/content-pages',
       '/api/settings',
       '/api/media',
+      '/api/upload',
       '/api/redirects',
       '/api/notifications',
       '/api/activity-logs',
@@ -83,6 +84,7 @@ const ROLE_PERMISSIONS: Record<string, {
     write: [
       '/api/enquiries',
       '/api/notifications',
+      '/api/upload',
     ],
   },
 };

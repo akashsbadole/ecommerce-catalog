@@ -216,9 +216,17 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
             onClick={() => onNavigate("home")}
             className="flex items-center gap-2 transition-opacity hover:opacity-80"
           >
-            <ShoppingBag className="h-6 w-6 text-primary" />
+            {settings?.site_logo ? (
+              <img
+                src={settings.site_logo}
+                alt={settings.site_name || 'Logo'}
+                className="h-8 w-auto object-contain"
+              />
+            ) : (
+              <ShoppingBag className="h-6 w-6 text-primary" />
+            )}
             <span className="text-xl font-bold tracking-tight">
-              Style<span className="text-primary">Store</span>
+              {settings?.site_name || 'Style'}<span className="text-primary">{settings?.site_name ? '' : 'Store'}</span>
             </span>
           </button>
 
@@ -378,7 +386,15 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
             <SheetContent side="right" className="w-72">
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2">
-                  <ShoppingBag className="h-5 w-5 text-primary" />
+                  {settings?.site_logo ? (
+                    <img
+                      src={settings.site_logo}
+                      alt={settings.site_name || 'Logo'}
+                      className="h-6 w-auto object-contain"
+                    />
+                  ) : (
+                    <ShoppingBag className="h-5 w-5 text-primary" />
+                  )}
                   {settings?.site_name || 'StyleStore'}
                 </SheetTitle>
               </SheetHeader>

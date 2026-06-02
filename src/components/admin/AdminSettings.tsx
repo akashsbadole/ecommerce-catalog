@@ -18,6 +18,8 @@ import {
   ShoppingCart,
   Heart,
   Tag,
+  Upload,
+  Image,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -37,6 +39,7 @@ interface Settings {
 const defaultSettings: Settings = {
   site_name: '',
   site_description: '',
+  site_logo: '',
   currency: 'USD',
   currency_symbol: '$',
   site_email: '',
@@ -161,7 +164,7 @@ export function AdminSettings() {
   const metaDescColor = metaDescLength > 160 ? 'text-rose-500' : metaDescLength > 140 ? 'text-amber-500' : 'text-muted-foreground';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-h-[calc(100vh-8rem)] overflow-y-auto pr-2">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -225,6 +228,65 @@ export function AdminSettings() {
               onChange={(e) => handleSettingChange('currency_symbol', e.target.value)}
               placeholder="$"
             />
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label>Site Logo</Label>
+            <div className="flex items-start gap-4">
+              {settings.site_logo ? (
+                <div className="relative w-20 h-20 rounded-lg border overflow-hidden bg-muted flex-shrink-0">
+                  <img
+                    src={settings.site_logo}
+                    alt="Site logo"
+                    className="w-full h-full object-contain"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleSettingChange('site_logo', '')}
+                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center text-xs hover:bg-destructive/90"
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <label className="w-20 h-20 rounded-lg border border-dashed flex flex-col items-center justify-center bg-muted cursor-pointer hover:bg-muted/80 flex-shrink-0">
+                  <Upload className="h-5 w-5 text-muted-foreground mb-1" />
+                  <span className="text-[10px] text-muted-foreground">Upload</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const formData = new FormData();
+                      formData.append('files', file);
+                      try {
+                        const res = await adminFetch('/api/upload', { method: 'POST', body: formData });
+                        const data = await res.json();
+                        if (data.files?.[0]?.url) {
+                          handleSettingChange('site_logo', data.files[0].url);
+                          toast.success('Logo uploaded');
+                        } else {
+                          toast.error(data.files?.[0]?.error || 'Upload failed');
+                        }
+                      } catch {
+                        toast.error('Upload failed');
+                      }
+                    }}
+                  />
+                </label>
+              )}
+              <div className="flex-1 space-y-2">
+                <Input
+                  value={settings.site_logo}
+                  onChange={(e) => handleSettingChange('site_logo', e.target.value)}
+                  placeholder="Paste image URL or upload a file"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Recommended: Square image, at least 200x200px. Supports JPG, PNG, SVG, WebP.
+                </p>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

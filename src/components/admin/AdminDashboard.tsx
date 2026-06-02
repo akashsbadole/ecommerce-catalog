@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAppStore } from '@/lib/store';
 import {
   ShoppingBag,
   LayoutDashboard,
@@ -100,13 +101,23 @@ function SidebarContent({
   onLogout: () => void;
   onNavigate: (page: string) => void;
 }) {
+  const { settings } = useAppStore();
+
   return (
     <div className="flex h-full flex-col">
       {/* Logo */}
       <div className="flex items-center gap-2 px-4 py-4">
-        <ShoppingBag className="h-5 w-5 text-emerald-600" />
+        {settings?.site_logo ? (
+          <img
+            src={settings.site_logo}
+            alt={settings.site_name || 'Logo'}
+            className="h-6 w-auto object-contain"
+          />
+        ) : (
+          <ShoppingBag className="h-5 w-5 text-emerald-600" />
+        )}
         <span className="text-lg font-bold">
-          Style<span className="text-emerald-600">Store</span>
+          {settings?.site_name || 'Style'}<span className="text-emerald-600">{settings?.site_name ? '' : 'Store'}</span>
         </span>
         <Badge variant="secondary" className="ml-auto text-xs">Admin</Badge>
       </div>
