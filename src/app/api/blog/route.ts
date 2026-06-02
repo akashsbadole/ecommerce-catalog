@@ -10,10 +10,16 @@ export async function GET(request: NextRequest) {
     const published = searchParams.get('published');
     const search = searchParams.get('search');
     const tag = searchParams.get('tag');
+    const slug = searchParams.get('slug');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
 
     const where: Record<string, unknown> = {};
+
+    // Single post lookup by slug
+    if (slug) {
+      where.slug = slug;
+    }
 
     if (published === 'true') {
       where.isPublished = true;
@@ -84,6 +90,11 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    // Auto-generate slug from title if not provided
+    if (!body.slug && body.title) {
+      body.slug = body.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+    }
+
     const result = blogPostSchema.safeParse(body);
     if (!result.success) {
       return NextResponse.json(
@@ -110,6 +121,7 @@ export async function POST(request: NextRequest) {
         metaTitle: validatedData.metaTitle || null,
         metaDescription: validatedData.metaDescription || null,
         ogImage: validatedData.ogImage || null,
+        blocks: body.blocks ? (typeof body.blocks === 'string' ? body.blocks : JSON.stringify(body.blocks)) : '[]',
         tags: validatedData.tags ? JSON.stringify(validatedData.tags) : null,
         isPublished: validatedData.isPublished ?? false,
         publishedAt: validatedData.isPublished ? new Date() : null,

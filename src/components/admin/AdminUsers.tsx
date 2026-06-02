@@ -12,6 +12,8 @@ import {
   UserCog,
   CheckCircle2,
   XCircle,
+  FileText,
+  Download,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminFetch } from '@/lib/admin-fetch';
@@ -119,6 +121,10 @@ export function AdminUsers() {
 
   // Bulk action state
   const [bulkLoading, setBulkLoading] = useState(false);
+
+  // CSV import/export state
+  const [importing, setImporting] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -278,6 +284,59 @@ export function AdminUsers() {
     }
   };
 
+  const handleCSVImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await adminFetch('/api/users/import', {
+        method: 'POST',
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(`Imported ${data.imported} user(s)`);
+        if (data.errors && data.errors.length > 0) {
+          toast.warning(`${data.errors.length} error(s) during import`);
+        }
+        fetchUsers();
+      } else {
+        const err = await res.json();
+        toast.error(err.error || 'Import failed');
+      }
+    } catch {
+      toast.error('Import failed');
+    } finally {
+      setImporting(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleCSVExport = async () => {
+    setExporting(true);
+    try {
+      const res = await adminFetch('/api/users/export');
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `users-export-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success('Users exported');
+      } else {
+        toast.error('Export failed');
+      }
+    } catch {
+      toast.error('Export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!deleteId) return;
     setDeleting(true);
@@ -306,10 +365,25 @@ export function AdminUsers() {
           <h2 className="text-2xl font-bold tracking-tight">Users</h2>
           <p className="text-muted-foreground mt-1">Manage admin and clerk accounts</p>
         </div>
-        <Button onClick={handleOpenAdd}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add User
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <label className="cursor-pointer">
+            <input type="file" accept=".csv" className="hidden" onChange={handleCSVImport} disabled={importing} />
+            <Button variant="outline" size="sm" disabled={importing} asChild>
+              <span>
+                <FileText className="mr-1.5 h-3.5 w-3.5" />
+                {importing ? 'Importing...' : 'Import CSV'}
+              </span>
+            </Button>
+          </label>
+          <Button variant="outline" size="sm" disabled={exporting} onClick={handleCSVExport}>
+            <Download className="mr-1.5 h-3.5 w-3.5" />
+            {exporting ? 'Exporting...' : 'Export CSV'}
+          </Button>
+          <Button onClick={handleOpenAdd}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add User
+          </Button>
+        </div>
       </div>
 
       {/* Search Bar */}

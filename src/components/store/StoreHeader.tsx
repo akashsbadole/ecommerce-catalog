@@ -1,10 +1,20 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import Image from 'next/image';
-import { Menu, X, ShoppingBag, FileText, Search } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import { useState, useEffect, useRef, useCallback } from "react";
+import Image from "next/image";
+import {
+  Menu,
+  X,
+  ShoppingBag,
+  FileText,
+  Search,
+  User,
+  LogOut,
+  LayoutDashboard,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { useAppStore } from "@/lib/store";
 import {
   Sheet,
   SheetContent,
@@ -12,15 +22,15 @@ import {
   SheetTitle,
   SheetTrigger,
   SheetClose,
-} from '@/components/ui/sheet';
+} from "@/components/ui/sheet";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
+} from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface StoreHeaderProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -36,15 +46,19 @@ interface SearchResult {
 }
 
 const navLinks = [
-  { label: 'Home', page: 'home' },
-  { label: 'Catalogue', page: 'catalogue' },
-  { label: 'Contact', page: 'contact' },
+  { label: "Home", page: "home" },
+  { label: "About us", page: "content-page", slug: "about-us" },
+  { label: "Manufacturing", page: "content-page", slug: "manufacturing" },
+  { label: "Products", page: "content-page", slug: "products" },
+  { label: "Catalogue", page: "catalogue" },
+  { label: "Contact", page: "content-page", slug: "contact" },
 ];
 
 export function StoreHeader({ onNavigate }: StoreHeaderProps) {
+  const { auth, logout, settings } = useAppStore();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -53,25 +67,29 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
   // Cmd+K / Ctrl+K keyboard shortcut
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setSearchOpen(true);
       }
     };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   // Focus input when dialog opens
   useEffect(() => {
     if (searchOpen) {
-      setTimeout(() => {
+      const timer = window.setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
-    } else {
-      setSearchQuery('');
-      setSearchResults([]);
+      return () => window.clearTimeout(timer);
     }
+
+    const resetTimer = window.setTimeout(() => {
+      setSearchQuery("");
+      setSearchResults([]);
+    }, 0);
+    return () => window.clearTimeout(resetTimer);
   }, [searchOpen]);
 
   const doSearch = useCallback(async (query: string) => {
@@ -81,7 +99,9 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
     }
     setSearchLoading(true);
     try {
-      const res = await fetch(`/api/products?search=${encodeURIComponent(query)}`);
+      const res = await fetch(
+        `/api/products?search=${encodeURIComponent(query)}`,
+      );
       if (res.ok) {
         const data = await res.json();
         setSearchResults(data.products || []);
@@ -103,13 +123,13 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
 
   const handleResultClick = (productId: string) => {
     setSearchOpen(false);
-    onNavigate('product', productId);
+    onNavigate("product", productId);
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(price);
   };
 
@@ -128,23 +148,27 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           {/* Logo */}
           <button
-            onClick={() => onNavigate('home')}
+            onClick={() => onNavigate("home")}
             className="flex items-center gap-2 transition-opacity hover:opacity-80"
           >
-            <ShoppingBag className="h-6 w-6 text-emerald-600" />
+            <ShoppingBag className="h-6 w-6 text-primary" />
             <span className="text-xl font-bold tracking-tight">
-              Style<span className="text-emerald-600">Store</span>
+              Style<span className="text-primary">Store</span>
             </span>
           </button>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1" role="navigation" aria-label="Main navigation">
+          <nav
+            className="hidden md:flex items-center gap-1"
+            role="navigation"
+            aria-label="Main navigation"
+          >
             {navLinks.map((link) => (
               <Button
-                key={link.page}
+                key={link.slug || link.page}
                 variant="ghost"
                 className="text-sm font-medium"
-                onClick={() => onNavigate(link.page)}
+                onClick={() => onNavigate(link.page, link.slug)}
               >
                 {link.label}
               </Button>
@@ -166,20 +190,54 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
             <Button
               variant="outline"
               size="sm"
-              className="text-sm border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950 dark:hover:text-emerald-300"
-              onClick={() => onNavigate('catalogue')}
+              className="text-sm border-primary/20 text-primary/80 hover:bg-primary/5 hover:text-primary-dark dark:border-primary-dark dark:text-primary/40 dark:hover:bg-primary-dark dark:hover:text-primary/30"
+              onClick={() => onNavigate("catalogue")}
             >
               <FileText className="mr-1.5 h-4 w-4" />
               Request Quote
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-sm"
-              onClick={() => onNavigate('admin-login')}
-            >
-              Admin
-            </Button>
+            {auth.user ? (
+              <div className="flex items-center gap-2">
+                {settings?.b2b_enable_buyer_portal === "true" && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-sm flex items-center gap-1.5"
+                    onClick={() => onNavigate("portal")}
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    Portal
+                  </Button>
+                )}
+                {(auth.user.role === "admin" || auth.user.role === "clerk") && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-sm flex items-center gap-1.5"
+                    onClick={() => (window.location.href = "/admin")}
+                  >
+                    Admin
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-sm text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                  onClick={() => logout()}
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-sm"
+                onClick={() => (window.location.href = "/admin")}
+              >
+                Login
+              </Button>
+            )}
             <ThemeToggle />
           </nav>
 
@@ -193,17 +251,21 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
             <SheetContent side="right" className="w-72">
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2">
-                  <ShoppingBag className="h-5 w-5 text-emerald-600" />
+                  <ShoppingBag className="h-5 w-5 text-primary" />
                   StyleStore
                 </SheetTitle>
               </SheetHeader>
-              <nav className="flex flex-col gap-2 px-4 pt-4" role="navigation" aria-label="Mobile navigation">
+              <nav
+                className="flex flex-col gap-2 px-4 pt-4"
+                role="navigation"
+                aria-label="Mobile navigation"
+              >
                 {navLinks.map((link) => (
-                  <SheetClose asChild key={link.page}>
+                  <SheetClose asChild key={link.slug || link.page}>
                     <Button
                       variant="ghost"
                       className="justify-start text-base"
-                      onClick={() => onNavigate(link.page)}
+                      onClick={() => onNavigate(link.page, link.slug)}
                     >
                       {link.label}
                     </Button>
@@ -223,22 +285,61 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                 <SheetClose asChild>
                   <Button
                     variant="outline"
-                    className="justify-start text-base border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950 dark:hover:text-emerald-300"
-                    onClick={() => onNavigate('catalogue')}
+                    className="justify-start text-base border-primary/20 text-primary/80 hover:bg-primary/5 hover:text-primary-dark dark:border-primary-dark dark:text-primary/40 dark:hover:bg-primary-dark dark:hover:text-primary/30"
+                    onClick={() => onNavigate("catalogue")}
                   >
                     <FileText className="mr-2 h-4 w-4" />
                     Request Quote
                   </Button>
                 </SheetClose>
-                <SheetClose asChild>
-                  <Button
-                    variant="outline"
-                    className="justify-start text-base"
-                    onClick={() => onNavigate('admin-login')}
-                  >
-                    Admin Panel
-                  </Button>
-                </SheetClose>
+                {auth.user ? (
+                  <>
+                    {settings?.b2b_enable_buyer_portal === "true" && (
+                      <SheetClose asChild>
+                        <Button
+                          variant="ghost"
+                          className="justify-start text-base"
+                          onClick={() => onNavigate("portal")}
+                        >
+                          <LayoutDashboard className="mr-2 h-4 w-4" />
+                          Buyer Portal
+                        </Button>
+                      </SheetClose>
+                    )}
+                    {(auth.user.role === "admin" ||
+                      auth.user.role === "clerk") && (
+                      <SheetClose asChild>
+                        <Button
+                          variant="ghost"
+                          className="justify-start text-base"
+                          onClick={() => (window.location.href = "/admin")}
+                        >
+                          Admin Panel
+                        </Button>
+                      </SheetClose>
+                    )}
+                    <SheetClose asChild>
+                      <Button
+                        variant="ghost"
+                        className="justify-start text-base text-rose-500"
+                        onClick={() => logout()}
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Logout
+                      </Button>
+                    </SheetClose>
+                  </>
+                ) : (
+                  <SheetClose asChild>
+                    <Button
+                      variant="outline"
+                      className="justify-start text-base"
+                      onClick={() => (window.location.href = "/admin")}
+                    >
+                      Login / Partner Access
+                    </Button>
+                  </SheetClose>
+                )}
               </nav>
             </SheetContent>
           </Sheet>
@@ -263,7 +364,10 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
             />
             {searchQuery && (
               <button
-                onClick={() => { setSearchQuery(''); setSearchResults([]); }}
+                onClick={() => {
+                  setSearchQuery("");
+                  setSearchResults([]);
+                }}
                 className="shrink-0 text-muted-foreground hover:text-foreground"
                 aria-label="Clear search"
               >
@@ -287,7 +391,9 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
             ) : searchQuery && searchResults.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <Search className="h-8 w-8 text-muted-foreground/50" />
-                <p className="mt-2 text-sm text-muted-foreground">No results found</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  No results found
+                </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Try adjusting your search terms
                 </p>
@@ -318,9 +424,13 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{product.name}</p>
+                        <p className="text-sm font-medium truncate">
+                          {product.name}
+                        </p>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          {product.Category && <span>{product.Category.name}</span>}
+                          {product.Category && (
+                            <span>{product.Category.name}</span>
+                          )}
                           <span>{formatPrice(product.price)}</span>
                         </div>
                       </div>
@@ -335,7 +445,11 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                   Start typing to search products
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Press <kbd className="rounded border bg-muted px-1 font-mono text-[10px]">Esc</kbd> to close
+                  Press{" "}
+                  <kbd className="rounded border bg-muted px-1 font-mono text-[10px]">
+                    Esc
+                  </kbd>{" "}
+                  to close
                 </p>
               </div>
             )}

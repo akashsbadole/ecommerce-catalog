@@ -71,9 +71,9 @@ export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
           {/* Company Info */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <ShoppingBag className="h-5 w-5 text-emerald-600" />
+              <ShoppingBag className="h-5 w-5 text-primary" />
               <span className="text-lg font-bold tracking-tight">
-                Style<span className="text-emerald-600">Store</span>
+                Style<span className="text-primary">Store</span>
               </span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -142,24 +142,24 @@ export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
             <h3 className="text-sm font-semibold uppercase tracking-wider">Contact Info</h3>
             <ul className="space-y-3">
               <li className="flex items-start gap-2">
-                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 <a href={`mailto:${companyEmail}`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   {companyEmail}
                 </a>
               </li>
               <li className="flex items-start gap-2">
-                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 <a href={`tel:${companyPhone}`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   {companyPhone}
                 </a>
               </li>
               <li className="flex items-start gap-2">
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 <span className="text-sm text-muted-foreground">{companyAddress}</span>
               </li>
               {whatsappNumber && (
                 <li className="flex items-start gap-2">
-                  <MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                  <MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                   <a
                     href={`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}`}
                     target="_blank"

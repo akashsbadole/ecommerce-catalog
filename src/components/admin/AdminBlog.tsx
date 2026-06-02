@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import dynamic from 'next/dynamic';
 import {
   Plus,
   Search,
@@ -18,12 +17,9 @@ import {
   Undo2,
   Trash,
   BookOpen,
+  LayoutGrid,
+  Download,
 } from 'lucide-react';
-
-const WysiwygEditor = dynamic(
-  () => import('@/components/admin/WysiwygEditor'),
-  { ssr: false, loading: () => <div className="min-h-[300px] rounded-md border border-input bg-muted/30 animate-pulse" /> }
-);
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -75,6 +71,8 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { adminFetch } from '@/lib/admin-fetch';
+import { PageBuilder } from '@/components/admin/PageBuilder';
+import type { PageBlock } from '@/lib/page-blocks';
 
 interface Author {
   id: string;
@@ -88,6 +86,7 @@ interface BlogPost {
   slug: string;
   excerpt: string | null;
   content: string;
+  blocks: string;
   coverImage: string | null;
   authorId: string | null;
   metaTitle: string | null;
@@ -106,6 +105,7 @@ interface BlogFormData {
   slug: string;
   excerpt: string;
   content: string;
+  blocks: PageBlock[];
   coverImage: string;
   authorId: string;
   metaTitle: string;
@@ -127,6 +127,7 @@ const emptyForm: BlogFormData = {
   slug: '',
   excerpt: '',
   content: '',
+  blocks: [],
   coverImage: '',
   authorId: '',
   metaTitle: '',
@@ -185,6 +186,10 @@ export function AdminBlog() {
   // Bulk action state
   const [bulkLoading, setBulkLoading] = useState(false);
 
+  // CSV import/export state
+  const [importing, setImporting] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
   const fetchPosts = useCallback(async (page = 1) => {
     try {
       setLoading(true);
@@ -217,7 +222,7 @@ export function AdminBlog() {
         })));
       }
     } catch {
-      // ignore — author dropdown will just be empty
+      // ignore
     }
   }, []);
 
@@ -288,11 +293,19 @@ export function AdminBlog() {
   const handleOpenEdit = (post: BlogPost) => {
     setEditingPost(post);
     const tags = parseTags(post.tags);
+    let blocks: PageBlock[] = [];
+    try {
+      blocks = JSON.parse(post.blocks || '[]');
+    } catch {
+      blocks = [];
+    }
+
     setForm({
       title: post.title,
       slug: post.slug,
       excerpt: post.excerpt || '',
       content: post.content || '',
+      blocks: blocks,
       coverImage: post.coverImage || '',
       authorId: post.authorId || '',
       metaTitle: post.metaTitle || '',
@@ -331,6 +344,7 @@ export function AdminBlog() {
         slug: form.slug.trim() || generateSlug(form.title),
         excerpt: form.excerpt.trim() || null,
         content: form.content.trim() || '',
+        blocks: form.blocks,
         coverImage: form.coverImage.trim() || null,
         authorId: form.authorId || null,
         metaTitle: form.metaTitle.trim() || null,
@@ -363,6 +377,59 @@ export function AdminBlog() {
       toast.error('Failed to save post');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleCSVImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await adminFetch('/api/blog/import', {
+        method: 'POST',
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(`Imported ${data.imported} blog post(s)`);
+        if (data.errors && data.errors.length > 0) {
+          toast.warning(`${data.errors.length} error(s) during import`);
+        }
+        fetchPosts(1);
+      } else {
+        const err = await res.json();
+        toast.error(err.error || 'Import failed');
+      }
+    } catch {
+      toast.error('Import failed');
+    } finally {
+      setImporting(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleCSVExport = async () => {
+    setExporting(true);
+    try {
+      const res = await adminFetch('/api/blog/export');
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `blog-export-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success('Blog posts exported');
+      } else {
+        toast.error('Export failed');
+      }
+    } catch {
+      toast.error('Export failed');
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -432,10 +499,25 @@ export function AdminBlog() {
           <p className="text-muted-foreground mt-1">Manage your blog posts and articles</p>
         </div>
         {activeTab === 'active' && (
-          <Button onClick={handleOpenAdd}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Post
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <label className="cursor-pointer">
+              <input type="file" accept=".csv" className="hidden" onChange={handleCSVImport} disabled={importing} />
+              <Button variant="outline" size="sm" disabled={importing} asChild>
+                <span>
+                  <FileText className="mr-1.5 h-3.5 w-3.5" />
+                  {importing ? 'Importing...' : 'Import CSV'}
+                </span>
+              </Button>
+            </label>
+            <Button variant="outline" size="sm" disabled={exporting} onClick={handleCSVExport}>
+              <Download className="mr-1.5 h-3.5 w-3.5" />
+              {exporting ? 'Exporting...' : 'Export CSV'}
+            </Button>
+            <Button onClick={handleOpenAdd}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Post
+            </Button>
+          </div>
         )}
       </div>
 
@@ -683,16 +765,23 @@ export function AdminBlog() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh]">
+        <DialogContent className="max-w-4xl max-h-[95vh]">
           <DialogHeader>
             <DialogTitle>
               {editingPost ? 'Edit Post' : 'Add Post'}
             </DialogTitle>
           </DialogHeader>
-          <ScrollArea className="max-h-[calc(90vh-140px)] pr-4">
-            <div className="grid gap-4 py-4">
-              {/* Title & Slug */}
-              <div className="grid gap-4 sm:grid-cols-2">
+          <Tabs defaultValue="content" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="content">Content</TabsTrigger>
+              <TabsTrigger value="builder">
+                <LayoutGrid className="mr-2 h-4 w-4" />
+                Page Builder
+              </TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
+            </TabsList>
+            <ScrollArea className="max-h-[calc(95vh-180px)] pr-4">
+              <TabsContent value="content" className="space-y-4 pt-4">
                 <div className="space-y-2">
                   <Label htmlFor="post-title">
                     Title <span className="text-rose-500">*</span>
@@ -705,65 +794,90 @@ export function AdminBlog() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="post-slug">Slug</Label>
-                  <Input
-                    id="post-slug"
-                    placeholder="post-slug"
-                    value={form.slug}
+                  <Label htmlFor="post-excerpt">Excerpt</Label>
+                  <Textarea
+                    id="post-excerpt"
+                    placeholder="Brief summary of the post..."
+                    value={form.excerpt}
                     onChange={(e) =>
-                      setForm(prev => ({ ...prev, slug: e.target.value }))
+                      setForm(prev => ({ ...prev, excerpt: e.target.value }))
                     }
+                    rows={3}
                   />
                 </div>
-              </div>
-
-              {/* Excerpt */}
-              <div className="space-y-2">
-                <Label htmlFor="post-excerpt">Excerpt</Label>
-                <Textarea
-                  id="post-excerpt"
-                  placeholder="Brief summary of the post..."
-                  value={form.excerpt}
-                  onChange={(e) =>
-                    setForm(prev => ({ ...prev, excerpt: e.target.value }))
-                  }
-                  rows={2}
-                />
-              </div>
-
-              {/* Content */}
-              <div className="space-y-2">
-                <Label>Content</Label>
-                <WysiwygEditor
-                  value={form.content}
-                  onChange={(val) => setForm(prev => ({ ...prev, content: val }))}
-                  placeholder="Write blog post content here..."
-                  minHeight="400px"
-                />
-              </div>
-
-              {/* Cover Image */}
-              <div className="space-y-2">
-                <Label htmlFor="post-cover">Cover Image URL</Label>
-                <Input
-                  id="post-cover"
-                  placeholder="https://example.com/cover.jpg"
-                  value={form.coverImage}
-                  onChange={(e) =>
-                    setForm(prev => ({ ...prev, coverImage: e.target.value }))
-                  }
-                />
-                {form.coverImage && (
-                  <img
-                    src={form.coverImage}
-                    alt="Cover preview"
-                    className="h-32 w-full rounded-md object-cover bg-muted"
+                <div className="space-y-2">
+                  <Label>Main Content (Legacy)</Label>
+                  <p className="text-xs text-muted-foreground italic mb-2">Note: For new posts, we recommend using the Page Builder tab.</p>
+                  <Textarea
+                    placeholder="Write blog post content here..."
+                    value={form.content}
+                    onChange={(e) => setForm(prev => ({ ...prev, content: e.target.value }))}
+                    className="min-h-[300px]"
                   />
-                )}
-              </div>
+                </div>
+              </TabsContent>
 
-              {/* Tags & Author */}
-              <div className="grid gap-4 sm:grid-cols-2">
+              <TabsContent value="builder" className="pt-4">
+                <PageBuilder
+                  blocks={form.blocks}
+                  onChange={(blocks) => setForm(prev => ({ ...prev, blocks }))}
+                />
+              </TabsContent>
+
+              <TabsContent value="settings" className="space-y-4 pt-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="post-slug">Slug</Label>
+                    <Input
+                      id="post-slug"
+                      placeholder="post-slug"
+                      value={form.slug}
+                      onChange={(e) =>
+                        setForm(prev => ({ ...prev, slug: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Author</Label>
+                    <Select
+                      value={form.authorId}
+                      onValueChange={(val) =>
+                        setForm(prev => ({ ...prev, authorId: val }))
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select author" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {authors.map((author) => (
+                          <SelectItem key={author.id} value={author.id}>
+                            {author.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="post-cover">Cover Image URL</Label>
+                  <Input
+                    id="post-cover"
+                    placeholder="https://example.com/cover.jpg"
+                    value={form.coverImage}
+                    onChange={(e) =>
+                      setForm(prev => ({ ...prev, coverImage: e.target.value }))
+                    }
+                  />
+                  {form.coverImage && (
+                    <img
+                      src={form.coverImage}
+                      alt="Cover preview"
+                      className="h-32 w-full rounded-md object-cover bg-muted mt-2"
+                    />
+                  )}
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="post-tags">Tags</Label>
                   <Input
@@ -776,70 +890,29 @@ export function AdminBlog() {
                   />
                   <p className="text-xs text-muted-foreground">Comma-separated tags</p>
                 </div>
-                <div className="space-y-2">
-                  <Label>Author</Label>
-                  <Select
-                    value={form.authorId}
-                    onValueChange={(val) =>
-                      setForm(prev => ({ ...prev, authorId: val }))
+
+                <div className="flex items-center gap-2 pt-2">
+                  <Switch
+                    checked={form.isPublished}
+                    onCheckedChange={(checked) =>
+                      setForm(prev => ({ ...prev, isPublished: checked }))
                     }
+                  />
+                  <Label
+                    className="cursor-pointer"
+                    onClick={() => setForm(prev => ({ ...prev, isPublished: !prev.isPublished }))}
                   >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select author" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {authors.map((author) => (
-                        <SelectItem key={author.id} value={author.id}>
-                          {author.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    Published
+                  </Label>
                 </div>
-              </div>
 
-              {/* Publish Toggle */}
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={form.isPublished}
-                  onCheckedChange={(checked) =>
-                    setForm(prev => ({ ...prev, isPublished: checked }))
-                  }
-                />
-                <Label
-                  className="cursor-pointer"
-                  onClick={() => setForm(prev => ({ ...prev, isPublished: !prev.isPublished }))}
-                >
-                  Published
-                </Label>
-                {editingPost?.publishedAt && (
-                  <span className="text-xs text-muted-foreground ml-2">
-                    (Published on {new Date(editingPost.publishedAt).toLocaleDateString()})
-                  </span>
-                )}
-              </div>
+                <Separator />
 
-              <Separator />
-
-              {/* SEO Section (Collapsible) */}
-              <Collapsible open={seoOpen} onOpenChange={setSeoOpen}>
-                <CollapsibleTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full justify-between"
-                  >
-                    <span className="flex items-center gap-2">
-                      <SearchCode className="h-4 w-4" />
-                      SEO Settings
-                      {(form.metaTitle || form.metaDescription) && (
-                        <span className="text-xs text-emerald-600 font-normal">(configured)</span>
-                      )}
-                    </span>
-                    <ChevronDown className="h-4 w-4 transition-transform duration-200" />
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-4 pt-3">
+                <div className="space-y-4">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <SearchCode className="h-4 w-4" />
+                    SEO Settings
+                  </h4>
                   <div className="space-y-2">
                     <Label htmlFor="post-meta-title">Meta Title</Label>
                     <Input
@@ -852,47 +925,22 @@ export function AdminBlog() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="post-meta-desc" className="flex items-center justify-between">
-                      <span>Meta Description</span>
-                      <span className="text-xs text-muted-foreground font-normal">
-                        {form.metaDescription.length}/160
-                      </span>
-                    </Label>
+                    <Label htmlFor="post-meta-desc">Meta Description</Label>
                     <Textarea
                       id="post-meta-desc"
                       placeholder="A brief description for search engines..."
                       value={form.metaDescription}
-                      onChange={(e) => {
-                        if (e.target.value.length <= 160) {
-                          setForm(prev => ({ ...prev, metaDescription: e.target.value }));
-                        }
-                      }}
-                      rows={3}
-                      className={form.metaDescription.length >= 150 ? 'border-amber-400' : ''}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Recommended: 150-160 characters for optimal SEO
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="post-og-image">OG Image URL</Label>
-                    <Input
-                      id="post-og-image"
-                      placeholder="https://example.com/og-image.jpg"
-                      value={form.ogImage}
                       onChange={(e) =>
-                        setForm(prev => ({ ...prev, ogImage: e.target.value }))
+                        setForm(prev => ({ ...prev, metaDescription: e.target.value }))
                       }
+                      rows={2}
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Image shown when this post is shared on social media (recommended 1200×630px)
-                    </p>
                   </div>
-                </CollapsibleContent>
-              </Collapsible>
-            </div>
-          </ScrollArea>
-          <DialogFooter>
+                </div>
+              </TabsContent>
+            </ScrollArea>
+          </Tabs>
+          <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setFormOpen(false)}>
               Cancel
             </Button>

@@ -17,6 +17,8 @@ import {
 } from '@/components/ui/select';
 import { EnquiryModal } from './EnquiryModal';
 import { QuickViewModal } from './QuickViewModal';
+import { useAppStore } from '@/lib/store';
+import { calculateTieredPrice, formatPrice as libFormatPrice } from '@/lib/pricing';
 
 interface Category {
   id: string;
@@ -46,6 +48,7 @@ interface CataloguePageProps {
 const ITEMS_PER_PAGE_OPTIONS = [12, 24, 48];
 
 export function CataloguePage({ onNavigate }: CataloguePageProps) {
+  const { auth, settings } = useAppStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -137,11 +140,16 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
     }
   };
 
+  const userTier = auth.user?.tier;
+
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(price);
+    return libFormatPrice(price, settings?.currency || 'USD');
+  };
+
+  const getEffectivePrice = (basePrice: number) => {
+    const isTieredEnabled = settings?.b2b_enable_tiered_pricing === 'true';
+    if (!isTieredEnabled) return basePrice;
+    return calculateTieredPrice(basePrice, userTier);
   };
 
   const handleEnquiryClick = (product: Product, mode: 'enquire' | 'rfq') => {
@@ -232,7 +240,7 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
             variant={selectedCategory === null ? 'default' : 'outline'}
             size="sm"
             onClick={() => setSelectedCategory(null)}
-            className={selectedCategory === null ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}
+            className={selectedCategory === null ? 'bg-primary hover:bg-primary/80 text-white' : ''}
           >
             All Products
           </Button>
@@ -242,7 +250,7 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
               variant={selectedCategory === cat.id ? 'default' : 'outline'}
               size="sm"
               onClick={() => setSelectedCategory(selectedCategory === cat.id ? null : cat.id)}
-              className={selectedCategory === cat.id ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}
+              className={selectedCategory === cat.id ? 'bg-primary hover:bg-primary/80 text-white' : ''}
             >
               {cat.name}
             </Button>
@@ -368,7 +376,7 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
                       </span>
                     )}
                     <h3
-                      className="font-semibold text-sm line-clamp-1 cursor-pointer hover:text-emerald-600 transition-colors"
+                      className="font-semibold text-sm line-clamp-1 cursor-pointer hover:text-primary transition-colors"
                       onClick={() => onNavigate('product', product.id)}
                     >
                       {product.name}
@@ -378,14 +386,19 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
                         {product.shortDescription}
                       </p>
                     )}
-                    <div className="flex items-center gap-2 pt-1">
-                      <span className="text-lg font-bold text-emerald-600">
-                        {formatPrice(product.price)}
-                      </span>
-                      {hasDiscount && (
-                        <span className="text-sm text-muted-foreground line-through">
-                          {formatPrice(product.comparePrice!)}
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center gap-2 pt-1">
+                        <span className="text-lg font-bold text-primary">
+                          {formatPrice(getEffectivePrice(product.price))}
                         </span>
+                        {hasDiscount && (
+                          <span className="text-sm text-muted-foreground line-through">
+                            {formatPrice(product.comparePrice!)}
+                          </span>
+                        )}
+                      </div>
+                      {settings?.b2b_enable_tiered_pricing === 'true' && userTier && userTier !== 'standard' && (
+                        <p className="text-[10px] font-medium text-primary">Tier price applied</p>
                       )}
                     </div>
                     {/* Wholesale price display */}
@@ -410,7 +423,7 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
                       </Button>
                       <Button
                         size="sm"
-                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                        className="flex-1 bg-primary hover:bg-primary/80 text-white"
                         onClick={() => handleEnquiryClick(product, 'enquire')}
                       >
                         Enquire

@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     const categoryId = searchParams.get('categoryId');
     const featured = searchParams.get('featured');
     const ids = searchParams.get('ids');
+    const slug = searchParams.get('slug');
     const trashed = searchParams.get('trashed');
 
     const all = searchParams.get('all');
@@ -36,6 +37,11 @@ export async function GET(request: NextRequest) {
 
     if (featured !== null && featured !== undefined) {
       where.isFeatured = featured === 'true';
+    }
+
+    // Single product lookup by slug
+    if (slug) {
+      where.slug = slug;
     }
 
     // Handle fetching specific products by IDs
@@ -65,6 +71,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+
+    // Auto-generate slug from name if not provided
+    if (!body.slug && body.name) {
+      body.slug = body.name.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+    }
 
     const result = productSchema.safeParse(body);
     if (!result.success) {

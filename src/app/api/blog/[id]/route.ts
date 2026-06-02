@@ -1,17 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+async function resolveBlogPost(idOrSlug: string) {
+  return db.blogPost.findFirst({
+    where: {
+      OR: [
+        { id: idOrSlug },
+        { slug: idOrSlug },
+      ],
+    },
+    include: { User: { select: { id: true, name: true, email: true } } },
+  });
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
-
-    const blogPost = await db.blogPost.findUnique({
-      where: { id },
-      include: { User: { select: { id: true, name: true, email: true } } },
-    });
+    const blogPost = await resolveBlogPost(id);
 
     if (!blogPost) {
       return NextResponse.json(
@@ -38,7 +46,7 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
-    const existing = await db.blogPost.findUnique({ where: { id } });
+    const existing = await resolveBlogPost(id);
     if (!existing) {
       return NextResponse.json(
         { error: 'Blog post not found' },
@@ -49,7 +57,7 @@ export async function PUT(
     // Check slug uniqueness if slug is being updated
     if (body.slug !== undefined && body.slug !== existing.slug) {
       const slugExists = await db.blogPost.findFirst({
-        where: { slug: body.slug, NOT: { id } },
+        where: { slug: body.slug, NOT: { id: existing.id } },
       });
       if (slugExists) {
         return NextResponse.json({ error: 'Slug already in use' }, { status: 409 });
@@ -65,7 +73,7 @@ export async function PUT(
     }
 
     const blogPost = await db.blogPost.update({
-      where: { id },
+      where: { id: existing.id },
       data: {
         ...(body.title !== undefined && { title: body.title }),
         ...(body.slug !== undefined && { slug: body.slug }),
@@ -87,6 +95,9 @@ export async function PUT(
         }),
         ...(body.ogImage !== undefined && {
           ogImage: body.ogImage || null,
+        }),
+        ...(body.blocks !== undefined && {
+          blocks: typeof body.blocks === 'string' ? body.blocks : JSON.stringify(body.blocks),
         }),
         ...(body.tags !== undefined && {
           tags: body.tags ? JSON.stringify(body.tags) : null,
@@ -115,14 +126,14 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
 
-    const existing = await db.blogPost.findUnique({ where: { id } });
+    const existing = await resolveBlogPost(id);
     if (!existing) {
       return NextResponse.json({ error: 'Blog post not found' }, { status: 404 });
     }
 
     if (body.restore) {
       const blogPost = await db.blogPost.update({
-        where: { id },
+        where: { id: existing.id },
         data: { deletedAt: null },
         include: { User: { select: { id: true, name: true, email: true } } },
       });
@@ -145,7 +156,7 @@ export async function DELETE(
     const { searchParams } = new URL(request.url);
     const permanent = searchParams.get('permanent') === 'true';
 
-    const existing = await db.blogPost.findUnique({ where: { id } });
+    const existing = await resolveBlogPost(id);
     if (!existing) {
       return NextResponse.json(
         { error: 'Blog post not found' },
@@ -154,12 +165,12 @@ export async function DELETE(
     }
 
     if (permanent) {
-      await db.blogPost.delete({ where: { id } });
+      await db.blogPost.delete({ where: { id: existing.id } });
       return NextResponse.json({ message: 'Blog post permanently deleted' });
     }
 
     await db.blogPost.update({
-      where: { id },
+      where: { id: existing.id },
       data: { deletedAt: new Date() },
     });
 

@@ -1,129 +1,91 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useAppStore } from '@/lib/store';
+import { usePathname } from 'next/navigation';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { HomePage } from '@/components/store/HomePage';
 import { CataloguePage } from '@/components/store/CataloguePage';
 import { ProductDetailPage } from '@/components/store/ProductDetailPage';
-import { ContactPage } from '@/components/store/ContactPage';
+import { CmsPage } from '@/components/store/CmsPage';
 import { ContentPageView } from '@/components/store/ContentPageView';
 import { BlogPage } from '@/components/store/BlogPage';
 import { BlogPostView } from '@/components/store/BlogPostView';
-import { AdminLogin } from '@/components/admin/AdminLogin';
-import { AdminDashboard } from '@/components/admin/AdminDashboard';
-
-type Page =
-  | { type: 'home' }
-  | { type: 'catalogue' }
-  | { type: 'product'; productId: string }
-  | { type: 'contact' }
-  | { type: 'content-page'; slug: string }
-  | { type: 'blog' }
-  | { type: 'blog-post'; postId: string }
-  | { type: 'admin-login' }
-  | { type: 'admin'; activeTab: string };
+import BuyerPortalPage from '@/app/portal/page';
 
 export default function MainApp() {
-  const [currentPage, setCurrentPage] = useState<Page>({ type: 'home' });
-  const [isAdmin, setIsAdmin] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return !!(localStorage.getItem('admin_user') && localStorage.getItem('admin_token'));
-    }
-    return false;
-  });
-  const [adminUser, setAdminUser] = useState<{ id: string; email: string; name: string; role: string } | null>(() => {
-    if (typeof window !== 'undefined') {
-      const savedUser = localStorage.getItem('admin_user');
-      if (savedUser) {
-        try {
-          return JSON.parse(savedUser);
-        } catch {
-          return null;
-        }
-      }
-    }
-    return null;
-  });
+  const {
+    currentPage,
+    navigate,
+    isAdmin,
+    adminUser,
+    setAdminLogin,
+    setAdminLogout
+  } = useAppStore();
 
-  // Cleanup invalid tokens
+  // Check if we're on an admin route - if so, don't render store UI
+  const pathname = usePathname();
+  const isAdminRoute = pathname === '/admin' || pathname.startsWith('/admin/');
+
+  // CMS-driven page slugs
+  const CMS_PAGES = ['about-us', 'manufacturing', 'contact', 'products', 'catalogue'];
+
+  // Route from URL on initial load and handle browser back/forward
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedUser = localStorage.getItem('admin_user');
-      const savedToken = localStorage.getItem('admin_token');
-      if (!savedUser || !savedToken) {
-        localStorage.removeItem('admin_user');
-        localStorage.removeItem('admin_token');
+    const routeFromPath = (path: string) => {
+      if (path === '/' || path === '') return;
+      const segments = path.split('/').filter(Boolean);
+      if (segments[0] === 'catalogue') {
+        if (segments[1]) navigate('product', segments[1]);
+        else navigate('catalogue');
+      } else if (segments[0] === 'blog') {
+        if (segments[1]) navigate('blog-post', segments[1]);
+        else navigate('blog');
+      } else if (segments[0] === 'portal') {
+        navigate('portal');
+      } else if (CMS_PAGES.includes(segments[0])) {
+        navigate('content-page', segments[0]);
+      } else {
+        navigate('content-page', segments.join('/'));
       }
+    };
+
+    // Initial route from URL
+    if (!isAdminRoute && pathname !== '/') {
+      routeFromPath(pathname);
     }
+
+    // Handle browser back/forward
+    const handlePopState = () => {
+      const currentPath = window.location.pathname;
+      if (currentPath === '/' || currentPath === '') {
+        navigate('home');
+      } else if (!currentPath.startsWith('/admin')) {
+        routeFromPath(currentPath);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
-
-  const handleNavigate = (page: string, data?: unknown) => {
-    window.scrollTo(0, 0);
-    switch (page) {
-      case 'home': setCurrentPage({ type: 'home' }); break;
-      case 'catalogue': setCurrentPage({ type: 'catalogue' }); break;
-      case 'product': setCurrentPage({ type: 'product', productId: data as string }); break;
-      case 'contact': setCurrentPage({ type: 'contact' }); break;
-      case 'content-page': setCurrentPage({ type: 'content-page', slug: data as string }); break;
-      case 'blog': setCurrentPage({ type: 'blog' }); break;
-      case 'blog-post': setCurrentPage({ type: 'blog-post', postId: data as string }); break;
-      case 'admin-login': setCurrentPage({ type: 'admin-login' }); break;
-      case 'admin':
-        setIsAdmin(true);
-        setCurrentPage({ type: 'admin', activeTab: (data as string) || 'dashboard' });
-        break;
-    }
-  };
-
-  const handleAdminLogin = (user: { id: string; email: string; name: string; role: string }, token?: string) => {
-    setAdminUser(user);
-    setIsAdmin(true);
-    localStorage.setItem('admin_user', JSON.stringify(user));
-    localStorage.setItem('admin_token', token || 'token-' + user.id);
-    handleNavigate('admin', 'dashboard');
-  };
-
-  const handleAdminLogout = () => {
-    setAdminUser(null);
-    setIsAdmin(false);
-    localStorage.removeItem('admin_user');
-    localStorage.removeItem('admin_token');
-    handleNavigate('home');
-  };
-
-  // Admin pages (no store layout)
-  if (currentPage.type === 'admin-login') {
-    return <AdminLogin onLogin={handleAdminLogin} onNavigate={handleNavigate} />;
-  }
-
-  if (currentPage.type === 'admin' && isAdmin) {
-    return (
-      <AdminDashboard
-        user={adminUser}
-        activeTab={currentPage.activeTab}
-        onNavigate={handleNavigate}
-        onLogout={handleAdminLogout}
-      />
-    );
-  }
 
   // Public pages (wrapped in store layout)
   const renderPage = () => {
     switch (currentPage.type) {
       case 'home':
-        return <HomePage onNavigate={handleNavigate} />;
+        return <HomePage onNavigate={navigate} />;
       case 'catalogue':
-        return <CataloguePage onNavigate={handleNavigate} />;
+        return <CataloguePage onNavigate={navigate} />;
       case 'product':
-        return <ProductDetailPage productId={currentPage.productId} onNavigate={handleNavigate} />;
-      case 'contact':
-        return <ContactPage />;
+        return <ProductDetailPage productId={currentPage.productId} onNavigate={navigate} />;
       case 'content-page':
-        return <ContentPageView slug={currentPage.slug} onNavigate={handleNavigate} />;
+        return <CmsPage slug={currentPage.slug} onNavigate={navigate} />;
       case 'blog':
-        return <BlogPage onNavigate={handleNavigate} />;
+        return <BlogPage onNavigate={navigate} />;
       case 'blog-post':
-        return <BlogPostView postId={currentPage.postId} onNavigate={handleNavigate} />;
+        return <BlogPostView postId={currentPage.postId} onNavigate={navigate} />;
+      case 'portal':
+        return <BuyerPortalPage />;
       default:
         return (
           <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -138,13 +100,13 @@ export default function MainApp() {
             </p>
             <div className="mt-6 flex gap-3">
               <button
-                onClick={() => handleNavigate('home')}
-                className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors"
+                onClick={() => navigate('home')}
+                className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
               >
                 Back to Home
               </button>
               <button
-                onClick={() => handleNavigate('catalogue')}
+                onClick={() => navigate('catalogue')}
                 className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
               >
                 Browse Catalogue
@@ -155,8 +117,13 @@ export default function MainApp() {
     }
   };
 
+  // Don't render store layout if on admin route (handled by /app/admin)
+  if (isAdminRoute) {
+    return null;
+  }
+
   return (
-    <StoreLayout currentPage={currentPage.type} onNavigate={handleNavigate}>
+    <StoreLayout currentPage={currentPage.type} onNavigate={navigate}>
       {renderPage()}
     </StoreLayout>
   );

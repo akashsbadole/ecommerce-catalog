@@ -3,14 +3,24 @@
  *
  * All admin components should use `adminFetch()` which automatically
  * attaches the JWT Bearer token from localStorage.
- *
- * Usage:
- *   const res = await adminFetch('/api/products', { method: 'POST', body: ... });
- *   const data = await res.json();
  */
 
 export function getAuthHeaders(): Record<string, string> {
   if (typeof window === 'undefined') return {};
+
+  // Try to get from Zustand storage first (new way)
+  try {
+    const storage = localStorage.getItem('app-storage');
+    if (storage) {
+      const parsed = JSON.parse(storage);
+      const token = parsed.state?.adminToken;
+      if (token) return { Authorization: `Bearer ${token}` };
+    }
+  } catch (e) {
+    console.error('Error parsing app-storage', e);
+  }
+
+  // Fallback to old way
   const token = localStorage.getItem('admin_token');
   if (!token) return {};
   return { Authorization: `Bearer ${token}` };
@@ -20,9 +30,9 @@ export async function adminFetch(url: string, options: RequestInit = {}): Promis
   const headers = new Headers(options.headers);
 
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('admin_token');
-    if (token) {
-      headers.set('Authorization', `Bearer ${token}`);
+    const authHeaders = getAuthHeaders();
+    if (authHeaders.Authorization) {
+      headers.set('Authorization', authHeaders.Authorization);
     }
   }
 

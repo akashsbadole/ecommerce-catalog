@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import DOMPurify from 'dompurify';
-import { Calendar, User, ArrowLeft, ImageIcon } from 'lucide-react';
+import { Calendar, User, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { PageBlockRenderer } from './PageBlockRenderer';
+import { generateArticleSchema } from '@/lib/seo/schema-generator';
 
 interface BlogPostData {
   id: string;
@@ -13,6 +15,7 @@ interface BlogPostData {
   slug: string;
   excerpt: string | null;
   content: string;
+  blocks: string;
   coverImage: string | null;
   metaTitle: string | null;
   metaDescription: string | null;
@@ -63,14 +66,12 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
   useEffect(() => {
     if (!post) return;
 
-    // Set document title
     if (post.metaTitle) {
       document.title = post.metaTitle;
     } else {
       document.title = `${post.title} | Blog`;
     }
 
-    // Set meta description
     let metaDesc = document.querySelector('meta[name="description"]');
     if (!metaDesc) {
       metaDesc = document.createElement('meta');
@@ -79,7 +80,6 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
     }
     metaDesc.setAttribute('content', post.metaDescription || post.excerpt || post.content.substring(0, 160));
 
-    // Set OG tags
     const setOgTag = (property: string, content: string) => {
       let tag = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
       if (!tag) {
@@ -99,10 +99,27 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
       setOgTag('og:image', post.coverImage);
     }
 
-    // Set article:published_time
     if (post.publishedAt) {
       setOgTag('article:published_time', new Date(post.publishedAt).toISOString());
     }
+
+    // JSON-LD
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://purvabites.com';
+    const jsonLd = generateArticleSchema(post, siteUrl);
+    const scriptId = 'blog-jsonld';
+    const existingScript = document.getElementById(scriptId);
+    if (existingScript) existingScript.remove();
+
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.id = scriptId;
+    script.textContent = JSON.stringify(jsonLd);
+    document.head.appendChild(script);
+
+    return () => {
+      const el = document.getElementById(scriptId);
+      if (el) el.remove();
+    };
   }, [post]);
 
   function parseTags(tags: string | null): string[] {
@@ -130,8 +147,6 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-5/6" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-3/4" />
         </div>
       </div>
     );
@@ -150,9 +165,15 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
   }
 
   const tags = parseTags(post.tags);
+  let blocks = [];
+  try {
+    blocks = JSON.parse(post.blocks || '[]');
+  } catch {
+    blocks = [];
+  }
 
   return (
-    <article className="max-w-3xl mx-auto px-4 py-8">
+    <article className="max-w-4xl mx-auto px-4 py-8">
       {/* Back Link */}
       <button
         onClick={() => onNavigate('blog')}
@@ -168,22 +189,21 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
           <img
             src={post.coverImage}
             alt={post.title}
-            className="w-full rounded-lg"
+            className="w-full h-[400px] object-cover rounded-xl shadow-lg"
           />
         </div>
       )}
 
-      {/* Title */}
-      <header className="mb-6">
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight leading-tight">
+      {/* Header Info */}
+      <header className="mb-10 text-center">
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-tight mb-6">
           {post.title}
         </h1>
 
-        {/* Meta Row */}
-        <div className="flex flex-wrap items-center gap-4 mt-4 text-sm text-muted-foreground">
+        <div className="flex flex-wrap justify-center items-center gap-6 text-sm text-muted-foreground">
           {post.publishedAt && (
             <span className="flex items-center gap-1.5">
-              <Calendar className="h-4 w-4" />
+              <Calendar className="h-4 w-4 text-primary" />
               {new Date(post.publishedAt).toLocaleDateString('en-US', {
                 month: 'long',
                 day: 'numeric',
@@ -193,17 +213,16 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
           )}
           {post.User && (
             <span className="flex items-center gap-1.5">
-              <User className="h-4 w-4" />
+              <User className="h-4 w-4 text-primary" />
               {post.User.name}
             </span>
           )}
         </div>
 
-        {/* Tags */}
         {tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-4">
+          <div className="flex flex-wrap justify-center gap-2 mt-6">
             {tags.map((tag, i) => (
-              <Badge key={i} variant="secondary" className="text-xs">
+              <Badge key={i} variant="outline" className="bg-primary/5 text-primary/80 border-primary/20">
                 {tag}
               </Badge>
             ))}
@@ -213,23 +232,32 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
 
       {/* Excerpt */}
       {post.excerpt && (
-        <p className="text-lg text-muted-foreground font-medium leading-relaxed mb-8 border-l-4 border-primary/20 pl-4">
-          {post.excerpt}
-        </p>
+        <div className="max-w-2xl mx-auto mb-12">
+          <p className="text-xl text-muted-foreground font-medium italic leading-relaxed text-center border-y py-6 border-primary/10">
+            &ldquo;{post.excerpt}&rdquo;
+          </p>
+        </div>
       )}
 
-      {/* Content */}
-      <div
-        className="prose prose-neutral dark:prose-invert max-w-none
-          prose-headings:font-bold prose-headings:tracking-tight
-          prose-p:text-foreground/80 prose-a:text-primary
-          prose-img:rounded-lg prose-blockquote:border-primary/20
-          [&>p]:mb-4 [&>h2]:mt-8 [&>h3]:mt-6"
-        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content, {
-          ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'div', 'span', 'pre', 'code', 'figure', 'figcaption', 'sup', 'sub'],
-          ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'style', 'target', 'rel', 'colspan', 'rowspan'],
-        }) }}
-      />
+      {/* Blocks Rendering */}
+      {blocks.length > 0 ? (
+        <div className="space-y-0">
+          <PageBlockRenderer blocks={blocks} onNavigate={onNavigate} />
+        </div>
+      ) : post.content ? (
+        /* Legacy Content Fallback */
+        <div
+          className="prose prose-neutral dark:prose-invert max-w-none
+            prose-headings:font-bold prose-headings:tracking-tight
+            prose-p:text-foreground/80 prose-a:text-primary
+            prose-img:rounded-lg prose-blockquote:border-primary/20
+            [&>p]:mb-4 [&>h2]:mt-8 [&>h3]:mt-6"
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content, {
+            ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'div', 'span', 'pre', 'code', 'figure', 'figcaption', 'sup', 'sub'],
+            ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'style', 'target', 'rel', 'colspan', 'rowspan'],
+          }) }}
+        />
+      ) : null}
     </article>
   );
 }

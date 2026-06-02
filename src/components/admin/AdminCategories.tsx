@@ -12,6 +12,8 @@ import {
   SearchCode,
   Power,
   PowerOff,
+  FileText,
+  Download,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -53,6 +55,13 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { adminFetch } from '@/lib/admin-fetch';
 
@@ -66,6 +75,8 @@ interface Category {
   isActive: boolean;
   metaTitle: string | null;
   metaDescription: string | null;
+  customSchema?: string | null;
+  parentId?: string | null;
   _count?: { products: number };
 }
 
@@ -78,6 +89,8 @@ interface CategoryFormData {
   isActive: boolean;
   metaTitle: string;
   metaDescription: string;
+  customSchema: string;
+  parentId: string;
 }
 
 const emptyForm: CategoryFormData = {
@@ -89,6 +102,8 @@ const emptyForm: CategoryFormData = {
   isActive: true,
   metaTitle: '',
   metaDescription: '',
+  customSchema: '',
+  parentId: '',
 };
 
 function generateSlug(name: string): string {
@@ -118,6 +133,10 @@ export function AdminCategories() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkAction, setBulkAction] = useState<string | null>(null);
   const [bulkLoading, setBulkLoading] = useState(false);
+
+  // CSV import/export state
+  const [importing, setImporting] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -155,6 +174,8 @@ export function AdminCategories() {
       isActive: cat.isActive,
       metaTitle: cat.metaTitle || '',
       metaDescription: cat.metaDescription || '',
+      customSchema: cat.customSchema || '',
+      parentId: cat.parentId || '',
     });
     setSeoOpen(!!(cat.metaTitle || cat.metaDescription));
     setFormOpen(true);
@@ -185,6 +206,8 @@ export function AdminCategories() {
         isActive: form.isActive,
         metaTitle: form.metaTitle.trim() || null,
         metaDescription: form.metaDescription.trim() || null,
+        customSchema: form.customSchema.trim() || null,
+        parentId: form.parentId || null,
       };
 
       const url = editingCategory
@@ -283,6 +306,59 @@ export function AdminCategories() {
     setDeleteCategory(cat);
   };
 
+  const handleCSVImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await adminFetch('/api/categories/import', {
+        method: 'POST',
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(`Imported ${data.imported} category(ies)`);
+        if (data.errors && data.errors.length > 0) {
+          toast.warning(`${data.errors.length} error(s) during import`);
+        }
+        fetchCategories();
+      } else {
+        const err = await res.json();
+        toast.error(err.error || 'Import failed');
+      }
+    } catch {
+      toast.error('Import failed');
+    } finally {
+      setImporting(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleCSVExport = async () => {
+    setExporting(true);
+    try {
+      const res = await adminFetch('/api/categories/export');
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `categories-export-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success('Categories exported');
+      } else {
+        toast.error('Export failed');
+      }
+    } catch {
+      toast.error('Export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!deleteId) return;
     setDeleting(true);
@@ -312,10 +388,25 @@ export function AdminCategories() {
           <h2 className="text-2xl font-bold tracking-tight">Categories</h2>
           <p className="text-muted-foreground mt-1">Organize your products into categories</p>
         </div>
-        <Button onClick={handleOpenAdd}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Category
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <label className="cursor-pointer">
+            <input type="file" accept=".csv" className="hidden" onChange={handleCSVImport} disabled={importing} />
+            <Button variant="outline" size="sm" disabled={importing} asChild>
+              <span>
+                <FileText className="mr-1.5 h-3.5 w-3.5" />
+                {importing ? 'Importing...' : 'Import CSV'}
+              </span>
+            </Button>
+          </label>
+          <Button variant="outline" size="sm" disabled={exporting} onClick={handleCSVExport}>
+            <Download className="mr-1.5 h-3.5 w-3.5" />
+            {exporting ? 'Exporting...' : 'Export CSV'}
+          </Button>
+          <Button onClick={handleOpenAdd}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Category
+          </Button>
+        </div>
       </div>
 
       {/* Bulk Actions Toolbar */}
@@ -536,17 +627,38 @@ export function AdminCategories() {
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="cat-sort">Sort Order</Label>
-              <Input
-                id="cat-sort"
-                type="number"
-                placeholder="0"
-                value={form.sortOrder}
-                onChange={(e) =>
-                  setForm(prev => ({ ...prev, sortOrder: e.target.value }))
-                }
-              />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="cat-sort">Sort Order</Label>
+                <Input
+                  id="cat-sort"
+                  type="number"
+                  placeholder="0"
+                  value={form.sortOrder}
+                  onChange={(e) =>
+                    setForm(prev => ({ ...prev, sortOrder: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cat-parent">Parent Category</Label>
+                <Select
+                  value={form.parentId}
+                  onValueChange={(val) => setForm(prev => ({ ...prev, parentId: val }))}
+                >
+                  <SelectTrigger id="cat-parent">
+                    <SelectValue placeholder="No Parent" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No Parent</SelectItem>
+                    {categories
+                      .filter(c => c.id !== editingCategory?.id)
+                      .map(c => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
@@ -621,6 +733,19 @@ export function AdminCategories() {
                   <p className="text-xs text-muted-foreground">
                     Recommended: 150-160 characters for optimal SEO
                   </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cat-custom-schema">Custom JSON-LD Schema</Label>
+                  <Textarea
+                    id="cat-custom-schema"
+                    placeholder='{"@context": "https://schema.org", "@type": "CollectionPage", ...}'
+                    value={form.customSchema}
+                    onChange={(e) =>
+                      setForm(prev => ({ ...prev, customSchema: e.target.value }))
+                    }
+                    rows={3}
+                    className="font-mono text-xs"
+                  />
                 </div>
               </CollapsibleContent>
             </Collapsible>

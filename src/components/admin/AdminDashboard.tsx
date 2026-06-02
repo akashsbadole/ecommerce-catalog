@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import {
   ShoppingBag,
   LayoutDashboard,
+  BarChart3,
   Package,
   FolderOpen,
   MessageSquare,
@@ -55,6 +56,7 @@ import { AdminUsers } from '@/components/admin/AdminUsers';
 import { AdminActivityLog } from '@/components/admin/AdminActivityLog';
 import { AdminDataExport } from '@/components/admin/AdminDataExport';
 import { AdminSearchDialog } from '@/components/admin/AdminSearchDialog';
+import { AdminAnalytics } from '@/components/admin/AdminAnalytics';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { NotificationBell } from '@/components/admin/NotificationBell';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -68,6 +70,7 @@ interface AdminDashboardProps {
 
 const sidebarItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'products', label: 'Products', icon: Package },
   { id: 'categories', label: 'Categories', icon: FolderOpen },
   { id: 'enquiries', label: 'Enquiries', icon: MessageSquare },
@@ -276,6 +279,8 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
     switch (currentTab) {
       case 'dashboard':
         return <AdminDashboardHome onNavigate={handleQuickNav} />;
+      case 'analytics':
+        return <AdminAnalytics />;
       case 'products':
         return <AdminProducts />;
       case 'categories':

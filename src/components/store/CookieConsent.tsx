@@ -36,10 +36,10 @@ export function CookieConsent() {
       role="dialog"
       aria-label="Cookie consent"
     >
-      <div className="mx-auto max-w-4xl rounded-xl border border-emerald-200 bg-background/95 backdrop-blur-sm p-5 shadow-lg">
+      <div className="mx-auto max-w-4xl rounded-xl border border-primary/20 bg-background/95 backdrop-blur-sm p-5 shadow-lg">
         <div className="flex items-start gap-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100">
-            <Shield className="h-5 w-5 text-emerald-600" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+            <Shield className="h-5 w-5 text-primary" />
           </div>
 
           <div className="flex-1 space-y-2">
@@ -54,7 +54,7 @@ export function CookieConsent() {
               <Button
                 size="sm"
                 onClick={handleAcceptAll}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="bg-primary hover:bg-primary/80 text-white"
               >
                 Accept All
               </Button>
@@ -62,7 +62,7 @@ export function CookieConsent() {
                 size="sm"
                 variant="outline"
                 onClick={handleRejectNonEssential}
-                className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                className="border-primary/20 text-primary/80 hover:bg-primary/5"
               >
                 Reject Non-Essential
               </Button>

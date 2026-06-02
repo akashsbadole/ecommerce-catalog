@@ -45,6 +45,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { SocialShare } from './SocialShare';
+import { useAppStore } from '@/lib/store';
+import { calculateTieredPrice, formatPrice as libFormatPrice } from '@/lib/pricing';
+import { generateProductSchema } from '@/lib/seo/schema-generator';
 
 interface ProductVariant {
   id: string;
@@ -88,6 +91,8 @@ interface ProductDetailPageProps {
 }
 
 export function ProductDetailPage({ productId, onNavigate }: ProductDetailPageProps) {
+  const auth = useAppStore((state) => state.auth);
+  const settings = useAppStore((state) => state.settings);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -210,29 +215,8 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
     metaEl.setAttribute('content', metaDesc);
 
     // JSON-LD structured data
-    const images = getImages(product.images);
-    const jsonLd = {
-      '@context': 'https://schema.org',
-      '@type': 'Product',
-      name: product.name,
-      description: product.description || product.shortDescription || '',
-      sku: product.sku || undefined,
-      image: images.length > 0 ? images : undefined,
-      offers: {
-        '@type': 'Offer',
-        price: product.price,
-        priceCurrency: 'USD',
-        availability: 'https://schema.org/InStock',
-      },
-    };
-    if (product.wholesalePrice) {
-      (jsonLd.offers as Record<string, unknown>).priceSpecification = {
-        '@type': 'PriceSpecification',
-        price: product.wholesalePrice,
-        priceCurrency: 'USD',
-        name: 'Wholesale price',
-      };
-    }
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://purvabites.com';
+    const jsonLd = generateProductSchema(product, siteUrl);
 
     const scriptEl = document.createElement('script');
     scriptEl.type = 'application/ld+json';
@@ -266,11 +250,16 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
     }
   };
 
+  const userTier = auth.user?.tier;
+
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(price);
+    return libFormatPrice(price, siteSettings?.currency || 'USD');
+  };
+
+  const getEffectivePrice = (basePrice: number) => {
+    const isTieredEnabled = settings?.b2b_enable_tiered_pricing === 'true';
+    if (!isTieredEnabled) return basePrice;
+    return calculateTieredPrice(basePrice, userTier);
   };
 
   const isRFQ = form.enquiryType === 'rfq';
@@ -318,7 +307,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
             ? 'Quote request submitted! Our sales team will respond shortly.'
             : 'Your enquiry has been submitted successfully!',
           {
-            icon: <Check className="h-4 w-4 text-emerald-600" />,
+            icon: <Check className="h-4 w-4 text-primary" />,
           }
         );
         setForm({
@@ -450,7 +439,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                   onClick={() => setSelectedImage(idx)}
                   className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
                     idx === selectedImage
-                      ? 'border-emerald-600'
+                      ? 'border-primary'
                       : 'border-transparent hover:border-gray-300'
                   }`}
                 >
@@ -472,7 +461,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
           {product.Category && (
             <button
               onClick={() => onNavigate('catalogue')}
-              className="text-sm text-emerald-600 hover:text-emerald-700 uppercase tracking-wider w-fit transition-colors"
+              className="text-sm text-primary hover:text-primary/80 uppercase tracking-wider w-fit transition-colors"
             >
               {product.Category.name}
             </button>
@@ -487,28 +476,35 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
           </div>
 
           {/* Pricing */}
-          <div className="flex items-center gap-3">
-            <span className="text-3xl font-bold text-emerald-600">
-              {selectedVariant?.price ? formatPrice(selectedVariant.price) : formatPrice(product.price)}
-            </span>
-            {(() => {
-              const cp = selectedVariant?.comparePrice || product.comparePrice;
-              const sp = selectedVariant?.price || product.price;
-              if (cp && cp > sp) {
-                const pct = Math.round(((cp - sp) / cp) * 100);
-                return (
-                  <>
-                    <span className="text-xl text-muted-foreground line-through">
-                      {formatPrice(cp)}
-                    </span>
-                    <Badge variant="secondary" className="bg-rose-100 text-rose-700">
-                      Save {pct}%
-                    </Badge>
-                  </>
-                );
-              }
-              return null;
-            })()}
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl font-bold text-primary">
+                {formatPrice(getEffectivePrice(selectedVariant?.price || product.price))}
+              </span>
+              {(() => {
+                const cp = selectedVariant?.comparePrice || product.comparePrice;
+                const sp = getEffectivePrice(selectedVariant?.price || product.price);
+                if (cp && cp > sp) {
+                  const pct = Math.round(((cp - sp) / cp) * 100);
+                  return (
+                    <>
+                      <span className="text-xl text-muted-foreground line-through">
+                        {formatPrice(cp)}
+                      </span>
+                      <Badge variant="secondary" className="bg-rose-100 text-rose-700">
+                        Save {pct}%
+                      </Badge>
+                    </>
+                  );
+                }
+                return null;
+              })()}
+            </div>
+            {settings?.b2b_enable_tiered_pricing === 'true' && userTier && userTier !== 'standard' && (
+              <p className="text-xs font-medium text-primary">
+                Exclusive {userTier} tier price applied
+              </p>
+            )}
           </div>
 
           {/* Variant Selector */}
@@ -523,7 +519,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                     size="sm"
                     className={
                       selectedVariant?.id === v.id
-                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                        ? 'bg-primary hover:bg-primary/80 text-white'
                         : ''
                     }
                     onClick={() => {
@@ -572,7 +568,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                 if (stock <= threshold) {
                   return <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Only {stock} left in stock</Badge>;
                 }
-                return <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">In Stock</Badge>;
+                return <Badge variant="secondary" className="bg-primary/10 text-primary/80 dark:bg-primary-dark/30 dark:text-primary/40">In Stock</Badge>;
               })()}
             </div>
           )}
@@ -588,32 +584,75 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                 ) : stock <= threshold ? (
                   <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Only {stock} left</Badge>
                 ) : (
-                  <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">In Stock</Badge>
+                  <Badge variant="secondary" className="bg-primary/10 text-primary/80 dark:bg-primary-dark/30 dark:text-primary/40">In Stock</Badge>
                 )}
               </div>
             );
           })()}
 
           {/* B2B Pricing */}
-          {product.wholesalePrice && (
-            <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/30">
-              <CardContent className="p-4 flex items-start gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/50">
-                  <Package className="h-4.5 w-4.5 text-amber-700 dark:text-amber-400" />
+          {(product.wholesalePrice || (product.minOrderQty && product.minOrderQty > 1)) && (
+            <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/30 shadow-sm overflow-hidden">
+              <div className="bg-amber-100 dark:bg-amber-900/50 px-4 py-2 border-b border-amber-200 dark:border-amber-800 flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                  <Building2 className="h-3.5 w-3.5" />
+                  B2B Wholesale Program
+                </span>
+                <Badge variant="outline" className="bg-white/50 border-amber-300 text-amber-800 dark:bg-black/20 dark:text-amber-300">
+                  Active
+                </Badge>
+              </div>
+              <CardContent className="p-4 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white dark:bg-gray-800 shadow-sm">
+                    <Package className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-baseline justify-between">
+                      <p className="font-semibold text-amber-900 dark:text-amber-100 text-sm">Wholesale Pricing</p>
+                      {product.wholesalePrice && (
+                        <p className="text-lg font-bold text-primary dark:text-primary/40">
+                          {formatPrice(product.wholesalePrice)}
+                          <span className="text-xs font-normal text-muted-foreground ml-1">/ unit</span>
+                        </p>
+                      )}
+                    </div>
+                    <div className="mt-2 space-y-1.5">
+                      <p className="text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
+                        <Check className="h-3 w-3 text-primary/50" />
+                        Minimum order quantity: <span className="font-bold">{product.minOrderQty} units</span>
+                      </p>
+                      <p className="text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
+                        <Check className="h-3 w-3 text-primary/50" />
+                        Custom branding & private labeling available
+                      </p>
+                      <p className="text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
+                        <Check className="h-3 w-3 text-primary/50" />
+                        Global logistics and door-step delivery
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-semibold text-amber-800 dark:text-amber-300 text-sm">
-                    Wholesale Price
-                  </p>
-                  <p className="text-lg font-bold text-amber-700 dark:text-amber-200">
-                    {formatPrice(product.wholesalePrice)}
-                    <span className="text-xs font-normal text-amber-600 dark:text-amber-400 ml-2">
-                      per unit
-                    </span>
-                  </p>
-                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
-                    Min. order: {product.minOrderQty} unit{product.minOrderQty > 1 ? 's' : ''}
-                  </p>
+
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    className="flex-1 bg-amber-600 hover:bg-amber-700 text-white border-none shadow-sm h-9"
+                    onClick={() => {
+                      setForm(prev => ({ ...prev, enquiryType: 'rfq', quantity: String(product.minOrderQty || 10) }));
+                      const enquirySection = document.getElementById('enquiry-section');
+                      if (enquirySection) {
+                        enquirySection.scrollIntoView({ behavior: 'smooth' });
+                      } else {
+                        // Fallback: scroll to bottom of the page where the form is usually located
+                        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                      }
+                      setBusinessOpen(true);
+                    }}
+                  >
+                    <Send className="mr-2 h-3.5 w-3.5" />
+                    Request Bulk Quote
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -676,11 +715,11 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
       />
 
       {/* Enquiry Form */}
-      <Separator />
-      <Card className="max-w-2xl mx-auto w-full">
+      <Separator id="enquiry-section" />
+      <Card className="max-w-2xl mx-auto w-full shadow-lg border-primary/10 dark:border-primary-dark/30">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Send className="h-5 w-5 text-emerald-600" />
+            <Send className="h-5 w-5 text-primary" />
             Make an Enquiry
           </CardTitle>
         </CardHeader>
@@ -783,7 +822,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                     <Building2 className="h-4 w-4" />
                     Business Details
                     {(form.companyName || form.companyEmail) && (
-                      <span className="text-xs text-emerald-600 font-normal">(filled)</span>
+                      <span className="text-xs text-primary font-normal">(filled)</span>
                     )}
                   </span>
                   <ChevronRight className="h-4 w-4 transition-transform duration-200" />
@@ -856,7 +895,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
             <div className="grid gap-3 sm:grid-cols-2">
               <Button
                 type="submit"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="bg-primary hover:bg-primary/80 text-white"
                 disabled={submitting}
               >
                 {submitting ? (
@@ -917,7 +956,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                   </div>
                   <div className="p-3">
                     <p className="font-medium text-sm truncate">{rp.name}</p>
-                    <p className="text-emerald-600 font-semibold text-sm mt-1">{formatPrice(rp.price)}</p>
+                    <p className="text-primary font-semibold text-sm mt-1">{formatPrice(rp.price)}</p>
                     {rp.Category && (
                       <p className="text-xs text-muted-foreground mt-0.5 truncate">{rp.Category.name}</p>
                     )}

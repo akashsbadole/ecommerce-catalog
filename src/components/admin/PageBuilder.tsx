@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 import {
   DndContext,
   closestCenter,
@@ -12,14 +12,14 @@ import {
   DragOverEvent,
   DragStartEvent,
   PointerSensorOptions,
-} from '@dnd-kit/core';
+} from "@dnd-kit/core";
 import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
   useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   Image,
   LayoutGrid,
@@ -38,21 +38,41 @@ import {
   ChevronDown,
   ChevronUp,
   X,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
+  GalleryHorizontal,
+  Layers,
+  User,
+  TrendingUp,
+  Users,
+  Factory,
+  Video,
+  Award,
+  FormInput,
+  UserCircle,
+  Building,
+  ArrowDownToLine,
+  Newspaper,
+  CreditCard,
+  Eye,
+  Smartphone,
+  Tablet,
+  Monitor,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { MediaPickerField } from "@/components/admin/MediaPickerField";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,21 +82,53 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import type { PageBlock, BlockType } from '@/lib/page-blocks';
-import { BLOCK_DEFAULTS, createBlock } from '@/lib/page-blocks';
+} from "@/components/ui/alert-dialog";
+import dynamic from "next/dynamic";
+import type { PageBlock, BlockType } from "@/lib/page-blocks";
+import { BLOCK_DEFAULTS, createBlock } from "@/lib/page-blocks";
 
-const BLOCK_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+const PreviewRenderer = dynamic(
+  () =>
+    import("@/components/store/PageBlockRenderer").then((m) => ({
+      default: m.PageBlockRenderer,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="min-h-[400px] rounded-md border border-input bg-muted/30 animate-pulse" />
+    ),
+  },
+);
+
+const BLOCK_ICONS: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
   hero: Image,
   features: LayoutGrid,
   cta: MousePointerClick,
   testimonials: Quote,
-  'image-gallery': Images,
+  "image-gallery": Images,
   text: Type,
   spacer: MoveVertical,
   divider: Minus,
   products: Package,
   faq: HelpCircle,
+  slider: GalleryHorizontal,
+  "product-carousel": Layers,
+  about: User,
+  "trust-bar": TrendingUp,
+  "audience-cards": Users,
+  capabilities: Factory,
+  "product-categories": LayoutGrid,
+  "factory-reel": Video,
+  certifications: Award,
+  "lead-capture": FormInput,
+  leadership: UserCircle,
+  "partner-logos": Building,
+  "sticky-cta": ArrowDownToLine,
+  "blog-grid": Newspaper,
+  "pricing-table": CreditCard,
 };
 
 interface PageBuilderProps {
@@ -213,7 +265,7 @@ function BlockEditDialog({
   };
 
   const updateField = (key: string, value: unknown) => {
-    setLocalData(prev => ({ ...prev, [key]: value }));
+    setLocalData((prev) => ({ ...prev, [key]: value }));
   };
 
   if (!block) return null;
@@ -235,52 +287,55 @@ function BlockEditDialog({
         <ScrollArea className="max-h-[calc(90vh-140px)] pr-4">
           <div className="grid gap-4 py-4">
             {/* Common fields based on block type */}
-            {block.type === 'hero' && (
+            {block.type === "hero" && (
               <>
                 <div className="space-y-2">
                   <Label>Title</Label>
                   <Input
-                    value={(localData.title as string) || ''}
-                    onChange={(e) => updateField('title', e.target.value)}
+                    value={(localData.title as string) || ""}
+                    onChange={(e) => updateField("title", e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Subtitle</Label>
                   <Input
-                    value={(localData.subtitle as string) || ''}
-                    onChange={(e) => updateField('subtitle', e.target.value)}
+                    value={(localData.subtitle as string) || ""}
+                    onChange={(e) => updateField("subtitle", e.target.value)}
                   />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Button Text</Label>
                     <Input
-                      value={(localData.buttonText as string) || ''}
-                      onChange={(e) => updateField('buttonText', e.target.value)}
+                      value={(localData.buttonText as string) || ""}
+                      onChange={(e) =>
+                        updateField("buttonText", e.target.value)
+                      }
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Button Link</Label>
                     <Input
-                      value={(localData.buttonLink as string) || ''}
-                      onChange={(e) => updateField('buttonLink', e.target.value)}
+                      value={(localData.buttonLink as string) || ""}
+                      onChange={(e) =>
+                        updateField("buttonLink", e.target.value)
+                      }
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Background Image URL</Label>
-                  <Input
-                    value={(localData.backgroundImage as string) || ''}
-                    onChange={(e) => updateField('backgroundImage', e.target.value)}
-                  />
-                </div>
+                <MediaPickerField
+                  label="Background Image"
+                  value={(localData.backgroundImage as string) || ""}
+                  onChange={(v) => updateField("backgroundImage", v)}
+                  placeholder="Image URL"
+                />
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Height</Label>
                     <select
                       className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
-                      value={(localData.height as string) || 'medium'}
-                      onChange={(e) => updateField('height', e.target.value)}
+                      value={(localData.height as string) || "medium"}
+                      onChange={(e) => updateField("height", e.target.value)}
                     >
                       <option value="small">Small</option>
                       <option value="medium">Medium</option>
@@ -291,8 +346,8 @@ function BlockEditDialog({
                     <Label>Alignment</Label>
                     <select
                       className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
-                      value={(localData.alignment as string) || 'center'}
-                      onChange={(e) => updateField('alignment', e.target.value)}
+                      value={(localData.alignment as string) || "center"}
+                      onChange={(e) => updateField("alignment", e.target.value)}
                     >
                       <option value="left">Left</option>
                       <option value="center">Center</option>
@@ -303,13 +358,13 @@ function BlockEditDialog({
               </>
             )}
 
-            {block.type === 'features' && (
+            {block.type === "features" && (
               <>
                 <div className="space-y-2">
                   <Label>Title</Label>
                   <Input
-                    value={(localData.title as string) || ''}
-                    onChange={(e) => updateField('title', e.target.value)}
+                    value={(localData.title as string) || ""}
+                    onChange={(e) => updateField("title", e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -317,7 +372,9 @@ function BlockEditDialog({
                   <select
                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
                     value={(localData.columns as number) || 3}
-                    onChange={(e) => updateField('columns', Number(e.target.value))}
+                    onChange={(e) =>
+                      updateField("columns", Number(e.target.value))
+                    }
                   >
                     <option value={2}>2</option>
                     <option value={3}>3</option>
@@ -326,18 +383,28 @@ function BlockEditDialog({
                 </div>
                 <Separator />
                 <Label className="text-base font-semibold">Features</Label>
-                {((localData.features as Array<{ title: string; description: string; icon: string }>) || []).map((f, i) => (
+                {(
+                  (localData.features as Array<{
+                    title: string;
+                    description: string;
+                    icon: string;
+                  }>) || []
+                ).map((f, i) => (
                   <Card key={i} className="p-4 space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Feature {i + 1}</span>
+                      <span className="text-sm font-medium">
+                        Feature {i + 1}
+                      </span>
                       <Button
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 text-rose-600"
                         onClick={() => {
-                          const feats = [...((localData.features as Array<unknown>) || [])];
+                          const feats = [
+                            ...((localData.features as Array<unknown>) || []),
+                          ];
                           feats.splice(i, 1);
-                          updateField('features', feats);
+                          updateField("features", feats);
                         }}
                       >
                         <X className="h-3 w-3" />
@@ -347,27 +414,39 @@ function BlockEditDialog({
                       placeholder="Title"
                       value={f.title}
                       onChange={(e) => {
-                        const feats = [...((localData.features as Array<Record<string, string>>) || [])];
+                        const feats = [
+                          ...((localData.features as Array<
+                            Record<string, string>
+                          >) || []),
+                        ];
                         feats[i] = { ...feats[i], title: e.target.value };
-                        updateField('features', feats);
+                        updateField("features", feats);
                       }}
                     />
                     <Input
                       placeholder="Description"
                       value={f.description}
                       onChange={(e) => {
-                        const feats = [...((localData.features as Array<Record<string, string>>) || [])];
+                        const feats = [
+                          ...((localData.features as Array<
+                            Record<string, string>
+                          >) || []),
+                        ];
                         feats[i] = { ...feats[i], description: e.target.value };
-                        updateField('features', feats);
+                        updateField("features", feats);
                       }}
                     />
                     <Input
                       placeholder="Icon name (e.g. Star, Heart)"
                       value={f.icon}
                       onChange={(e) => {
-                        const feats = [...((localData.features as Array<Record<string, string>>) || [])];
+                        const feats = [
+                          ...((localData.features as Array<
+                            Record<string, string>
+                          >) || []),
+                        ];
                         feats[i] = { ...feats[i], icon: e.target.value };
-                        updateField('features', feats);
+                        updateField("features", feats);
                       }}
                     />
                   </Card>
@@ -376,8 +455,13 @@ function BlockEditDialog({
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    const feats = [...((localData.features as Array<Record<string, string>>) || []), { title: 'New Feature', description: '', icon: 'Star' }];
-                    updateField('features', feats);
+                    const feats = [
+                      ...((localData.features as Array<
+                        Record<string, string>
+                      >) || []),
+                      { title: "New Feature", description: "", icon: "Star" },
+                    ];
+                    updateField("features", feats);
                   }}
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -386,35 +470,39 @@ function BlockEditDialog({
               </>
             )}
 
-            {block.type === 'cta' && (
+            {block.type === "cta" && (
               <>
                 <div className="space-y-2">
                   <Label>Title</Label>
                   <Input
-                    value={(localData.title as string) || ''}
-                    onChange={(e) => updateField('title', e.target.value)}
+                    value={(localData.title as string) || ""}
+                    onChange={(e) => updateField("title", e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Description</Label>
                   <Input
-                    value={(localData.description as string) || ''}
-                    onChange={(e) => updateField('description', e.target.value)}
+                    value={(localData.description as string) || ""}
+                    onChange={(e) => updateField("description", e.target.value)}
                   />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Button Text</Label>
                     <Input
-                      value={(localData.buttonText as string) || ''}
-                      onChange={(e) => updateField('buttonText', e.target.value)}
+                      value={(localData.buttonText as string) || ""}
+                      onChange={(e) =>
+                        updateField("buttonText", e.target.value)
+                      }
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Button Link</Label>
                     <Input
-                      value={(localData.buttonLink as string) || ''}
-                      onChange={(e) => updateField('buttonLink', e.target.value)}
+                      value={(localData.buttonLink as string) || ""}
+                      onChange={(e) =>
+                        updateField("buttonLink", e.target.value)
+                      }
                     />
                   </div>
                 </div>
@@ -422,8 +510,10 @@ function BlockEditDialog({
                   <Label>Background Color</Label>
                   <select
                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
-                    value={(localData.backgroundColor as string) || 'emerald'}
-                    onChange={(e) => updateField('backgroundColor', e.target.value)}
+                    value={(localData.backgroundColor as string) || "emerald"}
+                    onChange={(e) =>
+                      updateField("backgroundColor", e.target.value)
+                    }
                   >
                     <option value="emerald">Emerald</option>
                     <option value="rose">Rose</option>
@@ -434,29 +524,37 @@ function BlockEditDialog({
               </>
             )}
 
-            {block.type === 'testimonials' && (
+            {block.type === "testimonials" && (
               <>
                 <div className="space-y-2">
                   <Label>Title</Label>
                   <Input
-                    value={(localData.title as string) || ''}
-                    onChange={(e) => updateField('title', e.target.value)}
+                    value={(localData.title as string) || ""}
+                    onChange={(e) => updateField("title", e.target.value)}
                   />
                 </div>
                 <Separator />
                 <Label className="text-base font-semibold">Testimonials</Label>
-                {((localData.testimonials as Array<Record<string, string>>) || []).map((t, i) => (
+                {(
+                  (localData.testimonials as Array<Record<string, string>>) ||
+                  []
+                ).map((t, i) => (
                   <Card key={i} className="p-4 space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Testimonial {i + 1}</span>
+                      <span className="text-sm font-medium">
+                        Testimonial {i + 1}
+                      </span>
                       <Button
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 text-rose-600"
                         onClick={() => {
-                          const items = [...((localData.testimonials as Array<unknown>) || [])];
+                          const items = [
+                            ...((localData.testimonials as Array<unknown>) ||
+                              []),
+                          ];
                           items.splice(i, 1);
-                          updateField('testimonials', items);
+                          updateField("testimonials", items);
                         }}
                       >
                         <X className="h-3 w-3" />
@@ -467,18 +565,26 @@ function BlockEditDialog({
                         placeholder="Name"
                         value={t.name}
                         onChange={(e) => {
-                          const items = [...((localData.testimonials as Array<Record<string, string>>) || [])];
+                          const items = [
+                            ...((localData.testimonials as Array<
+                              Record<string, string>
+                            >) || []),
+                          ];
                           items[i] = { ...items[i], name: e.target.value };
-                          updateField('testimonials', items);
+                          updateField("testimonials", items);
                         }}
                       />
                       <Input
                         placeholder="Role"
                         value={t.role}
                         onChange={(e) => {
-                          const items = [...((localData.testimonials as Array<Record<string, string>>) || [])];
+                          const items = [
+                            ...((localData.testimonials as Array<
+                              Record<string, string>
+                            >) || []),
+                          ];
                           items[i] = { ...items[i], role: e.target.value };
-                          updateField('testimonials', items);
+                          updateField("testimonials", items);
                         }}
                       />
                     </div>
@@ -487,19 +593,28 @@ function BlockEditDialog({
                       rows={2}
                       value={t.quote}
                       onChange={(e) => {
-                        const items = [...((localData.testimonials as Array<Record<string, string>>) || [])];
+                        const items = [
+                          ...((localData.testimonials as Array<
+                            Record<string, string>
+                          >) || []),
+                        ];
                         items[i] = { ...items[i], quote: e.target.value };
-                        updateField('testimonials', items);
+                        updateField("testimonials", items);
                       }}
                     />
-                    <Input
-                      placeholder="Avatar URL (optional)"
+                    <MediaPickerField
+                      label="Avatar (optional)"
                       value={t.avatar}
-                      onChange={(e) => {
-                        const items = [...((localData.testimonials as Array<Record<string, string>>) || [])];
-                        items[i] = { ...items[i], avatar: e.target.value };
-                        updateField('testimonials', items);
+                      onChange={(v) => {
+                        const items = [
+                          ...((localData.testimonials as Array<
+                            Record<string, string>
+                          >) || []),
+                        ];
+                        items[i] = { ...items[i], avatar: v };
+                        updateField("testimonials", items);
                       }}
+                      placeholder="Avatar URL"
                     />
                   </Card>
                 ))}
@@ -507,8 +622,18 @@ function BlockEditDialog({
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    const items = [...((localData.testimonials as Array<Record<string, string>>) || []), { name: 'Name', role: 'Role', quote: 'Quote', avatar: '' }];
-                    updateField('testimonials', items);
+                    const items = [
+                      ...((localData.testimonials as Array<
+                        Record<string, string>
+                      >) || []),
+                      {
+                        name: "Name",
+                        role: "Role",
+                        quote: "Quote",
+                        avatar: "",
+                      },
+                    ];
+                    updateField("testimonials", items);
                   }}
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -517,13 +642,13 @@ function BlockEditDialog({
               </>
             )}
 
-            {block.type === 'image-gallery' && (
+            {block.type === "image-gallery" && (
               <>
                 <div className="space-y-2">
                   <Label>Title</Label>
                   <Input
-                    value={(localData.title as string) || ''}
-                    onChange={(e) => updateField('title', e.target.value)}
+                    value={(localData.title as string) || ""}
+                    onChange={(e) => updateField("title", e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -531,7 +656,9 @@ function BlockEditDialog({
                   <select
                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
                     value={(localData.columns as number) || 3}
-                    onChange={(e) => updateField('columns', Number(e.target.value))}
+                    onChange={(e) =>
+                      updateField("columns", Number(e.target.value))
+                    }
                   >
                     <option value={2}>2</option>
                     <option value={3}>3</option>
@@ -539,26 +666,32 @@ function BlockEditDialog({
                   </select>
                 </div>
                 <Separator />
-                <Label className="text-base font-semibold">Image URLs</Label>
+                <Label className="text-base font-semibold">Images</Label>
                 {((localData.images as string[]) || []).map((img, i) => (
                   <div key={i} className="flex gap-2">
-                    <Input
-                      placeholder="Image URL"
-                      value={img}
-                      onChange={(e) => {
-                        const imgs = [...((localData.images as string[]) || [])];
-                        imgs[i] = e.target.value;
-                        updateField('images', imgs);
-                      }}
-                    />
+                    <div className="flex-1">
+                      <MediaPickerField
+                        value={img}
+                        onChange={(v) => {
+                          const imgs = [
+                            ...((localData.images as string[]) || []),
+                          ];
+                          imgs[i] = v;
+                          updateField("images", imgs);
+                        }}
+                        placeholder="Image URL"
+                      />
+                    </div>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-9 w-9 shrink-0 text-rose-600"
+                      className="h-9 w-9 shrink-0 text-rose-600 mt-6"
                       onClick={() => {
-                        const imgs = [...((localData.images as string[]) || [])];
+                        const imgs = [
+                          ...((localData.images as string[]) || []),
+                        ];
                         imgs.splice(i, 1);
-                        updateField('images', imgs);
+                        updateField("images", imgs);
                       }}
                     >
                       <X className="h-4 w-4" />
@@ -569,8 +702,11 @@ function BlockEditDialog({
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    const imgs = [...((localData.images as string[]) || []), ''];
-                    updateField('images', imgs);
+                    const imgs = [
+                      ...((localData.images as string[]) || []),
+                      "",
+                    ];
+                    updateField("images", imgs);
                   }}
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -579,22 +715,24 @@ function BlockEditDialog({
               </>
             )}
 
-            {block.type === 'text' && (
+            {block.type === "text" && (
               <div className="space-y-2">
                 <Label>HTML Content</Label>
                 <Textarea
                   rows={12}
-                  value={(localData.content as string) || ''}
-                  onChange={(e) => updateField('content', e.target.value)}
+                  value={(localData.content as string) || ""}
+                  onChange={(e) => updateField("content", e.target.value)}
                   placeholder="Enter HTML content..."
                 />
                 <p className="text-xs text-muted-foreground">
-                  Supports HTML tags: &lt;p&gt;, &lt;h1&gt;-&lt;h6&gt;, &lt;strong&gt;, &lt;em&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;a&gt;, etc.
+                  Supports HTML tags: &lt;p&gt;, &lt;h1&gt;-&lt;h6&gt;,
+                  &lt;strong&gt;, &lt;em&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;a&gt;,
+                  etc.
                 </p>
               </div>
             )}
 
-            {block.type === 'spacer' && (
+            {block.type === "spacer" && (
               <div className="space-y-2">
                 <Label>Height (px)</Label>
                 <Input
@@ -602,18 +740,20 @@ function BlockEditDialog({
                   min={8}
                   max={512}
                   value={(localData.height as number) || 64}
-                  onChange={(e) => updateField('height', Number(e.target.value))}
+                  onChange={(e) =>
+                    updateField("height", Number(e.target.value))
+                  }
                 />
               </div>
             )}
 
-            {block.type === 'divider' && (
+            {block.type === "divider" && (
               <div className="space-y-2">
                 <Label>Style</Label>
                 <select
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
-                  value={(localData.style as string) || 'solid'}
-                  onChange={(e) => updateField('style', e.target.value)}
+                  value={(localData.style as string) || "solid"}
+                  onChange={(e) => updateField("style", e.target.value)}
                 >
                   <option value="solid">Solid</option>
                   <option value="dashed">Dashed</option>
@@ -622,13 +762,13 @@ function BlockEditDialog({
               </div>
             )}
 
-            {block.type === 'products' && (
+            {block.type === "products" && (
               <>
                 <div className="space-y-2">
                   <Label>Title</Label>
                   <Input
-                    value={(localData.title as string) || ''}
-                    onChange={(e) => updateField('title', e.target.value)}
+                    value={(localData.title as string) || ""}
+                    onChange={(e) => updateField("title", e.target.value)}
                   />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -639,15 +779,17 @@ function BlockEditDialog({
                       min={1}
                       max={20}
                       value={(localData.maxProducts as number) || 6}
-                      onChange={(e) => updateField('maxProducts', Number(e.target.value))}
+                      onChange={(e) =>
+                        updateField("maxProducts", Number(e.target.value))
+                      }
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Layout</Label>
                     <select
                       className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
-                      value={(localData.layout as string) || 'grid'}
-                      onChange={(e) => updateField('layout', e.target.value)}
+                      value={(localData.layout as string) || "grid"}
+                      onChange={(e) => updateField("layout", e.target.value)}
                     >
                       <option value="grid">Grid</option>
                       <option value="list">List</option>
@@ -657,51 +799,472 @@ function BlockEditDialog({
               </>
             )}
 
-            {block.type === 'faq' && (
+            {block.type === "faq" && (
               <>
                 <div className="space-y-2">
                   <Label>Title</Label>
                   <Input
-                    value={(localData.title as string) || ''}
-                    onChange={(e) => updateField('title', e.target.value)}
+                    value={(localData.title as string) || ""}
+                    onChange={(e) => updateField("title", e.target.value)}
                   />
                 </div>
                 <Separator />
                 <Label className="text-base font-semibold">FAQ Items</Label>
-                {((localData.items as Array<Record<string, string>>) || []).map((item, i) => (
+                {((localData.items as Array<Record<string, string>>) || []).map(
+                  (item, i) => (
+                    <Card key={i} className="p-4 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">
+                          Item {i + 1}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-rose-600"
+                          onClick={() => {
+                            const items = [
+                              ...((localData.items as Array<unknown>) || []),
+                            ];
+                            items.splice(i, 1);
+                            updateField("items", items);
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <Input
+                        placeholder="Question"
+                        value={item.question}
+                        onChange={(e) => {
+                          const items = [
+                            ...((localData.items as Array<
+                              Record<string, string>
+                            >) || []),
+                          ];
+                          items[i] = { ...items[i], question: e.target.value };
+                          updateField("items", items);
+                        }}
+                      />
+                      <Textarea
+                        placeholder="Answer"
+                        rows={2}
+                        value={item.answer}
+                        onChange={(e) => {
+                          const items = [
+                            ...((localData.items as Array<
+                              Record<string, string>
+                            >) || []),
+                          ];
+                          items[i] = { ...items[i], answer: e.target.value };
+                          updateField("items", items);
+                        }}
+                      />
+                    </Card>
+                  ),
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const items = [
+                      ...((localData.items as Array<Record<string, string>>) ||
+                        []),
+                      { question: "", answer: "" },
+                    ];
+                    updateField("items", items);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Question
+                </Button>
+              </>
+            )}
+
+            {block.type === "slider" && (
+              <>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="slider-autoplay"
+                      checked={!!localData.autoplay}
+                      onCheckedChange={(val) => updateField("autoplay", !!val)}
+                    />
+                    <Label htmlFor="slider-autoplay">Autoplay</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label>Interval (ms)</Label>
+                    <Input
+                      type="number"
+                      className="w-24 h-8"
+                      value={(localData.interval as number) || 5000}
+                      onChange={(e) =>
+                        updateField("interval", Number(e.target.value))
+                      }
+                    />
+                  </div>
+                </div>
+                <Separator />
+                <Label className="text-base font-semibold">Slides</Label>
+                {((localData.items as Array<Record<string, string>>) || []).map(
+                  (slide, i) => (
+                    <Card key={i} className="p-4 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">
+                          Slide {i + 1}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-rose-600"
+                          onClick={() => {
+                            const slides = [
+                              ...((localData.items as Array<unknown>) || []),
+                            ];
+                            slides.splice(i, 1);
+                            updateField("items", slides);
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <MediaPickerField
+                        label="Image"
+                        value={slide.image}
+                        onChange={(v) => {
+                          const slides = [
+                            ...((localData.items as Array<
+                              Record<string, string>
+                            >) || []),
+                          ];
+                          slides[i] = { ...slides[i], image: v };
+                          updateField("items", slides);
+                        }}
+                        placeholder="Image URL"
+                      />
+                      <Input
+                        placeholder="Title"
+                        value={slide.title}
+                        onChange={(e) => {
+                          const slides = [
+                            ...((localData.items as Array<
+                              Record<string, string>
+                            >) || []),
+                          ];
+                          slides[i] = { ...slides[i], title: e.target.value };
+                          updateField("items", slides);
+                        }}
+                      />
+                      <Input
+                        placeholder="Subtitle"
+                        value={slide.subtitle}
+                        onChange={(e) => {
+                          const slides = [
+                            ...((localData.items as Array<
+                              Record<string, string>
+                            >) || []),
+                          ];
+                          slides[i] = {
+                            ...slides[i],
+                            subtitle: e.target.value,
+                          };
+                          updateField("items", slides);
+                        }}
+                      />
+                      <Input
+                        placeholder="Link (optional)"
+                        value={slide.link}
+                        onChange={(e) => {
+                          const slides = [
+                            ...((localData.items as Array<
+                              Record<string, string>
+                            >) || []),
+                          ];
+                          slides[i] = { ...slides[i], link: e.target.value };
+                          updateField("items", slides);
+                        }}
+                      />
+                    </Card>
+                  ),
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const slides = [
+                      ...((localData.items as Array<Record<string, string>>) ||
+                        []),
+                      { image: "", title: "Slide", subtitle: "", link: "" },
+                    ];
+                    updateField("items", slides);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Slide
+                </Button>
+              </>
+            )}
+
+            {block.type === "product-carousel" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Title</Label>
+                  <Input
+                    value={(localData.title as string) || ""}
+                    onChange={(e) => updateField("title", e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Max Products</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={(localData.maxProducts as number) || 10}
+                      onChange={(e) =>
+                        updateField("maxProducts", Number(e.target.value))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Category ID (optional)</Label>
+                    <Input
+                      value={(localData.categoryId as string) || ""}
+                      onChange={(e) =>
+                        updateField("categoryId", e.target.value)
+                      }
+                      placeholder="Leave empty for featured"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {block.type === "about" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Title</Label>
+                  <Input
+                    value={(localData.title as string) || ""}
+                    onChange={(e) => updateField("title", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Content (HTML)</Label>
+                  <Textarea
+                    rows={6}
+                    value={(localData.content as string) || ""}
+                    onChange={(e) => updateField("content", e.target.value)}
+                  />
+                </div>
+                <MediaPickerField
+                  label="Image"
+                  value={(localData.image as string) || ""}
+                  onChange={(v) => updateField("image", v)}
+                  placeholder="Image URL"
+                />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Image Position</Label>
+                    <select
+                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
+                      value={(localData.imagePosition as string) || "left"}
+                      onChange={(e) =>
+                        updateField("imagePosition", e.target.value)
+                      }
+                    >
+                      <option value="left">Left</option>
+                      <option value="right">Right</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Button Text</Label>
+                    <Input
+                      value={(localData.buttonText as string) || ""}
+                      onChange={(e) =>
+                        updateField("buttonText", e.target.value)
+                      }
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {block.type === "trust-bar" && (
+              <>
+                <Label className="text-base font-semibold">Statistics</Label>
+                {(
+                  (localData.stats as Array<{
+                    value: number;
+                    suffix: string;
+                    label: string;
+                  }>) || []
+                ).map((stat, i) => (
                   <Card key={i} className="p-4 space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Item {i + 1}</span>
+                      <span className="text-sm font-medium">Stat {i + 1}</span>
                       <Button
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 text-rose-600"
                         onClick={() => {
-                          const items = [...((localData.items as Array<unknown>) || [])];
-                          items.splice(i, 1);
-                          updateField('items', items);
+                          const arr = [
+                            ...((localData.stats as Array<unknown>) || []),
+                          ];
+                          arr.splice(i, 1);
+                          updateField("stats", arr);
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <Input
+                        placeholder="Value (number)"
+                        type="number"
+                        value={stat.value}
+                        onChange={(e) => {
+                          const arr = [
+                            ...((localData.stats as Array<
+                              Record<string, unknown>
+                            >) || []),
+                          ];
+                          arr[i] = { ...arr[i], value: Number(e.target.value) };
+                          updateField("stats", arr);
+                        }}
+                      />
+                      <Input
+                        placeholder="Suffix (e.g. +)"
+                        value={stat.suffix}
+                        onChange={(e) => {
+                          const arr = [
+                            ...((localData.stats as Array<
+                              Record<string, unknown>
+                            >) || []),
+                          ];
+                          arr[i] = { ...arr[i], suffix: e.target.value };
+                          updateField("stats", arr);
+                        }}
+                      />
+                      <Input
+                        placeholder="Label"
+                        value={stat.label}
+                        onChange={(e) => {
+                          const arr = [
+                            ...((localData.stats as Array<
+                              Record<string, unknown>
+                            >) || []),
+                          ];
+                          arr[i] = { ...arr[i], label: e.target.value };
+                          updateField("stats", arr);
+                        }}
+                      />
+                    </div>
+                  </Card>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const arr = [
+                      ...((localData.stats as Array<unknown>) || []),
+                      { value: 100, suffix: "+", label: "New stat" },
+                    ];
+                    updateField("stats", arr);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Add Stat
+                </Button>
+              </>
+            )}
+
+            {block.type === "audience-cards" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Section Label</Label>
+                  <Input
+                    value={(localData.label as string) || ""}
+                    onChange={(e) => updateField("label", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Heading</Label>
+                  <Input
+                    value={(localData.heading as string) || ""}
+                    onChange={(e) => updateField("heading", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Input
+                    value={(localData.description as string) || ""}
+                    onChange={(e) => updateField("description", e.target.value)}
+                  />
+                </div>
+                <Separator />
+                <Label className="text-base font-semibold">Cards</Label>
+                {(
+                  (localData.cards as Array<{
+                    title: string;
+                    description: string;
+                    cta: string;
+                  }>) || []
+                ).map((card, i) => (
+                  <Card key={i} className="p-4 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Card {i + 1}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-rose-600"
+                        onClick={() => {
+                          const arr = [
+                            ...((localData.cards as Array<unknown>) || []),
+                          ];
+                          arr.splice(i, 1);
+                          updateField("cards", arr);
                         }}
                       >
                         <X className="h-3 w-3" />
                       </Button>
                     </div>
                     <Input
-                      placeholder="Question"
-                      value={item.question}
+                      placeholder="Title"
+                      value={card.title}
                       onChange={(e) => {
-                        const items = [...((localData.items as Array<Record<string, string>>) || [])];
-                        items[i] = { ...items[i], question: e.target.value };
-                        updateField('items', items);
+                        const arr = [
+                          ...((localData.cards as Array<
+                            Record<string, string>
+                          >) || []),
+                        ];
+                        arr[i] = { ...arr[i], title: e.target.value };
+                        updateField("cards", arr);
                       }}
                     />
-                    <Textarea
-                      placeholder="Answer"
-                      rows={2}
-                      value={item.answer}
+                    <Input
+                      placeholder="Description"
+                      value={card.description}
                       onChange={(e) => {
-                        const items = [...((localData.items as Array<Record<string, string>>) || [])];
-                        items[i] = { ...items[i], answer: e.target.value };
-                        updateField('items', items);
+                        const arr = [
+                          ...((localData.cards as Array<
+                            Record<string, string>
+                          >) || []),
+                        ];
+                        arr[i] = { ...arr[i], description: e.target.value };
+                        updateField("cards", arr);
+                      }}
+                    />
+                    <Input
+                      placeholder="CTA text"
+                      value={card.cta}
+                      onChange={(e) => {
+                        const arr = [
+                          ...((localData.cards as Array<
+                            Record<string, string>
+                          >) || []),
+                        ];
+                        arr[i] = { ...arr[i], cta: e.target.value };
+                        updateField("cards", arr);
                       }}
                     />
                   </Card>
@@ -710,24 +1273,1028 @@ function BlockEditDialog({
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    const items = [...((localData.items as Array<Record<string, string>>) || []), { question: '', answer: '' }];
-                    updateField('items', items);
+                    const arr = [
+                      ...((localData.cards as Array<unknown>) || []),
+                      { title: "New", description: "", cta: "Enquire" },
+                    ];
+                    updateField("cards", arr);
                   }}
                 >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Question
+                  <Plus className="mr-2 h-4 w-4" /> Add Card
                 </Button>
               </>
             )}
+
+            {block.type === "capabilities" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Section Label</Label>
+                  <Input
+                    value={(localData.label as string) || ""}
+                    onChange={(e) => updateField("label", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Heading</Label>
+                  <Input
+                    value={(localData.heading as string) || ""}
+                    onChange={(e) => updateField("heading", e.target.value)}
+                  />
+                </div>
+                <Separator />
+                <Label className="text-base font-semibold">
+                  Capability Items
+                </Label>
+                {((localData.items as string[]) || []).map((item, i) => (
+                  <div key={i} className="flex gap-2">
+                    <Input
+                      value={item}
+                      onChange={(e) => {
+                        const arr = [...((localData.items as string[]) || [])];
+                        arr[i] = e.target.value;
+                        updateField("items", arr);
+                      }}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 shrink-0 text-rose-600"
+                      onClick={() => {
+                        const arr = [...((localData.items as string[]) || [])];
+                        arr.splice(i, 1);
+                        updateField("items", arr);
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const arr = [
+                      ...((localData.items as string[]) || []),
+                      "New capability",
+                    ];
+                    updateField("items", arr);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Add Item
+                </Button>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Image Caption</Label>
+                    <Input
+                      value={(localData.imageCaption as string) || ""}
+                      onChange={(e) =>
+                        updateField("imageCaption", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>CTA Text</Label>
+                    <Input
+                      value={(localData.ctaText as string) || ""}
+                      onChange={(e) => updateField("ctaText", e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>CTA Link</Label>
+                  <Input
+                    value={(localData.ctaLink as string) || ""}
+                    onChange={(e) => updateField("ctaLink", e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            {block.type === "product-categories" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Section Label</Label>
+                  <Input
+                    value={(localData.label as string) || ""}
+                    onChange={(e) => updateField("label", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Heading</Label>
+                  <Input
+                    value={(localData.heading as string) || ""}
+                    onChange={(e) => updateField("heading", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Input
+                    value={(localData.description as string) || ""}
+                    onChange={(e) => updateField("description", e.target.value)}
+                  />
+                </div>
+                <Separator />
+                <Label className="text-base font-semibold">Categories</Label>
+                {(
+                  (localData.categories as Array<{
+                    name: string;
+                    variants: string;
+                  }>) || []
+                ).map((cat, i) => (
+                  <Card key={i} className="p-4 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">
+                        Category {i + 1}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-rose-600"
+                        onClick={() => {
+                          const arr = [
+                            ...((localData.categories as Array<unknown>) || []),
+                          ];
+                          arr.splice(i, 1);
+                          updateField("categories", arr);
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <Input
+                      placeholder="Name"
+                      value={cat.name}
+                      onChange={(e) => {
+                        const arr = [
+                          ...((localData.categories as Array<
+                            Record<string, string>
+                          >) || []),
+                        ];
+                        arr[i] = { ...arr[i], name: e.target.value };
+                        updateField("categories", arr);
+                      }}
+                    />
+                    <Input
+                      placeholder="Variants (e.g. 12+ variants)"
+                      value={cat.variants}
+                      onChange={(e) => {
+                        const arr = [
+                          ...((localData.categories as Array<
+                            Record<string, string>
+                          >) || []),
+                        ];
+                        arr[i] = { ...arr[i], variants: e.target.value };
+                        updateField("categories", arr);
+                      }}
+                    />
+                  </Card>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const arr = [
+                      ...((localData.categories as Array<unknown>) || []),
+                      { name: "New", variants: "0 variants" },
+                    ];
+                    updateField("categories", arr);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Add Category
+                </Button>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>CTA Text</Label>
+                    <Input
+                      value={(localData.ctaText as string) || ""}
+                      onChange={(e) => updateField("ctaText", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>CTA Link</Label>
+                    <Input
+                      value={(localData.ctaLink as string) || ""}
+                      onChange={(e) => updateField("ctaLink", e.target.value)}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {block.type === "factory-reel" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Section Label</Label>
+                  <Input
+                    value={(localData.label as string) || ""}
+                    onChange={(e) => updateField("label", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Heading</Label>
+                  <Input
+                    value={(localData.heading as string) || ""}
+                    onChange={(e) => updateField("heading", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Input
+                    value={(localData.description as string) || ""}
+                    onChange={(e) => updateField("description", e.target.value)}
+                  />
+                </div>
+                <MediaPickerField
+                  label="Video Thumbnail"
+                  value={(localData.thumbnailUrl as string) || ""}
+                  onChange={(v) => updateField("thumbnailUrl", v)}
+                  placeholder="Thumbnail URL"
+                />
+                <div className="space-y-2">
+                  <Label>Heading</Label>
+                  <Input
+                    value={(localData.heading as string) || ""}
+                    onChange={(e) => updateField("heading", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Input
+                    value={(localData.description as string) || ""}
+                    onChange={(e) => updateField("description", e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Video URL</Label>
+                    <Input
+                      value={(localData.videoUrl as string) || ""}
+                      onChange={(e) => updateField("videoUrl", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Thumbnail URL</Label>
+                    <Input
+                      value={(localData.thumbnailUrl as string) || ""}
+                      onChange={(e) =>
+                        updateField("thumbnailUrl", e.target.value)
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>CTA Text</Label>
+                    <Input
+                      value={(localData.ctaText as string) || ""}
+                      onChange={(e) => updateField("ctaText", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>CTA Link</Label>
+                    <Input
+                      value={(localData.ctaLink as string) || ""}
+                      onChange={(e) => updateField("ctaLink", e.target.value)}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {block.type === "certifications" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Section Label</Label>
+                  <Input
+                    value={(localData.label as string) || ""}
+                    onChange={(e) => updateField("label", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Heading</Label>
+                  <Input
+                    value={(localData.heading as string) || ""}
+                    onChange={(e) => updateField("heading", e.target.value)}
+                  />
+                </div>
+                <Separator />
+                <Label className="text-base font-semibold">
+                  Certification Names
+                </Label>
+                {((localData.items as string[]) || []).map((cert, i) => (
+                  <div key={i} className="flex gap-2">
+                    <Input
+                      value={cert}
+                      onChange={(e) => {
+                        const arr = [...((localData.items as string[]) || [])];
+                        arr[i] = e.target.value;
+                        updateField("items", arr);
+                      }}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 shrink-0 text-rose-600"
+                      onClick={() => {
+                        const arr = [...((localData.items as string[]) || [])];
+                        arr.splice(i, 1);
+                        updateField("items", arr);
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const arr = [
+                      ...((localData.items as string[]) || []),
+                      "New cert",
+                    ];
+                    updateField("items", arr);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Add Certification
+                </Button>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>CTA Text</Label>
+                    <Input
+                      value={(localData.ctaText as string) || ""}
+                      onChange={(e) => updateField("ctaText", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>CTA Link</Label>
+                    <Input
+                      value={(localData.ctaLink as string) || ""}
+                      onChange={(e) => updateField("ctaLink", e.target.value)}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {block.type === "lead-capture" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Section Label (small text above heading)</Label>
+                  <Input
+                    value={(localData.label as string) || ""}
+                    onChange={(e) => updateField("label", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Heading</Label>
+                  <Input
+                    value={(localData.heading as string) || ""}
+                    onChange={(e) => updateField("heading", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Input
+                    value={(localData.description as string) || ""}
+                    onChange={(e) => updateField("description", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Submit Button Text</Label>
+                  <Input
+                    value={(localData.submitText as string) || ""}
+                    onChange={(e) => updateField("submitText", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Disclaimer</Label>
+                  <Input
+                    value={(localData.disclaimer as string) || ""}
+                    onChange={(e) => updateField("disclaimer", e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            {block.type === "leadership" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Section Label</Label>
+                  <Input
+                    value={(localData.label as string) || ""}
+                    onChange={(e) => updateField("label", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Heading</Label>
+                  <Input
+                    value={(localData.heading as string) || ""}
+                    onChange={(e) => updateField("heading", e.target.value)}
+                  />
+                </div>
+                <Separator />
+                <Label className="text-base font-semibold">Team Members</Label>
+                {(
+                  (localData.members as Array<{
+                    name: string;
+                    role: string;
+                    bio: string;
+                  }>) || []
+                ).map((member, i) => (
+                  <Card key={i} className="p-4 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">
+                        Member {i + 1}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-rose-600"
+                        onClick={() => {
+                          const arr = [
+                            ...((localData.members as Array<unknown>) || []),
+                          ];
+                          arr.splice(i, 1);
+                          updateField("members", arr);
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <Input
+                      placeholder="Name"
+                      value={member.name}
+                      onChange={(e) => {
+                        const arr = [
+                          ...((localData.members as Array<
+                            Record<string, string>
+                          >) || []),
+                        ];
+                        arr[i] = { ...arr[i], name: e.target.value };
+                        updateField("members", arr);
+                      }}
+                    />
+                    <Input
+                      placeholder="Role"
+                      value={member.role}
+                      onChange={(e) => {
+                        const arr = [
+                          ...((localData.members as Array<
+                            Record<string, string>
+                          >) || []),
+                        ];
+                        arr[i] = { ...arr[i], role: e.target.value };
+                        updateField("members", arr);
+                      }}
+                    />
+                    <Textarea
+                      placeholder="Bio"
+                      rows={2}
+                      value={member.bio}
+                      onChange={(e) => {
+                        const arr = [
+                          ...((localData.members as Array<
+                            Record<string, string>
+                          >) || []),
+                        ];
+                        arr[i] = { ...arr[i], bio: e.target.value };
+                        updateField("members", arr);
+                      }}
+                    />
+                  </Card>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const arr = [
+                      ...((localData.members as Array<unknown>) || []),
+                      { name: "Name", role: "Role", bio: "Bio" },
+                    ];
+                    updateField("members", arr);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Add Member
+                </Button>
+                <div className="space-y-2">
+                  <Label>CTA Text</Label>
+                  <Input
+                    value={(localData.ctaText as string) || ""}
+                    onChange={(e) => updateField("ctaText", e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            {block.type === "partner-logos" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Heading</Label>
+                  <Input
+                    value={(localData.heading as string) || ""}
+                    onChange={(e) => updateField("heading", e.target.value)}
+                  />
+                </div>
+                <Separator />
+                <Label className="text-base font-semibold">Testimonials</Label>
+                {(
+                  (localData.testimonials as Array<{
+                    quote: string;
+                    author: string;
+                  }>) || []
+                ).map((t, i) => (
+                  <Card key={i} className="p-4 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">
+                        Testimonial {i + 1}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-rose-600"
+                        onClick={() => {
+                          const arr = [
+                            ...((localData.testimonials as Array<unknown>) ||
+                              []),
+                          ];
+                          arr.splice(i, 1);
+                          updateField("testimonials", arr);
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <Textarea
+                      placeholder="Quote"
+                      rows={2}
+                      value={t.quote}
+                      onChange={(e) => {
+                        const arr = [
+                          ...((localData.testimonials as Array<
+                            Record<string, string>
+                          >) || []),
+                        ];
+                        arr[i] = { ...arr[i], quote: e.target.value };
+                        updateField("testimonials", arr);
+                      }}
+                    />
+                    <Input
+                      placeholder="Author"
+                      value={t.author}
+                      onChange={(e) => {
+                        const arr = [
+                          ...((localData.testimonials as Array<
+                            Record<string, string>
+                          >) || []),
+                        ];
+                        arr[i] = { ...arr[i], author: e.target.value };
+                        updateField("testimonials", arr);
+                      }}
+                    />
+                  </Card>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const arr = [
+                      ...((localData.testimonials as Array<unknown>) || []),
+                      { quote: "", author: "" },
+                    ];
+                    updateField("testimonials", arr);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Add Testimonial
+                </Button>
+                <div className="space-y-2">
+                  <Label>Number of Partner Logos to Display</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={20}
+                    value={(localData.logoCount as number) || 0}
+                    onChange={(e) =>
+                      updateField("logoCount", Number(e.target.value))
+                    }
+                  />
+                </div>
+              </>
+            )}
+
+            {block.type === "blog-grid" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Title</Label>
+                  <Input
+                    value={(localData.title as string) || ""}
+                    onChange={(e) => updateField("title", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Max Posts</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={(localData.maxPosts as number) || 6}
+                    onChange={(e) =>
+                      updateField("maxPosts", Number(e.target.value))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Layout</Label>
+                  <select
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
+                    value={(localData.layout as string) || "grid"}
+                    onChange={(e) => updateField("layout", e.target.value)}
+                  >
+                    <option value="grid">Grid</option>
+                    <option value="list">List</option>
+                    <option value="carousel">Carousel</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Category Filter (optional)</Label>
+                  <Input
+                    placeholder="Leave empty for all"
+                    value={(localData.categoryId as string) || ""}
+                    onChange={(e) => updateField("categoryId", e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={(localData.showFeatured as boolean) !== false}
+                    onCheckedChange={(checked) =>
+                      updateField("showFeatured", checked)
+                    }
+                  />
+                  <Label className="cursor-pointer">
+                    Show featured post first
+                  </Label>
+                </div>
+              </>
+            )}
+
+            {block.type === "pricing-table" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Title</Label>
+                  <Input
+                    value={(localData.title as string) || ""}
+                    onChange={(e) => updateField("title", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Input
+                    value={(localData.description as string) || ""}
+                    onChange={(e) => updateField("description", e.target.value)}
+                  />
+                </div>
+                <Separator />
+                <Label className="text-base font-semibold">Pricing Tiers</Label>
+                {(
+                  (localData.tiers as Array<{
+                    name: string;
+                    price: string;
+                    description: string;
+                    features: string[];
+                    ctaText: string;
+                    ctaLink: string;
+                    highlighted: boolean;
+                  }>) || []
+                ).map((tier, i) => (
+                  <Card key={i} className="p-4 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Tier {i + 1}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-rose-600"
+                        onClick={() => {
+                          const arr = [
+                            ...((localData.tiers as Array<unknown>) || []),
+                          ];
+                          arr.splice(i, 1);
+                          updateField("tiers", arr);
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <Input
+                        placeholder="Plan Name"
+                        value={tier.name}
+                        onChange={(e) => {
+                          const arr = [
+                            ...((localData.tiers as Array<
+                              Record<string, unknown>
+                            >) || []),
+                          ];
+                          arr[i] = { ...arr[i], name: e.target.value };
+                          updateField("tiers", arr);
+                        }}
+                      />
+                      <Input
+                        placeholder="Price (e.g. ₹999)"
+                        value={tier.price}
+                        onChange={(e) => {
+                          const arr = [
+                            ...((localData.tiers as Array<
+                              Record<string, unknown>
+                            >) || []),
+                          ];
+                          arr[i] = { ...arr[i], price: e.target.value };
+                          updateField("tiers", arr);
+                        }}
+                      />
+                    </div>
+                    <Input
+                      placeholder="Short description"
+                      value={tier.description}
+                      onChange={(e) => {
+                        const arr = [
+                          ...((localData.tiers as Array<
+                            Record<string, unknown>
+                          >) || []),
+                        ];
+                        arr[i] = { ...arr[i], description: e.target.value };
+                        updateField("tiers", arr);
+                      }}
+                    />
+                    <div className="space-y-2">
+                      <Label>Features (one per line)</Label>
+                      <Textarea
+                        rows={3}
+                        placeholder="Feature 1&#10;Feature 2&#10;Feature 3"
+                        value={(tier.features || []).join("\n")}
+                        onChange={(e) => {
+                          const arr = [
+                            ...((localData.tiers as Array<
+                              Record<string, unknown>
+                            >) || []),
+                          ];
+                          arr[i] = {
+                            ...arr[i],
+                            features: e.target.value
+                              .split("\n")
+                              .filter(Boolean),
+                          };
+                          updateField("tiers", arr);
+                        }}
+                      />
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <Input
+                        placeholder="CTA Text"
+                        value={tier.ctaText}
+                        onChange={(e) => {
+                          const arr = [
+                            ...((localData.tiers as Array<
+                              Record<string, unknown>
+                            >) || []),
+                          ];
+                          arr[i] = { ...arr[i], ctaText: e.target.value };
+                          updateField("tiers", arr);
+                        }}
+                      />
+                      <Input
+                        placeholder="CTA Link"
+                        value={tier.ctaLink}
+                        onChange={(e) => {
+                          const arr = [
+                            ...((localData.tiers as Array<
+                              Record<string, unknown>
+                            >) || []),
+                          ];
+                          arr[i] = { ...arr[i], ctaLink: e.target.value };
+                          updateField("tiers", arr);
+                        }}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        checked={tier.highlighted || false}
+                        onCheckedChange={(checked) => {
+                          const arr = [
+                            ...((localData.tiers as Array<
+                              Record<string, unknown>
+                            >) || []),
+                          ];
+                          arr[i] = { ...arr[i], highlighted: checked };
+                          updateField("tiers", arr);
+                        }}
+                      />
+                      <Label className="cursor-pointer">
+                        Highlight this tier (featured)
+                      </Label>
+                    </div>
+                  </Card>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const arr = [
+                      ...((localData.tiers as Array<unknown>) || []),
+                      {
+                        name: "New Plan",
+                        price: "₹___",
+                        description: "",
+                        features: ["Feature"],
+                        ctaText: "Get started",
+                        ctaLink: "/contact",
+                        highlighted: false,
+                      },
+                    ];
+                    updateField("tiers", arr);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Add Tier
+                </Button>
+              </>
+            )}
+
+            {block.type === "sticky-cta" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Text</Label>
+                  <Input
+                    value={(localData.text as string) || ""}
+                    onChange={(e) => updateField("text", e.target.value)}
+                  />
+                </div>
+                <Separator />
+                <Label className="text-base font-semibold">Buttons</Label>
+                {(
+                  (localData.buttons as Array<{
+                    text: string;
+                    type: string;
+                    action: string;
+                  }>) || []
+                ).map((btn, i) => (
+                  <Card key={i} className="p-4 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">
+                        Button {i + 1}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-rose-600"
+                        onClick={() => {
+                          const arr = [
+                            ...((localData.buttons as Array<unknown>) || []),
+                          ];
+                          arr.splice(i, 1);
+                          updateField("buttons", arr);
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <Input
+                      placeholder="Button Text"
+                      value={btn.text}
+                      onChange={(e) => {
+                        const arr = [
+                          ...((localData.buttons as Array<
+                            Record<string, string>
+                          >) || []),
+                        ];
+                        arr[i] = { ...arr[i], text: e.target.value };
+                        updateField("buttons", arr);
+                      }}
+                    />
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Type</Label>
+                        <select
+                          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
+                          value={btn.type}
+                          onChange={(e) => {
+                            const arr = [
+                              ...((localData.buttons as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            arr[i] = { ...arr[i], type: e.target.value };
+                            updateField("buttons", arr);
+                          }}
+                        >
+                          <option value="primary">Primary</option>
+                          <option value="whatsapp">WhatsApp</option>
+                          <option value="phone">Phone</option>
+                          <option value="ghost">Ghost</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Action</Label>
+                        <select
+                          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
+                          value={btn.action}
+                          onChange={(e) => {
+                            const arr = [
+                              ...((localData.buttons as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            arr[i] = { ...arr[i], action: e.target.value };
+                            updateField("buttons", arr);
+                          }}
+                        >
+                          <option value="enquiry">Open Enquiry</option>
+                          <option value="whatsapp">WhatsApp Link</option>
+                          <option value="phone">Phone Call</option>
+                          <option value="link">Custom Link</option>
+                        </select>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const arr = [
+                      ...((localData.buttons as Array<unknown>) || []),
+                      { text: "Button", type: "primary", action: "enquiry" },
+                    ];
+                    updateField("buttons", arr);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Add Button
+                </Button>
+              </>
+            )}
+
+            {/* Common Style Controls */}
+            <Separator className="my-2" />
+            <div className="space-y-3">
+              <Label className="text-base font-semibold">Style Settings</Label>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="space-y-2">
+                  <Label>Background Color</Label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      className="h-9 w-9 rounded-md border border-input cursor-pointer"
+                      value={(localData.bgColor as string) || "#ffffff"}
+                      onChange={(e) => updateField("bgColor", e.target.value)}
+                    />
+                    <Input
+                      placeholder="#ffffff"
+                      value={(localData.bgColor as string) || ""}
+                      onChange={(e) => updateField("bgColor", e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Padding Top</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={200}
+                    placeholder="px"
+                    value={(localData.paddingTop as number) ?? 80}
+                    onChange={(e) =>
+                      updateField("paddingTop", Number(e.target.value))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Padding Bottom</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={200}
+                    placeholder="px"
+                    value={(localData.paddingBottom as number) ?? 80}
+                    onChange={(e) =>
+                      updateField("paddingBottom", Number(e.target.value))
+                    }
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Custom CSS Class</Label>
+                <Input
+                  placeholder="e.g. max-w-4xl mx-auto"
+                  value={(localData.customClass as string) || ""}
+                  onChange={(e) => updateField("customClass", e.target.value)}
+                />
+              </div>
+            </div>
           </div>
         </ScrollArea>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>
-            Save Changes
-          </Button>
+          <Button onClick={handleSave}>Save Changes</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -743,16 +2310,38 @@ export function PageBuilder({ blocks, onChange }: PageBuilderProps) {
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const [editingBlock, setEditingBlock] = useState<PageBlock | null>(null);
   const [deleteBlock, setDeleteBlock] = useState<PageBlock | null>(null);
+  const [previewMode, setPreviewMode] = useState(false);
+  const [deviceSize, setDeviceSize] = useState<"desktop" | "tablet" | "mobile">(
+    "desktop",
+  );
 
-  const handleAddBlock = useCallback((type: BlockType) => {
-    const newBlock = createBlock(type);
-    onChange([...blocks, newBlock]);
-  }, [blocks, onChange]);
+  const deviceWidths: Record<string, string> = {
+    desktop: "w-full",
+    tablet: "max-w-[768px]",
+    mobile: "max-w-[375px]",
+  };
+
+  const deviceIcons: Record<
+    string,
+    React.ComponentType<{ className?: string }>
+  > = {
+    desktop: Monitor,
+    tablet: Tablet,
+    mobile: Smartphone,
+  };
+
+  const handleAddBlock = useCallback(
+    (type: BlockType) => {
+      const newBlock = createBlock(type);
+      onChange([...blocks, newBlock]);
+    },
+    [blocks, onChange],
+  );
 
   const handleDeleteBlock = useCallback(() => {
     if (!deleteBlock) return;
@@ -760,126 +2349,212 @@ export function PageBuilder({ blocks, onChange }: PageBuilderProps) {
     setDeleteBlock(null);
   }, [blocks, deleteBlock, onChange]);
 
-  const handleEditSave = useCallback((updatedBlock: PageBlock) => {
-    onChange(blocks.map((b) => (b.id === updatedBlock.id ? updatedBlock : b)));
-    setEditingBlock(null);
-  }, [blocks, onChange]);
+  const handleEditSave = useCallback(
+    (updatedBlock: PageBlock) => {
+      onChange(
+        blocks.map((b) => (b.id === updatedBlock.id ? updatedBlock : b)),
+      );
+      setEditingBlock(null);
+    },
+    [blocks, onChange],
+  );
 
-  const handleMoveUp = useCallback((index: number) => {
-    if (index <= 0) return;
-    const newBlocks = [...blocks];
-    [newBlocks[index - 1], newBlocks[index]] = [newBlocks[index], newBlocks[index - 1]];
-    onChange(newBlocks);
-  }, [blocks, onChange]);
+  const handleMoveUp = useCallback(
+    (index: number) => {
+      if (index <= 0) return;
+      const newBlocks = [...blocks];
+      [newBlocks[index - 1], newBlocks[index]] = [
+        newBlocks[index],
+        newBlocks[index - 1],
+      ];
+      onChange(newBlocks);
+    },
+    [blocks, onChange],
+  );
 
-  const handleMoveDown = useCallback((index: number) => {
-    if (index >= blocks.length - 1) return;
-    const newBlocks = [...blocks];
-    [newBlocks[index], newBlocks[index + 1]] = [newBlocks[index + 1], newBlocks[index]];
-    onChange(newBlocks);
-  }, [blocks, onChange]);
+  const handleMoveDown = useCallback(
+    (index: number) => {
+      if (index >= blocks.length - 1) return;
+      const newBlocks = [...blocks];
+      [newBlocks[index], newBlocks[index + 1]] = [
+        newBlocks[index + 1],
+        newBlocks[index],
+      ];
+      onChange(newBlocks);
+    },
+    [blocks, onChange],
+  );
 
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      const oldIndex = blocks.findIndex((b) => b.id === active.id);
-      const newIndex = blocks.findIndex((b) => b.id === over.id);
-      if (oldIndex !== -1 && newIndex !== -1) {
-        const newBlocks = [...blocks];
-        const [moved] = newBlocks.splice(oldIndex, 1);
-        newBlocks.splice(newIndex, 0, moved);
-        onChange(newBlocks);
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (over && active.id !== over.id) {
+        const oldIndex = blocks.findIndex((b) => b.id === active.id);
+        const newIndex = blocks.findIndex((b) => b.id === over.id);
+        if (oldIndex !== -1 && newIndex !== -1) {
+          const newBlocks = [...blocks];
+          const [moved] = newBlocks.splice(oldIndex, 1);
+          newBlocks.splice(newIndex, 0, moved);
+          onChange(newBlocks);
+        }
       }
-    }
-  }, [blocks, onChange]);
+    },
+    [blocks, onChange],
+  );
 
   const blockTypes = Object.keys(BLOCK_DEFAULTS) as BlockType[];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
-      {/* Sidebar: Add Block Panel */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Add Block</h3>
-        <p className="text-sm text-muted-foreground">Click to add a block to the end</p>
-        <ScrollArea className="h-[calc(100vh-320px)]">
-          <div className="space-y-2 pr-4">
-            {blockTypes.map((type) => {
-              const defaults = BLOCK_DEFAULTS[type];
-              const Icon = BLOCK_ICONS[type] || Type;
-              return (
-                <button
-                  key={type}
-                  className="flex w-full items-center gap-3 rounded-lg border bg-card p-3 text-left hover:bg-accent/50 transition-colors"
-                  onClick={() => handleAddBlock(type)}
-                >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-900/30">
-                    <Icon className="h-4 w-4 text-emerald-600" />
-                  </div>
-                  <span className="text-sm font-medium">{defaults.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </ScrollArea>
-      </div>
-
-      {/* Main: Block List */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">
-            Page Blocks
-            <span className="ml-2 text-sm font-normal text-muted-foreground">
-              ({blocks.length})
-            </span>
-          </h3>
-          {blocks.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-              onClick={() => onChange([])}
-            >
-              Clear All
-            </Button>
+    <div className="space-y-4">
+      {/* Toolbar: Preview Toggle & Device Size */}
+      <div className="flex items-center justify-between rounded-lg border bg-card p-3">
+        <div className="flex items-center gap-2">
+          <Button
+            variant={previewMode ? "default" : "outline"}
+            size="sm"
+            onClick={() => setPreviewMode(!previewMode)}
+          >
+            <Eye className="mr-2 h-4 w-4" />
+            {previewMode ? "Edit Blocks" : "Preview"}
+          </Button>
+          {previewMode && (
+            <div className="flex items-center gap-1 ml-2 border-l pl-2">
+              {(["desktop", "tablet", "mobile"] as const).map((device) => {
+                const DeviceIcon = deviceIcons[device];
+                return (
+                  <Button
+                    key={device}
+                    variant={deviceSize === device ? "secondary" : "ghost"}
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={() => setDeviceSize(device)}
+                    title={`${device.charAt(0).toUpperCase() + device.slice(1)} view`}
+                  >
+                    <DeviceIcon className="h-4 w-4" />
+                  </Button>
+                );
+              })}
+            </div>
           )}
         </div>
-
-        {blocks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center">
-            <LayoutGrid className="h-10 w-10 text-muted-foreground/50" />
-            <h4 className="mt-4 text-lg font-medium">No blocks yet</h4>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Click a block type from the left panel to start building your page
-            </p>
-          </div>
-        ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
+        {!previewMode && blocks.length > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+            onClick={() => onChange([])}
           >
-            <SortableContext
-              items={blocks.map((b) => b.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <div className="space-y-2">
-                {blocks.map((block, index) => (
-                  <SortableBlockCard
-                    key={block.id}
-                    block={block}
-                    index={index}
-                    total={blocks.length}
-                    onEdit={setEditingBlock}
-                    onDelete={setDeleteBlock}
-                    onMoveUp={handleMoveUp}
-                    onMoveDown={handleMoveDown}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
+            Clear All
+          </Button>
         )}
       </div>
+
+      {previewMode ? (
+        /* Live Preview */
+        <div className="flex justify-center">
+          <div
+            className={`${deviceWidths[deviceSize]} w-full rounded-lg border bg-white shadow-sm overflow-hidden`}
+          >
+            <div className="bg-muted px-4 py-2 text-xs text-muted-foreground border-b flex items-center gap-2">
+              <div className="flex gap-1.5">
+                <div className="h-2.5 w-2.5 rounded-full bg-rose-500" />
+                <div className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+              </div>
+              <span className="ml-2 font-medium">Preview — {deviceSize}</span>
+            </div>
+            {blocks.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
+                <LayoutGrid className="h-10 w-10 mb-2" />
+                <p>Add blocks to see preview</p>
+              </div>
+            ) : (
+              <PreviewRenderer blocks={blocks} />
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
+          {/* Sidebar: Add Block Panel */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Add Block</h3>
+            <p className="text-sm text-muted-foreground">
+              Click to add a block to the end
+            </p>
+            <ScrollArea className="h-[calc(100vh-400px)]">
+              <div className="space-y-2 pr-4">
+                {blockTypes.map((type) => {
+                  const defaults = BLOCK_DEFAULTS[type];
+                  const Icon = BLOCK_ICONS[type] || Type;
+                  return (
+                    <button
+                      key={type}
+                      className="flex w-full items-center gap-3 rounded-lg border bg-card p-3 text-left hover:bg-accent/50 transition-colors"
+                      onClick={() => handleAddBlock(type)}
+                    >
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-900/30">
+                        <Icon className="h-4 w-4 text-emerald-600" />
+                      </div>
+                      <span className="text-sm font-medium">
+                        {defaults.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          </div>
+
+          {/* Main: Block List */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">
+                Page Blocks
+                <span className="ml-2 text-sm font-normal text-muted-foreground">
+                  ({blocks.length})
+                </span>
+              </h3>
+            </div>
+
+            {blocks.length === 0 ? (
+              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center">
+                <LayoutGrid className="h-10 w-10 text-muted-foreground/50" />
+                <h4 className="mt-4 text-lg font-medium">No blocks yet</h4>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Click a block type from the left panel to start building your
+                  page
+                </p>
+              </div>
+            ) : (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={blocks.map((b) => b.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="space-y-2">
+                    {blocks.map((block, index) => (
+                      <SortableBlockCard
+                        key={block.id}
+                        block={block}
+                        index={index}
+                        total={blocks.length}
+                        onEdit={setEditingBlock}
+                        onDelete={setDeleteBlock}
+                        onMoveUp={handleMoveUp}
+                        onMoveDown={handleMoveDown}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Edit Dialog */}
       <BlockEditDialog
@@ -890,12 +2565,16 @@ export function PageBuilder({ blocks, onChange }: PageBuilderProps) {
       />
 
       {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteBlock} onOpenChange={() => setDeleteBlock(null)}>
+      <AlertDialog
+        open={!!deleteBlock}
+        onOpenChange={() => setDeleteBlock(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Block</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this block? This action cannot be undone.
+              Are you sure you want to delete this block? This action cannot be
+              undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

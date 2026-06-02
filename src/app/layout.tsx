@@ -1,17 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const viewport: Viewport = {
@@ -19,14 +21,15 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#09090b" },
+    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#0A0A0A" },
   ],
 };
 
 export const metadata: Metadata = {
   title: {
-    default: "Purva Bites - Premium Roasted Makhana, Dry Fruits & Healthy Snacks",
+    default:
+      "Purva Bites - Premium Roasted Makhana, Dry Fruits & Healthy Snacks",
     template: "%s | Purva Bites",
   },
   description:
@@ -50,7 +53,7 @@ export const metadata: Metadata = {
     apple: "/logo.png",
   },
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://your-domain.com"
+    process.env.NEXT_PUBLIC_SITE_URL || "https://your-domain.com",
   ),
   alternates: {
     canonical: "/",
@@ -101,12 +104,13 @@ export default function RootLayout({
         <meta name="format-detection" content="address=yes" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
+        className={`${inter.variable} ${playfair.variable} antialiased bg-background text-foreground`}
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="light"
+          // defaultTheme="system"
+          // enableSystem
           disableTransitionOnChange
         >
           {children}

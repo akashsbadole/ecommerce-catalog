@@ -124,7 +124,7 @@ export function EnquiryModal({
             ? 'Quote request submitted! Our sales team will respond shortly.'
             : 'Enquiry submitted successfully! We\'ll get back to you soon.',
           {
-            icon: <Check className="h-4 w-4 text-emerald-600" />,
+            icon: <Check className="h-4 w-4 text-primary" />,
           }
         );
         handleOpenChange(false);
@@ -144,7 +144,7 @@ export function EnquiryModal({
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Send className="h-5 w-5 text-emerald-600" />
+            <Send className="h-5 w-5 text-primary" />
             Enquire about this product
           </DialogTitle>
           <DialogDescription>
@@ -254,7 +254,7 @@ export function EnquiryModal({
                   <Building2 className="h-4 w-4" />
                   Business Details
                   {(form.companyName || form.companyEmail) && (
-                    <span className="text-xs text-emerald-600 font-normal">(filled)</span>
+                    <span className="text-xs text-primary font-normal">(filled)</span>
                   )}
                 </span>
                 <ChevronDown className="h-4 w-4 transition-transform duration-200" />
@@ -337,7 +337,7 @@ export function EnquiryModal({
           </Button>
           <Button
             onClick={handleSubmit as unknown as () => void}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            className="bg-primary hover:bg-primary/80 text-white"
             disabled={submitting}
           >
             {submitting ? (
