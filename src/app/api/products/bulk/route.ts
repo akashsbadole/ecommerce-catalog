@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+const MAX_BULK_SIZE = 100;
+
 export async function POST(request: NextRequest) {
   try {
     const { ids, action } = await request.json();
     if (!ids || !Array.isArray(ids) || ids.length === 0 || !action) {
       return NextResponse.json({ error: 'ids and action required' }, { status: 400 });
+    }
+    
+    if (ids.length > MAX_BULK_SIZE) {
+      return NextResponse.json({ error: `Maximum ${MAX_BULK_SIZE} items per bulk operation` }, { status: 400 });
     }
     switch (action) {
       case 'publish':

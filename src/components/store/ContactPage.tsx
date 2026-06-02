@@ -40,15 +40,16 @@ export function ContactPage({ settings }: ContactPageProps) {
 
   // SEO: set document title and meta description
   useEffect(() => {
-    document.title = 'Contact Us | StyleStore';
+    const siteName = settings?.site_name || 'StyleStore';
+    document.title = `Contact Us | ${siteName}`;
     let metaEl = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
     if (!metaEl) {
       metaEl = document.createElement('meta');
       metaEl.setAttribute('name', 'description');
       document.head.appendChild(metaEl);
     }
-    metaEl.setAttribute('content', 'Get in touch with StyleStore. Contact us for product enquiries, wholesale orders, and B2B partnerships.');
-  }, []);
+    metaEl.setAttribute('content', `Get in touch with ${siteName}. Contact us for product enquiries, wholesale orders, and B2B partnerships.`);
+  }, [settings]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

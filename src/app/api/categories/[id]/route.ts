@@ -82,11 +82,13 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const permanent = searchParams.get('permanent') === 'true';
 
     const existing = await db.category.findUnique({ where: { id } });
     if (!existing) {
@@ -96,10 +98,32 @@ export async function DELETE(
       );
     }
 
-    await db.category.delete({ where: { id } });
+    // Check if category has products
+    const productCount = await db.product.count({
+      where: { categoryId: id, deletedAt: null },
+    });
+
+    if (permanent) {
+      // Only allow permanent delete if no active products
+      if (productCount > 0) {
+        return NextResponse.json(
+          { error: `Cannot permanently delete category with ${productCount} active products. Remove or reassign products first.` },
+          { status: 400 }
+        );
+      }
+      await db.category.delete({ where: { id } });
+      return NextResponse.json({ message: 'Category permanently deleted' });
+    }
+
+    // Soft delete - just mark as inactive (Category model doesn't have deletedAt)
+    // Since Category doesn't have soft delete, we'll deactivate it
+    await db.category.update({
+      where: { id },
+      data: { isActive: false },
+    });
 
     return NextResponse.json({
-      message: 'Category deleted successfully',
+      message: 'Category deactivated successfully',
     });
   } catch (error) {
     console.error('Delete category error:', error);

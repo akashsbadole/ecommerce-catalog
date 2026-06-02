@@ -121,15 +121,16 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
 
   // SEO: set document title and meta description on mount
   useEffect(() => {
-    document.title = 'Product Catalogue | StyleStore';
+    const siteName = settings?.site_name || 'StyleStore';
+    document.title = `Product Catalogue | ${siteName}`;
     let metaEl = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
     if (!metaEl) {
       metaEl = document.createElement('meta');
       metaEl.setAttribute('name', 'description');
       document.head.appendChild(metaEl);
     }
-    metaEl.setAttribute('content', 'Browse our complete catalogue of premium products. Wholesale and bulk pricing available for B2B orders.');
-  }, []);
+    metaEl.setAttribute('content', `Browse our complete catalogue of premium products. Wholesale and bulk pricing available for B2B orders.`);
+  }, [settings]);
 
   const getFirstImage = (images: string) => {
     try {

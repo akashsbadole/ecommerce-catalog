@@ -14,6 +14,10 @@ import {
   Search,
   Building2,
   Info,
+  Store,
+  ShoppingCart,
+  Heart,
+  Tag,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -38,9 +42,11 @@ const defaultSettings: Settings = {
   site_email: '',
   site_phone: '',
   site_address: '',
+  whatsapp_number: '',
   facebook_url: '',
   instagram_url: '',
   twitter_url: '',
+  linkedin_url: '',
   smtp_host: '',
   smtp_port: '587',
   smtp_user: '',
@@ -58,6 +64,10 @@ const defaultSettings: Settings = {
   b2b_enable_tiered_pricing: 'false',
   b2b_enable_buyer_portal: 'false',
   b2b_verify_new_accounts: 'false',
+  catalog_mode: 'ecommerce',
+  catalog_show_prices: 'true',
+  catalog_enable_cart: 'true',
+  catalog_enable_wishlist: 'true',
 };
 
 export function AdminSettings() {
@@ -288,7 +298,7 @@ export function AdminSettings() {
               placeholder="https://instagram.com/yourpage"
             />
           </div>
-          <div className="space-y-2 sm:col-span-2">
+          <div className="space-y-2">
             <Label htmlFor="twitter_url">Twitter URL</Label>
             <Input
               id="twitter_url"
@@ -296,6 +306,27 @@ export function AdminSettings() {
               onChange={(e) => handleSettingChange('twitter_url', e.target.value)}
               placeholder="https://twitter.com/yourpage"
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="linkedin_url">LinkedIn URL</Label>
+            <Input
+              id="linkedin_url"
+              value={settings.linkedin_url}
+              onChange={(e) => handleSettingChange('linkedin_url', e.target.value)}
+              placeholder="https://linkedin.com/company/yourpage"
+            />
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="whatsapp_number">WhatsApp Number</Label>
+            <Input
+              id="whatsapp_number"
+              value={settings.whatsapp_number}
+              onChange={(e) => handleSettingChange('whatsapp_number', e.target.value)}
+              placeholder="+91 98765 43210"
+            />
+            <p className="text-xs text-muted-foreground">
+              Include country code. Used for WhatsApp button in sticky bar and product pages.
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -524,6 +555,98 @@ export function AdminSettings() {
               checked={settings.b2b_verify_new_accounts === 'true'}
               onCheckedChange={(checked) =>
                 handleSettingChange('b2b_verify_new_accounts', String(checked))
+              }
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Catalog / Ecommerce Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Store className="h-4 w-4" />
+            Catalog / Ecommerce
+          </CardTitle>
+          <CardDescription>
+            Choose how your store operates - full ecommerce with cart/checkout, or catalog-only with enquiry forms.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="catalog_mode" className="cursor-pointer">
+                Catalog Mode
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                When enabled, prices are hidden and customers submit enquiries instead of purchasing directly
+              </p>
+            </div>
+            <Switch
+              id="catalog_mode"
+              checked={settings.catalog_mode === 'catalog'}
+              onCheckedChange={(checked) =>
+                handleSettingChange('catalog_mode', checked ? 'catalog' : 'ecommerce')
+              }
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="catalog_show_prices" className="cursor-pointer">
+                <div className="flex items-center gap-1.5">
+                  <Tag className="h-3.5 w-3.5" />
+                  Show Prices
+                </div>
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Display product prices on the catalogue and product pages
+              </p>
+            </div>
+            <Switch
+              id="catalog_show_prices"
+              checked={settings.catalog_show_prices === 'true'}
+              onCheckedChange={(checked) =>
+                handleSettingChange('catalog_show_prices', String(checked))
+              }
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="catalog_enable_cart" className="cursor-pointer">
+                <div className="flex items-center gap-1.5">
+                  <ShoppingCart className="h-3.5 w-3.5" />
+                  Enable Cart
+                </div>
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Allow customers to add products to cart and checkout
+              </p>
+            </div>
+            <Switch
+              id="catalog_enable_cart"
+              checked={settings.catalog_enable_cart === 'true'}
+              onCheckedChange={(checked) =>
+                handleSettingChange('catalog_enable_cart', String(checked))
+              }
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="catalog_enable_wishlist" className="cursor-pointer">
+                <div className="flex items-center gap-1.5">
+                  <Heart className="h-3.5 w-3.5" />
+                  Enable Wishlist
+                </div>
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Allow customers to save products to their wishlist
+              </p>
+            </div>
+            <Switch
+              id="catalog_enable_wishlist"
+              checked={settings.catalog_enable_wishlist === 'true'}
+              onCheckedChange={(checked) =>
+                handleSettingChange('catalog_enable_wishlist', String(checked))
               }
             />
           </div>

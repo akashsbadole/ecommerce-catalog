@@ -28,9 +28,15 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      where.OR = [
-        { title: { contains: search } },
-        { excerpt: { contains: search } },
+      // Use AND to combine with existing filters instead of OR which overwrites
+      where.AND = [
+        ...(Array.isArray(where.AND) ? where.AND : []),
+        {
+          OR: [
+            { title: { contains: search } },
+            { excerpt: { contains: search } },
+          ],
+        },
       ];
     }
 

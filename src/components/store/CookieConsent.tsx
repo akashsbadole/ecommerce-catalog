@@ -9,7 +9,8 @@ export function CookieConsent() {
 
   useEffect(() => {
     const consent = localStorage.getItem('cookie-consent');
-    if (!consent) {
+    const dismissed = sessionStorage.getItem('cookie-consent-dismissed');
+    if (!consent && !dismissed) {
       setVisible(true);
     }
   }, []);
@@ -25,6 +26,10 @@ export function CookieConsent() {
   };
 
   const handleDismiss = () => {
+    // Use session storage to hide for current session only
+    // This prevents banner from reappearing on every page load
+    // but still shows on next visit (GDPR compliant)
+    sessionStorage.setItem('cookie-consent-dismissed', 'true');
     setVisible(false);
   };
 
@@ -32,7 +37,7 @@ export function CookieConsent() {
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-50 p-4 animate-in slide-in-from-bottom duration-300"
+      className="fixed bottom-0 left-0 right-0 z-[60] p-4 animate-in slide-in-from-bottom duration-300"
       role="dialog"
       aria-label="Cookie consent"
     >

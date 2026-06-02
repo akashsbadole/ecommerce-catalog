@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import DOMPurify from 'dompurify';
 import {
   ArrowLeft,
   ShoppingCart,
@@ -202,11 +203,14 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
   useEffect(() => {
     if (!product) return;
 
-    const title = product.metaTitle || `${product.name} | StyleStore`;
+    const siteName = settings?.site_name || 'StyleStore';
+    const prevTitle = document.title;
+    const title = product.metaTitle || `${product.name} | ${siteName}`;
     document.title = title;
 
-    const metaDesc = product.metaDescription || product.shortDescription || `Shop ${product.name} at StyleStore. Premium quality at competitive prices.`;
+    const metaDesc = product.metaDescription || product.shortDescription || `Shop ${product.name} at ${siteName}. Premium quality at competitive prices.`;
     let metaEl = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
+    const prevMetaContent = metaEl?.getAttribute('content') || '';
     if (!metaEl) {
       metaEl = document.createElement('meta');
       metaEl.setAttribute('name', 'description');
@@ -227,6 +231,8 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
     document.head.appendChild(scriptEl);
 
     return () => {
+      document.title = prevTitle;
+      if (metaEl) metaEl.setAttribute('content', prevMetaContent);
       const el = document.getElementById('product-jsonld');
       if (el) el.remove();
     };
@@ -675,11 +681,18 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
           )}
 
           {product.description && (
-            <div className="prose prose-sm max-w-none">
-              <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                {product.description}
-              </p>
-            </div>
+            <div
+              className="prose prose-sm max-w-none text-muted-foreground leading-relaxed"
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(product.description, {
+                  ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+                    'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'table', 'thead', 'tbody', 'tr', 'th', 'td',
+                    'hr', 'div', 'span', 'pre', 'code', 'figure', 'figcaption'],
+                  ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'style', 'target', 'rel',
+                    'colspan', 'rowspan'],
+                }),
+              }}
+            />
           )}
 
           {/* Specifications */}

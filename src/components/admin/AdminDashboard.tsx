@@ -192,6 +192,11 @@ function SidebarContent({
 export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminDashboardProps) {
   const isMobile = useIsMobile();
   const [currentTab, setCurrentTab] = useState(activeTab);
+
+  // Sync activeTab prop changes
+  useEffect(() => {
+    setCurrentTab(activeTab);
+  }, [activeTab]);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [changePwdOpen, setChangePwdOpen] = useState(false);

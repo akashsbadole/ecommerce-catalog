@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { db } from '@/lib/db';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { sendEmail } from '@/lib/email';
 
 // Max 5 requests per 15 minutes per IP
 const RESET_RATE_LIMIT = { maxRequests: 5, windowMs: 15 * 60 * 1000, prefix: 'forgot-password-post' };
@@ -49,9 +50,37 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // In a production app, you would send an email here with the reset link
-      // For now, the token is stored and can be verified via /api/auth/reset-password
-      console.log(`Password reset token for ${email}: ${token}`);
+      // Send email with reset link
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+      const resetUrl = `${siteUrl}/reset-password?token=${token}`;
+
+      const siteName = await db.siteSetting.findUnique({ where: { key: 'site_name' } });
+      const brandName = siteName?.value || 'Your Store';
+
+      const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #333;">Password Reset Request</h2>
+          <p style="color: #555; line-height: 1.6;">
+            We received a request to reset your password for your ${brandName} account.
+          </p>
+          <p style="color: #555; line-height: 1.6;">
+            Click the button below to reset your password. This link will expire in 1 hour.
+          </p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetUrl}" style="background-color: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+              Reset Password
+            </a>
+          </div>
+          <p style="color: #999; font-size: 12px;">
+            If you didn't request this, you can safely ignore this email.
+          </p>
+          <p style="color: #999; font-size: 12px;">
+            Or copy this link: ${resetUrl}
+          </p>
+        </div>
+      `;
+
+      await sendEmail(user.email, `Reset your ${brandName} password`, html);
     }
 
     return NextResponse.json({ success: true });

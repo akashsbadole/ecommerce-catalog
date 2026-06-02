@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
         isActive: validatedData.isActive ?? true,
         metaTitle: validatedData.metaTitle || null,
         metaDescription: validatedData.metaDescription || null,
-        customSchema: body.customSchema || null,
+        customSchema: (validatedData as Record<string, unknown>).customSchema as string || null,
         parentId: body.parentId || null,
       },
     });

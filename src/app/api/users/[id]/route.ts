@@ -62,7 +62,17 @@ export async function PUT(
       }
       data.email = trimmedEmail;
     }
-    if (role !== undefined) data.role = role;
+    if (role !== undefined) {
+      // Only allow admin or clerk roles
+      const userRole = request.headers.get('x-user-role');
+      if (userRole !== 'admin') {
+        return NextResponse.json({ error: 'Only admins can change user roles' }, { status: 403 });
+      }
+      if (!['admin', 'clerk'].includes(role)) {
+        return NextResponse.json({ error: 'Invalid role. Must be admin or clerk' }, { status: 400 });
+      }
+      data.role = role;
+    }
     if (isActive !== undefined) data.isActive = isActive;
 
     // Handle password change

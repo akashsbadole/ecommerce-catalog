@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import DOMPurify from "dompurify";
+import { useAppStore } from "@/lib/store";
 import {
   Image,
   LayoutGrid,
@@ -44,7 +45,53 @@ import {
   CreditCard,
   Check,
 } from "lucide-react";
-import * as LucideIcons from "lucide-react";
+
+// Curated icon map for dynamic resolution (instead of importing entire library)
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Image,
+  LayoutGrid,
+  MousePointerClick,
+  Quote,
+  Images,
+  Type,
+  MoveVertical,
+  Minus,
+  Package,
+  HelpCircle,
+  Star,
+  ChevronDown,
+  ShoppingCart,
+  ChevronLeft,
+  ChevronRight,
+  GalleryHorizontal,
+  Layers,
+  User,
+  TrendingUp,
+  Users,
+  Factory,
+  Video,
+  Award,
+  FormInput,
+  UserCircle,
+  Building,
+  ArrowDownToLine,
+  Building2,
+  ShieldCheck,
+  Clock,
+  Verified,
+  Play,
+  Phone,
+  MessageCircle,
+  Send,
+  ArrowRight,
+  Mail,
+  Newspaper,
+  CreditCard,
+  Check,
+  Heart: () => null, // Placeholder for wishlist icon
+  Lock: () => null, // Placeholder for security icon
+  Globe: () => null, // Placeholder for global icon
+};
 import { motion, useInView, animate } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -115,12 +162,7 @@ const SANITIZE_OPTIONS = {
 
 // Dynamic icon resolver
 function LucideIcon({ name, className }: { name: string; className?: string }) {
-  const IconComponent = (
-    LucideIcons as unknown as Record<
-      string,
-      React.ComponentType<{ className?: string }>
-    >
-  )[name];
+  const IconComponent = iconMap[name];
   if (IconComponent) {
     return <IconComponent className={className} />;
   }
@@ -413,9 +455,14 @@ function SpacerBlock({ data }: { data: Record<string, unknown> }) {
 
 function DividerBlock({ data }: { data: Record<string, unknown> }) {
   const style = (data.style as string) || "solid";
+  const borderClass = style === "dashed" 
+    ? "border-dashed" 
+    : style === "dotted" 
+    ? "border-dotted" 
+    : "border-solid";
   return (
     <hr
-      className={`my-8 border-${style === "dashed" ? "dashed" : style === "dotted" ? "dotted" : "solid"} border-border`}
+      className={`my-8 ${borderClass} border-border`}
     />
   );
 }
@@ -896,6 +943,7 @@ function FactoryReelBlock({
   const heading = (data.heading as string) || "";
   const description = (data.description as string) || "";
   const ctaText = (data.ctaText as string) || "";
+  const videoUrl = (data.videoUrl as string) || "";
 
   return (
     <section className="relative overflow-hidden bg-foreground/5">
@@ -924,11 +972,22 @@ function FactoryReelBlock({
             </p>
           )}
           <div className="relative max-w-3xl mx-auto aspect-video rounded-xl overflow-hidden bg-muted border">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-16 h-16 rounded-full bg-brand/90 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform">
-                <Play className="h-6 w-6 text-brand-foreground ml-0.5" />
+            {videoUrl ? (
+              <iframe
+                src={videoUrl}
+                className="absolute inset-0 w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                title={heading || "Factory reel video"}
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center text-muted-foreground">
+                  <Play className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Add a video URL in the block settings</p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
           {ctaText && (
             <Button
@@ -1150,7 +1209,7 @@ function LeadershipBlock({
   const label = (data.label as string) || "";
   const heading = (data.heading as string) || "";
   const members =
-    (data.members as Array<{ name: string; role: string; bio: string }>) || [];
+    (data.members as Array<{ name: string; role: string; bio: string; photo?: string }>) || [];
   const ctaText = (data.ctaText as string) || "";
 
   return (
@@ -1181,8 +1240,16 @@ function LeadershipBlock({
               transition={{ delay: i * 0.1, duration: 0.4 }}
               className="flex items-start gap-4 p-4 rounded-xl border"
             >
-              <div className="w-12 h-14 rounded-lg bg-muted flex-shrink-0 flex items-center justify-center">
-                <span className="text-xs text-muted-foreground">Photo</span>
+              <div className="w-12 h-14 rounded-lg bg-muted flex-shrink-0 flex items-center justify-center overflow-hidden">
+                {person.photo ? (
+                  <img
+                    src={person.photo}
+                    alt={person.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-xs text-muted-foreground">Photo</span>
+                )}
               </div>
               <div>
                 <h3 className="font-semibold text-sm">{person.name}</h3>
@@ -1222,7 +1289,47 @@ function PartnerLogosBlock({ data }: { data: Record<string, unknown> }) {
   const heading = (data.heading as string) || "";
   const testimonials =
     (data.testimonials as Array<{ quote: string; author: string }>) || [];
+  const logos = (data.logos as Array<{ url: string; alt?: string }>) || [];
   const logoCount = (data.logoCount as number) || 0;
+
+  const renderLogos = () => {
+    if (logos.length > 0) {
+      return (
+        <div className="flex flex-wrap justify-center gap-8 items-center border-t pt-8">
+          {logos.map((logo, i) => (
+            <div key={i} className="h-10 w-24 flex items-center justify-center">
+              {logo.url ? (
+                <img
+                  src={logo.url}
+                  alt={logo.alt || `Partner ${i + 1}`}
+                  className="max-h-full max-w-full object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all"
+                />
+              ) : (
+                <div className="h-8 w-16 rounded bg-muted border flex items-center justify-center text-xs text-muted-foreground">
+                  Logo {i + 1}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      );
+    }
+    if (logoCount > 0) {
+      return (
+        <div className="flex flex-wrap justify-center gap-8 items-center border-t pt-8">
+          {Array.from({ length: logoCount }).map((_, i) => (
+            <div
+              key={i}
+              className="h-8 w-16 rounded bg-muted border flex items-center justify-center text-xs text-muted-foreground"
+            >
+              Logo {i + 1}
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <section className="bg-muted/30 border-y">
@@ -1259,18 +1366,7 @@ function PartnerLogosBlock({ data }: { data: Record<string, unknown> }) {
               ))}
             </div>
           )}
-          {logoCount > 0 && (
-            <div className="flex flex-wrap justify-center gap-8 items-center border-t pt-8">
-              {Array.from({ length: logoCount }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-8 w-16 rounded bg-muted border flex items-center justify-center text-xs text-muted-foreground"
-                >
-                  Logo {i + 1}
-                </div>
-              ))}
-            </div>
-          )}
+          {renderLogos()}
         </motion.div>
       </div>
     </section>
@@ -1284,10 +1380,12 @@ function StickyCtaBlock({
   data: Record<string, unknown>;
   onNavigate?: (page: string, data?: unknown) => void;
 }) {
+  const { settings } = useAppStore();
   const text = (data.text as string) || "";
   const buttons =
     (data.buttons as Array<{ text: string; type: string; action: string }>) ||
     [];
+  const whatsappNumber = settings?.whatsapp_number || "";
 
   return (
     <div className="sticky bottom-0 z-30 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -1315,8 +1413,10 @@ function StickyCtaBlock({
               onClick={() => {
                 if (btn.action === "enquiry")
                   onNavigate && onNavigate("contact");
-                else if (btn.action === "whatsapp")
-                  window.open("https://wa.me/", "_blank");
+                else if (btn.action === "whatsapp" && whatsappNumber)
+                  window.open(`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, "")}`, "_blank");
+                else if (btn.action === "phone")
+                  window.open(`tel:${whatsappNumber}`);
               }}
             >
               {btn.type === "whatsapp" && (

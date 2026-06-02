@@ -204,6 +204,9 @@ model Product {
   Category          Category?        @relation(fields: [categoryId], references: [id])
   ProductVariant    ProductVariant[]
   ProductTier       ProductTier[]
+  CartItem          CartItem[]
+  WishlistItem      WishlistItem[]
+  OrderItem         OrderItem[]
 
   @@index([deletedAt])
 }
@@ -255,6 +258,99 @@ model SiteSetting {
   updatedAt DateTime @default(now())
 }
 
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  User      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+
+  @@unique([userId])
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  productId String
+  variantId String?
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  Product   Product  @relation(fields: [productId], references: [id])
+
+  @@unique([cartId, productId, variantId])
+}
+
+model Wishlist {
+  id        String         @id @default(cuid())
+  userId    String
+  createdAt DateTime       @default(now())
+  User      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     WishlistItem[]
+
+  @@unique([userId])
+}
+
+model WishlistItem {
+  id          String    @id @default(cuid())
+  wishlistId  String
+  productId   String
+  createdAt   DateTime  @default(now())
+  Wishlist    Wishlist  @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  Product     Product   @relation(fields: [productId], references: [id])
+
+  @@unique([wishlistId, productId])
+}
+
+model Order {
+  id             String      @id @default(cuid())
+  userId         String
+  orderNumber    String      @unique
+  status         String      @default("pending") // pending, confirmed, processing, shipped, delivered, cancelled
+  paymentStatus  String      @default("pending") // pending, paid, failed, refunded
+  paymentMethod  String?
+  subtotal       Float
+  shippingCost   Float       @default(0)
+  tax            Float       @default(0)
+  total          Float
+  currency       String      @default("USD")
+  shippingName   String?
+  shippingEmail  String?
+  shippingPhone  String?
+  shippingAddress String?
+  billingName    String?
+  billingEmail   String?
+  billingAddress String?
+  notes          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  User           User        @relation(fields: [userId], references: [id])
+  items          OrderItem[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([orderNumber])
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  productId   String
+  variantId   String?
+  name        String
+  sku         String?
+  price       Float
+  quantity    Int
+  total       Float
+  images      String   @default("[]")
+  Order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  Product     Product  @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+}
+
 model User {
   id                 String               @id @default(cuid())
   email              String               @unique
@@ -265,6 +361,8 @@ model User {
   companyName        String?
   taxId              String?
   businessAddress    String?
+  phone              String?
+  avatar             String?
   isVerified         Boolean              @default(false)
   tier               String               @default("standard") // standard, silver, gold, platinum
   documents          String               @default("[]") // JSON array of document URLs
@@ -274,4 +372,7 @@ model User {
   BlogPost           BlogPost[]
   Enquiry            Enquiry[]
   PasswordResetToken PasswordResetToken[]
+  Cart               Cart?
+  Wishlist           Wishlist?
+  Order              Order[]
 }

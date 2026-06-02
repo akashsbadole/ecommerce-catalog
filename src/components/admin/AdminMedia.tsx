@@ -49,6 +49,16 @@ import {
 import { toast } from 'sonner';
 import { adminFetch } from '@/lib/admin-fetch';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface MediaItem {
   id: string;
@@ -106,6 +116,7 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MediaItem | null>(null);
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState<MediaItem | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [editAltOpen, setEditAltOpen] = useState(false);
   const [editAlt, setEditAlt] = useState('');
@@ -258,7 +269,7 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
   };
 
   const handleDelete = async (item: MediaItem) => {
-    if (!confirm(`Delete "${item.originalName}"?`)) return;
+    setDeleteConfirmItem(null);
     try {
       const res = await adminFetch(`/api/media/${item.id}`, { method: 'DELETE' });
       if (res.ok) {
@@ -560,7 +571,7 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             className="text-destructive"
-                            onClick={() => handleDelete(item)}
+                            onClick={() => setDeleteConfirmItem(item)}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
@@ -906,6 +917,28 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
           </div>
         </DialogContent>
       </Dialog>
+
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteConfirmItem} onOpenChange={() => setDeleteConfirmItem(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Media</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this file? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteConfirmItem && handleDelete(deleteConfirmItem)}
+              className="bg-rose-600 hover:bg-rose-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -11,13 +11,70 @@ export type Page =
   | { type: "blog-post"; postId: string }
   | { type: "portal" }
   | { type: "admin-login" }
-  | { type: "admin"; activeTab: string };
+  | { type: "admin"; activeTab: string }
+  | { type: "cart" }
+  | { type: "wishlist" }
+  | { type: "orders" }
+  | { type: "order-detail"; orderId: string }
+  | { type: "account" }
+  | { type: "checkout" };
 
 interface AdminUser {
   id: string;
   email: string;
   name: string;
   role: string;
+}
+
+export interface CartItem {
+  id: string;
+  productId: string;
+  variantId: string | null;
+  quantity: number;
+  Product: {
+    id: string;
+    name: string;
+    slug: string;
+    price: number;
+    comparePrice: number | null;
+    images: string;
+    stock: number;
+    isActive: boolean;
+    minOrderQty: number;
+  };
+}
+
+export interface WishlistItem {
+  id: string;
+  productId: string;
+  createdAt: string;
+  Product: {
+    id: string;
+    name: string;
+    slug: string;
+    price: number;
+    comparePrice: number | null;
+    wholesalePrice: number | null;
+    images: string;
+    stock: number;
+    isActive: boolean;
+    isFeatured: boolean;
+    shortDescription: string | null;
+    Category: { id: string; name: string; slug: string } | null;
+  };
+}
+
+interface CartState {
+  items: CartItem[];
+  total: number;
+  itemCount: number;
+  loading: boolean;
+}
+
+interface WishlistState {
+  items: WishlistItem[];
+  itemCount: number;
+  loading: boolean;
 }
 
 interface AppState {
@@ -38,6 +95,7 @@ interface AppState {
           taxId?: string | null;
           businessPhone?: string | null;
           businessAddress?: string | null;
+          phone?: string | null;
         })
       | null;
     token: string | null;
@@ -51,6 +109,21 @@ interface AppState {
   settings: Record<string, string> | null;
   setSettings: (settings: Record<string, string>) => void;
   fetchSettings: () => Promise<void>;
+
+  // Cart
+  cart: CartState;
+  fetchCart: () => Promise<void>;
+  addToCart: (productId: string, quantity?: number, variantId?: string) => Promise<boolean>;
+  updateCartItem: (itemId: string, quantity: number) => Promise<void>;
+  removeFromCart: (itemId: string) => Promise<void>;
+  clearCart: () => Promise<void>;
+
+  // Wishlist
+  wishlist: WishlistState;
+  fetchWishlist: () => Promise<void>;
+  addToWishlist: (productId: string) => Promise<boolean>;
+  removeFromWishlist: (productId: string) => Promise<void>;
+  isInWishlist: (productId: string) => boolean;
 }
 
 export const useAppStore = create<AppState>()(
@@ -126,6 +199,38 @@ export const useAppStore = create<AppState>()(
             if (typeof window !== "undefined")
               window.history.pushState({}, "", "/admin");
             break;
+          case "cart":
+            set({ currentPage: { type: "cart" } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", "/cart");
+            break;
+          case "wishlist":
+            set({ currentPage: { type: "wishlist" } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", "/wishlist");
+            break;
+          case "orders":
+            set({ currentPage: { type: "orders" } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", "/orders");
+            break;
+          case "order-detail":
+            set({
+              currentPage: { type: "order-detail", orderId: data as string },
+            });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", `/orders/${data as string}`);
+            break;
+          case "account":
+            set({ currentPage: { type: "account" } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", "/account");
+            break;
+          case "checkout":
+            set({ currentPage: { type: "checkout" } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", "/checkout");
+            break;
         }
       },
 
@@ -157,14 +262,20 @@ export const useAppStore = create<AppState>()(
           adminToken:
             user.role === "admin" || user.role === "clerk" ? token : null,
         }),
-      logout: () =>
+      logout: () => {
         set({
           auth: { user: null, token: null },
           isAdmin: false,
           adminUser: null,
           adminToken: null,
           currentPage: { type: "home" },
-        }),
+          cart: { items: [], total: 0, itemCount: 0, loading: false },
+          wishlist: { items: [], itemCount: 0, loading: false },
+        });
+        // Clear cart and wishlist on server
+        fetch("/api/cart", { method: "DELETE" }).catch(() => {});
+        fetch("/api/wishlist", { method: "DELETE" }).catch(() => {});
+      },
 
       settings: null,
       setSettings: (settings) => set({ settings }),
@@ -178,6 +289,194 @@ export const useAppStore = create<AppState>()(
         } catch (error) {
           console.error("Failed to fetch settings:", error);
         }
+      },
+
+      // Cart
+      cart: { items: [], total: 0, itemCount: 0, loading: false },
+      fetchCart: async () => {
+        const { auth } = get();
+        if (!auth.token) {
+          set({ cart: { items: [], total: 0, itemCount: 0, loading: false } });
+          return;
+        }
+        set((state) => ({ cart: { ...state.cart, loading: true } }));
+        try {
+          const res = await fetch("/api/cart", {
+            headers: { Authorization: `Bearer ${auth.token}` },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            set({
+              cart: {
+                items: data.items || [],
+                total: data.total || 0,
+                itemCount: data.itemCount || 0,
+                loading: false,
+              },
+            });
+          }
+        } catch (error) {
+          console.error("Failed to fetch cart:", error);
+          set((state) => ({ cart: { ...state.cart, loading: false } }));
+        }
+      },
+      addToCart: async (productId, quantity = 1, variantId) => {
+        const { auth } = get();
+        if (!auth.token) {
+          // Redirect to login or show message
+          return false;
+        }
+        try {
+          const res = await fetch("/api/cart", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${auth.token}`,
+            },
+            body: JSON.stringify({ productId, quantity, variantId }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            set({
+              cart: {
+                items: data.items || [],
+                total: data.total || 0,
+                itemCount: data.itemCount || 0,
+                loading: false,
+              },
+            });
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error("Failed to add to cart:", error);
+          return false;
+        }
+      },
+      updateCartItem: async (itemId, quantity) => {
+        const { auth } = get();
+        if (!auth.token) return;
+        try {
+          const res = await fetch("/api/cart", {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${auth.token}`,
+            },
+            body: JSON.stringify({ itemId, quantity }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            set({
+              cart: {
+                items: data.items || [],
+                total: data.total || 0,
+                itemCount: data.itemCount || 0,
+                loading: false,
+              },
+            });
+          }
+        } catch (error) {
+          console.error("Failed to update cart item:", error);
+        }
+      },
+      removeFromCart: async (itemId) => {
+        const { auth } = get();
+        if (!auth.token) return;
+        try {
+          const res = await fetch(`/api/cart?itemId=${itemId}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${auth.token}` },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            // Re-fetch cart to get updated state
+            get().fetchCart();
+          }
+        } catch (error) {
+          console.error("Failed to remove from cart:", error);
+        }
+      },
+      clearCart: async () => {
+        const { auth } = get();
+        if (!auth.token) return;
+        try {
+          await fetch("/api/cart", {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${auth.token}` },
+          });
+          set({ cart: { items: [], total: 0, itemCount: 0, loading: false } });
+        } catch (error) {
+          console.error("Failed to clear cart:", error);
+        }
+      },
+
+      // Wishlist
+      wishlist: { items: [], itemCount: 0, loading: false },
+      fetchWishlist: async () => {
+        const { auth } = get();
+        if (!auth.token) {
+          set({ wishlist: { items: [], itemCount: 0, loading: false } });
+          return;
+        }
+        set((state) => ({ wishlist: { ...state.wishlist, loading: true } }));
+        try {
+          const res = await fetch("/api/wishlist", {
+            headers: { Authorization: `Bearer ${auth.token}` },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            set({
+              wishlist: {
+                items: data.items || [],
+                itemCount: data.itemCount || 0,
+                loading: false,
+              },
+            });
+          }
+        } catch (error) {
+          console.error("Failed to fetch wishlist:", error);
+          set((state) => ({ wishlist: { ...state.wishlist, loading: false } }));
+        }
+      },
+      addToWishlist: async (productId) => {
+        const { auth } = get();
+        if (!auth.token) return false;
+        try {
+          const res = await fetch("/api/wishlist", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${auth.token}`,
+            },
+            body: JSON.stringify({ productId }),
+          });
+          if (res.ok) {
+            get().fetchWishlist();
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error("Failed to add to wishlist:", error);
+          return false;
+        }
+      },
+      removeFromWishlist: async (productId) => {
+        const { auth } = get();
+        if (!auth.token) return;
+        try {
+          await fetch(`/api/wishlist?productId=${productId}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${auth.token}` },
+          });
+          get().fetchWishlist();
+        } catch (error) {
+          console.error("Failed to remove from wishlist:", error);
+        }
+      },
+      isInWishlist: (productId) => {
+        const { wishlist } = get();
+        return wishlist.items.some((item) => item.productId === productId);
       },
     }),
     {

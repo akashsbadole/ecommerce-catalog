@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   Menu,
@@ -11,6 +12,10 @@ import {
   User,
   LogOut,
   LayoutDashboard,
+  Heart,
+  ShoppingCart,
+  Package,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -29,6 +34,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -45,17 +56,64 @@ interface SearchResult {
   Category: { id: string; name: string } | null;
 }
 
+interface NavItem {
+  label: string;
+  page: string;
+  slug?: string;
+  children?: NavItem[];
+}
+
+function MobileNavItem({ link, onNavigate }: { link: NavItem; onNavigate: (page: string, data?: unknown) => void }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="flex flex-col">
+      <Button
+        variant="ghost"
+        className="justify-start text-base"
+        onClick={() => setOpen(!open)}
+      >
+        {link.label}
+        <ChevronDown className={`ml-auto h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
+      </Button>
+      {open && (
+        <div className="ml-4 flex flex-col gap-1">
+          {link.children?.map((child) => (
+            <SheetClose asChild key={child.slug}>
+              <Button
+                variant="ghost"
+                className="justify-start text-sm"
+                onClick={() => onNavigate(child.page, child.slug)}
+              >
+                {child.label}
+              </Button>
+            </SheetClose>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const navLinks = [
   { label: "Home", page: "home" },
-  { label: "About us", page: "content-page", slug: "about-us" },
   { label: "Manufacturing", page: "content-page", slug: "manufacturing" },
   { label: "Products", page: "content-page", slug: "products" },
   { label: "Catalogue", page: "catalogue" },
-  { label: "Contact", page: "content-page", slug: "contact" },
+  {
+    label: "About Us",
+    page: "content-page",
+    slug: "about-us",
+    children: [
+      { label: "About Us", page: "content-page", slug: "about-us" },
+      { label: "Contact Us", page: "content-page", slug: "contact" },
+    ],
+  },
 ];
 
 export function StoreHeader({ onNavigate }: StoreHeaderProps) {
-  const { auth, logout, settings } = useAppStore();
+  const { auth, logout, settings, cart, wishlist } = useAppStore();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -91,6 +149,13 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
     }, 0);
     return () => window.clearTimeout(resetTimer);
   }, [searchOpen]);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   const doSearch = useCallback(async (query: string) => {
     if (!query.trim()) {
@@ -129,7 +194,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: settings?.currency || "USD",
     }).format(price);
   };
 
@@ -163,16 +228,38 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
             role="navigation"
             aria-label="Main navigation"
           >
-            {navLinks.map((link) => (
-              <Button
-                key={link.slug || link.page}
-                variant="ghost"
-                className="text-sm font-medium"
-                onClick={() => onNavigate(link.page, link.slug)}
-              >
-                {link.label}
-              </Button>
-            ))}
+            {navLinks.map((link) =>
+              link.children ? (
+                <DropdownMenu key={link.slug || link.page}>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="text-sm font-medium">
+                      {link.label}
+                      <ChevronDown className="ml-1 h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {link.children.map((child) => (
+                      <DropdownMenuItem
+                        key={child.slug}
+                        onClick={() => onNavigate(child.page, child.slug)}
+                        className="cursor-pointer"
+                      >
+                        {child.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button
+                  key={link.slug || link.page}
+                  variant="ghost"
+                  className="text-sm font-medium"
+                  onClick={() => onNavigate(link.page, link.slug)}
+                >
+                  {link.label}
+                </Button>
+              ),
+            )}
             <Separator orientation="vertical" className="mx-2 h-6" />
             {/* Search Button */}
             <Button
@@ -187,6 +274,36 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                 <span className="text-xs">⌘</span>K
               </kbd>
             </Button>
+            {/* Wishlist Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative"
+              onClick={() => onNavigate("wishlist")}
+              aria-label="Wishlist"
+            >
+              <Heart className="h-5 w-5" />
+              {wishlist.itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] font-bold text-white flex items-center justify-center">
+                  {wishlist.itemCount > 99 ? "99+" : wishlist.itemCount}
+                </span>
+              )}
+            </Button>
+            {/* Cart Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative"
+              onClick={() => onNavigate("cart")}
+              aria-label="Shopping cart"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {cart.itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] font-bold text-white flex items-center justify-center">
+                  {cart.itemCount > 99 ? "99+" : cart.itemCount}
+                </span>
+              )}
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -199,25 +316,35 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
             {auth.user ? (
               <div className="flex items-center gap-2">
                 {settings?.b2b_enable_buyer_portal === "true" && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-sm flex items-center gap-1.5"
-                    onClick={() => onNavigate("portal")}
-                  >
-                    <LayoutDashboard className="h-4 w-4" />
-                    Portal
-                  </Button>
-                )}
-                {(auth.user.role === "admin" || auth.user.role === "clerk") && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-sm flex items-center gap-1.5"
-                    onClick={() => (window.location.href = "/admin")}
-                  >
-                    Admin
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-sm flex items-center gap-1.5"
+                      >
+                        <LayoutDashboard className="h-4 w-4" />
+                        Portal
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() => onNavigate("account")}
+                        className="cursor-pointer"
+                      >
+                        <User className="mr-2 h-4 w-4" />
+                        My Account
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onNavigate("orders")}
+                        className="cursor-pointer"
+                      >
+                        <Package className="mr-2 h-4 w-4" />
+                        Orders
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 )}
                 <Button
                   variant="ghost"
@@ -233,7 +360,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                 variant="outline"
                 size="sm"
                 className="text-sm"
-                onClick={() => (window.location.href = "/admin")}
+                onClick={() => router.push("/admin")}
               >
                 Login
               </Button>
@@ -252,7 +379,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2">
                   <ShoppingBag className="h-5 w-5 text-primary" />
-                  StyleStore
+                  {settings?.site_name || 'StyleStore'}
                 </SheetTitle>
               </SheetHeader>
               <nav
@@ -260,18 +387,48 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                 role="navigation"
                 aria-label="Mobile navigation"
               >
-                {navLinks.map((link) => (
-                  <SheetClose asChild key={link.slug || link.page}>
-                    <Button
-                      variant="ghost"
-                      className="justify-start text-base"
-                      onClick={() => onNavigate(link.page, link.slug)}
-                    >
-                      {link.label}
-                    </Button>
-                  </SheetClose>
-                ))}
+                {navLinks.map((link) =>
+                  link.children ? (
+                    <MobileNavItem
+                      key={link.slug || link.page}
+                      link={link}
+                      onNavigate={onNavigate}
+                    />
+                  ) : (
+                    <SheetClose asChild key={link.slug || link.page}>
+                      <Button
+                        variant="ghost"
+                        className="justify-start text-base"
+                        onClick={() => onNavigate(link.page, link.slug)}
+                      >
+                        {link.label}
+                      </Button>
+                    </SheetClose>
+                  ),
+                )}
                 <Separator className="my-2" />
+                {/* Mobile Cart & Wishlist */}
+                <SheetClose asChild>
+                  <Button
+                    variant="ghost"
+                    className="justify-start text-base"
+                    onClick={() => onNavigate("cart")}
+                  >
+                    <ShoppingCart className="mr-2 h-4 w-4" />
+                    Cart {cart.itemCount > 0 && `(${cart.itemCount})`}
+                  </Button>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Button
+                    variant="ghost"
+                    className="justify-start text-base"
+                    onClick={() => onNavigate("wishlist")}
+                  >
+                    <Heart className="mr-2 h-4 w-4" />
+                    Wishlist{" "}
+                    {wishlist.itemCount > 0 && `(${wishlist.itemCount})`}
+                  </Button>
+                </SheetClose>
                 <SheetClose asChild>
                   <Button
                     variant="outline"
@@ -295,28 +452,28 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                 {auth.user ? (
                   <>
                     {settings?.b2b_enable_buyer_portal === "true" && (
-                      <SheetClose asChild>
-                        <Button
-                          variant="ghost"
-                          className="justify-start text-base"
-                          onClick={() => onNavigate("portal")}
-                        >
-                          <LayoutDashboard className="mr-2 h-4 w-4" />
-                          Buyer Portal
-                        </Button>
-                      </SheetClose>
-                    )}
-                    {(auth.user.role === "admin" ||
-                      auth.user.role === "clerk") && (
-                      <SheetClose asChild>
-                        <Button
-                          variant="ghost"
-                          className="justify-start text-base"
-                          onClick={() => (window.location.href = "/admin")}
-                        >
-                          Admin Panel
-                        </Button>
-                      </SheetClose>
+                      <>
+                        <SheetClose asChild>
+                          <Button
+                            variant="ghost"
+                            className="justify-start text-base"
+                            onClick={() => onNavigate("account")}
+                          >
+                            <User className="mr-2 h-4 w-4" />
+                            My Account
+                          </Button>
+                        </SheetClose>
+                        <SheetClose asChild>
+                          <Button
+                            variant="ghost"
+                            className="justify-start text-base"
+                            onClick={() => onNavigate("orders")}
+                          >
+                            <Package className="mr-2 h-4 w-4" />
+                            Orders
+                          </Button>
+                        </SheetClose>
+                      </>
                     )}
                     <SheetClose asChild>
                       <Button
@@ -334,7 +491,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                     <Button
                       variant="outline"
                       className="justify-start text-base"
-                      onClick={() => (window.location.href = "/admin")}
+                      onClick={() => router.push("/admin")}
                     >
                       Login / Partner Access
                     </Button>

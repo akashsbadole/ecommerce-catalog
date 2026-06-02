@@ -1510,20 +1510,6 @@ function BlockEditDialog({
                   onChange={(v) => updateField("thumbnailUrl", v)}
                   placeholder="Thumbnail URL"
                 />
-                <div className="space-y-2">
-                  <Label>Heading</Label>
-                  <Input
-                    value={(localData.heading as string) || ""}
-                    onChange={(e) => updateField("heading", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Input
-                    value={(localData.description as string) || ""}
-                    onChange={(e) => updateField("description", e.target.value)}
-                  />
-                </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Video URL</Label>

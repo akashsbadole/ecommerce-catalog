@@ -2,11 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendEmail } from '@/lib/email';
 
+// Settings keys that should never be exposed to the public
+const SENSITIVE_KEYS = [
+  'smtp_password',
+  'jwt_secret',
+  'api_key',
+  'secret_key',
+  'access_token',
+  'private_key',
+];
+
 export async function GET() {
   try {
     const settings = await db.siteSetting.findMany();
     const settingsMap: Record<string, string> = {};
     for (const s of settings) {
+      // Skip sensitive keys in public response
+      if (SENSITIVE_KEYS.some(sk => s.key.toLowerCase().includes(sk))) {
+        continue;
+      }
       settingsMap[s.key] = s.value;
     }
     return NextResponse.json({ settings: settingsMap });

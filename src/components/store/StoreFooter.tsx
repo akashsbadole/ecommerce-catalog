@@ -205,7 +205,7 @@ export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
 
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
           <p className="text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()} StyleStore. All rights reserved.
+            &copy; {new Date().getFullYear()} {settings?.site_name || 'StyleStore'}. All rights reserved.
           </p>
           <p className="text-xs text-muted-foreground">
             Crafted with care for quality shopping.

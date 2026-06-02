@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       return {
         date,
         enquiries: count,
-        views: count * (10 + Math.floor(Math.random() * 50)) // Simulated views
+        views: count * 15 // Estimated views per enquiry (15:1 ratio)
       };
     });
 
@@ -66,7 +66,8 @@ export async function GET(request: NextRequest) {
       summary: {
         totalEnquiries: enquiries.length,
         newEnquiries: enquiries.filter(e => e.status === 'new').length,
-        conversionRate: enquiries.length > 0 ? (enquiries.length / (enquiries.length * 20) * 100).toFixed(1) : 0
+        conversionRate: enquiries.length > 0 ? 
+          ((enquiries.filter(e => e.status !== 'new').length / enquiries.length) * 100).toFixed(1) : 0
       }
     });
   } catch (error) {

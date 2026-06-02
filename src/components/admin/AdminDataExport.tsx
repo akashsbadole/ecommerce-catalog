@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Download, Package, FolderOpen, FileText, MessageSquare, Users, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { adminFetch } from '@/lib/admin-fetch';
 
 interface ExportItem {
@@ -52,10 +53,29 @@ export function AdminDataExport() {
     fetchCounts();
   }, []);
 
-  const handleExport = (type: string) => {
+  const handleExport = async (type: string) => {
     setExporting(type);
-    window.open(`/api/export?type=${type}`, '_blank');
-    setTimeout(() => setExporting(null), 2000);
+    try {
+      const res = await adminFetch(`/api/export?type=${type}`);
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${type}-export.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        toast.success(`${type} export downloaded`);
+      } else {
+        toast.error(`Failed to export ${type}`);
+      }
+    } catch {
+      toast.error(`Failed to export ${type}`);
+    } finally {
+      setExporting(null);
+    }
   };
 
   return (
