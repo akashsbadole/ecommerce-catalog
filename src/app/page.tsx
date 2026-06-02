@@ -17,6 +17,7 @@ import { OrdersPage } from '@/components/store/OrdersPage';
 import { OrderDetailPage } from '@/components/store/OrderDetailPage';
 import { AccountPage } from '@/components/store/AccountPage';
 import { CheckoutPage } from '@/components/store/CheckoutPage';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import BuyerPortalPage from '@/app/portal/page';
 
 export default function MainApp() {
@@ -164,7 +165,9 @@ export default function MainApp() {
 
   return (
     <StoreLayout currentPage={currentPage.type} onNavigate={navigate}>
-      {renderPage()}
+      <ErrorBoundary>
+        {renderPage()}
+      </ErrorBoundary>
     </StoreLayout>
   );
 }

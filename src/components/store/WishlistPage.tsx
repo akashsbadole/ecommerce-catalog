@@ -182,7 +182,7 @@ export function WishlistPage({ onNavigate }: WishlistPageProps) {
                 <Button
                   variant="secondary"
                   size="icon"
-                  className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white"
+                  className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white dark:bg-gray-800/90 dark:hover:bg-gray-800"
                   onClick={() => handleRemove(item.productId)}
                 >
                   <Trash2 className="h-3.5 w-3.5 text-rose-500" />

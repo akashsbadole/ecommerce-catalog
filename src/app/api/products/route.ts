@@ -13,6 +13,11 @@ export async function GET(request: NextRequest) {
     const slug = searchParams.get('slug');
     const trashed = searchParams.get('trashed');
 
+    // Pagination params
+    const cursor = searchParams.get('cursor');
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
+    const page = searchParams.get('page');
+
     const all = searchParams.get('all');
     const where: Record<string, unknown> = {};
 
@@ -28,7 +33,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      where.name = { contains: search };
+      where.OR = [
+        { name: { contains: search } },
+        { sku: { contains: search } },
+      ];
     }
 
     if (categoryId) {
@@ -52,13 +60,55 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const products = await db.product.findMany({
-      where,
-      include: { Category: true },
-      orderBy: { sortOrder: 'asc' },
+    // Cursor-based or page-based pagination
+    let products;
+    let nextCursor = null;
+    let total = 0;
+
+    if (cursor && !page) {
+      // Cursor-based pagination
+      products = await db.product.findMany({
+        where: { ...where, id: { gt: cursor } },
+        include: { Category: true },
+        orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
+        take: limit + 1,
+      });
+      if (products.length > limit) {
+        nextCursor = products.pop()?.id || null;
+      }
+      total = await db.product.count({ where });
+    } else {
+      // Page-based pagination (default, backward compatible)
+      const pageNum = Math.max(1, parseInt(page || '1'));
+      const skip = (pageNum - 1) * limit;
+
+      [products, total] = await Promise.all([
+        db.product.findMany({
+          where,
+          include: { Category: true },
+          orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
+          skip,
+          take: limit,
+        }),
+        db.product.count({ where }),
+      ]);
+    }
+
+    const response = NextResponse.json({
+      products,
+      pagination: {
+        total,
+        limit,
+        nextCursor,
+      },
     });
 
-    return NextResponse.json({ products });
+    // Cache public product listings for 5 minutes (revalidate in background)
+    if (!all && trashed !== 'true') {
+      response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    }
+
+    return response;
   } catch (error) {
     console.error('Get products error:', error);
     return NextResponse.json(

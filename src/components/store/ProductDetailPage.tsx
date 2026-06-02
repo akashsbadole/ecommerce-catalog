@@ -220,7 +220,8 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
 
     // JSON-LD structured data
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://purvabites.com';
-    const jsonLd = generateProductSchema(product, siteUrl);
+    const brandName = settings?.site_name || 'Store';
+    const jsonLd = generateProductSchema(product, siteUrl, brandName);
 
     const scriptEl = document.createElement('script');
     scriptEl.type = 'application/ld+json';
@@ -446,7 +447,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                   className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
                     idx === selectedImage
                       ? 'border-primary'
-                      : 'border-transparent hover:border-gray-300'
+                      : 'border-transparent hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
                   <Image

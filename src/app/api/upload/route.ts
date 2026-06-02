@@ -2,13 +2,28 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+const ALLOWED_TYPES = [
+  'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
+  'application/pdf',
+  'text/csv',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-excel',
+];
+const MAX_FILES_PER_REQUEST = 20;
+
+// Max 30 uploads per hour per IP
+const UPLOAD_RATE_LIMIT = { maxRequests: 30, windowMs: 60 * 60 * 1000, prefix: 'upload' };
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const rateLimitResponse = checkRateLimit(request, UPLOAD_RATE_LIMIT);
+    if (rateLimitResponse) return rateLimitResponse;
+
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
     const folder = (formData.get('folder') as string) || '/';
@@ -17,8 +32,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No files provided' }, { status: 400 });
     }
 
+    if (files.length > MAX_FILES_PER_REQUEST) {
+      return NextResponse.json({ error: `Too many files (max ${MAX_FILES_PER_REQUEST})` }, { status: 400 });
+    }
+
+    // Sanitize folder path to prevent path traversal
+    const safeFolder = folder.replace(/\.\./g, '').replace(/^\/+/, '').replace(/\/+$/, '') || '/';
+
     // Ensure upload directory exists
-    const targetDir = path.join(UPLOAD_DIR, folder);
+    const targetDir = path.join(UPLOAD_DIR, safeFolder);
     await mkdir(targetDir, { recursive: true });
 
     const results: Array<{ filename: string; id?: string; url?: string; size?: number; error?: string }> = [];
@@ -27,13 +49,13 @@ export async function POST(request: NextRequest) {
       try {
         // Validate file size
         if (file.size > MAX_FILE_SIZE) {
-          results.push({ filename: file.name, error: 'File too large (max 10MB)' });
+          results.push({ filename: file.name, error: `File too large (max ${MAX_FILE_SIZE / 1024 / 1024}MB)` });
           continue;
         }
 
         // Validate file type
         if (!ALLOWED_TYPES.includes(file.type)) {
-          results.push({ filename: file.name, error: 'File type not allowed' });
+          results.push({ filename: file.name, error: `File type not allowed. Allowed: images, PDF, CSV, Excel` });
           continue;
         }
 
@@ -47,7 +69,7 @@ export async function POST(request: NextRequest) {
         await writeFile(filepath, buffer);
 
         // Save to database
-        const url = `/uploads${folder === '/' ? '' : folder}/${filename}`;
+        const url = `/uploads${safeFolder === '/' ? '' : safeFolder}/${filename}`;
         const media = await db.media.create({
           data: {
             filename,
@@ -55,7 +77,7 @@ export async function POST(request: NextRequest) {
             mimeType: file.type,
             size: file.size,
             url,
-            folder,
+            folder: safeFolder,
           },
         });
 

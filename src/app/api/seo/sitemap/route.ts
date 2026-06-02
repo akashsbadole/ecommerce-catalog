@@ -19,7 +19,7 @@ export async function GET() {
         orderBy: { updatedAt: 'desc' },
       }),
       db.category.findMany({
-        where: { isActive: true },
+        where: { isActive: true, deletedAt: null },
         select: { slug: true, updatedAt: true },
         orderBy: { updatedAt: 'desc' },
       }),

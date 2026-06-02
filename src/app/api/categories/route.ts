@@ -7,7 +7,14 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const all = searchParams.get('all');
+    const includeDeleted = searchParams.get('includeDeleted');
     const where: Record<string, unknown> = {};
+
+    // Always exclude soft-deleted unless explicitly requested
+    if (!includeDeleted) {
+      where.deletedAt = null;
+    }
+
     if (!all) {
       where.isActive = true;
     }
@@ -18,7 +25,14 @@ export async function GET(request: NextRequest) {
       include: all ? { _count: { select: { Product: true } } } : undefined,
     });
 
-    return NextResponse.json({ categories });
+    const response = NextResponse.json({ categories });
+
+    // Cache public category listings for 10 minutes
+    if (!includeDeleted) {
+      response.headers.set('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=1200');
+    }
+
+    return response;
   } catch (error) {
     console.error('Get categories error:', error);
     return NextResponse.json(
@@ -41,8 +55,10 @@ export async function POST(request: NextRequest) {
     }
     const validatedData = result.data;
 
-    // Check slug uniqueness
-    const existingSlug = await db.category.findUnique({ where: { slug: validatedData.slug } });
+    // Check slug uniqueness (excluding soft-deleted)
+    const existingSlug = await db.category.findFirst({
+      where: { slug: validatedData.slug, deletedAt: null },
+    });
     if (existingSlug) {
       return NextResponse.json({ error: 'Slug already in use' }, { status: 409 });
     }

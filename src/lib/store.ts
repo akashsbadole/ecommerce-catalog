@@ -256,11 +256,11 @@ export const useAppStore = create<AppState>()(
       login: (user, token) =>
         set({
           auth: { user, token },
-          isAdmin: user.role === "admin" || user.role === "clerk",
+          isAdmin: user.role === "admin" || user.role === "clerk" || user.role === "editor",
           adminUser:
-            user.role === "admin" || user.role === "clerk" ? user : null,
+            user.role === "admin" || user.role === "clerk" || user.role === "editor" ? user : null,
           adminToken:
-            user.role === "admin" || user.role === "clerk" ? token : null,
+            user.role === "admin" || user.role === "clerk" || user.role === "editor" ? token : null,
         }),
       logout: () => {
         set({

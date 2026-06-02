@@ -68,8 +68,8 @@ export async function PUT(
       if (userRole !== 'admin') {
         return NextResponse.json({ error: 'Only admins can change user roles' }, { status: 403 });
       }
-      if (!['admin', 'clerk'].includes(role)) {
-        return NextResponse.json({ error: 'Invalid role. Must be admin or clerk' }, { status: 400 });
+      if (!['admin', 'clerk', 'editor'].includes(role)) {
+        return NextResponse.json({ error: 'Invalid role. Must be admin, clerk, or editor' }, { status: 400 });
       }
       data.role = role;
     }

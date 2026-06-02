@@ -7,8 +7,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const category = await db.category.findUnique({
-      where: { id },
+    const category = await db.category.findFirst({
+      where: { id, deletedAt: null },
     });
     if (!category) {
       return NextResponse.json({ error: 'Category not found' }, { status: 404 });
@@ -27,7 +27,7 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
-    const existing = await db.category.findUnique({ where: { id } });
+    const existing = await db.category.findFirst({ where: { id, deletedAt: null } });
     if (!existing) {
       return NextResponse.json(
         { error: 'Category not found' },
@@ -38,7 +38,7 @@ export async function PUT(
     // Check slug uniqueness if slug is being updated
     if (body.slug !== undefined && body.slug !== existing.slug) {
       const slugExists = await db.category.findFirst({
-        where: { slug: body.slug, NOT: { id } },
+        where: { slug: body.slug, NOT: { id }, deletedAt: null },
       });
       if (slugExists) {
         return NextResponse.json({ error: 'Slug already in use' }, { status: 409 });
@@ -90,7 +90,7 @@ export async function DELETE(
     const { searchParams } = new URL(request.url);
     const permanent = searchParams.get('permanent') === 'true';
 
-    const existing = await db.category.findUnique({ where: { id } });
+    const existing = await db.category.findFirst({ where: { id, deletedAt: null } });
     if (!existing) {
       return NextResponse.json(
         { error: 'Category not found' },
@@ -115,15 +115,14 @@ export async function DELETE(
       return NextResponse.json({ message: 'Category permanently deleted' });
     }
 
-    // Soft delete - just mark as inactive (Category model doesn't have deletedAt)
-    // Since Category doesn't have soft delete, we'll deactivate it
+    // Soft delete - set deletedAt timestamp
     await db.category.update({
       where: { id },
-      data: { isActive: false },
+      data: { deletedAt: new Date(), isActive: false },
     });
 
     return NextResponse.json({
-      message: 'Category deactivated successfully',
+      message: 'Category deleted successfully',
     });
   } catch (error) {
     console.error('Delete category error:', error);

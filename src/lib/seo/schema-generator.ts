@@ -1,5 +1,5 @@
 
-export function generateProductSchema(product: any, siteUrl: string) {
+export function generateProductSchema(product: any, siteUrl: string, brandName?: string) {
   const images = (() => {
     try {
       const arr = JSON.parse(product.images || '[]');
@@ -18,14 +18,14 @@ export function generateProductSchema(product: any, siteUrl: string) {
     image: images,
     brand: {
       '@type': 'Brand',
-      name: 'Purva Bites'
+      name: brandName || 'Store'
     },
     offers: {
       '@type': 'Offer',
       url: `${siteUrl}/product/${product.slug}`,
       priceCurrency: 'INR',
       price: product.price,
-      availability: 'https://schema.org/InStock'
+      availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'
     }
   };
 

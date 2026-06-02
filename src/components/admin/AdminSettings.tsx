@@ -20,6 +20,9 @@ import {
   Tag,
   Upload,
   Image,
+  CreditCard,
+  Download,
+  Database,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -31,6 +34,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { adminFetch } from '@/lib/admin-fetch';
+import { AdminImport } from '@/components/admin/AdminImport';
+import { AdminBackup } from '@/components/admin/AdminBackup';
 
 interface Settings {
   [key: string]: string;
@@ -71,6 +76,10 @@ const defaultSettings: Settings = {
   catalog_show_prices: 'true',
   catalog_enable_cart: 'true',
   catalog_enable_wishlist: 'true',
+  payment_razorpay_enabled: 'false',
+  payment_razorpay_key_id: '',
+  payment_razorpay_key_secret: '',
+  payment_razorpay_mode: 'test',
 };
 
 export function AdminSettings() {
@@ -794,6 +803,93 @@ export function AdminSettings() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Payment Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <CreditCard className="h-4 w-4" />
+            Payment Gateway (Razorpay)
+          </CardTitle>
+          <CardDescription>
+            Configure Razorpay to accept online payments. Get API keys from{' '}
+            <a href="https://dashboard.razorpay.com/" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+              Razorpay Dashboard
+            </a>
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="payment_razorpay_enabled" className="cursor-pointer">
+                Enable Razorpay
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Accept payments via Razorpay (UPI, Cards, Netbanking, Wallets)
+              </p>
+            </div>
+            <Switch
+              id="payment_razorpay_enabled"
+              checked={settings.payment_razorpay_enabled === 'true'}
+              onCheckedChange={(checked) =>
+                handleSettingChange('payment_razorpay_enabled', String(checked))
+              }
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="payment_razorpay_mode" className="cursor-pointer">
+                Test Mode
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Use test keys for development. Switch to Live for production.
+              </p>
+            </div>
+            <Switch
+              id="payment_razorpay_mode"
+              checked={settings.payment_razorpay_mode === 'test'}
+              onCheckedChange={(checked) =>
+                handleSettingChange('payment_razorpay_mode', checked ? 'test' : 'live')
+              }
+            />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="payment_razorpay_key_id">
+                {settings.payment_razorpay_mode === 'test' ? 'Test' : 'Live'} Key ID
+              </Label>
+              <Input
+                id="payment_razorpay_key_id"
+                value={settings.payment_razorpay_key_id}
+                onChange={(e) => handleSettingChange('payment_razorpay_key_id', e.target.value)}
+                placeholder="rzp_test_xxxxxxxxxxxxxxxx"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="payment_razorpay_key_secret">
+                {settings.payment_razorpay_mode === 'test' ? 'Test' : 'Live'} Key Secret
+              </Label>
+              <Input
+                id="payment_razorpay_key_secret"
+                type="password"
+                value={settings.payment_razorpay_key_secret}
+                onChange={(e) => handleSettingChange('payment_razorpay_key_secret', e.target.value)}
+                placeholder="xxxxxxxxxxxxxxxxxxxxxxxx"
+              />
+            </div>
+          </div>
+          <div className="rounded-lg bg-muted p-3 text-xs text-muted-foreground">
+            <p className="font-medium mb-1">Supported payment methods:</p>
+            <p>UPI, Credit/Debit Cards, Netbanking, Wallets, EMI, PayLater</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Import Products */}
+      <AdminImport />
+
+      {/* Backup & Restore */}
+      <AdminBackup />
 
       {/* Bottom Save */}
       <div className="flex justify-end">

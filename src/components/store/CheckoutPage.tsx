@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import {
   ArrowLeft,
@@ -9,6 +9,8 @@ import {
   CheckCircle,
   ShoppingBag,
   Package,
+  Wallet,
+  Banknote,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -18,7 +20,38 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAppStore } from '@/lib/store';
+
+declare global {
+  interface Window {
+    Razorpay: new (options: RazorpayOptions) => RazorpayInstance;
+  }
+}
+
+interface RazorpayOptions {
+  key: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description?: string;
+  order_id: string;
+  handler: (response: RazorpayResponse) => void;
+  prefill?: { name?: string; email?: string; contact?: string };
+  theme?: { color?: string };
+  modal?: { ondismiss?: () => void };
+}
+
+interface RazorpayInstance {
+  open: () => void;
+  on: (event: string, handler: (response: { error: { description: string } }) => void) => void;
+}
+
+interface RazorpayResponse {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
 
 interface CheckoutPageProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -38,6 +71,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   const [placing, setPlacing] = useState(false);
 
   const currency = settings?.currency || 'USD';
+  const razorpayEnabled = settings?.payment_razorpay_enabled === 'true';
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -47,6 +81,8 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   };
   const [step, setStep] = useState<'shipping' | 'review' | 'success'>('shipping');
   const [orderNumber, setOrderNumber] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'manual' | 'razorpay'>('manual');
+  const [razorpayKeyId, setRazorpayKeyId] = useState<string | null>(null);
 
   // Shipping form
   const [shippingName, setShippingName] = useState('');
@@ -54,6 +90,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   const [shippingPhone, setShippingPhone] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
   const [notes, setNotes] = useState('');
+  const shippingInitialized = useRef(false);
 
   useEffect(() => {
     if (auth.token) {
@@ -62,11 +99,22 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   }, [auth.token, fetchCart]);
 
   useEffect(() => {
-    if (auth.user) {
+    if (auth.user && !shippingInitialized.current) {
+      shippingInitialized.current = true;
       setShippingName(auth.user.name || '');
       setShippingEmail(auth.user.email || '');
     }
   }, [auth.user]);
+
+  // Load Razorpay script
+  useEffect(() => {
+    if (razorpayEnabled && !document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')) {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, [razorpayEnabled]);
 
   const handlePlaceOrder = async () => {
     if (!auth.token || cart.items.length === 0) return;
@@ -76,38 +124,136 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
       return;
     }
 
-    setPlacing(true);
-    try {
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${auth.token}`,
-        },
-        body: JSON.stringify({
-          shippingName,
-          shippingEmail,
-          shippingPhone,
-          shippingAddress,
-          paymentMethod: 'manual',
-          notes,
-        }),
-      });
+    if (paymentMethod === 'razorpay' && razorpayEnabled) {
+      // Razorpay flow: create order first, then open Razorpay
+      setPlacing(true);
+      try {
+        const res = await fetch('/api/payment/razorpay', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${auth.token}`,
+          },
+          body: JSON.stringify({
+            amount: cart.total,
+            currency,
+          }),
+        });
 
-      if (res.ok) {
-        const data = await res.json();
-        setOrderNumber(data.order.orderNumber);
-        setStep('success');
-        fetchCart(); // Refresh cart (should be empty now)
-        toast.success('Order placed successfully!');
-      } else {
-        const data = await res.json();
-        toast.error(data.error || 'Failed to place order');
+        if (!res.ok) {
+          const data = await res.json();
+          toast.error(data.error || 'Failed to create payment');
+          setPlacing(false);
+          return;
+        }
+
+        const orderData = await res.json();
+        setRazorpayKeyId(orderData.keyId);
+
+        // Open Razorpay checkout
+        const options: RazorpayOptions = {
+          key: orderData.keyId,
+          amount: orderData.amount,
+          currency: orderData.currency,
+          name: settings?.site_title || 'Store',
+          description: `Order - ${cart.items.length} items`,
+          order_id: orderData.orderId,
+          handler: async (response: RazorpayResponse) => {
+            // Payment successful, now place the order
+            try {
+              const orderRes = await fetch('/api/orders', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${auth.token}`,
+                },
+                body: JSON.stringify({
+                  shippingName,
+                  shippingEmail,
+                  shippingPhone,
+                  shippingAddress,
+                  paymentMethod: 'razorpay',
+                  paymentId: response.razorpay_payment_id,
+                  razorpayOrderId: response.razorpay_order_id,
+                  notes,
+                }),
+              });
+
+              if (orderRes.ok) {
+                const data = await orderRes.json();
+                setOrderNumber(data.order.orderNumber);
+                setStep('success');
+                fetchCart();
+                toast.success('Payment successful! Order placed.');
+              } else {
+                toast.error('Order placement failed after payment');
+              }
+            } catch {
+              toast.error('Order placement failed after payment');
+            }
+            setPlacing(false);
+          },
+          prefill: {
+            name: shippingName,
+            email: shippingEmail,
+            contact: shippingPhone || undefined,
+          },
+          theme: {
+            color: '#3b82f6',
+          },
+          modal: {
+            ondismiss: () => {
+              setPlacing(false);
+              toast.info('Payment cancelled');
+            },
+          },
+        };
+
+        const razorpay = new window.Razorpay(options);
+        razorpay.on('payment.failed', (response: { error: { description: string } }) => {
+          toast.error(`Payment failed: ${response.error.description}`);
+          setPlacing(false);
+        });
+        razorpay.open();
+      } catch {
+        toast.error('Failed to initialize payment');
+        setPlacing(false);
       }
-    } catch {
-      toast.error('Failed to place order');
-    } finally {
-      setPlacing(false);
+    } else {
+      // Manual payment flow (existing)
+      setPlacing(true);
+      try {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${auth.token}`,
+          },
+          body: JSON.stringify({
+            shippingName,
+            shippingEmail,
+            shippingPhone,
+            shippingAddress,
+            paymentMethod: 'manual',
+            notes,
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setOrderNumber(data.order.orderNumber);
+          setStep('success');
+          fetchCart();
+          toast.success('Order placed successfully!');
+        } else {
+          const data = await res.json();
+          toast.error(data.error || 'Failed to place order');
+        }
+      } catch {
+        toast.error('Failed to place order');
+      } finally {
+        setPlacing(false);
+      }
     }
   };
 
@@ -313,6 +459,39 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
                   </Button>
                 </div>
 
+                {/* Payment Method */}
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-sm">Payment Method</h3>
+                  <RadioGroup
+                    value={paymentMethod}
+                    onValueChange={(v) => setPaymentMethod(v as 'manual' | 'razorpay')}
+                    className="space-y-2"
+                  >
+                    <div className="flex items-center space-x-2 rounded-lg border p-3">
+                      <RadioGroupItem value="manual" id="pay-manual" />
+                      <Label htmlFor="pay-manual" className="flex items-center gap-2 cursor-pointer flex-1">
+                        <Banknote className="h-4 w-4" />
+                        <div>
+                          <p className="font-medium text-sm">Manual Payment</p>
+                          <p className="text-xs text-muted-foreground">Pay later via bank transfer or other method</p>
+                        </div>
+                      </Label>
+                    </div>
+                    {razorpayEnabled && (
+                      <div className="flex items-center space-x-2 rounded-lg border p-3">
+                        <RadioGroupItem value="razorpay" id="pay-razorpay" />
+                        <Label htmlFor="pay-razorpay" className="flex items-center gap-2 cursor-pointer flex-1">
+                          <Wallet className="h-4 w-4" />
+                          <div>
+                            <p className="font-medium text-sm">Razorpay</p>
+                            <p className="text-xs text-muted-foreground">Pay online via cards, UPI, or net banking</p>
+                          </div>
+                        </Label>
+                      </div>
+                    )}
+                  </RadioGroup>
+                </div>
+
                 {/* Order Items */}
                 <div className="space-y-3">
                   <h3 className="font-semibold text-sm">Order Items</h3>
@@ -359,7 +538,11 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
                     Back
                   </Button>
                   <Button onClick={handlePlaceOrder} disabled={placing}>
-                    {placing ? 'Placing Order...' : 'Place Order'}
+                    {placing
+                      ? 'Processing...'
+                      : paymentMethod === 'razorpay'
+                        ? 'Pay & Place Order'
+                        : 'Place Order'}
                   </Button>
                 </div>
               </CardContent>
