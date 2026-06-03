@@ -114,10 +114,13 @@ model Enquiry {
   type           String   @default("product")
   status         String   @default("new")
   userId         String?
+  companyId      String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now())
   Product        Product? @relation(fields: [productId], references: [id])
   User           User?    @relation(fields: [userId], references: [id])
+  Company        Company? @relation(fields: [companyId], references: [id])
+  Quote          Quote?
 }
 
 model Media {
@@ -262,9 +265,7 @@ model User {
   password           String
   role               String               @default("clerk")
   isActive           Boolean              @default(true)
-  companyName        String?
-  taxId              String?
-  businessAddress    String?
+  companyId          String?
   isVerified         Boolean              @default(false)
   tier               String               @default("standard") // standard, silver, gold, platinum
   documents          String               @default("[]") // JSON array of document URLs
@@ -274,4 +275,38 @@ model User {
   BlogPost           BlogPost[]
   Enquiry            Enquiry[]
   PasswordResetToken PasswordResetToken[]
+  Company            Company?             @relation(fields: [companyId], references: [id])
+  Quote              Quote[]
+}
+
+model Company {
+  id          String    @id @default(cuid())
+  name        String
+  taxId       String?
+  address     String?
+  website     String?
+  isVerified  Boolean   @default(false)
+  tier        String    @default("standard")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now())
+  User        User[]
+  Enquiry     Enquiry[]
+  Quote       Quote[]
+}
+
+model Quote {
+  id          String    @id @default(cuid())
+  enquiryId   String?   @unique
+  companyId   String?
+  userId      String
+  items       String    @default("[]") // JSON array of {productId, variantId, quantity, unitPrice}
+  totalAmount Float
+  status      String    @default("draft") // draft, sent, accepted, rejected, expired
+  validUntil  DateTime?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now())
+  Enquiry     Enquiry?  @relation(fields: [enquiryId], references: [id])
+  Company     Company?  @relation(fields: [companyId], references: [id])
+  User        User      @relation(fields: [userId], references: [id])
 }

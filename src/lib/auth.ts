@@ -9,6 +9,12 @@ export interface AuthUser {
   email: string;
   name: string;
   role: string;
+  tier?: string;
+  isVerified?: boolean;
+  companyId?: string | null;
+  companyName?: string | null;
+  taxId?: string | null;
+  businessAddress?: string | null;
 }
 
 export interface JWTPayload {
@@ -44,22 +50,50 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
 export async function getUserById(id: string): Promise<AuthUser | null> {
   const user = await db.user.findUnique({
     where: { id },
-    select: { id: true, email: true, name: true, role: true, isActive: true },
+    include: { Company: true },
   });
   if (!user || !user.isActive) return null;
-  return { id: user.id, email: user.email, name: user.name, role: user.role };
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    tier: user.tier,
+    isVerified: user.isVerified,
+    companyId: user.companyId,
+    companyName: user.Company?.name,
+    taxId: user.Company?.taxId,
+    businessAddress: user.Company?.address,
+  };
 }
 
 export async function authenticateUser(
   email: string,
   password: string
 ): Promise<{ user: AuthUser; token: string } | null> {
-  const user = await db.user.findUnique({ where: { email } });
+  const user = await db.user.findUnique({
+    where: { email },
+    include: { Company: true },
+  });
   if (!user || !user.isActive) return null;
 
   const isValid = await compare(password, user.password);
   if (!isValid) return null;
 
   const token = await generateToken({ id: user.id, email: user.email, role: user.role });
-  return { user: { id: user.id, email: user.email, name: user.name, role: user.role }, token };
+  return {
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      tier: user.tier,
+      isVerified: user.isVerified,
+      companyId: user.companyId,
+      companyName: user.Company?.name,
+      taxId: user.Company?.taxId,
+      businessAddress: user.Company?.address,
+    },
+    token,
+  };
 }

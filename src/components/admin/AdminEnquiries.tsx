@@ -18,6 +18,9 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  FileText,
+  DollarSign,
+  Calendar,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -80,6 +83,8 @@ interface Enquiry {
   createdAt: string;
   updatedAt: string;
   Product?: { id: string; name: string } | null;
+  User?: { id: string; name: string; email: string; companyId: string | null } | null;
+  Quote?: { id: string; status: string; totalAmount: number } | null;
 }
 
 interface PaginationInfo {
@@ -130,6 +135,16 @@ export function AdminEnquiries() {
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Quote dialog state
+  const [quoteOpen, setQuoteOpen] = useState(false);
+  const [quotingEnquiry, setQuotingEnquiry] = useState<Enquiry | null>(null);
+  const [quoteForm, setQuoteForm] = useState({
+    totalAmount: '',
+    validUntil: '',
+    notes: '',
+  });
+  const [creatingQuote, setCreatingQuote] = useState(false);
 
   const fetchEnquiries = useCallback(async (page = 1) => {
     try {
@@ -264,6 +279,57 @@ export function AdminEnquiries() {
     // Auto mark as read
     if (enquiry.status === 'new') {
       updateStatus(enquiry.id, 'read');
+    }
+  };
+
+  const handleOpenQuote = (enquiry: Enquiry) => {
+    setQuotingEnquiry(enquiry);
+    setQuoteForm({
+      totalAmount: '',
+      validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      notes: '',
+    });
+    setQuoteOpen(true);
+  };
+
+  const handleCreateQuote = async () => {
+    if (!quotingEnquiry || !quoteForm.totalAmount) {
+      toast.error('Please enter a total amount');
+      return;
+    }
+
+    setCreatingQuote(true);
+    try {
+      const res = await adminFetch('/api/quotes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          enquiryId: quotingEnquiry.id,
+          userId: quotingEnquiry.User?.id || quotingEnquiry.id,
+          companyId: quotingEnquiry.User?.companyId,
+          totalAmount: parseFloat(quoteForm.totalAmount),
+          validUntil: quoteForm.validUntil,
+          notes: quoteForm.notes,
+          items: quotingEnquiry.productId ? [{
+            productId: quotingEnquiry.productId,
+            name: quotingEnquiry.Product?.name,
+            quantity: quotingEnquiry.quantity || 1,
+            unitPrice: parseFloat(quoteForm.totalAmount) / (quotingEnquiry.quantity || 1)
+          }] : []
+        })
+      });
+
+      if (res.ok) {
+        toast.success('Formal quote created and sent to buyer');
+        setQuoteOpen(false);
+        fetchEnquiries(pagination.page);
+      } else {
+        toast.error('Failed to create quote');
+      }
+    } catch {
+      toast.error('Failed to create quote');
+    } finally {
+      setCreatingQuote(false);
     }
   };
 
@@ -533,6 +599,17 @@ export function AdminEnquiries() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
+                        {!enq.Quote && enq.User?.companyId && (
+                           <Button
+                           variant="ghost"
+                           size="icon"
+                           className="h-8 w-8 text-emerald-600"
+                           onClick={() => handleOpenQuote(enq)}
+                           title="Create Quote"
+                         >
+                           <FileText className="h-4 w-4" />
+                         </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
@@ -788,6 +865,56 @@ export function AdminEnquiries() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Quote Dialog */}
+      <Dialog open={quoteOpen} onOpenChange={setQuoteOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create Formal Quote</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label>Total Amount ($)</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="number"
+                  placeholder="0.00"
+                  className="pl-9"
+                  value={quoteForm.totalAmount}
+                  onChange={(e) => setQuoteForm({ ...quoteForm, totalAmount: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Valid Until</Label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="date"
+                  className="pl-9"
+                  value={quoteForm.validUntil}
+                  onChange={(e) => setQuoteForm({ ...quoteForm, validUntil: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Notes (Internal or for Buyer)</Label>
+              <Input
+                placeholder="Special terms, shipping info..."
+                value={quoteForm.notes}
+                onChange={(e) => setQuoteForm({ ...quoteForm, notes: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setQuoteOpen(false)}>Cancel</Button>
+            <Button onClick={handleCreateQuote} disabled={creatingQuote}>
+              {creatingQuote ? 'Creating...' : 'Send Quote'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

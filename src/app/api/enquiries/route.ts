@@ -26,7 +26,8 @@ export async function GET(request: NextRequest) {
         where,
         include: {
           Product: { select: { id: true, name: true } },
-          User: { select: { id: true, name: true, email: true } },
+          User: { select: { id: true, name: true, email: true, companyId: true } },
+          Quote: true,
         },
         orderBy: { createdAt: 'desc' },
         skip,

@@ -33,6 +33,7 @@ const PUBLIC_GET_PREFIXES = [
 const PUBLIC_POST_PATHS = [
   '/api/enquiries',
   '/api/contact',
+  '/api/auth/register',
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
   '/api/auth/change-password',
@@ -62,10 +63,24 @@ const ROLE_PERMISSIONS: Record<string, {
       '/api/redirects',
       '/api/notifications',
       '/api/activity-logs',
+      '/api/companies',
+      '/api/quotes',
     ],
     write: [
       '/api/enquiries',
       '/api/notifications',
+      '/api/quotes',
+    ],
+  },
+  buyer: {
+    read: [
+      '/api/quotes',
+      '/api/enquiries',
+      '/api/companies', // Allowed to see their own company
+    ],
+    write: [
+      '/api/quotes', // To accept quotes
+      '/api/enquiries',
     ],
   },
 };
@@ -137,6 +152,12 @@ async function checkRedirect(pathname: string, request: NextRequest): Promise<Ca
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Security: Prevent header spoofing by stripping x-user headers from incoming requests
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.delete('x-user-id');
+  requestHeaders.delete('x-user-role');
+  requestHeaders.delete('x-user-email');
+
   // For non-API routes, check redirects first
   if (!pathname.startsWith('/api/') && !pathname.startsWith('/_next/') && !pathname.startsWith('/_proxy/') && !pathname.includes('.')) {
     const redirect = await checkRedirect(pathname, request);
@@ -153,17 +174,17 @@ export async function middleware(request: NextRequest) {
 
   // Allow public auth endpoints
   if (PUBLIC_API_PATHS.some(p => pathname.startsWith(p))) {
-    return NextResponse.next();
+    return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
   // Allow public GET endpoints
   if (request.method === 'GET' && PUBLIC_GET_PREFIXES.some(p => pathname.startsWith(p))) {
-    return NextResponse.next();
+    return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
   // Allow public POST endpoints
   if (request.method === 'POST' && PUBLIC_POST_PATHS.some(p => pathname.startsWith(p))) {
-    return NextResponse.next();
+    return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
   // Check authorization
@@ -190,7 +211,6 @@ export async function middleware(request: NextRequest) {
   }
 
   // Add user info to headers for downstream use
-  const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-user-id', payload.userId);
   requestHeaders.set('x-user-role', payload.role);
   requestHeaders.set('x-user-email', payload.email);
