@@ -1,14 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { verifyToken } from '@/lib/auth-edge';
-
-async function resolveUserId(request: NextRequest): Promise<string | null> {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  const token = authHeader.split(' ')[1];
-  const payload = await verifyToken(token);
-  return payload?.userId ?? null;
-}
+import { resolveUserId } from '@/lib/auth-helpers';
 
 // GET /api/quotes/[id] - Get single quote details
 export async function GET(

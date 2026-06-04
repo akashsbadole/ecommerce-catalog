@@ -19,6 +19,8 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAppStore } from '@/lib/store';
 import { toast } from 'sonner';
+import { getFirstImage } from '@/lib/utils';
+import { formatPrice } from '@/lib/pricing';
 
 interface OrderDetail {
   id: string;
@@ -56,22 +58,6 @@ interface OrderDetail {
 interface OrderDetailPageProps {
   orderId: string;
   onNavigate: (page: string, data?: unknown) => void;
-}
-
-function getFirstImage(images: string): string | null {
-  try {
-    const arr = JSON.parse(images);
-    return Array.isArray(arr) && arr.length > 0 ? arr[0] : null;
-  } catch {
-    return null;
-  }
-}
-
-function formatPrice(price: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-  }).format(price);
 }
 
 function getStatusIcon(status: string) {

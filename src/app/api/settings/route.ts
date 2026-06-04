@@ -4,12 +4,9 @@ import { sendEmail } from '@/lib/email';
 
 // Settings keys that should never be exposed to the public
 const SENSITIVE_KEYS = [
-  'smtp_password',
-  'jwt_secret',
-  'api_key',
-  'secret_key',
-  'access_token',
-  'private_key',
+  'smtp_pass', 'smtp_user', 'smtp_host', 'smtp_port',
+  'jwt_secret', 'payment_razorpay_key_secret',
+  'smtp_password', 'api_key', 'secret_key', 'access_token', 'private_key',
 ];
 
 export async function GET() {
@@ -46,13 +43,13 @@ export async function PUT(request: NextRequest) {
     }
 
     const results = await Promise.all(
-      Object.entries(settings).map(([key, value]) =>
-        db.siteSetting.upsert({
-          where: { key },
-          update: { value },
-          create: { key, value },
-        })
-      )
+      Object.entries(settings).map(async ([key, value]) => {
+        const existing = await db.siteSetting.findFirst({ where: { storeId: null, key } });
+        if (existing) {
+          return db.siteSetting.update({ where: { id: existing.id }, data: { value: value as string } });
+        }
+        return db.siteSetting.create({ data: { key, value: value as string } });
+      })
     );
 
     return NextResponse.json({ settings: results });

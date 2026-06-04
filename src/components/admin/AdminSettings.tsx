@@ -23,6 +23,7 @@ import {
   CreditCard,
   Download,
   Database,
+  Truck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { adminFetch } from '@/lib/admin-fetch';
@@ -78,6 +80,9 @@ const defaultSettings: Settings = {
   catalog_show_prices: 'true',
   catalog_enable_cart: 'true',
   catalog_enable_wishlist: 'true',
+  shipping_method: 'free',
+  shipping_rate: '0',
+  shipping_free_above: '0',
   payment_razorpay_enabled: 'false',
   payment_razorpay_key_id: '',
   payment_razorpay_key_secret: '',
@@ -210,7 +215,7 @@ export function AdminSettings() {
               id="site_name"
               value={settings.site_name}
               onChange={(e) => handleSettingChange('site_name', e.target.value)}
-              placeholder="StyleStore"
+              placeholder="My Store"
             />
           </div>
           <div className="space-y-2">
@@ -453,7 +458,7 @@ export function AdminSettings() {
               id="seo_default_title"
               value={settings.seo_default_title}
               onChange={(e) => handleSettingChange('seo_default_title', e.target.value)}
-              placeholder="StyleStore - Premium Products"
+              placeholder="My Store - Premium Products"
             />
             <p className="text-xs text-muted-foreground">
               Used as the default page title across the site. Best practice: 50-60 characters.
@@ -834,6 +839,45 @@ export function AdminSettings() {
               Sends a test email to the site email address
             </span>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Shipping */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Truck className="h-5 w-5" />
+            Shipping
+          </CardTitle>
+          <CardDescription>Configure shipping rates for your store</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Shipping Method</Label>
+            <Select value={settings.shipping_method} onValueChange={(v) => handleSettingChange('shipping_method', v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="free">Free Shipping</SelectItem>
+                <SelectItem value="flat_rate">Flat Rate</SelectItem>
+                <SelectItem value="flat_rate_free_above">Flat Rate (Free Above Threshold)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {settings.shipping_method !== 'free' && (
+            <>
+              <div className="space-y-2">
+                <Label>Shipping Rate ({settings.currency_symbol || '$'})</Label>
+                <Input type="number" step="0.01" value={settings.shipping_rate} onChange={(e) => handleSettingChange('shipping_rate', e.target.value)} />
+              </div>
+              {settings.shipping_method === 'flat_rate_free_above' && (
+                <div className="space-y-2">
+                  <Label>Free Above Amount ({settings.currency_symbol || '$'})</Label>
+                  <Input type="number" step="0.01" value={settings.shipping_free_above} onChange={(e) => handleSettingChange('shipping_free_above', e.target.value)} />
+                  <p className="text-xs text-muted-foreground">Orders above this amount get free shipping</p>
+                </div>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
 

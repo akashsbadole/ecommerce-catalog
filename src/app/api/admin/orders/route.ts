@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { verifyToken } from '@/lib/auth-edge';
+import { getStoreId } from '@/lib/store-db';
 
 // GET /api/admin/orders - List all orders (admin only)
 export async function GET(request: NextRequest) {
   try {
+    const storeId = getStoreId(request);
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -34,9 +36,11 @@ export async function GET(request: NextRequest) {
       ];
     }
 
+    const scopedWhere = { ...where, ...(storeId ? { storeId } : {}) };
+
     const [orders, total] = await Promise.all([
       db.order.findMany({
-        where,
+        where: scopedWhere,
         include: {
           User: {
             select: { id: true, name: true, email: true },
@@ -52,7 +56,7 @@ export async function GET(request: NextRequest) {
         skip,
         take: limit,
       }),
-      db.order.count({ where }),
+      db.order.count({ where: scopedWhere }),
     ]);
 
     return NextResponse.json({

@@ -17,18 +17,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAppStore } from '@/lib/store';
+import { getFirstImage } from '@/lib/utils';
+import { formatPrice as libFormatPrice } from '@/lib/pricing';
 
 interface CartPageProps {
   onNavigate: (page: string, data?: unknown) => void;
-}
-
-function getFirstImage(images: string): string | null {
-  try {
-    const arr = JSON.parse(images);
-    return Array.isArray(arr) && arr.length > 0 ? arr[0] : null;
-  } catch {
-    return null;
-  }
 }
 
 export function CartPage({ onNavigate }: CartPageProps) {
@@ -39,10 +32,7 @@ export function CartPage({ onNavigate }: CartPageProps) {
   const currencySymbol = settings?.currency_symbol || '$';
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-    }).format(price);
+    return libFormatPrice(price, currency);
   };
 
   useEffect(() => {

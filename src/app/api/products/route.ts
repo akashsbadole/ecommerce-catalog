@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { logActivity } from '@/lib/activity-log';
 import { productSchema } from '@/lib/validations';
+import { getStoreId } from '@/lib/store-db';
 
 export async function GET(request: NextRequest) {
   try {
+    const storeId = getStoreId(request);
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search');
     const categoryId = searchParams.get('categoryId');
@@ -42,6 +44,22 @@ export async function GET(request: NextRequest) {
 
     if (categoryId) {
       where.categoryId = categoryId;
+    }
+
+    const minPrice = searchParams.get('minPrice');
+    const maxPrice = searchParams.get('maxPrice');
+    const inStock = searchParams.get('inStock');
+
+    if (minPrice) {
+      const gte = parseFloat(minPrice);
+      where.price = typeof where.price === 'object' ? { ...where.price, gte } : { gte };
+    }
+    if (maxPrice) {
+      const lte = parseFloat(maxPrice);
+      where.price = typeof where.price === 'object' ? { ...where.price, lte } : { lte };
+    }
+    if (inStock === 'true') {
+      where.stock = { gt: 0 };
     }
 
     if (featured !== null && featured !== undefined) {
@@ -87,6 +105,8 @@ export async function GET(request: NextRequest) {
         break;
     }
 
+    const scopedWhere = { ...where, ...(storeId ? { storeId } : {}) };
+
     // Cursor-based or page-based pagination
     let products;
     let nextCursor = null;
@@ -95,7 +115,7 @@ export async function GET(request: NextRequest) {
     if (cursor && !page) {
       // Cursor-based pagination
       products = await db.product.findMany({
-        where: { ...where, id: { gt: cursor } },
+        where: { ...scopedWhere, id: { gt: cursor } },
         include: { Category: true },
         orderBy,
         take: limit + 1,
@@ -103,7 +123,7 @@ export async function GET(request: NextRequest) {
       if (products.length > limit) {
         nextCursor = products.pop()?.id || null;
       }
-      total = await db.product.count({ where });
+      total = await db.product.count({ where: scopedWhere });
     } else {
       // Page-based pagination (default, backward compatible)
       const pageNum = Math.max(1, parseInt(page || '1'));
@@ -111,13 +131,13 @@ export async function GET(request: NextRequest) {
 
       [products, total] = await Promise.all([
         db.product.findMany({
-          where,
+          where: scopedWhere,
           include: { Category: true },
           orderBy,
           skip,
           take: limit,
         }),
-        db.product.count({ where }),
+        db.product.count({ where: scopedWhere }),
       ]);
     }
 
@@ -169,6 +189,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Slug already in use' }, { status: 409 });
     }
 
+    const storeId = getStoreId(request);
     const product = await db.product.create({
       data: {
         name: validatedData.name,
@@ -196,6 +217,7 @@ export async function POST(request: NextRequest) {
         stock: typeof body.stock === 'number' ? body.stock : (parseInt(body.stock) || 0),
         lowStockThreshold: typeof body.lowStockThreshold === 'number' ? body.lowStockThreshold : (parseInt(body.lowStockThreshold) || 10),
         relatedProductIds: typeof body.relatedProductIds === 'string' ? body.relatedProductIds : '[]',
+        ...(storeId ? { storeId } : {}),
       },
       include: { Category: true },
     });

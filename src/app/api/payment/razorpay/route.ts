@@ -1,15 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { verifyToken } from '@/lib/auth-edge';
+import { resolveUserId } from '@/lib/auth-helpers';
+import { getGlobalSetting } from '@/lib/settings';
 import crypto from 'crypto';
-
-async function resolveUserId(request: NextRequest): Promise<string | null> {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  const token = authHeader.split(' ')[1];
-  const payload = await verifyToken(token);
-  return payload?.userId ?? null;
-}
 
 // POST /api/payment/razorpay - Create Razorpay order
 export async function POST(request: NextRequest) {
@@ -20,21 +13,21 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { amount, currency = 'INR', orderId } = body;
+    const { amount, currency = 'USD', orderId } = body;
 
     // Get Razorpay settings
-    const [keyIdSetting, keySecretSetting, enabledSetting] = await Promise.all([
-      db.siteSetting.findUnique({ where: { key: 'payment_razorpay_key_id' } }),
-      db.siteSetting.findUnique({ where: { key: 'payment_razorpay_key_secret' } }),
-      db.siteSetting.findUnique({ where: { key: 'payment_razorpay_enabled' } }),
+    const [keyIdValue, keySecretValue, enabledValue] = await Promise.all([
+      getGlobalSetting('payment_razorpay_key_id'),
+      getGlobalSetting('payment_razorpay_key_secret'),
+      getGlobalSetting('payment_razorpay_enabled'),
     ]);
 
-    if (enabledSetting?.value !== 'true') {
+    if (enabledValue !== 'true') {
       return NextResponse.json({ error: 'Razorpay is not enabled' }, { status: 400 });
     }
 
-    const keyId = keyIdSetting?.value;
-    const keySecret = keySecretSetting?.value;
+    const keyId = keyIdValue;
+    const keySecret = keySecretValue;
 
     if (!keyId || !keySecret) {
       return NextResponse.json({ error: 'Razorpay keys not configured' }, { status: 400 });
@@ -91,8 +84,8 @@ export async function PUT(request: NextRequest) {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = body;
 
     // Get Razorpay secret
-    const keySecretSetting = await db.siteSetting.findUnique({ where: { key: 'payment_razorpay_key_secret' } });
-    const keySecret = keySecretSetting?.value;
+    const keySecretValue = await getGlobalSetting('payment_razorpay_key_secret');
+    const keySecret = keySecretValue;
 
     if (!keySecret) {
       return NextResponse.json({ error: 'Razorpay not configured' }, { status: 400 });
@@ -114,6 +107,7 @@ export async function PUT(request: NextRequest) {
         where: { id: orderId },
         data: {
           status: 'confirmed',
+          paymentStatus: 'paid',
           paymentMethod: 'razorpay',
           notes: `Razorpay Order: ${razorpay_order_id}, Payment: ${razorpay_payment_id}`,
         },

@@ -1,15 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { verifyToken } from '@/lib/auth-edge';
+import { resolveUserId } from '@/lib/auth-helpers';
 import { sendOrderConfirmationToCustomer, sendOrderNotificationToAdmin, getSiteSettings } from '@/lib/email';
-
-async function resolveUserId(request: NextRequest): Promise<string | null> {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  const token = authHeader.split(' ')[1];
-  const payload = await verifyToken(token);
-  return payload?.userId ?? null;
-}
+import { getGlobalSetting, getSetting } from '@/lib/settings';
+import { getStoreId } from '@/lib/store-db';
 
 function generateOrderNumber(): string {
   const now = new Date();
@@ -149,11 +143,23 @@ export async function POST(request: NextRequest) {
 
     // Calculate totals
     const subtotal = cart.items.reduce((sum, item) => sum + item.Product.price * item.quantity, 0);
-    const shippingCost = 0; // Default to free shipping, can be configured
+
+    // Calculate shipping from site settings
+    const storeId = getStoreId(request);
+    const shippingMethod = await getSetting('shipping_method', storeId) || 'free';
+    const shippingRate = parseFloat(await getSetting('shipping_rate', storeId) || '0');
+    const shippingFreeAbove = parseFloat(await getSetting('shipping_free_above', storeId) || '0');
+
+    let shippingCost = 0;
+    if (shippingMethod === 'flat_rate') {
+      shippingCost = shippingRate;
+    } else if (shippingMethod === 'flat_rate_free_above') {
+      shippingCost = (shippingFreeAbove > 0 && subtotal >= shippingFreeAbove) ? 0 : shippingRate;
+    }
 
     // Tax calculation from site settings
-    const taxSettings = await db.siteSetting.findUnique({ where: { key: 'tax_rate' } });
-    const taxRate = parseFloat(taxSettings?.value || '0');
+    const taxRateValue = await getGlobalSetting('tax_rate');
+    const taxRate = parseFloat(taxRateValue || '0');
     const tax = Math.round(subtotal * taxRate * 100) / 100;
 
     // Coupon discount
@@ -180,8 +186,8 @@ export async function POST(request: NextRequest) {
     const total = subtotal + shippingCost + tax - discount;
 
     // Check approval threshold
-    const thresholdSetting = await db.siteSetting.findUnique({ where: { key: 'order_approval_threshold' } });
-    const approvalThreshold = parseFloat(thresholdSetting?.value || '0');
+    const thresholdValue = await getGlobalSetting('order_approval_threshold');
+    const approvalThreshold = parseFloat(thresholdValue || '0');
     const requiresApproval = approvalThreshold > 0 && total >= approvalThreshold;
 
     // Create order in a transaction
@@ -253,8 +259,8 @@ export async function POST(request: NextRequest) {
     });
 
     // Send order emails (non-blocking)
-    const getSetting = await getSiteSettings();
-    const siteName = getSetting('site_name') || 'Store';
+    const emailSettings = await getSiteSettings();
+    const siteName = emailSettings('site_name') || 'Store';
     sendOrderConfirmationToCustomer(order, order.items, siteName).catch(() => {});
     sendOrderNotificationToAdmin(order, order.items, siteName).catch(() => {});
 

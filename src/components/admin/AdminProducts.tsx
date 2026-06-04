@@ -25,6 +25,7 @@ import {
   X,
 } from 'lucide-react';
 import { AdminProductVariants } from './AdminProductVariants';
+import { formatPrice as libFormatPrice } from '@/lib/pricing';
 
 const WysiwygEditor = dynamic(
   () => import('@/components/admin/WysiwygEditor'),
@@ -554,10 +555,7 @@ export function AdminProducts() {
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(price);
+    return libFormatPrice(price, 'USD');
   };
 
   const getStockBadge = (stock: number, threshold: number) => {
@@ -1458,7 +1456,7 @@ export function AdminProducts() {
                       }
                     />
                     <p className="text-xs text-muted-foreground">
-                      Leave empty to use: Product Name | StyleStore
+                      Leave empty to use: Product Name | My Store
                     </p>
                   </div>
                   <div className="space-y-2">

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { startOfDay, subDays, format } from 'date-fns';
+import { getStoreId } from '@/lib/store-db';
 
 export async function GET(request: NextRequest) {
   try {
+    const storeId = getStoreId(request);
     const { searchParams } = new URL(request.url);
     const days = parseInt(searchParams.get('days') || '7');
 
@@ -12,7 +14,8 @@ export async function GET(request: NextRequest) {
     // Get enquiries trend
     const enquiries = await db.enquiry.findMany({
       where: {
-        createdAt: { gte: startDate }
+        createdAt: { gte: startDate },
+        ...(storeId ? { storeId } : {}),
       },
       select: {
         createdAt: true,
@@ -34,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     // Get popular products (by enquiry count)
     const popularProducts = await db.product.findMany({
-      where: { deletedAt: null },
+      where: { deletedAt: null, ...(storeId ? { storeId } : {}) },
       select: {
         id: true,
         name: true,
@@ -50,6 +53,7 @@ export async function GET(request: NextRequest) {
 
     // Get category engagement
     const categories = await db.category.findMany({
+      where: storeId ? { storeId } : undefined,
       select: {
         id: true,
         name: true,

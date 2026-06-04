@@ -113,11 +113,19 @@ export async function POST(request: NextRequest) {
     // Restore each collection
     if (data.settings) {
       for (const setting of data.settings) {
-        await db.siteSetting.upsert({
-          where: { key: setting.key },
-          update: { value: setting.value },
-          create: { key: setting.key, value: setting.value },
+        const existing = await db.siteSetting.findFirst({
+          where: { storeId: null, key: setting.key },
         });
+        if (existing) {
+          await db.siteSetting.update({
+            where: { id: existing.id },
+            data: { value: setting.value },
+          });
+        } else {
+          await db.siteSetting.create({
+            data: { key: setting.key, value: setting.value },
+          });
+        }
       }
       results.settings = data.settings.length;
     }

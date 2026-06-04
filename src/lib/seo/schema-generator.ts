@@ -23,7 +23,7 @@ export function generateProductSchema(product: any, siteUrl: string, brandName?:
     offers: {
       '@type': 'Offer',
       url: `${siteUrl}/product/${product.slug}`,
-      priceCurrency: 'INR',
+      priceCurrency: 'USD',
       price: product.price,
       availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'
     }
@@ -42,7 +42,8 @@ export function generateProductSchema(product: any, siteUrl: string, brandName?:
   return schema;
 }
 
-export function generateArticleSchema(post: any, siteUrl: string) {
+export function generateArticleSchema(post: any, siteUrl: string, brandName?: string) {
+  const name = brandName || 'My Store';
   const schema: any = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
@@ -51,11 +52,11 @@ export function generateArticleSchema(post: any, siteUrl: string) {
     image: post.coverImage.startsWith('http') ? post.coverImage : `${siteUrl}${post.coverImage}`,
     author: {
       '@type': 'Organization',
-      name: 'Purva Bites'
+      name
     },
     publisher: {
       '@type': 'Organization',
-      name: 'Purva Bites',
+      name,
       logo: {
         '@type': 'ImageObject',
         url: `${siteUrl}/logo.png`

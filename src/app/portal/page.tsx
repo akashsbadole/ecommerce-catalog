@@ -303,7 +303,7 @@ export default function BuyerPortalPage() {
               </div>
             </div>
             <div className="flex items-end">
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={() => navigate('account')}>
                 <UserIcon className="mr-2 h-4 w-4" />
                 Edit Profile
               </Button>

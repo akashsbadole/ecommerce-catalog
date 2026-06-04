@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { verifyToken } from '@/lib/auth-edge';
+import { getStoreId } from '@/lib/store-db';
 
 // GET /api/admin/quotes - List all quotes (admin only)
 export async function GET(request: NextRequest) {
   try {
+    const storeId = getStoreId(request);
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -34,9 +36,11 @@ export async function GET(request: NextRequest) {
       ];
     }
 
+    const scopedWhere = { ...where, ...(storeId ? { storeId } : {}) };
+
     const [quotes, total] = await Promise.all([
       db.quote.findMany({
-        where,
+        where: scopedWhere,
         include: {
           User: {
             select: {
@@ -62,7 +66,7 @@ export async function GET(request: NextRequest) {
         skip,
         take: limit,
       }),
-      db.quote.count({ where }),
+      db.quote.count({ where: scopedWhere }),
     ]);
 
     return NextResponse.json({

@@ -45,6 +45,8 @@ import {
   CreditCard,
   Check,
 } from "lucide-react";
+import { getFirstImage } from "@/lib/utils";
+import { formatPrice } from "@/lib/pricing";
 
 // Curated icon map for dynamic resolution (instead of importing entire library)
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -508,22 +510,6 @@ function ProductsBlock({
     };
     fetchProducts();
   }, [maxProducts]);
-
-  const getFirstImage = (images: string) => {
-    try {
-      const arr = JSON.parse(images);
-      return Array.isArray(arr) && arr.length > 0 ? arr[0] : null;
-    } catch {
-      return null;
-    }
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(price);
-  };
 
   return (
     <section className="py-12">

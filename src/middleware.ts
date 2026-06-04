@@ -5,6 +5,7 @@ const PUBLIC_API_PATHS = [
   '/api/auth/login',
   '/api/auth/me',
   '/api/redirects/check',
+  '/api/stores', // Allow store listing/creation
 ];
 
 // Public GET endpoints (no auth needed)
@@ -27,6 +28,7 @@ const PUBLIC_GET_PREFIXES = [
   '/api/users',
   '/api/export',
   '/api/newsletter',
+  '/api/stores',
 ];
 
 // Public POST endpoints
@@ -39,6 +41,7 @@ const PUBLIC_POST_PATHS = [
   '/api/auth/register',
   '/api/newsletter/subscribe',
   '/api/content-pages/seed',
+  '/api/stores', // Allow store creation
 ];
 
 // User-authenticated GET endpoints (require Bearer token, not admin RBAC)
@@ -48,6 +51,7 @@ const USER_AUTH_GET_PREFIXES = [
   '/api/orders',
   '/api/account',
   '/api/quotes',
+  '/api/stores',
 ];
 
 // User-authenticated POST/PUT/DELETE endpoints
@@ -57,7 +61,101 @@ const USER_AUTH_MUTATION_PREFIXES = [
   '/api/orders',
   '/api/account',
   '/api/quotes',
+  '/api/stores',
 ];
+
+// Platform admin paths (no store context needed)
+const PLATFORM_ADMIN_PREFIXES = [
+  '/api/admin',
+];
+
+// ─── Store Resolution (Edge-compatible, in-memory cache) ───
+
+interface CachedStore {
+  id: string;
+  slug: string;
+  expiresAt: number;
+}
+
+const storeCache = new Map<string, CachedStore>();
+const STORE_CACHE_TTL = 5 * 60 * 1000;
+
+const PLATFORM_DOMAINS = [
+  process.env.PLATFORM_DOMAIN || 'localhost',
+  process.env.PLATFORM_DOMAIN || 'localhost',
+];
+
+function extractSubdomain(hostname: string): string | null {
+  const host = hostname.split(':')[0];
+  if (!host || host === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(host)) {
+    return null;
+  }
+  for (const domain of PLATFORM_DOMAINS) {
+    if (host.endsWith(`.${domain}`)) {
+      const sub = host.replace(`.${domain}`, '');
+      return sub || null;
+    }
+  }
+  return null;
+}
+
+function isCustomDomain(hostname: string): boolean {
+  const host = hostname.split(':')[0];
+  if (!host || host === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(host)) {
+    return false;
+  }
+  return !PLATFORM_DOMAINS.some((d) => host.endsWith(`.${d}`));
+}
+
+async function resolveStoreId(hostname: string): Promise<string | null> {
+  const host = hostname.split(':')[0];
+
+  // Check cache
+  const cached = storeCache.get(host);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.id;
+  }
+
+  let storeId: string | null = null;
+
+  // Try subdomain
+  const subdomain = extractSubdomain(hostname);
+  if (subdomain) {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `http://localhost:${3000}`;
+      const res = await fetch(`${baseUrl}/api/stores/resolve?slug=${encodeURIComponent(subdomain)}`, {
+        headers: { 'x-internal-request': 'true' },
+        signal: AbortSignal.timeout(2000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        storeId = data.storeId || null;
+      }
+    } catch { /* ignore */ }
+  }
+
+  // Try custom domain
+  if (!storeId && isCustomDomain(hostname)) {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `http://localhost:${3000}`;
+      const res = await fetch(`${baseUrl}/api/stores/resolve?domain=${encodeURIComponent(host)}`, {
+        headers: { 'x-internal-request': 'true' },
+        signal: AbortSignal.timeout(2000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        storeId = data.storeId || null;
+      }
+    } catch { /* ignore */ }
+  }
+
+  // Cache result
+  if (storeId) {
+    storeCache.set(host, { id: storeId, slug: subdomain || host, expiresAt: Date.now() + STORE_CACHE_TTL });
+  }
+
+  return storeId;
+}
 
 // Role-based permission map
 const ROLE_PERMISSIONS: Record<string, {
@@ -181,6 +279,7 @@ async function checkRedirect(pathname: string, request: NextRequest): Promise<Ca
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const hostname = request.headers.get('host') || '';
 
   // For non-API routes, check redirects first
   if (!pathname.startsWith('/api/') && !pathname.startsWith('/_next/') && !pathname.startsWith('/_proxy/') && !pathname.includes('.')) {
@@ -193,22 +292,39 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // ─── Store Resolution ───
+  // Resolve store from hostname for all routes
+  const storeId = await resolveStoreId(hostname);
+
   // Only protect /api/ routes from here on
-  if (!pathname.startsWith('/api/')) return NextResponse.next();
+  if (!pathname.startsWith('/api/')) {
+    // For non-API routes, pass storeId along
+    const requestHeaders = new Headers(request.headers);
+    if (storeId) {
+      requestHeaders.set('x-store-id', storeId);
+    }
+    return NextResponse.next({ request: { headers: requestHeaders } });
+  }
 
   // Allow public auth endpoints
   if (PUBLIC_API_PATHS.some(p => pathname.startsWith(p))) {
-    return NextResponse.next();
+    const requestHeaders = new Headers(request.headers);
+    if (storeId) requestHeaders.set('x-store-id', storeId);
+    return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
   // Allow public GET endpoints
   if (request.method === 'GET' && PUBLIC_GET_PREFIXES.some(p => pathname.startsWith(p))) {
-    return NextResponse.next();
+    const requestHeaders = new Headers(request.headers);
+    if (storeId) requestHeaders.set('x-store-id', storeId);
+    return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
   // Allow public POST endpoints
   if (request.method === 'POST' && PUBLIC_POST_PATHS.some(p => pathname.startsWith(p))) {
-    return NextResponse.next();
+    const requestHeaders = new Headers(request.headers);
+    if (storeId) requestHeaders.set('x-store-id', storeId);
+    return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
   // Check user-authenticated endpoints (cart, wishlist, orders, account)
@@ -231,6 +347,7 @@ export async function middleware(request: NextRequest) {
     requestHeaders.set('x-user-id', payload.userId);
     requestHeaders.set('x-user-role', payload.role);
     requestHeaders.set('x-user-email', payload.email);
+    if (storeId) requestHeaders.set('x-store-id', storeId);
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
@@ -262,6 +379,7 @@ export async function middleware(request: NextRequest) {
   requestHeaders.set('x-user-id', payload.userId);
   requestHeaders.set('x-user-role', payload.role);
   requestHeaders.set('x-user-email', payload.email);
+  if (storeId) requestHeaders.set('x-store-id', storeId);
 
   return NextResponse.next({
     request: { headers: requestHeaders },

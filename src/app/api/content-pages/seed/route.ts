@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { createBlock } from '@/lib/page-blocks';
 
+const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'My Store';
+
 const PAGE_BLOCKS: Record<string, { title: string; metaTitle?: string; metaDescription?: string; blocks: ReturnType<typeof createBlock>[] }> = {
   homepage: {
     title: 'Homepage',
-    metaTitle: 'Purva Bites - Premium Roasted Makhana, Dry Fruits & Healthy Snacks',
-    metaDescription: 'Purva Bites is a premier manufacturer and dealer of high-quality roasted makhana, premium dry fruits, flavored khakhra, flavored bhakhri and healthy snacks.',
+    metaTitle: `${siteName} - Premium Products & B2B Wholesale Supplier`,
+    metaDescription: `${siteName} is a premier manufacturer and dealer of high-quality products, premium dry fruits, and healthy snacks.`,
     blocks: [
       createBlock('hero'),
       createBlock('trust-bar'),
@@ -23,8 +25,8 @@ const PAGE_BLOCKS: Record<string, { title: string; metaTitle?: string; metaDescr
   },
   'about-us': {
     title: 'About Us',
-    metaTitle: 'About Us - Purva Bites',
-    metaDescription: 'Learn about Purva Bites - our story, leadership, and commitment to quality manufacturing.',
+    metaTitle: `About Us - ${siteName}`,
+    metaDescription: `Learn about ${siteName} - our story, leadership, and commitment to quality manufacturing.`,
     blocks: [
       createBlock('hero'),
       createBlock('about'),
@@ -39,7 +41,7 @@ const PAGE_BLOCKS: Record<string, { title: string; metaTitle?: string; metaDescr
   },
   manufacturing: {
     title: 'Manufacturing',
-    metaTitle: 'Manufacturing - Purva Bites',
+    metaTitle: `Manufacturing - ${siteName}`,
     metaDescription: 'Discover our state-of-the-art manufacturing facility, production lines, and quality processes.',
     blocks: [
       createBlock('hero'),
@@ -54,8 +56,8 @@ const PAGE_BLOCKS: Record<string, { title: string; metaTitle?: string; metaDescr
   },
   contact: {
     title: 'Contact Us',
-    metaTitle: 'Contact Us - Purva Bites',
-    metaDescription: 'Get in touch with Purva Bites for bulk orders, private label, distribution, and enquiries.',
+    metaTitle: `Contact Us - ${siteName}`,
+    metaDescription: `Get in touch with ${siteName} for bulk orders, private label, distribution, and enquiries.`,
     blocks: [
       createBlock('hero'),
       createBlock('lead-capture'),
@@ -67,7 +69,7 @@ const PAGE_BLOCKS: Record<string, { title: string; metaTitle?: string; metaDescr
   },
   products: {
     title: 'Products',
-    metaTitle: 'Products - Purva Bites',
+    metaTitle: `Products - ${siteName}`,
     metaDescription: 'Explore our range of premium roasted makhana, dry fruits, khakhra, bhakhri, and extruder products.',
     blocks: [
       createBlock('hero'),
@@ -78,7 +80,7 @@ const PAGE_BLOCKS: Record<string, { title: string; metaTitle?: string; metaDescr
   },
   catalogue: {
     title: 'Catalogue',
-    metaTitle: 'Product Catalogue - Purva Bites',
+    metaTitle: `Product Catalogue - ${siteName}`,
     metaDescription: 'Browse our complete product catalogue with pricing, bulk orders, and wholesale options.',
     blocks: [
       createBlock('hero'),

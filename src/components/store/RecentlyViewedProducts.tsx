@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { Clock, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/lib/store';
+import { getFirstImage } from '@/lib/utils';
+import { formatPrice } from '@/lib/pricing';
 
 interface ViewedProduct {
   id: string;
@@ -58,18 +60,6 @@ export function RecentlyViewedProducts({ onNavigate, currentProductId }: Recentl
   }, [currentProductId]);
 
   if (products.length === 0) return null;
-
-  const getFirstImage = (images: string): string | null => {
-    try {
-      const arr = JSON.parse(images);
-      return Array.isArray(arr) && arr.length > 0 ? arr[0] : null;
-    } catch {
-      return null;
-    }
-  };
-
-  const formatPrice = (price: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price);
 
   return (
     <div className="space-y-4">

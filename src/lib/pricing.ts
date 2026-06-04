@@ -13,6 +13,9 @@ export function calculateTieredPrice(basePrice: number, tier: string | null | un
   return basePrice * (1 - discount);
 }
 
-export function formatPrice(price: number, currency: string = 'USD', symbol: string = '$'): string {
-  return `${symbol}${price.toFixed(2)}`;
+export function formatPrice(price: number, currency: string = 'USD'): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+  }).format(price);
 }

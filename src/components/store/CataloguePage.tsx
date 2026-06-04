@@ -19,6 +19,7 @@ import { EnquiryModal } from './EnquiryModal';
 import { QuickViewModal } from './QuickViewModal';
 import { useAppStore } from '@/lib/store';
 import { calculateTieredPrice, formatPrice as libFormatPrice } from '@/lib/pricing';
+import { getFirstImage } from '@/lib/utils';
 
 interface Category {
   id: string;
@@ -56,6 +57,11 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
   const [enquiryMode, setEnquiryMode] = useState<'enquire' | 'rfq'>('enquire');
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [sortBy, setSortBy] = useState('featured');
+  const [facets, setFacets] = useState<any>(null);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   // Infinite scroll state
   const [visibleCount, setVisibleCount] = useState(12);
@@ -72,7 +78,7 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
   // Reset visible count when search/filter changes
   useEffect(() => {
     setVisibleCount(12);
-  }, [searchQuery, selectedCategory, sortBy]);
+  }, [searchQuery, selectedCategory, sortBy, priceRange, selectedBrands, inStockOnly]);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -81,6 +87,10 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
       if (searchQuery) params.set('search', searchQuery);
       if (selectedCategory) params.set('categoryId', selectedCategory);
       if (sortBy && sortBy !== 'featured') params.set('sort', sortBy);
+      if (priceRange[0] > 0) params.set('minPrice', priceRange[0].toString());
+      if (priceRange[1] > 0 && priceRange[1] < (facets?.priceRange?.max || Infinity)) params.set('maxPrice', priceRange[1].toString());
+      if (selectedBrands.length > 0) params.set('brands', selectedBrands.join(','));
+      if (inStockOnly) params.set('inStock', 'true');
 
       const res = await fetch(`/api/products?${params.toString()}`);
       if (res.ok) {
@@ -92,7 +102,7 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedCategory, sortBy]);
+  }, [searchQuery, selectedCategory, sortBy, priceRange, selectedBrands, inStockOnly, facets]);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -106,9 +116,27 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
     }
   }, []);
 
+  const fetchFacets = useCallback(async () => {
+    try {
+      const params = new URLSearchParams();
+      if (searchQuery) params.set('search', searchQuery);
+      const res = await fetch(`/api/products/facets?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setFacets(data);
+        if (priceRange[0] === 0 && priceRange[1] === 0 && data.priceRange.max > 0) {
+          setPriceRange([0, Math.ceil(data.priceRange.max)]);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch facets:', error);
+    }
+  }, [searchQuery]);
+
   useEffect(() => {
     fetchCategories();
-  }, [fetchCategories]);
+    fetchFacets();
+  }, [fetchCategories, fetchFacets]);
 
   useEffect(() => {
     // Debounce search
@@ -120,7 +148,7 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
 
   // SEO: set document title and meta description on mount
   useEffect(() => {
-    const siteName = settings?.site_name || 'StyleStore';
+    const siteName = settings?.site_name || 'My Store';
     document.title = `Product Catalogue | ${siteName}`;
     let metaEl = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
     if (!metaEl) {
@@ -152,15 +180,6 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
     observer.observe(sentinelRef.current);
     return () => observer.disconnect();
   }, [hasMore, loading, products.length]);
-
-  const getFirstImage = (images: string) => {
-    try {
-      const arr = JSON.parse(images);
-      return Array.isArray(arr) && arr.length > 0 ? arr[0] : null;
-    } catch {
-      return null;
-    }
-  };
 
   const userTier = auth.user?.tier;
 
@@ -286,6 +305,94 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
             </Button>
           ))}
         </section>
+      )}
+
+      {/* Filter Sidebar */}
+      <div className="flex items-center gap-2 mb-4">
+        <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)} className="gap-1">
+          <SlidersHorizontal className="h-4 w-4" />
+          Filters
+          {(selectedBrands.length > 0 || inStockOnly || priceRange[0] > 0) && (
+            <Badge variant="secondary" className="ml-1 text-xs">Active</Badge>
+          )}
+        </Button>
+        {selectedBrands.length > 0 && (
+          <Button variant="ghost" size="sm" onClick={() => setSelectedBrands([])} className="text-xs">
+            Clear brands <X className="h-3 w-3 ml-1" />
+          </Button>
+        )}
+        {inStockOnly && (
+          <Button variant="ghost" size="sm" onClick={() => setInStockOnly(false)} className="text-xs">
+            Show all <X className="h-3 w-3 ml-1" />
+          </Button>
+        )}
+      </div>
+
+      {showFilters && facets && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-medium text-sm mb-2">Price Range</h4>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  placeholder="Min"
+                  value={priceRange[0] || ''}
+                  onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
+                  className="h-8 text-xs"
+                />
+                <span className="text-muted-foreground">-</span>
+                <Input
+                  type="number"
+                  placeholder="Max"
+                  value={priceRange[1] || ''}
+                  onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 0])}
+                  className="h-8 text-xs"
+                />
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-medium text-sm mb-2">Availability</h4>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={inStockOnly}
+                  onChange={(e) => setInStockOnly(e.target.checked)}
+                  className="rounded"
+                />
+                In Stock Only
+                <span className="text-muted-foreground text-xs">({facets.availability.inStock})</span>
+              </label>
+            </div>
+          </div>
+
+          {facets.brands.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm mb-2">Brand</h4>
+              <div className="space-y-1 max-h-40 overflow-y-auto">
+                {facets.brands.map((brand: any) => (
+                  <label key={brand.name} className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedBrands.includes(brand.name)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedBrands(prev => [...prev, brand.name]);
+                        } else {
+                          setSelectedBrands(prev => prev.filter(b => b !== brand.name));
+                        }
+                      }}
+                      className="rounded"
+                    />
+                    {brand.name}
+                    <span className="text-muted-foreground text-xs">({brand.count})</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Results Count */}

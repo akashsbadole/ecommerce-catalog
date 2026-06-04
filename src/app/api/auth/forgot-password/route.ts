@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { db } from '@/lib/db';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { sendEmail } from '@/lib/email';
+import { getGlobalSetting } from '@/lib/settings';
 
 // Max 5 requests per 15 minutes per IP
 const RESET_RATE_LIMIT = { maxRequests: 5, windowMs: 15 * 60 * 1000, prefix: 'forgot-password-post' };
@@ -54,8 +55,8 @@ export async function POST(request: NextRequest) {
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
       const resetUrl = `${siteUrl}/reset-password?token=${token}`;
 
-      const siteName = await db.siteSetting.findUnique({ where: { key: 'site_name' } });
-      const brandName = siteName?.value || 'Your Store';
+      const siteNameValue = await getGlobalSetting('site_name');
+      const brandName = siteNameValue || 'Your Store';
 
       const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

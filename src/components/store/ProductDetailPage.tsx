@@ -110,6 +110,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -214,11 +215,34 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
     fetchRelated();
   }, [product?.relatedProductIds]);
 
+  // Fetch algorithmic recommendations
+  useEffect(() => {
+    if (!productId) return;
+    // Only fetch if no manual related products
+    if (product?.relatedProductIds) {
+      try {
+        const ids = JSON.parse(product.relatedProductIds);
+        if (Array.isArray(ids) && ids.length > 0) return;
+      } catch {}
+    }
+
+    const fetchRecommendations = async () => {
+      try {
+        const res = await fetch(`/api/products/${productId}/recommendations?limit=8`);
+        if (res.ok) {
+          const data = await res.json();
+          setRecommendedProducts(data.products || []);
+        }
+      } catch {}
+    };
+    fetchRecommendations();
+  }, [productId, product?.relatedProductIds]);
+
   // SEO: dynamic title, meta description, JSON-LD
   useEffect(() => {
     if (!product) return;
 
-    const siteName = settings?.site_name || 'StyleStore';
+    const siteName = settings?.site_name || 'My Store';
     const prevTitle = document.title;
     const title = product.metaTitle || `${product.name} | ${siteName}`;
     document.title = title;
@@ -234,7 +258,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
     metaEl.setAttribute('content', metaDesc);
 
     // JSON-LD structured data
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://purvabites.com';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     const brandName = settings?.site_name || 'Store';
     const jsonLd = generateProductSchema(product, siteUrl, brandName);
 
@@ -1027,16 +1051,20 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
         </CardContent>
       </Card>
 
-      {/* Related Products */}
-      {relatedProducts.length > 0 && (
+      {/* Related / Recommended Products */}
+      {(relatedProducts.length > 0 || recommendedProducts.length > 0) && (
         <div className="space-y-4">
           <Separator />
           <div>
-            <h3 className="text-xl font-semibold">Related Products</h3>
-            <p className="text-sm text-muted-foreground mt-1">You may also be interested in</p>
+            <h3 className="text-xl font-semibold">
+              {relatedProducts.length > 0 ? 'Related Products' : 'You May Also Like'}
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              {relatedProducts.length > 0 ? 'You may also be interested in' : 'Recommended for you'}
+            </p>
           </div>
           <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 snap-x">
-            {relatedProducts.map((rp) => {
+            {(relatedProducts.length > 0 ? relatedProducts : recommendedProducts).map((rp) => {
               const rpImages = (() => { try { return JSON.parse(rp.images || '[]'); } catch { return []; } })();
               const rpImg = rpImages.length > 0 ? rpImages[0] : null;
               return (

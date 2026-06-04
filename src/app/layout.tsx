@@ -26,28 +26,20 @@ export const viewport: Viewport = {
   ],
 };
 
+const siteName = process.env.NEXT_PUBLIC_SITE_NAME || "My Store";
+const siteDesc =
+  process.env.NEXT_PUBLIC_SITE_DESCRIPTION ||
+  "Premium products and exceptional service.";
+
 export const metadata: Metadata = {
   title: {
-    default:
-      "Purva Bites - Premium Roasted Makhana, Dry Fruits & Healthy Snacks",
-    template: "%s | Purva Bites",
+    default: `${siteName} - ${siteDesc}`,
+    template: `%s | ${siteName}`,
   },
-  description:
-    "Purva Bites is a premier manufacturer and dealer of high-quality roasted makhana, premium dry fruits, flavored khakhra, flavored bhakhri and healthy snacks.",
-  keywords: [
-    "Purva Bites",
-    "roasted makhana",
-    "premium dry fruits",
-    "flavored khakhra",
-    "flavored bhakhri",
-    "healthy snacks",
-    "snack manufacturer",
-    "makhana",
-    "khakhra",
-    "bhakhri",
-  ],
-  authors: [{ name: "Purva Bites" }],
-  creator: "Purva Bites",
+  description: siteDesc,
+  keywords: [siteName],
+  authors: [{ name: siteName }],
+  creator: siteName,
   icons: {
     icon: "/logo.png",
     apple: "/logo.png",
@@ -59,19 +51,17 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Purva Bites - Premium Roasted Makhana, Dry Fruits & Healthy Snacks",
-    description:
-      "Purva Bites is a premier manufacturer and dealer of high-quality roasted makhana, premium dry fruits, flavored khakhra, flavored bhakhri and healthy snacks.",
+    title: `${siteName} - ${siteDesc}`,
+    description: siteDesc,
     url: process.env.NEXT_PUBLIC_SITE_URL || "https://your-domain.com",
-    siteName: "Purva Bites",
+    siteName,
     type: "website",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Purva Bites - Premium Roasted Makhana, Dry Fruits & Healthy Snacks",
-    description:
-      "Purva Bites is a premier manufacturer and dealer of high-quality roasted makhana, premium dry fruits, flavored khakhra, flavored bhakhri and healthy snacks.",
+    title: `${siteName} - ${siteDesc}`,
+    description: siteDesc,
   },
   robots: {
     index: true,
@@ -108,9 +98,8 @@ export default function RootLayout({
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
-          // defaultTheme="system"
-          // enableSystem
+          defaultTheme="system"
+          enableSystem
           disableTransitionOnChange
         >
           {children}

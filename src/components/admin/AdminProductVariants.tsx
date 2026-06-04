@@ -41,6 +41,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { adminFetch } from '@/lib/admin-fetch';
+import { formatPrice as libFormatPrice } from '@/lib/pricing';
 
 interface ProductVariant {
   id: string;
@@ -110,10 +111,7 @@ function getStockBadge(stock: number, threshold: number) {
 
 const formatPrice = (price: number | null) => {
   if (price === null || price === undefined) return '—';
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(price);
+  return libFormatPrice(price, 'USD');
 };
 
 export function AdminProductVariants({ productId, lowStockThreshold = 10, onVariantsChange }: AdminProductVariantsProps) {

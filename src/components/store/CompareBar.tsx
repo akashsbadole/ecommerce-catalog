@@ -4,21 +4,13 @@ import Image from 'next/image';
 import { X, GitCompareArrows, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/lib/store';
+import { getFirstImage } from '@/lib/utils';
 
 export function CompareBar() {
   const { compare, removeFromCompare, clearCompare, setCompareOpen, navigate } = useAppStore();
   const { products } = compare;
 
   if (products.length === 0) return null;
-
-  const getFirstImage = (images: string) => {
-    try {
-      const arr = JSON.parse(images);
-      return Array.isArray(arr) && arr.length > 0 ? arr[0] : null;
-    } catch {
-      return null;
-    }
-  };
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-[0_-2px_10px_rgba(0,0,0,0.1)]">

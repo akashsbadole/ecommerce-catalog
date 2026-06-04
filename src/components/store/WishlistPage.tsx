@@ -15,18 +15,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAppStore } from '@/lib/store';
+import { getFirstImage } from '@/lib/utils';
+import { formatPrice as libFormatPrice } from '@/lib/pricing';
 
 interface WishlistPageProps {
   onNavigate: (page: string, data?: unknown) => void;
-}
-
-function getFirstImage(images: string): string | null {
-  try {
-    const arr = JSON.parse(images);
-    return Array.isArray(arr) && arr.length > 0 ? arr[0] : null;
-  } catch {
-    return null;
-  }
 }
 
 export function WishlistPage({ onNavigate }: WishlistPageProps) {
@@ -36,10 +29,7 @@ export function WishlistPage({ onNavigate }: WishlistPageProps) {
   const currency = settings?.currency || 'USD';
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-    }).format(price);
+    return libFormatPrice(price, currency);
   };
 
   useEffect(() => {

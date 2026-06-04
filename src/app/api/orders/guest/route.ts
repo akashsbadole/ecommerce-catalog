@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getGlobalSetting, getSetting } from '@/lib/settings';
+import { getStoreId } from '@/lib/store-db';
+import { sendOrderConfirmationToCustomer, sendOrderNotificationToAdmin, getSiteSettings } from '@/lib/email';
 
 function generateOrderNumber(): string {
   const now = new Date();
@@ -57,7 +60,7 @@ export async function POST(request: NextRequest) {
         where: { id: item.productId },
         select: {
           id: true, name: true, sku: true, images: true,
-          price: true, stock: true, isActive: true, deletedAt: true,
+          price: true, stock: true, isActive: true, deletedAt: true, minOrderQty: true,
         },
       });
 
@@ -71,6 +74,13 @@ export async function POST(request: NextRequest) {
       if (product.stock < item.quantity) {
         return NextResponse.json(
           { error: `Insufficient stock for "${product.name}". Available: ${product.stock}` },
+          { status: 400 }
+        );
+      }
+
+      if (product.minOrderQty && item.quantity < product.minOrderQty) {
+        return NextResponse.json(
+          { error: `Minimum order quantity for "${product.name}" is ${product.minOrderQty}` },
           { status: 400 }
         );
       }
@@ -90,15 +100,28 @@ export async function POST(request: NextRequest) {
     }
 
     // Tax calculation
-    const taxSettings = await db.siteSetting.findUnique({ where: { key: 'tax_rate' } });
-    const taxRate = parseFloat(taxSettings?.value || '0');
+    const taxRateValue = await getGlobalSetting('tax_rate');
+    const taxRate = parseFloat(taxRateValue || '0');
     const tax = Math.round(subtotal * taxRate * 100) / 100;
 
-    const total = subtotal + tax;
+    // Calculate shipping
+    const storeId = getStoreId(request);
+    const shippingMethod = await getSetting('shipping_method', storeId) || 'free';
+    const shippingRate = parseFloat(await getSetting('shipping_rate', storeId) || '0');
+    const shippingFreeAbove = parseFloat(await getSetting('shipping_free_above', storeId) || '0');
+
+    let shippingCost = 0;
+    if (shippingMethod === 'flat_rate') {
+      shippingCost = shippingRate;
+    } else if (shippingMethod === 'flat_rate_free_above') {
+      shippingCost = (shippingFreeAbove > 0 && subtotal >= shippingFreeAbove) ? 0 : shippingRate;
+    }
+
+    const total = subtotal + shippingCost + tax;
 
     // Check approval threshold
-    const thresholdSetting = await db.siteSetting.findUnique({ where: { key: 'order_approval_threshold' } });
-    const approvalThreshold = parseFloat(thresholdSetting?.value || '0');
+    const thresholdValue = await getGlobalSetting('order_approval_threshold');
+    const approvalThreshold = parseFloat(thresholdValue || '0');
     const requiresApproval = approvalThreshold > 0 && total >= approvalThreshold;
 
     // Create order in a transaction
@@ -110,6 +133,7 @@ export async function POST(request: NextRequest) {
           paymentStatus: 'pending',
           paymentMethod: paymentMethod || null,
           subtotal,
+          shippingCost,
           tax,
           total,
           currency: 'USD',
@@ -140,6 +164,18 @@ export async function POST(request: NextRequest) {
 
       return newOrder;
     });
+
+    // Send emails (non-blocking)
+    try {
+      const emailSettings = await getSiteSettings();
+      const siteName = emailSettings('site_name') || 'Store';
+      if (shippingEmail) {
+        sendOrderConfirmationToCustomer(order, order.items, siteName).catch(() => {});
+      }
+      sendOrderNotificationToAdmin(order, order.items, siteName).catch(() => {});
+    } catch {
+      // Email sending is non-critical
+    }
 
     return NextResponse.json({
       order,

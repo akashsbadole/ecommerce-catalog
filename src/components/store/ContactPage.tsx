@@ -40,7 +40,7 @@ export function ContactPage({ settings }: ContactPageProps) {
 
   // SEO: set document title and meta description
   useEffect(() => {
-    const siteName = settings?.site_name || 'StyleStore';
+    const siteName = settings?.site_name || 'My Store';
     document.title = `Contact Us | ${siteName}`;
     let metaEl = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
     if (!metaEl) {

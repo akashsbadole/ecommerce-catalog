@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getStoreId } from '@/lib/store-db';
 
 export async function GET(request: NextRequest) {
   try {
+    const storeId = getStoreId(request);
     // --- Enquiry Trends: last 30 days grouped by createdAt date ---
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -11,6 +13,7 @@ export async function GET(request: NextRequest) {
     const enquiriesLast30 = await db.enquiry.findMany({
       where: {
         createdAt: { gte: thirtyDaysAgo },
+        ...(storeId ? { storeId } : {}),
       },
       select: {
         createdAt: true,
@@ -40,11 +43,12 @@ export async function GET(request: NextRequest) {
     }));
 
     // --- Product Stats ---
+    const productWhere = storeId ? { storeId } : {};
     const [totalProducts, activeProducts, featuredProducts, totalCategories] = await Promise.all([
-      db.product.count(),
-      db.product.count({ where: { isActive: true } }),
-      db.product.count({ where: { isFeatured: true } }),
-      db.category.count(),
+      db.product.count({ where: productWhere }),
+      db.product.count({ where: { isActive: true, ...productWhere } }),
+      db.product.count({ where: { isFeatured: true, ...productWhere } }),
+      db.category.count({ where: productWhere }),
     ]);
 
     const productStats = {
@@ -72,24 +76,25 @@ export async function GET(request: NextRequest) {
     const startOfLastWeek = new Date(startOfWeek);
     startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
 
+    const enquiryWhere = storeId ? { storeId } : {};
     const [thisWeekCount, lastWeekCount] = await Promise.all([
-      db.enquiry.count({ where: { createdAt: { gte: startOfWeek } } }),
+      db.enquiry.count({ where: { createdAt: { gte: startOfWeek }, ...enquiryWhere } }),
       db.enquiry.count({
-        where: { createdAt: { gte: startOfLastWeek, lt: startOfWeek } },
+        where: { createdAt: { gte: startOfLastWeek, lt: startOfWeek }, ...enquiryWhere },
       }),
     ]);
 
     const enquiryStats = {
       thisWeek: thisWeekCount,
       lastWeek: lastWeekCount,
-      total: await db.enquiry.count(),
-      newCount: await db.enquiry.count({ where: { status: 'new' } }),
-      rfqCount: await db.enquiry.count({ where: { type: 'rfq' } }),
+      total: await db.enquiry.count({ where: enquiryWhere }),
+      newCount: await db.enquiry.count({ where: { status: 'new', ...enquiryWhere } }),
+      rfqCount: await db.enquiry.count({ where: { type: 'rfq', ...enquiryWhere } }),
     };
 
     // Conversion rate = enquiries replied or closed / total enquiries * 100
     const repliedOrClosed = await db.enquiry.count({
-      where: { status: { in: ['replied', 'closed'] } },
+      where: { status: { in: ['replied', 'closed'] }, ...enquiryWhere },
     });
     const conversionRate =
       enquiryStats.total > 0

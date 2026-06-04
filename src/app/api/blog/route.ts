@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { logActivity } from '@/lib/activity-log';
 import { blogPostSchema } from '@/lib/validations';
+import { getStoreId } from '@/lib/store-db';
 
 export async function GET(request: NextRequest) {
   try {
+    const storeId = getStoreId(request);
     const { searchParams } = new URL(request.url);
     const all = searchParams.get('all');
     const published = searchParams.get('published');
@@ -44,9 +46,11 @@ export async function GET(request: NextRequest) {
       where.tags = { contains: tag };
     }
 
+    const scopedWhere = { ...where, ...(storeId ? { storeId } : {}) };
+
     const [blogPosts, total] = await Promise.all([
       db.blogPost.findMany({
-        where,
+        where: scopedWhere,
         select: {
           id: true,
           title: true,
@@ -71,7 +75,7 @@ export async function GET(request: NextRequest) {
         skip: (page - 1) * limit,
         take: limit,
       }),
-      db.blogPost.count({ where }),
+      db.blogPost.count({ where: scopedWhere }),
     ]);
 
     return NextResponse.json({
@@ -116,6 +120,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Slug already in use' }, { status: 409 });
     }
 
+    const storeId = getStoreId(request);
     const blogPost = await db.blogPost.create({
       data: {
         title: validatedData.title,
@@ -131,6 +136,7 @@ export async function POST(request: NextRequest) {
         tags: validatedData.tags ? JSON.stringify(validatedData.tags) : null,
         isPublished: validatedData.isPublished ?? false,
         publishedAt: validatedData.isPublished ? new Date() : null,
+        ...(storeId ? { storeId } : {}),
       },
       include: { User: { select: { id: true, name: true, email: true } } },
     });

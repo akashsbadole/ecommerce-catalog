@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { verifyToken } from '@/lib/auth-edge';
-
-async function resolveUserId(request: NextRequest): Promise<string | null> {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  const token = authHeader.split(' ')[1];
-  const payload = await verifyToken(token);
-  return payload?.userId ?? null;
-}
+import { resolveUserId } from '@/lib/auth-helpers';
+import { getGlobalSetting } from '@/lib/settings';
 
 function generateQuoteNumber(): string {
   const now = new Date();
@@ -144,8 +137,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Tax calculation from site settings
-    const taxSettings = await db.siteSetting.findUnique({ where: { key: 'tax_rate' } });
-    const taxRate = parseFloat(taxSettings?.value || '0');
+    const taxRateValue = await getGlobalSetting('tax_rate');
+    const taxRate = parseFloat(taxRateValue || '0');
     const tax = Math.round(subtotal * taxRate * 100) / 100;
 
     const total = subtotal + tax;

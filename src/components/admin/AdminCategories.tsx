@@ -708,7 +708,7 @@ export function AdminCategories() {
                     }
                   />
                   <p className="text-xs text-muted-foreground">
-                    Leave empty to use: Category Name | StyleStore
+                    Leave empty to use: Category Name | My Store
                   </p>
                 </div>
                 <div className="space-y-2">

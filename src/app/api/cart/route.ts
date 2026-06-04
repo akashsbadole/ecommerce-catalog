@@ -1,21 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { verifyToken } from '@/lib/auth-edge';
-
-function getUserId(request: NextRequest): string | null {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  const token = authHeader.split(' ')[1];
-  return verifyToken(token).then(p => p?.userId ?? null) as unknown as string | null;
-}
-
-async function resolveUserId(request: NextRequest): Promise<string | null> {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  const token = authHeader.split(' ')[1];
-  const payload = await verifyToken(token);
-  return payload?.userId ?? null;
-}
+import { resolveUserId } from '@/lib/auth-helpers';
 
 // GET /api/cart - Get current user's cart
 export async function GET(request: NextRequest) {

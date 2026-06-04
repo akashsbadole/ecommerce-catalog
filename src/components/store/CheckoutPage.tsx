@@ -57,14 +57,8 @@ interface CheckoutPageProps {
   onNavigate: (page: string, data?: unknown) => void;
 }
 
-function getFirstImage(images: string): string | null {
-  try {
-    const arr = JSON.parse(images);
-    return Array.isArray(arr) && arr.length > 0 ? arr[0] : null;
-  } catch {
-    return null;
-  }
-}
+import { getFirstImage } from '@/lib/utils';
+import { formatPrice as libFormatPrice } from '@/lib/pricing';
 
 export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   const { cart, auth, fetchCart, settings } = useAppStore();
@@ -74,10 +68,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   const razorpayEnabled = settings?.payment_razorpay_enabled === 'true';
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-    }).format(price);
+    return libFormatPrice(price, currency);
   };
   const [step, setStep] = useState<'shipping' | 'review' | 'success'>('shipping');
   const [orderNumber, setOrderNumber] = useState('');
@@ -91,6 +82,15 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   const [shippingAddress, setShippingAddress] = useState('');
   const [notes, setNotes] = useState('');
   const shippingInitialized = useRef(false);
+  const [shippingCost, setShippingCost] = useState(0);
+  const [shippingMethod, setShippingMethod] = useState('free');
+
+  // Coupon state
+  const [couponCode, setCouponCode] = useState('');
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponError, setCouponError] = useState('');
+  const [couponApplied, setCouponApplied] = useState(false);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
 
   useEffect(() => {
     if (auth.token) {
@@ -115,6 +115,51 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
       document.body.appendChild(script);
     }
   }, [razorpayEnabled]);
+
+  useEffect(() => {
+    async function fetchShipping() {
+      try {
+        const res = await fetch('/api/shipping/calculate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ subtotal: cart.total }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setShippingCost(data.shippingCost);
+          setShippingMethod(data.method);
+        }
+      } catch {}
+    }
+    if (cart.total > 0) fetchShipping();
+  }, [cart.total]);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setValidatingCoupon(true);
+    setCouponError('');
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: couponCode.trim(), subtotal: cart.total }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setCouponDiscount(data.discount);
+        setCouponApplied(true);
+        setCouponError('');
+      } else {
+        setCouponError(data.error || 'Invalid coupon');
+        setCouponDiscount(0);
+        setCouponApplied(false);
+      }
+    } catch {
+      setCouponError('Failed to validate coupon');
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
 
   const handlePlaceOrder = async () => {
     if (cart.items.length === 0) return;
@@ -145,6 +190,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
             shippingAddress,
             paymentMethod: 'manual',
             notes,
+            couponCode: couponApplied ? couponCode : undefined,
           }),
         });
 
@@ -159,7 +205,8 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
           const data = await res.json();
           toast.error(data.error || 'Failed to place order');
         }
-      } catch {
+      } catch (error) {
+        console.error('Guest order placement failed:', error);
         toast.error('Failed to place order');
       } finally {
         setPlacing(false);
@@ -179,7 +226,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
             Authorization: `Bearer ${auth.token}`,
           },
           body: JSON.stringify({
-            amount: cart.total,
+            amount: cart.total + shippingCost - couponDiscount,
             currency,
           }),
         });
@@ -220,6 +267,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
                   paymentId: response.razorpay_payment_id,
                   razorpayOrderId: response.razorpay_order_id,
                   notes,
+                  couponCode: couponApplied ? couponCode : undefined,
                 }),
               });
 
@@ -232,7 +280,8 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
               } else {
                 toast.error('Order placement failed after payment');
               }
-            } catch {
+            } catch (error) {
+              console.error('Order placement after payment failed:', error);
               toast.error('Order placement failed after payment');
             }
             setPlacing(false);
@@ -259,7 +308,8 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
           setPlacing(false);
         });
         razorpay.open();
-      } catch {
+      } catch (error) {
+        console.error('Razorpay initialization failed:', error);
         toast.error('Failed to initialize payment');
         setPlacing(false);
       }
@@ -280,6 +330,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
             shippingAddress,
             paymentMethod: 'manual',
             notes,
+            couponCode: couponApplied ? couponCode : undefined,
           }),
         });
 
@@ -293,7 +344,8 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
           const data = await res.json();
           toast.error(data.error || 'Failed to place order');
         }
-      } catch {
+      } catch (error) {
+        console.error('Manual order placement failed:', error);
         toast.error('Failed to place order');
       } finally {
         setPlacing(false);
@@ -617,15 +669,61 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
                   <span className="text-muted-foreground">Subtotal</span>
                   <span className="font-medium">{formatPrice(cart.total)}</span>
                 </div>
+                {/* Coupon Code */}
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Coupon code"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    disabled={couponApplied}
+                    className="h-9 text-sm flex-1"
+                  />
+                  {couponApplied ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setCouponCode('');
+                        setCouponDiscount(0);
+                        setCouponApplied(false);
+                        setCouponError('');
+                      }}
+                    >
+                      Remove
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleApplyCoupon}
+                      disabled={validatingCoupon || !couponCode.trim()}
+                    >
+                      {validatingCoupon ? '...' : 'Apply'}
+                    </Button>
+                  )}
+                </div>
+                {couponError && (
+                  <p className="text-xs text-red-500">{couponError}</p>
+                )}
+                {couponApplied && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-green-600">Discount</span>
+                    <span className="font-medium text-green-600">
+                      -{formatPrice(couponDiscount)}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span className="font-medium text-green-600">Free</span>
+                  <span className={`font-medium ${shippingCost === 0 ? 'text-green-600' : ''}`}>
+                    {shippingCost === 0 ? 'Free' : formatPrice(shippingCost)}
+                  </span>
                 </div>
                 <Separator />
                 <div className="flex justify-between">
                   <span className="font-bold">Total</span>
                   <span className="font-bold text-lg text-primary">
-                    {formatPrice(cart.total)}
+                    {formatPrice(cart.total + shippingCost - couponDiscount)}
                   </span>
                 </div>
               </div>

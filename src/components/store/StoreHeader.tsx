@@ -44,6 +44,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getFirstImage } from '@/lib/utils';
+import { formatPrice as libFormatPrice } from '@/lib/pricing';
 
 interface StoreHeaderProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -97,7 +99,7 @@ function MobileNavItem({ link, onNavigate }: { link: NavItem; onNavigate: (page:
   );
 }
 
-const navLinks = [
+const navLinksDefault = [
   { label: "Home", page: "home" },
   { label: "Manufacturing", page: "content-page", slug: "manufacturing" },
   { label: "Products", page: "content-page", slug: "products" },
@@ -123,8 +125,35 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [navLinks, setNavLinks] = useState<{ label: string; page: string; slug?: string; children?: NavItem[] }[]>(navLinksDefault);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch dynamic navigation links from content pages
+  useEffect(() => {
+    async function fetchNavLinks() {
+      try {
+        const res = await fetch('/api/content-pages');
+        if (res.ok) {
+          const data = await res.json();
+          const pages = (data.pages || []).filter((p: any) => p.isActive);
+          const links = pages.map((p: any) => ({
+            label: p.title,
+            page: 'content-page' as const,
+            slug: p.slug,
+          }));
+          // Add fixed links
+          links.push({ label: 'Products', page: 'catalogue' as const });
+          links.push({ label: 'Contact Us', page: 'content-page' as const, slug: 'contact' });
+          setNavLinks(links);
+        }
+      } catch {
+        // fallback to default links
+        setNavLinks(navLinksDefault);
+      }
+    }
+    fetchNavLinks();
+  }, []);
 
   // Load search history from localStorage
   useEffect(() => {
@@ -228,19 +257,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: settings?.currency || "USD",
-    }).format(price);
-  };
-
-  const getFirstImage = (images: string): string | null => {
-    try {
-      const arr = JSON.parse(images);
-      return Array.isArray(arr) && arr.length > 0 ? arr[0] : null;
-    } catch {
-      return null;
-    }
+    return libFormatPrice(price, settings?.currency || 'USD');
   };
 
   return (
@@ -262,7 +279,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
               <ShoppingBag className="h-6 w-6 text-primary" />
             )}
             <span className="text-xl font-bold tracking-tight">
-              {settings?.site_name || 'Style'}<span className="text-primary">{settings?.site_name ? '' : 'Store'}</span>
+              {settings?.site_name || 'My Store'}
             </span>
           </button>
 
@@ -442,7 +459,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                   ) : (
                     <ShoppingBag className="h-5 w-5 text-primary" />
                   )}
-                  {settings?.site_name || 'StyleStore'}
+                  {settings?.site_name || 'My Store'}
                 </SheetTitle>
               </SheetHeader>
               <nav

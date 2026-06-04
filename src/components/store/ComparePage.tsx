@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/table';
 import { useAppStore } from '@/lib/store';
 import { formatPrice as libFormatPrice } from '@/lib/pricing';
+import { getFirstImage } from '@/lib/utils';
 
 interface ComparePageProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -23,15 +24,6 @@ interface ComparePageProps {
 export function ComparePage({ onNavigate }: ComparePageProps) {
   const { compare, removeFromCompare, clearCompare, addToCart, auth, settings } = useAppStore();
   const { products } = compare;
-
-  const getFirstImage = (images: string) => {
-    try {
-      const arr = JSON.parse(images);
-      return Array.isArray(arr) && arr.length > 0 ? arr[0] : null;
-    } catch {
-      return null;
-    }
-  };
 
   const formatPrice = (price: number) => {
     return libFormatPrice(price, settings?.currency || 'USD');

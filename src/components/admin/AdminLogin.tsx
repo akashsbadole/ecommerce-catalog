@@ -281,7 +281,7 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
         )}
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          StyleStore CMS &mdash; Admin Panel
+          My Store CMS &mdash; Admin Panel
         </p>
       </div>
     </div>

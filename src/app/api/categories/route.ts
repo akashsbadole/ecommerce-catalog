@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { logActivity } from '@/lib/activity-log';
 import { categorySchema } from '@/lib/validations';
+import { getStoreId } from '@/lib/store-db';
 
 export async function GET(request: NextRequest) {
   try {
+    const storeId = getStoreId(request);
     const { searchParams } = new URL(request.url);
     const all = searchParams.get('all');
     const includeDeleted = searchParams.get('includeDeleted');
@@ -20,7 +22,7 @@ export async function GET(request: NextRequest) {
     }
 
     const categories = await db.category.findMany({
-      where,
+      where: { ...where, ...(storeId ? { storeId } : {}) },
       orderBy: { sortOrder: 'asc' },
       include: all ? { _count: { select: { Product: true } } } : undefined,
     });
@@ -63,6 +65,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Slug already in use' }, { status: 409 });
     }
 
+    const storeId = getStoreId(request);
     const category = await db.category.create({
       data: {
         name: validatedData.name,
@@ -75,6 +78,7 @@ export async function POST(request: NextRequest) {
         metaDescription: validatedData.metaDescription || null,
         customSchema: (validatedData as Record<string, unknown>).customSchema as string || null,
         parentId: body.parentId || null,
+        ...(storeId ? { storeId } : {}),
       },
     });
 

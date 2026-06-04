@@ -24,6 +24,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useAppStore } from '@/lib/store';
+import { formatPrice } from '@/lib/pricing';
 
 interface Order {
   id: string;
@@ -45,13 +46,6 @@ interface Order {
 
 interface OrdersPageProps {
   onNavigate: (page: string, data?: unknown) => void;
-}
-
-function formatPrice(price: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-  }).format(price);
 }
 
 function getStatusIcon(status: string) {

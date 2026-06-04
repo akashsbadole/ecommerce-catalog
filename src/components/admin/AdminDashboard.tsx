@@ -13,11 +13,13 @@ import {
   FileText,
   BookOpen,
   ArrowRightLeft,
+  Tag,
   Settings,
   LogOut,
   Menu,
   ChevronRight,
   Users,
+  Store,
   ClipboardList,
   Search,
   Download,
@@ -55,7 +57,9 @@ import { AdminMedia } from '@/components/admin/AdminMedia';
 import { AdminPages } from '@/components/admin/AdminPages';
 import { AdminBlog } from '@/components/admin/AdminBlog';
 import { AdminRedirects } from '@/components/admin/AdminRedirects';
+import { AdminCoupons } from '@/components/admin/AdminCoupons';
 import { AdminUsers } from '@/components/admin/AdminUsers';
+import { AdminStores } from '@/components/admin/AdminStores';
 import { AdminActivityLog } from '@/components/admin/AdminActivityLog';
 import { AdminDataExport } from '@/components/admin/AdminDataExport';
 import { AdminSearchDialog } from '@/components/admin/AdminSearchDialog';
@@ -78,6 +82,7 @@ const sidebarItems = [
   { id: 'categories', label: 'Categories', icon: FolderOpen },
   { id: 'quotes', label: 'Quotes', icon: FileText },
   { id: 'orders', label: 'Orders', icon: ShoppingBag },
+  { id: 'coupons', label: 'Coupons', icon: Tag },
   { id: 'enquiries', label: 'Enquiries', icon: MessageSquare },
   { id: 'media', label: 'Media', icon: ImageIcon },
   { id: 'pages', label: 'Pages', icon: FileText },
@@ -85,6 +90,7 @@ const sidebarItems = [
   { id: 'banners', label: 'Banners', icon: ImageIcon },
   { id: 'redirects', label: 'Redirects', icon: ArrowRightLeft },
   { id: 'users', label: 'Users', icon: Users },
+  { id: 'stores', label: 'Stores', icon: Store },
   { id: 'activity-log', label: 'Activity Log', icon: ClipboardList },
   { id: 'data-export', label: 'Data Export', icon: Download },
   { id: 'settings', label: 'Settings', icon: Settings },
@@ -311,6 +317,8 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
         return <AdminQuotes />;
       case 'orders':
         return <AdminOrders />;
+      case 'coupons':
+        return <AdminCoupons />;
       case 'banners':
         return <AdminBanners />;
       case 'media':
@@ -323,6 +331,8 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
         return <AdminRedirects />;
       case 'users':
         return <AdminUsers />;
+      case 'stores':
+        return <AdminStores />;
       case 'activity-log':
         return <AdminActivityLog />;
       case 'data-export':

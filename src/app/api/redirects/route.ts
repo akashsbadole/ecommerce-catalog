@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getStoreId } from '@/lib/store-db';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const storeId = getStoreId(request);
     const redirects = await db.redirect.findMany({
+      where: storeId ? { storeId } : undefined,
       orderBy: { createdAt: 'desc' },
     });
 
@@ -29,12 +32,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const storeId = getStoreId(request);
     const redirect = await db.redirect.create({
       data: {
         from,
         to,
         type: type || '301',
         isActive: isActive ?? true,
+        ...(storeId ? { storeId } : {}),
       },
     });
 

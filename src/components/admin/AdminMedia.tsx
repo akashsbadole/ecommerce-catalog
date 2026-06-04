@@ -151,7 +151,8 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
         setTotal(data.total);
         setPage(data.page);
       }
-    } catch {
+    } catch (error) {
+      console.error('Failed to load media:', error);
       toast.error('Failed to load media');
     } finally {
       setLoading(false);
@@ -178,8 +179,8 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
         const data = await res.json();
         setFolders(data.folders || []);
       }
-    } catch {
-      // ignore
+    } catch (error) {
+      console.error('Failed to load folders:', error);
     }
   }, []);
 
@@ -209,7 +210,8 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
       } else {
         toast.error('Failed to create folder');
       }
-    } catch {
+    } catch (error) {
+      console.error('Failed to create folder:', error);
       toast.error('Failed to create folder');
     }
   };
@@ -231,7 +233,8 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
       } else {
         toast.error('Failed to move file');
       }
-    } catch {
+    } catch (error) {
+      console.error('Failed to move file:', error);
       toast.error('Failed to move file');
     }
   };
@@ -260,7 +263,8 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
       } else {
         toast.error('Upload failed');
       }
-    } catch {
+    } catch (error) {
+      console.error('Upload failed:', error);
       toast.error('Upload failed');
     } finally {
       setUploading(false);
@@ -282,7 +286,8 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
       } else {
         toast.error('Delete failed');
       }
-    } catch {
+    } catch (error) {
+      console.error('Delete failed:', error);
       toast.error('Delete failed');
     }
   };
@@ -313,7 +318,8 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
         setEditAltOpen(false);
         fetchMedia(page, search);
       }
-    } catch {
+    } catch (error) {
+      console.error('Failed to update alt text:', error);
       toast.error('Update failed');
     }
   };

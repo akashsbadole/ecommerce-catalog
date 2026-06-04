@@ -12,6 +12,7 @@ import {
   Clock,
   Eye,
   FileText,
+  AlertTriangle,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { adminFetch } from '@/lib/admin-fetch';
@@ -74,6 +75,21 @@ export function AdminDashboardHome({ onNavigate }: { onNavigate?: (tab: string) 
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentEnquiries, setRecentEnquiries] = useState<EnquiryRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [smtpConfigured, setSmtpConfigured] = useState(true);
+
+  useEffect(() => {
+    async function checkSmtp() {
+      try {
+        const res = await adminFetch('/api/settings');
+        if (res.ok) {
+          const data = await res.json();
+          const hasSmtp = data.settings?.smtp_host && data.settings?.smtp_user;
+          setSmtpConfigured(!!hasSmtp);
+        }
+      } catch {}
+    }
+    checkSmtp();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -140,6 +156,16 @@ export function AdminDashboardHome({ onNavigate }: { onNavigate?: (tab: string) 
         <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
         <p className="text-muted-foreground mt-1">Overview of your store performance</p>
       </div>
+
+      {!smtpConfigured && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
+          <div>
+            <p className="font-medium text-yellow-800">Email not configured</p>
+            <p className="text-sm text-yellow-700">SMTP settings are not set up. Order confirmation emails and notifications won't be sent. Go to Settings to configure SMTP.</p>
+          </div>
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
