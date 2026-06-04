@@ -16,6 +16,8 @@ import {
   ShoppingCart,
   Package,
   ChevronDown,
+  Clock,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -113,14 +115,24 @@ const navLinks = [
 
 export function StoreHeader({ onNavigate }: StoreHeaderProps) {
   const { auth, logout, settings, cart, wishlist } = useAppStore();
+  const isEcommerce = settings?.catalog_mode !== 'catalog';
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Load search history from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('search_history');
+      if (stored) setSearchHistory(JSON.parse(stored));
+    } catch { /* ignore */ }
+  }, []);
 
   // Cmd+K / Ctrl+K keyboard shortcut
   useEffect(() => {
@@ -178,6 +190,29 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
     }
   }, []);
 
+  const saveSearchToHistory = (query: string) => {
+    if (!query.trim()) return;
+    setSearchHistory((prev) => {
+      const filtered = prev.filter((q) => q.toLowerCase() !== query.toLowerCase());
+      const next = [query, ...filtered].slice(0, 10);
+      try { localStorage.setItem('search_history', JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  };
+
+  const removeSearchFromHistory = (query: string) => {
+    setSearchHistory((prev) => {
+      const next = prev.filter((q) => q !== query);
+      try { localStorage.setItem('search_history', JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  };
+
+  const clearSearchHistory = () => {
+    setSearchHistory([]);
+    try { localStorage.removeItem('search_history'); } catch { /* ignore */ }
+  };
+
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -187,6 +222,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
   };
 
   const handleResultClick = (productId: string) => {
+    saveSearchToHistory(searchQuery);
     setSearchOpen(false);
     onNavigate("product", productId);
   };
@@ -321,6 +357,17 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
               <FileText className="mr-1.5 h-4 w-4" />
               Request Quote
             </Button>
+            {isEcommerce && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-sm"
+                onClick={() => onNavigate("quick-order")}
+              >
+                <ShoppingCart className="mr-1.5 h-3.5 w-3.5" />
+                Quick Order
+              </Button>
+            )}
             {auth.user ? (
               <div className="flex items-center gap-2">
                 {settings?.b2b_enable_buyer_portal === "true" && (
@@ -465,6 +512,18 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                     Request Quote
                   </Button>
                 </SheetClose>
+                {isEcommerce && (
+                  <SheetClose asChild>
+                    <Button
+                      variant="ghost"
+                      className="justify-start text-base"
+                      onClick={() => onNavigate("quick-order")}
+                    >
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      Quick Order
+                    </Button>
+                  </SheetClose>
+                )}
                 {auth.user ? (
                   <>
                     {settings?.b2b_enable_buyer_portal === "true" && (
@@ -533,6 +592,12 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
               placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchQuery.trim()) {
+                  saveSearchToHistory(searchQuery);
+                  doSearch(searchQuery);
+                }
+              }}
               className="flex h-12 w-full bg-transparent px-3 py-3 text-sm outline-none placeholder:text-muted-foreground"
             />
             {searchQuery && (
@@ -588,7 +653,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                             alt={product.name}
                             fill
                             className="object-cover"
-                            unoptimized
+
                           />
                         </div>
                       ) : (
@@ -612,18 +677,61 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                 })}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <Search className="h-8 w-8 text-muted-foreground/50" />
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Start typing to search products
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Press{" "}
-                  <kbd className="rounded border bg-muted px-1 font-mono text-[10px]">
-                    Esc
-                  </kbd>{" "}
-                  to close
-                </p>
+              <div className="flex flex-col py-2">
+                {searchHistory.length > 0 && (
+                  <div className="px-3 py-2 flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Recent Searches</span>
+                    <button
+                      onClick={clearSearchHistory}
+                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      Clear
+                    </button>
+                  </div>
+                )}
+                {searchHistory.length > 0 ? (
+                  <div className="px-2">
+                    {searchHistory.map((query, idx) => (
+                      <div key={idx} className="flex items-center gap-2 group">
+                        <button
+                          onClick={() => {
+                            setSearchQuery(query);
+                            doSearch(query);
+                          }}
+                          className="flex flex-1 items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-muted transition-colors"
+                        >
+                          <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          <span className="text-sm">{query}</span>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeSearchFromHistory(query);
+                          }}
+                          className="shrink-0 p-1 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                          aria-label={`Remove "${query}" from history`}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <Search className="h-8 w-8 text-muted-foreground/50" />
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Start typing to search products
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Press{" "}
+                      <kbd className="rounded border bg-muted px-1 font-mono text-[10px]">
+                        Esc
+                      </kbd>{" "}
+                      to close
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

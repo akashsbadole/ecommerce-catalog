@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Image from 'next/image';
-import { Search, ShoppingCart, X, SlidersHorizontal, Hash, Package, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, ShoppingCart, X, SlidersHorizontal, Hash, Package, Eye, GitCompareArrows } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -45,10 +45,8 @@ interface CataloguePageProps {
   onNavigate: (page: string, data?: unknown) => void;
 }
 
-const ITEMS_PER_PAGE_OPTIONS = [12, 24, 48];
-
 export function CataloguePage({ onNavigate }: CataloguePageProps) {
-  const { auth, settings } = useAppStore();
+  const { auth, settings, addToCompare, isInCompare, removeFromCompare } = useAppStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,24 +55,24 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
   const [enquiryProduct, setEnquiryProduct] = useState<Product | null>(null);
   const [enquiryMode, setEnquiryMode] = useState<'enquire' | 'rfq'>('enquire');
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+  const [sortBy, setSortBy] = useState('featured');
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(12);
+  // Infinite scroll state
+  const [visibleCount, setVisibleCount] = useState(12);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  // Derived pagination values
-  const totalPages = Math.max(1, Math.ceil(products.length / itemsPerPage));
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, products.length);
-  const paginatedProducts = useMemo(
-    () => products.slice(startIndex, endIndex),
-    [products, startIndex, endIndex]
+  // Derived values
+  const visibleProducts = useMemo(
+    () => products.slice(0, visibleCount),
+    [products, visibleCount]
   );
+  const hasMore = visibleCount < products.length;
 
-  // Reset to page 1 when search/filter changes
+  // Reset visible count when search/filter changes
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, selectedCategory, itemsPerPage]);
+    setVisibleCount(12);
+  }, [searchQuery, selectedCategory, sortBy]);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -82,6 +80,7 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
       const params = new URLSearchParams();
       if (searchQuery) params.set('search', searchQuery);
       if (selectedCategory) params.set('categoryId', selectedCategory);
+      if (sortBy && sortBy !== 'featured') params.set('sort', sortBy);
 
       const res = await fetch(`/api/products?${params.toString()}`);
       if (res.ok) {
@@ -93,7 +92,7 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedCategory]);
+  }, [searchQuery, selectedCategory, sortBy]);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -132,6 +131,28 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
     metaEl.setAttribute('content', `Browse our complete catalogue of premium products. Wholesale and bulk pricing available for B2B orders.`);
   }, [settings]);
 
+  // Infinite scroll via IntersectionObserver
+  useEffect(() => {
+    if (!sentinelRef.current || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          setLoadingMore(true);
+          // Small delay to feel like loading
+          setTimeout(() => {
+            setVisibleCount((prev) => Math.min(prev + 12, products.length));
+            setLoadingMore(false);
+          }, 300);
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, loading, products.length]);
+
   const getFirstImage = (images: string) => {
     try {
       const arr = JSON.parse(images);
@@ -163,21 +184,28 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
     setQuickViewProduct(product);
   };
 
-  // Generate page numbers to display (show max 7 page numbers with ellipsis)
-  const getPageNumbers = () => {
-    const pages: (number | 'ellipsis-start' | 'ellipsis-end')[] = [];
-    if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
+  const buildCompareProduct = (product: Product) => ({
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    price: product.price,
+    comparePrice: product.comparePrice,
+    images: product.images,
+    stock: 0,
+    sku: null,
+    description: null,
+    shortDescription: product.shortDescription,
+    minOrderQty: product.minOrderQty,
+    Category: product.Category,
+  });
+
+  const handleCompareToggle = (product: Product, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isInCompare(product.id)) {
+      removeFromCompare(product.id);
     } else {
-      pages.push(1);
-      if (currentPage > 3) pages.push('ellipsis-start');
-      const start = Math.max(2, currentPage - 1);
-      const end = Math.min(totalPages - 1, currentPage + 1);
-      for (let i = start; i <= end; i++) pages.push(i);
-      if (currentPage < totalPages - 2) pages.push('ellipsis-end');
-      pages.push(totalPages);
+      addToCompare(buildCompareProduct(product));
     }
-    return pages;
   };
 
   return (
@@ -214,20 +242,21 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
           <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm text-muted-foreground">Filter:</span>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Show:</span>
+            <span className="text-sm text-muted-foreground">Sort:</span>
             <Select
-              value={String(itemsPerPage)}
-              onValueChange={(val) => setItemsPerPage(Number(val))}
+              value={sortBy}
+              onValueChange={(val) => setSortBy(val)}
             >
-              <SelectTrigger className="w-[70px] h-8 text-sm">
-                <SelectValue />
+              <SelectTrigger className="w-[150px] h-8 text-sm">
+                <SelectValue placeholder="Featured" />
               </SelectTrigger>
               <SelectContent>
-                {ITEMS_PER_PAGE_OPTIONS.map((option) => (
-                  <SelectItem key={option} value={String(option)}>
-                    {option}
-                  </SelectItem>
-                ))}
+                <SelectItem value="featured">Featured</SelectItem>
+                <SelectItem value="price_asc">Price: Low to High</SelectItem>
+                <SelectItem value="price_desc">Price: High to Low</SelectItem>
+                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="name_asc">Name: A-Z</SelectItem>
+                <SelectItem value="name_desc">Name: Z-A</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -263,7 +292,7 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
       {!loading && products.length > 0 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {startIndex + 1}–{endIndex} of {products.length} product{products.length !== 1 ? 's' : ''}
+            Showing {Math.min(visibleCount, products.length)} of {products.length} product{products.length !== 1 ? 's' : ''}
           </p>
         </div>
       )}
@@ -271,7 +300,7 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
       {/* Product Grid */}
       {loading ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {Array.from({ length: Math.min(8, itemsPerPage) }).map((_, i) => (
+          {Array.from({ length: 8 }).map((_, i) => (
             <Card key={i} className="overflow-hidden py-0 gap-0">
               <Skeleton className="aspect-square w-full" />
               <div className="p-4 space-y-3">
@@ -316,7 +345,7 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
       ) : (
         <>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {paginatedProducts.map((product) => {
+            {visibleProducts.map((product) => {
               const image = getFirstImage(product.images);
               const hasDiscount = product.comparePrice && product.comparePrice > product.price;
               const discountPercent = hasDiscount
@@ -340,7 +369,7 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
                         alt={product.name}
                         fill
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
-                        unoptimized
+
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
@@ -368,6 +397,20 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
                       aria-label={`Quick view ${product.name}`}
                     >
                       <Eye className="h-4 w-4 text-gray-700 dark:text-gray-200" />
+                    </Button>
+                    {/* Compare Button */}
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className={`absolute bottom-3 right-14 h-9 w-9 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md ${
+                        isInCompare(product.id)
+                          ? 'bg-primary text-white hover:bg-primary/80'
+                          : 'bg-white/90 hover:bg-white dark:bg-gray-800/90 dark:hover:bg-gray-800'
+                      }`}
+                      onClick={(e) => handleCompareToggle(product, e)}
+                      aria-label={isInCompare(product.id) ? `Remove ${product.name} from compare` : `Add ${product.name} to compare`}
+                    >
+                      <GitCompareArrows className="h-4 w-4" />
                     </Button>
                   </div>
                   <CardContent className="p-4 space-y-2">
@@ -447,60 +490,28 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
             })}
           </div>
 
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <nav className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between" aria-label="Pagination">
-              <p className="text-sm text-muted-foreground order-2 sm:order-1">
-                Showing {startIndex + 1}–{endIndex} of {products.length} products
-              </p>
-              <div className="flex items-center gap-1 order-1 sm:order-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9"
-                  disabled={currentPage <= 1}
-                  onClick={() => setCurrentPage((p) => p - 1)}
-                  aria-label="Previous page"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                {getPageNumbers().map((page, idx) => {
-                  if (page === 'ellipsis-start' || page === 'ellipsis-end') {
-                    return (
-                      <span
-                        key={page}
-                        className="flex h-9 w-9 items-center justify-center text-sm text-muted-foreground"
-                      >
-                        …
-                      </span>
-                    );
-                  }
-                  return (
-                    <Button
-                      key={page}
-                      variant={currentPage === page ? 'default' : 'outline'}
-                      size="icon"
-                      className="h-9 w-9"
-                      onClick={() => setCurrentPage(page)}
-                      aria-label={`Page ${page}`}
-                      aria-current={currentPage === page ? 'page' : undefined}
-                    >
-                      {page}
-                    </Button>
-                  );
-                })}
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9"
-                  disabled={currentPage >= totalPages}
-                  onClick={() => setCurrentPage((p) => p + 1)}
-                  aria-label="Next page"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </nav>
+          {/* Infinite Scroll / Load More */}
+          {hasMore && (
+            <div ref={sentinelRef} className="flex justify-center py-8">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setLoadingMore(true);
+                  setTimeout(() => {
+                    setVisibleCount((prev) => Math.min(prev + 12, products.length));
+                    setLoadingMore(false);
+                  }, 300);
+                }}
+                disabled={loadingMore}
+              >
+                {loadingMore ? 'Loading...' : 'Load More'}
+              </Button>
+            </div>
+          )}
+          {!hasMore && products.length > 12 && (
+            <p className="text-center text-sm text-muted-foreground py-8">
+              All {products.length} products loaded
+            </p>
           )}
         </>
       )}

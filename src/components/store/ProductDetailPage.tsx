@@ -15,6 +15,8 @@ import {
   Building2,
   Minus,
   MessageCircle,
+  GitCompareArrows,
+  FileText,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -46,6 +48,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { SocialShare } from './SocialShare';
+import { trackProductView } from './RecentlyViewedProducts';
 import { useAppStore } from '@/lib/store';
 import { calculateTieredPrice, formatPrice as libFormatPrice } from '@/lib/pricing';
 import { generateProductSchema } from '@/lib/seo/schema-generator';
@@ -79,6 +82,7 @@ interface Product {
   Category: { id: string; name: string; slug: string } | null;
   isFeatured: boolean;
   specifications: string | null;
+  documents: string | null;
   metaTitle: string | null;
   metaDescription: string | null;
   stock: number;
@@ -94,6 +98,9 @@ interface ProductDetailPageProps {
 export function ProductDetailPage({ productId, onNavigate }: ProductDetailPageProps) {
   const auth = useAppStore((state) => state.auth);
   const settings = useAppStore((state) => state.settings);
+  const addToCompare = useAppStore((state) => state.addToCompare);
+  const removeFromCompare = useAppStore((state) => state.removeFromCompare);
+  const isInCompare = useAppStore((state) => state.isInCompare);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -144,6 +151,14 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
             ...prev,
             message: `I'm interested in ${data.product.name}. Please provide more information.`,
           }));
+          // Track recently viewed
+          trackProductView({
+            id: data.product.id,
+            name: data.product.name,
+            slug: data.product.slug,
+            price: data.product.price,
+            images: data.product.images,
+          });
         } else {
           toast.error('Product not found');
           onNavigate('catalogue');
@@ -405,14 +420,49 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
       </nav>
 
       {/* Back Button */}
-      <Button
-        variant="ghost"
-        className="w-fit"
-        onClick={() => onNavigate('catalogue')}
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Catalogue
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          className="w-fit"
+          onClick={() => onNavigate('catalogue')}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Catalogue
+        </Button>
+        {(() => {
+          const inCompare = isInCompare(product.id);
+          return (
+            <Button
+              variant={inCompare ? 'default' : 'outline'}
+              size="sm"
+              className={inCompare ? 'bg-primary hover:bg-primary/80 text-white' : ''}
+              onClick={() => {
+                if (inCompare) {
+                  removeFromCompare(product.id);
+                } else {
+                  addToCompare({
+                    id: product.id,
+                    name: product.name,
+                    slug: product.slug,
+                    price: product.price,
+                    comparePrice: product.comparePrice,
+                    images: product.images,
+                    stock: product.stock,
+                    sku: product.sku,
+                    description: product.description,
+                    shortDescription: product.shortDescription,
+                    minOrderQty: product.minOrderQty,
+                    Category: product.Category,
+                  });
+                }
+              }}
+            >
+              <GitCompareArrows className="mr-1.5 h-4 w-4" />
+              {inCompare ? 'In Compare' : 'Compare'}
+            </Button>
+          );
+        })()}
+      </div>
 
       {/* Product Detail */}
       <div className="grid gap-8 lg:grid-cols-2">
@@ -425,7 +475,6 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                 alt={product.name}
                 fill
                 className="object-cover"
-                unoptimized
               />
             ) : (
               <div className="flex h-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
@@ -455,7 +504,6 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                     alt={`${product.name} ${idx + 1}`}
                     fill
                     className="object-cover"
-                    unoptimized
                   />
                 </button>
               ))}
@@ -719,6 +767,45 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
               </div>
             </>
           )}
+
+          {/* Documents / Datasheets */}
+          {(() => {
+            let docs: Array<{ name: string; url: string; size?: number }> = [];
+            try {
+              docs = product.documents ? JSON.parse(product.documents) : [];
+            } catch { /* ignore */ }
+            if (docs.length === 0) return null;
+            return (
+              <>
+                <Separator />
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Documents & Datasheets</h3>
+                  <div className="space-y-2">
+                    {docs.map((doc, idx) => (
+                      <a
+                        key={idx}
+                        href={doc.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                      >
+                        <FileText className="h-5 w-5 text-red-500 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{doc.name}</p>
+                          {doc.size && (
+                            <p className="text-xs text-muted-foreground">
+                              {(doc.size / 1024).toFixed(1)} KB
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-xs text-muted-foreground">PDF</span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </>
+            );
+          })()}
         </div>
       </div>
 
@@ -961,7 +1048,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                 >
                   <div className="relative aspect-square overflow-hidden rounded-t-lg bg-muted">
                     {rpImg ? (
-                      <Image src={rpImg} alt={rp.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" unoptimized />
+                      <Image src={rpImg} alt={rp.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
                     ) : (
                       <div className="flex h-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
                         <ShoppingCart className="h-10 w-10 text-gray-400" />

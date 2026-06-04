@@ -201,6 +201,7 @@ model Product {
   stock             Int              @default(0)
   lowStockThreshold Int              @default(10)
   relatedProductIds String           @default("[]")
+  documents         String           @default("[]") // JSON array of {name, url, size} for PDFs/datasheets
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @default(now())
   Enquiry           Enquiry[]
@@ -309,7 +310,7 @@ model WishlistItem {
 
 model Order {
   id             String      @id @default(cuid())
-  userId         String
+  userId         String?
   orderNumber    String      @unique
   status         String      @default("pending") // pending, confirmed, processing, shipped, delivered, cancelled
   paymentStatus  String      @default("pending") // pending, paid, failed, refunded
@@ -329,7 +330,7 @@ model Order {
   notes          String?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
-  User           User        @relation(fields: [userId], references: [id])
+  User           User?       @relation(fields: [userId], references: [id])
   items          OrderItem[]
 
   @@index([userId])
@@ -354,6 +355,58 @@ model OrderItem {
   @@index([orderId])
 }
 
+model Coupon {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  type      String    // "percentage" or "fixed"
+  value     Float     // percentage (0-100) or fixed amount
+  minOrder  Float     @default(0)
+  maxUses   Int?
+  usedCount Int       @default(0)
+  startsAt  DateTime?
+  expiresAt DateTime?
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+}
+
+model Quote {
+  id            String      @id @default(cuid())
+  quoteNumber   String      @unique
+  userId        String
+  status        String      @default("draft") // draft, sent, approved, rejected, converted
+  subtotal      Float
+  discount      Float       @default(0)
+  tax           Float       @default(0)
+  total         Float
+  currency      String      @default("USD")
+  validUntil    DateTime?
+  notes         String?
+  adminNotes    String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  User          User        @relation(fields: [userId], references: [id])
+  items         QuoteItem[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([quoteNumber])
+}
+
+model QuoteItem {
+  id          String  @id @default(cuid())
+  quoteId     String
+  productId   String
+  name        String
+  sku         String?
+  price       Float
+  quantity    Int
+  total       Float
+  images      String  @default("[]")
+  Quote       Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@index([quoteId])
+}
+
 model User {
   id                 String               @id @default(cuid())
   email              String               @unique
@@ -369,6 +422,7 @@ model User {
   isVerified         Boolean              @default(false)
   tier               String               @default("standard") // standard, silver, gold, platinum
   documents          String               @default("[]") // JSON array of document URLs
+  addresses          String               @default("[]") // JSON array of saved addresses
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @default(now())
   ActivityLog        ActivityLog[]
@@ -378,4 +432,5 @@ model User {
   Cart               Cart?
   Wishlist           Wishlist?
   Order              Order[]
+  Quote              Quote[]
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageBlockRenderer } from './PageBlockRenderer';
+import { RecentlyViewedProducts } from './RecentlyViewedProducts';
 import type { PageBlock } from '@/lib/page-blocks';
 
 interface HomePageProps {
@@ -152,6 +153,9 @@ export function HomePage({ onNavigate, settings }: HomePageProps) {
   return (
     <div className="flex flex-col">
       <PageBlockRenderer blocks={blocks} onNavigate={onNavigate} />
+      <div className="container mx-auto px-4 py-12">
+        <RecentlyViewedProducts onNavigate={onNavigate} />
+      </div>
     </div>
   );
 }

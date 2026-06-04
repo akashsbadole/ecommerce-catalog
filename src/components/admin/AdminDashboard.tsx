@@ -47,6 +47,8 @@ import { AdminDashboardHome } from '@/components/admin/AdminDashboardHome';
 import { AdminProducts } from '@/components/admin/AdminProducts';
 import { AdminCategories } from '@/components/admin/AdminCategories';
 import { AdminEnquiries } from '@/components/admin/AdminEnquiries';
+import { AdminQuotes } from '@/components/admin/AdminQuotes';
+import { AdminOrders } from '@/components/admin/AdminOrders';
 import { AdminBanners } from '@/components/admin/AdminBanners';
 import { AdminSettings } from '@/components/admin/AdminSettings';
 import { AdminMedia } from '@/components/admin/AdminMedia';
@@ -74,6 +76,8 @@ const sidebarItems = [
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'products', label: 'Products', icon: Package },
   { id: 'categories', label: 'Categories', icon: FolderOpen },
+  { id: 'quotes', label: 'Quotes', icon: FileText },
+  { id: 'orders', label: 'Orders', icon: ShoppingBag },
   { id: 'enquiries', label: 'Enquiries', icon: MessageSquare },
   { id: 'media', label: 'Media', icon: ImageIcon },
   { id: 'pages', label: 'Pages', icon: FileText },
@@ -303,6 +307,10 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
         return <AdminCategories />;
       case 'enquiries':
         return <AdminEnquiries />;
+      case 'quotes':
+        return <AdminQuotes />;
+      case 'orders':
+        return <AdminOrders />;
       case 'banners':
         return <AdminBanners />;
       case 'media':

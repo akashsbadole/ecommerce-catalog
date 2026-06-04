@@ -17,7 +17,9 @@ export type Page =
   | { type: "orders" }
   | { type: "order-detail"; orderId: string }
   | { type: "account" }
-  | { type: "checkout" };
+  | { type: "checkout" }
+  | { type: "compare" }
+  | { type: "quick-order" };
 
 interface AdminUser {
   id: string;
@@ -77,6 +79,26 @@ interface WishlistState {
   loading: boolean;
 }
 
+export interface CompareProduct {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  comparePrice: number | null;
+  images: string;
+  stock: number;
+  sku: string | null;
+  description: string | null;
+  shortDescription: string | null;
+  minOrderQty: number;
+  Category: { id: string; name: string } | null;
+}
+
+interface CompareState {
+  products: CompareProduct[];
+  compareOpen: boolean;
+}
+
 interface AppState {
   // Navigation
   currentPage: Page;
@@ -124,6 +146,14 @@ interface AppState {
   addToWishlist: (productId: string) => Promise<boolean>;
   removeFromWishlist: (productId: string) => Promise<void>;
   isInWishlist: (productId: string) => boolean;
+
+  // Compare
+  compare: CompareState;
+  addToCompare: (product: CompareProduct) => void;
+  removeFromCompare: (productId: string) => void;
+  clearCompare: () => void;
+  isInCompare: (productId: string) => boolean;
+  setCompareOpen: (open: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -231,6 +261,16 @@ export const useAppStore = create<AppState>()(
             if (typeof window !== "undefined")
               window.history.pushState({}, "", "/checkout");
             break;
+          case "compare":
+            set({ currentPage: { type: "compare" } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", "/compare");
+            break;
+          case "quick-order":
+            set({ currentPage: { type: "quick-order" } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", "/quick-order");
+            break;
         }
       },
 
@@ -323,8 +363,66 @@ export const useAppStore = create<AppState>()(
       addToCart: async (productId, quantity = 1, variantId) => {
         const { auth } = get();
         if (!auth.token) {
-          // Redirect to login or show message
-          return false;
+          // Guest cart: store locally
+          try {
+            const localCartKey = 'guest_cart';
+            const stored = localStorage.getItem(localCartKey);
+            const guestCart = stored ? JSON.parse(stored) : { items: [], total: 0, itemCount: 0 };
+
+            // Fetch product details
+            const res = await fetch(`/api/products/${productId}`);
+            if (!res.ok) return false;
+            const data = await res.json();
+            const product = data.product;
+
+            const existingIdx = guestCart.items.findIndex(
+              (i: any) => i.productId === productId && i.variantId === (variantId || null)
+            );
+
+            if (existingIdx >= 0) {
+              guestCart.items[existingIdx].quantity += quantity;
+            } else {
+              guestCart.items.push({
+                id: `guest_${productId}_${Date.now()}`,
+                productId,
+                variantId: variantId || null,
+                quantity,
+                Product: {
+                  id: product.id,
+                  name: product.name,
+                  slug: product.slug,
+                  price: product.price,
+                  comparePrice: product.comparePrice,
+                  images: product.images,
+                  stock: product.stock,
+                  isActive: product.isActive,
+                  minOrderQty: product.minOrderQty || 1,
+                },
+              });
+            }
+
+            guestCart.total = guestCart.items.reduce(
+              (sum: number, i: any) => sum + i.Product.price * i.quantity, 0
+            );
+            guestCart.itemCount = guestCart.items.reduce(
+              (sum: number, i: any) => sum + i.quantity, 0
+            );
+
+            localStorage.setItem(localCartKey, JSON.stringify(guestCart));
+
+            set({
+              cart: {
+                items: guestCart.items,
+                total: guestCart.total,
+                itemCount: guestCart.itemCount,
+                loading: false,
+              },
+            });
+            return true;
+          } catch (error) {
+            console.error("Failed to add to guest cart:", error);
+            return false;
+          }
         }
         try {
           const res = await fetch("/api/cart", {
@@ -477,6 +575,41 @@ export const useAppStore = create<AppState>()(
       isInWishlist: (productId) => {
         const { wishlist } = get();
         return wishlist.items.some((item) => item.productId === productId);
+      },
+
+      // Compare
+      compare: { products: [], compareOpen: false },
+      addToCompare: (product) => {
+        const { compare } = get();
+        if (compare.products.length >= 4) return;
+        if (compare.products.some((p) => p.id === product.id)) return;
+        set({
+          compare: {
+            ...compare,
+            products: [...compare.products, product],
+            compareOpen: true,
+          },
+        });
+      },
+      removeFromCompare: (productId) => {
+        const { compare } = get();
+        set({
+          compare: {
+            ...compare,
+            products: compare.products.filter((p) => p.id !== productId),
+          },
+        });
+      },
+      clearCompare: () => {
+        set({ compare: { products: [], compareOpen: false } });
+      },
+      isInCompare: (productId) => {
+        const { compare } = get();
+        return compare.products.some((p) => p.id === productId);
+      },
+      setCompareOpen: (open) => {
+        const { compare } = get();
+        set({ compare: { ...compare, compareOpen: open } });
       },
     }),
     {

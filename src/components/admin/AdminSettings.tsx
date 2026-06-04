@@ -72,6 +72,8 @@ const defaultSettings: Settings = {
   b2b_enable_tiered_pricing: 'false',
   b2b_enable_buyer_portal: 'false',
   b2b_verify_new_accounts: 'false',
+  tax_rate: '0',
+  order_approval_threshold: '0',
   catalog_mode: 'ecommerce',
   catalog_show_prices: 'true',
   catalog_enable_cart: 'true',
@@ -237,6 +239,37 @@ export function AdminSettings() {
               onChange={(e) => handleSettingChange('currency_symbol', e.target.value)}
               placeholder="$"
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="tax_rate">Tax Rate (%)</Label>
+            <Input
+              id="tax_rate"
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              value={settings.tax_rate}
+              onChange={(e) => handleSettingChange('tax_rate', e.target.value)}
+              placeholder="0"
+            />
+            <p className="text-xs text-muted-foreground">
+              Percentage applied to orders at checkout
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="order_approval_threshold">Order Approval Threshold</Label>
+            <Input
+              id="order_approval_threshold"
+              type="number"
+              min="0"
+              step="0.01"
+              value={settings.order_approval_threshold || '0'}
+              onChange={(e) => handleSettingChange('order_approval_threshold', e.target.value)}
+              placeholder="0 (disabled)"
+            />
+            <p className="text-xs text-muted-foreground">
+              Orders above this total require admin approval. Set to 0 to disable.
+            </p>
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label>Site Logo</Label>

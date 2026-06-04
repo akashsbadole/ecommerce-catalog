@@ -117,13 +117,57 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   }, [razorpayEnabled]);
 
   const handlePlaceOrder = async () => {
-    if (!auth.token || cart.items.length === 0) return;
+    if (cart.items.length === 0) return;
 
     if (!shippingName || !shippingEmail || !shippingAddress) {
       toast.error('Please fill in all required shipping fields');
       return;
     }
 
+    // Guest checkout flow
+    if (!auth.token) {
+      setPlacing(true);
+      try {
+        const guestItems = cart.items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.Product.price,
+        }));
+
+        const res = await fetch('/api/orders/guest', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: guestItems,
+            shippingName,
+            shippingEmail,
+            shippingPhone,
+            shippingAddress,
+            paymentMethod: 'manual',
+            notes,
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setOrderNumber(data.order.orderNumber);
+          setStep('success');
+          // Clear guest cart
+          try { localStorage.removeItem('guest_cart'); } catch { /* ignore */ }
+          toast.success('Order placed successfully!');
+        } else {
+          const data = await res.json();
+          toast.error(data.error || 'Failed to place order');
+        }
+      } catch {
+        toast.error('Failed to place order');
+      } finally {
+        setPlacing(false);
+      }
+      return;
+    }
+
+    // Authenticated checkout flow
     if (paymentMethod === 'razorpay' && razorpayEnabled) {
       // Razorpay flow: create order first, then open Razorpay
       setPlacing(true);
@@ -257,16 +301,16 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
     }
   };
 
-  if (!auth.token) {
+  if (!auth.token && cart.items.length === 0 && step !== 'success') {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <ShoppingBag className="h-16 w-16 text-muted-foreground/30 mb-4" />
         <h1 className="text-2xl font-bold">Checkout</h1>
         <p className="mt-2 text-muted-foreground">
-          Please log in to proceed with checkout
+          Your cart is empty. Add some products before checking out.
         </p>
-        <Button className="mt-6" onClick={() => onNavigate('home')}>
-          Continue Shopping
+        <Button className="mt-6" onClick={() => onNavigate('catalogue')}>
+          Browse Catalogue
         </Button>
       </div>
     );
@@ -509,7 +553,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
                               alt={item.Product.name}
                               fill
                               className="object-cover"
-                              unoptimized
+
                             />
                           ) : (
                             <div className="flex h-full items-center justify-center">

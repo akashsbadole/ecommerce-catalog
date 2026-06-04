@@ -47,6 +47,7 @@ const USER_AUTH_GET_PREFIXES = [
   '/api/wishlist',
   '/api/orders',
   '/api/account',
+  '/api/quotes',
 ];
 
 // User-authenticated POST/PUT/DELETE endpoints
@@ -55,6 +56,7 @@ const USER_AUTH_MUTATION_PREFIXES = [
   '/api/wishlist',
   '/api/orders',
   '/api/account',
+  '/api/quotes',
 ];
 
 // Role-based permission map
@@ -84,6 +86,7 @@ const ROLE_PERMISSIONS: Record<string, {
       '/api/import/shopify',
       '/api/import/woocommerce',
       '/api/admin/backup',
+      '/api/admin/quotes',
     ],
     write: [
       '/api/enquiries',
@@ -93,6 +96,7 @@ const ROLE_PERMISSIONS: Record<string, {
       '/api/import/shopify',
       '/api/import/woocommerce',
       '/api/admin/backup',
+      '/api/admin/quotes',
     ],
   },
   editor: {

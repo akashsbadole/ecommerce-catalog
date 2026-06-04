@@ -157,7 +157,7 @@ export function WishlistPage({ onNavigate }: WishlistPageProps) {
                       alt={item.Product.name}
                       fill
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      unoptimized
+
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center">

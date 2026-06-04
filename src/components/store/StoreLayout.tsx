@@ -6,6 +6,7 @@ import { StoreHeader } from './StoreHeader';
 import { StoreFooter } from './StoreFooter';
 import { BackToTop } from './BackToTop';
 import { CookieConsent } from './CookieConsent';
+import { CompareBar } from './CompareBar';
 
 interface StoreLayoutProps {
   currentPage: string;
@@ -93,6 +94,8 @@ export function StoreLayout({ currentPage, onNavigate, children }: StoreLayoutPr
       <StoreFooter onNavigate={onNavigate} settings={settings} />
 
       <BackToTop />
+
+      <CompareBar />
 
       <CookieConsent />
     </div>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { verifyToken } from '@/lib/auth-edge';
+import { sendOrderConfirmationToCustomer, sendOrderNotificationToAdmin, getSiteSettings } from '@/lib/email';
 
 async function resolveUserId(request: NextRequest): Promise<string | null> {
   const authHeader = request.headers.get('authorization');
@@ -93,6 +94,7 @@ export async function POST(request: NextRequest) {
       billingAddress,
       paymentMethod,
       notes,
+      couponCode,
     } = body;
 
     // Get user's cart with items
@@ -148,8 +150,39 @@ export async function POST(request: NextRequest) {
     // Calculate totals
     const subtotal = cart.items.reduce((sum, item) => sum + item.Product.price * item.quantity, 0);
     const shippingCost = 0; // Default to free shipping, can be configured
-    const tax = 0; // Tax calculation can be added later
-    const total = subtotal + shippingCost + tax;
+
+    // Tax calculation from site settings
+    const taxSettings = await db.siteSetting.findUnique({ where: { key: 'tax_rate' } });
+    const taxRate = parseFloat(taxSettings?.value || '0');
+    const tax = Math.round(subtotal * taxRate * 100) / 100;
+
+    // Coupon discount
+    let discount = 0;
+    let appliedCouponId: string | null = null;
+    if (couponCode) {
+      const coupon = await db.coupon.findUnique({ where: { code: couponCode.toUpperCase() } });
+      if (coupon && coupon.isActive) {
+        const now = new Date();
+        const valid = (!coupon.startsAt || now >= coupon.startsAt) &&
+          (!coupon.expiresAt || now <= coupon.expiresAt) &&
+          subtotal >= coupon.minOrder &&
+          (coupon.maxUses === null || coupon.usedCount < coupon.maxUses);
+        if (valid) {
+          discount = coupon.type === 'percentage'
+            ? Math.round(subtotal * coupon.value) / 100
+            : Math.min(coupon.value, subtotal);
+          discount = Math.round(discount * 100) / 100;
+          appliedCouponId = coupon.id;
+        }
+      }
+    }
+
+    const total = subtotal + shippingCost + tax - discount;
+
+    // Check approval threshold
+    const thresholdSetting = await db.siteSetting.findUnique({ where: { key: 'order_approval_threshold' } });
+    const approvalThreshold = parseFloat(thresholdSetting?.value || '0');
+    const requiresApproval = approvalThreshold > 0 && total >= approvalThreshold;
 
     // Create order in a transaction
     const order = await db.$transaction(async (tx) => {
@@ -157,7 +190,7 @@ export async function POST(request: NextRequest) {
         data: {
           userId,
           orderNumber: generateOrderNumber(),
-          status: 'pending',
+          status: requiresApproval ? 'pending_approval' : 'pending',
           paymentStatus: 'pending',
           paymentMethod: paymentMethod || null,
           subtotal,
@@ -203,6 +236,14 @@ export async function POST(request: NextRequest) {
         });
       }
 
+      // Increment coupon usage
+      if (appliedCouponId) {
+        await tx.coupon.update({
+          where: { id: appliedCouponId },
+          data: { usedCount: { increment: 1 } },
+        });
+      }
+
       // Clear the cart
       await tx.cartItem.deleteMany({
         where: { cartId: cart.id },
@@ -210,6 +251,12 @@ export async function POST(request: NextRequest) {
 
       return newOrder;
     });
+
+    // Send order emails (non-blocking)
+    const getSetting = await getSiteSettings();
+    const siteName = getSetting('site_name') || 'Store';
+    sendOrderConfirmationToCustomer(order, order.items, siteName).catch(() => {});
+    sendOrderNotificationToAdmin(order, order.items, siteName).catch(() => {});
 
     return NextResponse.json({
       order,

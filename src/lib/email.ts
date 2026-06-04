@@ -118,6 +118,149 @@ export async function sendEnquiryConfirmation(enquiry: {
   );
 }
 
+// Order confirmation email to customer
+export async function sendOrderConfirmationToCustomer(
+  order: {
+    id: string;
+    orderNumber: string;
+    status: string;
+    total: number;
+    currency: string;
+    shippingName?: string | null;
+    shippingEmail?: string | null;
+    shippingPhone?: string | null;
+    shippingAddress?: string | null;
+    paymentMethod?: string | null;
+    notes?: string | null;
+  },
+  items: {
+    name: string;
+    price: number;
+    quantity: number;
+    total: number;
+    images?: string;
+    sku?: string | null;
+  }[],
+  siteName: string
+) {
+  const email = order.shippingEmail;
+  if (!email) return false;
+
+  const content = buildOrderEmailContent(order, items, siteName, false);
+  return sendEmail(
+    email,
+    `Order Confirmation #${order.orderNumber} - ${siteName}`,
+    emailWrapper(siteName, content)
+  );
+}
+
+// Admin notification for new order
+export async function sendOrderNotificationToAdmin(
+  order: {
+    id: string;
+    orderNumber: string;
+    status: string;
+    total: number;
+    currency: string;
+    shippingName?: string | null;
+    shippingEmail?: string | null;
+    shippingPhone?: string | null;
+    shippingAddress?: string | null;
+    paymentMethod?: string | null;
+    notes?: string | null;
+  },
+  items: {
+    name: string;
+    price: number;
+    quantity: number;
+    total: number;
+    images?: string;
+    sku?: string | null;
+  }[],
+  siteName: string
+) {
+  const getSetting = await getSiteSettings();
+  const siteEmail = getSetting('site_email') || 'admin@store.com';
+
+  const content = buildOrderEmailContent(order, items, siteName, true);
+  return sendEmail(
+    siteEmail,
+    `[${siteName}] New Order #${order.orderNumber}`,
+    emailWrapper(siteName, content)
+  );
+}
+
+function buildOrderEmailContent(
+  order: {
+    orderNumber: string;
+    status: string;
+    total: number;
+    currency: string;
+    shippingName?: string | null;
+    shippingEmail?: string | null;
+    shippingPhone?: string | null;
+    shippingAddress?: string | null;
+    paymentMethod?: string | null;
+    notes?: string | null;
+  },
+  items: {
+    name: string;
+    price: number;
+    quantity: number;
+    total: number;
+    sku?: string | null;
+  }[],
+  siteName: string,
+  isAdmin: boolean
+): string {
+  const fmt = (n: number) => `${order.currency} ${n.toFixed(2)}`;
+
+  let content = isAdmin
+    ? `<h2 style="margin-top:0">New Order Received</h2><p>A new order has been placed on your website.</p>`
+    : `<h2 style="margin-top:0">Order Confirmed!</h2><p>Dear ${order.shippingName || 'Customer'},</p><p>Thank you for your order. We have received it and it is being processed.</p>`;
+
+  // Order summary
+  content += `<div style="margin:20px 0;padding:16px;background:#f0fdf4;border-radius:8px;border-left:4px solid #059669">`;
+  content += `<p style="margin:0;color:#065f46"><strong>Order #${order.orderNumber}</strong></p>`;
+  content += `<p style="margin:4px 0 0;color:#065f46">Status: ${order.status.charAt(0).toUpperCase() + order.status.slice(1)} | Payment: ${order.paymentMethod || 'Not specified'}</p>`;
+  content += `</div>`;
+
+  // Items table
+  content += `<div class="field-label">Items</div>`;
+  content += `<table style="width:100%;border-collapse:collapse;margin-top:8px">`;
+  content += `<tr style="background:#f9fafb"><th style="padding:8px;text-align:left;border-bottom:1px solid #e5e7eb;font-size:12px;text-transform:uppercase;color:#6b7280">Product</th><th style="padding:8px;text-align:center;border-bottom:1px solid #e5e7eb;font-size:12px;text-transform:uppercase;color:#6b7280">Qty</th><th style="padding:8px;text-align:right;border-bottom:1px solid #e5e7eb;font-size:12px;text-transform:uppercase;color:#6b7280">Price</th><th style="padding:8px;text-align:right;border-bottom:1px solid #e5e7eb;font-size:12px;text-transform:uppercase;color:#6b7280">Total</th></tr>`;
+  for (const item of items) {
+    content += `<tr><td style="padding:8px;border-bottom:1px solid #f3f4f6">${item.name}${item.sku ? ` <span style="color:#9ca3af;font-size:12px">(${item.sku})</span>` : ''}</td><td style="padding:8px;text-align:center;border-bottom:1px solid #f3f4f6">${item.quantity}</td><td style="padding:8px;text-align:right;border-bottom:1px solid #f3f4f6">${fmt(item.price)}</td><td style="padding:8px;text-align:right;border-bottom:1px solid #f3f4f6">${fmt(item.total)}</td></tr>`;
+  }
+  content += `</table>`;
+
+  // Total
+  content += `<div style="margin-top:16px;text-align:right;font-size:18px"><strong>Total: ${fmt(order.total)}</strong></div>`;
+
+  // Shipping details
+  if (order.shippingName || order.shippingEmail || order.shippingAddress || order.shippingPhone) {
+    content += `<div class="field-label" style="margin-top:24px">Shipping Details</div>`;
+    if (order.shippingName) content += `<div class="field-value">${order.shippingName}</div>`;
+    if (order.shippingEmail) content += `<div class="field-value">${order.shippingEmail}</div>`;
+    if (order.shippingPhone) content += `<div class="field-value">${order.shippingPhone}</div>`;
+    if (order.shippingAddress) content += `<div class="field-value">${order.shippingAddress.replace(/\n/g, '<br>')}</div>`;
+  }
+
+  if (order.notes) {
+    content += `<div class="field-label" style="margin-top:16px">Notes</div>`;
+    content += `<div class="field-value">${order.notes.replace(/\n/g, '<br>')}</div>`;
+  }
+
+  if (!isAdmin) {
+    content += `<div style="margin-top:24px;padding:16px;background:#f0fdf4;border-radius:8px;border-left:4px solid #059669">`;
+    content += `<p style="margin:0;color:#065f46"><strong>What happens next?</strong></p>`;
+    content += `<p style="margin:8px 0 0;color:#065f46">We are preparing your order for dispatch. You will receive another email once your order has been shipped.</p>`;
+    content += `</div>`;
+  }
+
+  return content;
+}
+
 // Keep backward compatibility
 export async function sendEnquiryNotification(enquiry: {
   name: string;

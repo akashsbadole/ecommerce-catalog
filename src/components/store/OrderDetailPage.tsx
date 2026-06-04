@@ -9,6 +9,8 @@ import {
   CheckCircle,
   Truck,
   XCircle,
+  ShoppingCart,
+  RotateCcw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,6 +43,7 @@ interface OrderDetail {
   updatedAt: string;
   items: {
     id: string;
+    productId: string;
     name: string;
     sku: string | null;
     price: number;
@@ -108,10 +111,11 @@ function getStatusColor(status: string) {
 }
 
 export function OrderDetailPage({ orderId, onNavigate }: OrderDetailPageProps) {
-  const { auth, settings } = useAppStore();
+  const { auth, settings, addToCart } = useAppStore();
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const [reordering, setReordering] = useState(false);
 
   const currency = settings?.currency || 'USD';
 
@@ -151,6 +155,30 @@ export function OrderDetailPage({ orderId, onNavigate }: OrderDetailPageProps) {
       toast.error('Failed to cancel order');
     } finally {
       setCancelling(false);
+    }
+  };
+
+  const handleReorder = async () => {
+    if (!order || !auth.token) return;
+    setReordering(true);
+    let added = 0;
+    let failed = 0;
+    try {
+      for (const item of order.items) {
+        const success = await addToCart(item.productId, item.quantity);
+        if (success) added++;
+        else failed++;
+      }
+      if (added > 0) {
+        toast.success(`${added} item(s) added to cart${failed > 0 ? ` (${failed} failed)` : ''}`);
+        onNavigate('cart');
+      } else {
+        toast.error('Failed to add items to cart');
+      }
+    } catch {
+      toast.error('Failed to re-order');
+    } finally {
+      setReordering(false);
     }
   };
 
@@ -267,7 +295,7 @@ export function OrderDetailPage({ orderId, onNavigate }: OrderDetailPageProps) {
                       alt={item.name}
                       fill
                       className="object-cover"
-                      unoptimized
+
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center">
@@ -379,8 +407,24 @@ export function OrderDetailPage({ orderId, onNavigate }: OrderDetailPageProps) {
       </div>
 
       {/* Actions */}
-      {order.status === 'pending' && (
-        <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        {order.status !== 'cancelled' && (
+          <Button
+            variant="outline"
+            onClick={handleReorder}
+            disabled={reordering}
+          >
+            {reordering ? (
+              'Adding to cart...'
+            ) : (
+              <>
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Re-order
+              </>
+            )}
+          </Button>
+        )}
+        {order.status === 'pending' && (
           <Button
             variant="outline"
             className="text-rose-500 hover:bg-rose-50 hover:text-rose-600"
@@ -389,8 +433,8 @@ export function OrderDetailPage({ orderId, onNavigate }: OrderDetailPageProps) {
           >
             {cancelling ? 'Cancelling...' : 'Cancel Order'}
           </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

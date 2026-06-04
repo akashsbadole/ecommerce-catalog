@@ -17,6 +17,7 @@ import { OrdersPage } from '@/components/store/OrdersPage';
 import { OrderDetailPage } from '@/components/store/OrderDetailPage';
 import { AccountPage } from '@/components/store/AccountPage';
 import { CheckoutPage } from '@/components/store/CheckoutPage';
+import { QuickOrderPage } from '@/components/store/QuickOrderPage';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import BuyerPortalPage from '@/app/portal/page';
 
@@ -64,6 +65,8 @@ export default function MainApp() {
         navigate('account');
       } else if (segments[0] === 'checkout') {
         navigate('checkout');
+      } else if (segments[0] === 'quick-order') {
+        navigate('quick-order');
       } else if (CMS_PAGES.includes(segments[0])) {
         navigate('content-page', segments[0]);
       } else {
@@ -127,6 +130,8 @@ export default function MainApp() {
         return <AccountPage onNavigate={navigate} />;
       case 'checkout':
         return <CheckoutPage onNavigate={navigate} />;
+      case 'quick-order':
+        return <QuickOrderPage onNavigate={navigate} />;
       default:
         return (
           <div className="flex flex-col items-center justify-center py-20 text-center">

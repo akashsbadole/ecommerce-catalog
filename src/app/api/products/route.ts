@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
     const page = searchParams.get('page');
 
+    const sort = searchParams.get('sort');
     const all = searchParams.get('all');
     const where: Record<string, unknown> = {};
 
@@ -60,6 +61,32 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Build orderBy from sort param
+    let orderBy: Record<string, string>[];
+    switch (sort) {
+      case 'price_asc':
+        orderBy = [{ price: 'asc' }];
+        break;
+      case 'price_desc':
+        orderBy = [{ price: 'desc' }];
+        break;
+      case 'newest':
+        orderBy = [{ createdAt: 'desc' }];
+        break;
+      case 'oldest':
+        orderBy = [{ createdAt: 'asc' }];
+        break;
+      case 'name_asc':
+        orderBy = [{ name: 'asc' }];
+        break;
+      case 'name_desc':
+        orderBy = [{ name: 'desc' }];
+        break;
+      default:
+        orderBy = [{ sortOrder: 'asc' }, { id: 'asc' }];
+        break;
+    }
+
     // Cursor-based or page-based pagination
     let products;
     let nextCursor = null;
@@ -70,7 +97,7 @@ export async function GET(request: NextRequest) {
       products = await db.product.findMany({
         where: { ...where, id: { gt: cursor } },
         include: { Category: true },
-        orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
+        orderBy,
         take: limit + 1,
       });
       if (products.length > limit) {
@@ -86,7 +113,7 @@ export async function GET(request: NextRequest) {
         db.product.findMany({
           where,
           include: { Category: true },
-          orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
+          orderBy,
           skip,
           take: limit,
         }),

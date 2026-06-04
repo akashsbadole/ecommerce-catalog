@@ -163,7 +163,7 @@ export function CartPage({ onNavigate }: CartPageProps) {
                         alt={item.Product.name}
                         fill
                         className="object-cover"
-                        unoptimized
+
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center">
