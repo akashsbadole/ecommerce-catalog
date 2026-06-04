@@ -21,6 +21,7 @@ import {
   Search,
   Download,
   KeyRound,
+  Building2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -53,6 +54,7 @@ import { AdminPages } from '@/components/admin/AdminPages';
 import { AdminBlog } from '@/components/admin/AdminBlog';
 import { AdminRedirects } from '@/components/admin/AdminRedirects';
 import { AdminUsers } from '@/components/admin/AdminUsers';
+import { AdminCompanies } from '@/components/admin/AdminCompanies';
 import { AdminActivityLog } from '@/components/admin/AdminActivityLog';
 import { AdminDataExport } from '@/components/admin/AdminDataExport';
 import { AdminSearchDialog } from '@/components/admin/AdminSearchDialog';
@@ -80,6 +82,7 @@ const sidebarItems = [
   { id: 'banners', label: 'Banners', icon: ImageIcon },
   { id: 'redirects', label: 'Redirects', icon: ArrowRightLeft },
   { id: 'users', label: 'Users', icon: Users },
+  { id: 'companies', label: 'Companies', icon: Building2 },
   { id: 'activity-log', label: 'Activity Log', icon: ClipboardList },
   { id: 'data-export', label: 'Data Export', icon: Download },
   { id: 'settings', label: 'Settings', icon: Settings },
@@ -299,6 +302,8 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
         return <AdminRedirects />;
       case 'users':
         return <AdminUsers />;
+      case 'companies':
+        return <AdminCompanies />;
       case 'activity-log':
         return <AdminActivityLog />;
       case 'data-export':

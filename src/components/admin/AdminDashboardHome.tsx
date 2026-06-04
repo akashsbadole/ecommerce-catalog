@@ -12,6 +12,8 @@ import {
   Clock,
   Eye,
   FileText,
+  CheckCircle2,
+  DollarSign,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { adminFetch } from '@/lib/admin-fetch';
@@ -52,6 +54,12 @@ interface DashboardStats {
     total: number;
     newCount: number;
     rfqCount: number;
+  };
+  quoteStats?: {
+    total: number;
+    sent: number;
+    accepted: number;
+    totalAmount: number;
   };
   recentActivity: Array<{
     id: string;
@@ -111,6 +119,9 @@ export function AdminDashboardHome({ onNavigate }: { onNavigate?: (tab: string) 
         { label: 'New Enquiries', value: stats.enquiryStats.newCount, icon: MessageSquare, color: 'bg-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/40' },
         { label: 'Total Enquiries', value: stats.enquiryStats.total, icon: Star, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-950/40' },
         { label: 'RFQ Requests', value: stats.enquiryStats.rfqCount, icon: FileText, color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-950/40' },
+        { label: 'Sent Quotes', value: stats.quoteStats?.sent || 0, icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+        { label: 'Accepted Quotes', value: stats.quoteStats?.accepted || 0, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/40' },
+        { label: 'Accepted Revenue', value: `$${(stats.quoteStats?.totalAmount || 0).toLocaleString()}`, icon: DollarSign, color: 'text-emerald-700', bg: 'bg-emerald-100 dark:bg-emerald-900/40' },
       ]
     : [];
 

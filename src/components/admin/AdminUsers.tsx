@@ -14,6 +14,7 @@ import {
   XCircle,
   FileText,
   Download,
+  Building2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminFetch } from '@/lib/admin-fetch';
@@ -64,6 +65,13 @@ interface User {
   email: string;
   role: string;
   isActive: boolean;
+  isVerified: boolean;
+  tier: string;
+  companyId: string | null;
+  Company?: {
+    id: string;
+    name: string;
+  } | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -74,6 +82,9 @@ interface UserFormData {
   password: string;
   role: string;
   isActive: boolean;
+  isVerified: boolean;
+  tier: string;
+  companyId: string;
 }
 
 const emptyForm: UserFormData = {
@@ -82,6 +93,9 @@ const emptyForm: UserFormData = {
   password: '',
   role: 'clerk',
   isActive: true,
+  isVerified: false,
+  tier: 'standard',
+  companyId: '',
 };
 
 function RoleBadge({ role }: { role: string }) {
@@ -93,16 +107,25 @@ function RoleBadge({ role }: { role: string }) {
       </Badge>
     );
   }
+  if (role === 'clerk') {
+    return (
+      <Badge className="bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400">
+        <UserCog className="mr-1 h-3 w-3" />
+        Clerk
+      </Badge>
+    );
+  }
   return (
-    <Badge className="bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400">
-      <UserCog className="mr-1 h-3 w-3" />
-      Clerk
+    <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+      <Building2 className="mr-1 h-3 w-3" />
+      Buyer
     </Badge>
   );
 }
 
 export function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
+  const [companies, setCompanies] = useState<{id: string, name: string}[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -143,9 +166,22 @@ export function AdminUsers() {
     }
   }, [searchTerm]);
 
+  const fetchCompanies = useCallback(async () => {
+    try {
+      const res = await adminFetch('/api/companies');
+      if (res.ok) {
+        const data = await res.json();
+        setCompanies(data.companies || []);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
   useEffect(() => {
     fetchUsers();
-  }, [fetchUsers]);
+    fetchCompanies();
+  }, [fetchUsers, fetchCompanies]);
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev =>
@@ -224,6 +260,9 @@ export function AdminUsers() {
       password: '',
       role: user.role,
       isActive: user.isActive,
+      isVerified: user.isVerified || false,
+      tier: user.tier || 'standard',
+      companyId: user.companyId || '',
     });
     setFormOpen(true);
   };
@@ -249,6 +288,9 @@ export function AdminUsers() {
         email: form.email.trim(),
         role: form.role,
         isActive: form.isActive,
+        isVerified: form.isVerified,
+        tier: form.tier,
+        companyId: form.companyId || null,
       };
 
       if (!editingUser) {
@@ -472,6 +514,7 @@ export function AdminUsers() {
                   </TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead className="hidden md:table-cell">Email</TableHead>
+                  <TableHead>Company</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="hidden lg:table-cell">Created</TableHead>
@@ -499,6 +542,9 @@ export function AdminUsers() {
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-muted-foreground">
                       {user.email}
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      {user.Company?.name || '—'}
                     </TableCell>
                     <TableCell>
                       <RoleBadge role={user.role} />
@@ -633,8 +679,67 @@ export function AdminUsers() {
                       Clerk
                     </span>
                   </SelectItem>
+                  <SelectItem value="buyer">
+                    <span className="flex items-center gap-2">
+                      <Building2 className="h-3.5 w-3.5 text-amber-600" />
+                      Buyer
+                    </span>
+                  </SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Company Selection */}
+            {form.role === 'buyer' && (
+              <div className="space-y-2">
+                <Label>Company</Label>
+                <Select
+                  value={form.companyId}
+                  onValueChange={(val) => setForm(prev => ({ ...prev, companyId: val }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select company" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No Company</SelectItem>
+                    {companies.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* B2B Tier */}
+            {form.role === 'buyer' && (
+              <div className="space-y-2">
+                <Label>B2B Pricing Tier</Label>
+                <Select
+                  value={form.tier}
+                  onValueChange={(val) => setForm(prev => ({ ...prev, tier: val }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="standard">Standard</SelectItem>
+                    <SelectItem value="silver">Silver</SelectItem>
+                    <SelectItem value="gold">Gold</SelectItem>
+                    <SelectItem value="platinum">Platinum</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Verified Status */}
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={form.isVerified}
+                onCheckedChange={(checked) =>
+                  setForm(prev => ({ ...prev, isVerified: checked }))
+                }
+              />
+              <Label>Verified Business Partner</Label>
             </div>
 
             {/* Active */}

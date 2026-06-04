@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ShoppingBag, ArrowLeft, Eye, EyeOff, Loader2, KeyRound, ArrowRight } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, Eye, EyeOff, Loader2, KeyRound, ArrowRight, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -183,12 +183,21 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
                 <p>Clerk: <span className="font-mono">clerk@store.com</span> / <span className="font-mono">clerk123</span></p>
               </div>
 
-              {/* Forgot Password Link */}
-              <div className="mt-4 text-center">
+              {/* B2B Registration Link */}
+              <div className="mt-6 flex flex-col gap-2 text-center">
+                <Button
+                  variant="outline"
+                  className="w-full border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                  onClick={() => (window.location.href = '/register')}
+                >
+                  <Building2 className="mr-2 h-4 w-4" />
+                  Register as B2B Partner
+                </Button>
+
                 <button
                   type="button"
                   onClick={() => setShowForgot(true)}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors mt-2"
                 >
                   Forgot Password?
                 </button>
