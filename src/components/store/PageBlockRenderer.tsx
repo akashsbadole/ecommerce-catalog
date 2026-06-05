@@ -429,6 +429,7 @@ function ProductsBlock({
 }) {
   const title = (data.title as string) || "";
   const maxProducts = (data.maxProducts as number) || 6;
+  const layout = (data.layout as string) || "grid";
   const [products, setProducts] = useState<
     Array<{
       id: string;
@@ -500,10 +501,51 @@ function ProductsBlock({
           ))}
         </div>
       ) : products.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+          className={
+            layout === "list"
+              ? "space-y-4 max-w-4xl mx-auto"
+              : "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+          }
+        >
           {products.map((product) => {
             const image = getFirstImage(product.images);
-            return (
+            return layout === "list" ? (
+              <Card
+                key={product.id}
+                className="group flex flex-row overflow-hidden py-0 gap-0 transition-shadow hover:shadow-lg cursor-pointer h-32"
+                onClick={() => onNavigate && onNavigate("product", product.id)}
+              >
+                <div className="relative w-32 shrink-0 overflow-hidden bg-muted">
+                  {image ? (
+                    <img
+                      src={image}
+                      alt={product.name}
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center bg-muted">
+                      <ShoppingCart className="h-6 w-6 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+                <div className="p-4 flex flex-col justify-center flex-1 min-w-0">
+                  <h3 className="font-semibold text-sm line-clamp-1 group-hover:text-primary transition-colors">
+                    {product.name}
+                  </h3>
+                  {product.shortDescription && (
+                    <p className="text-xs text-muted-foreground line-clamp-1 mt-1">
+                      {product.shortDescription}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-2 pt-2">
+                    <span className="text-base font-bold text-primary">
+                      {formatPrice(product.price)}
+                    </span>
+                  </div>
+                </div>
+              </Card>
+            ) : (
               <Card
                 key={product.id}
                 className="group overflow-hidden py-0 gap-0 transition-shadow hover:shadow-lg cursor-pointer"
@@ -712,7 +754,24 @@ function AudienceCardsBlock({
               <Button
                 size="sm"
                 className="bg-brand text-brand-foreground hover:bg-brand-muted text-xs px-4 py-1.5 h-auto"
-                onClick={() => onNavigate && onNavigate("contact")}
+                onClick={() => {
+                  if (card.link && onNavigate) {
+                    if (card.link.startsWith("/")) {
+                      onNavigate(
+                        card.link.startsWith("/page/")
+                          ? "content-page"
+                          : card.link === "/contact"
+                            ? "contact"
+                            : "catalogue",
+                        card.link.replace("/page/", ""),
+                      );
+                    } else {
+                      window.open(card.link, "_blank");
+                    }
+                  } else if (onNavigate) {
+                    onNavigate("contact");
+                  }
+                }}
               >
                 {card.cta}
               </Button>
@@ -783,10 +842,20 @@ function CapabilitiesBlock({
                 <Button
                   variant="outline"
                   className="mt-6 text-sm"
-                  onClick={() =>
-                    onNavigate &&
-                    onNavigate("content-page", ctaLink.replace("/page/", ""))
-                  }
+                  onClick={() => {
+                    if (ctaLink && onNavigate) {
+                      onNavigate(
+                        ctaLink.startsWith("/page/")
+                          ? "content-page"
+                          : ctaLink === "/contact"
+                            ? "contact"
+                            : "catalogue",
+                        ctaLink.replace("/page/", ""),
+                      );
+                    } else if (onNavigate) {
+                      onNavigate("catalogue");
+                    }
+                  }}
                 >
                   {ctaText}
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -873,7 +942,20 @@ function ProductCategoriesBlock({
           <div className="text-center mt-10">
             <Button
               variant="outline"
-              onClick={() => onNavigate && onNavigate("catalogue")}
+              onClick={() => {
+                if (ctaLink && onNavigate) {
+                  onNavigate(
+                    ctaLink.startsWith("/page/")
+                      ? "content-page"
+                      : ctaLink === "/contact"
+                        ? "contact"
+                        : "catalogue",
+                    ctaLink.replace("/page/", ""),
+                  );
+                } else if (onNavigate) {
+                  onNavigate("catalogue");
+                }
+              }}
             >
               {ctaText}
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -896,6 +978,8 @@ function FactoryReelBlock({
   const heading = (data.heading as string) || "";
   const description = (data.description as string) || "";
   const ctaText = (data.ctaText as string) || "";
+  const videoUrl = (data.videoUrl as string) || "";
+  const thumbnailUrl = (data.thumbnailUrl as string) || "";
 
   return (
     <section className="relative overflow-hidden bg-foreground/5">
@@ -923,17 +1007,30 @@ function FactoryReelBlock({
               {description}
             </p>
           )}
-          <div className="relative max-w-3xl mx-auto aspect-video rounded-xl overflow-hidden bg-muted border">
+          <div className="relative max-w-3xl mx-auto aspect-video rounded-xl overflow-hidden bg-muted border shadow-lg">
+            {thumbnailUrl ? (
+              <img
+                src={thumbnailUrl}
+                alt={heading}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-brand/5" />
+            )}
+            <div className="absolute inset-0 bg-black/20 group hover:bg-black/30 transition-colors" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-16 h-16 rounded-full bg-brand/90 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform">
-                <Play className="h-6 w-6 text-brand-foreground ml-0.5" />
-              </div>
+              <button
+                className="w-16 h-16 rounded-full bg-brand/90 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform shadow-xl text-brand-foreground"
+                onClick={() => videoUrl && window.open(videoUrl, "_blank")}
+              >
+                <Play className="h-6 w-6 ml-0.5" />
+              </button>
             </div>
           </div>
           {ctaText && (
             <Button
               variant="outline"
-              className="mt-6"
+              className="mt-8"
               onClick={() =>
                 onNavigate &&
                 onNavigate(
@@ -996,13 +1093,21 @@ function CertificationsBlock({
               variant="ghost"
               size="sm"
               className="mt-8 text-muted-foreground"
-              onClick={() =>
-                onNavigate &&
-                onNavigate(
-                  "content-page",
-                  ((data.ctaLink as string) || "").replace("/page/", ""),
-                )
-              }
+              onClick={() => {
+                const ctaLink = (data.ctaLink as string) || "";
+                if (ctaLink && onNavigate) {
+                  onNavigate(
+                    ctaLink.startsWith("/page/")
+                      ? "content-page"
+                      : ctaLink === "/contact"
+                        ? "contact"
+                        : "catalogue",
+                    ctaLink.replace("/page/", ""),
+                  );
+                } else if (onNavigate) {
+                  onNavigate("catalogue");
+                }
+              }}
             >
               {ctaText}
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -1058,17 +1163,22 @@ function LeadCaptureBlock({ data }: { data: Record<string, unknown> }) {
               e.preventDefault();
               const form = e.currentTarget;
               const formData = new FormData(form);
+              const apiEndpoint =
+                (data.apiEndpoint as string) || "/api/enquiries";
+              const successMessage =
+                (data.successMessage as string) ||
+                "Enquiry submitted! We'll call you back within 24 hours.";
+
               try {
-                const res = await fetch("/api/enquiries", {
+                const res = await fetch(apiEndpoint, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify(Object.fromEntries(formData)),
                 });
                 if (res.ok) {
-                  toast.success(
-                    "Enquiry submitted! We'll call you back within 24 hours.",
-                    { icon: <Send className="h-4 w-4" /> },
-                  );
+                  toast.success(successMessage, {
+                    icon: <Send className="h-4 w-4" />,
+                  });
                   form.reset();
                 } else {
                   const err = await res.json();
@@ -1082,32 +1192,52 @@ function LeadCaptureBlock({ data }: { data: Record<string, unknown> }) {
             }}
           >
             {fields.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {fields.map((field) =>
-                  field.type === "select" ? (
-                    <Select key={field.name} name={field.name}>
-                      <SelectTrigger className="bg-background/10 border-brand-foreground/20 text-brand-foreground">
-                        <SelectValue placeholder={field.placeholder} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(field.options || []).map((opt) => (
-                          <SelectItem key={opt} value={opt.toLowerCase()}>
-                            {opt}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Input
-                      key={field.name}
-                      name={field.name}
-                      type={field.type}
-                      placeholder={field.placeholder}
-                      required={field.required}
-                      className="bg-background/10 border-brand-foreground/20 text-brand-foreground placeholder:text-brand-foreground/50"
-                    />
-                  ),
-                )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {fields.map((field) => (
+                  <div
+                    key={field.name}
+                    className={`space-y-1 ${field.type === "textarea" ? "sm:col-span-2 md:col-span-3" : ""}`}
+                  >
+                    {field.label && (
+                      <label className="text-xs font-medium text-brand-foreground/80 ml-1">
+                        {field.label}
+                        {field.required && (
+                          <span className="text-rose-400 ml-1">*</span>
+                        )}
+                      </label>
+                    )}
+                    {field.type === "select" ? (
+                      <Select name={field.name} required={field.required}>
+                        <SelectTrigger className="bg-background/10 border-brand-foreground/20 text-brand-foreground">
+                          <SelectValue placeholder={field.placeholder} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(field.options || []).map((opt) => (
+                            <SelectItem key={opt} value={opt.toLowerCase()}>
+                              {opt}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : field.type === "textarea" ? (
+                      <Textarea
+                        name={field.name}
+                        placeholder={field.placeholder}
+                        required={field.required}
+                        className="bg-background/10 border-brand-foreground/20 text-brand-foreground placeholder:text-brand-foreground/50"
+                        rows={4}
+                      />
+                    ) : (
+                      <Input
+                        name={field.name}
+                        type={field.type}
+                        placeholder={field.placeholder}
+                        required={field.required}
+                        className="bg-background/10 border-brand-foreground/20 text-brand-foreground placeholder:text-brand-foreground/50"
+                      />
+                    )}
+                  </div>
+                ))}
               </div>
             )}
             {messageField && (
@@ -1181,8 +1311,16 @@ function LeadershipBlock({
               transition={{ delay: i * 0.1, duration: 0.4 }}
               className="flex items-start gap-4 p-4 rounded-xl border"
             >
-              <div className="w-12 h-14 rounded-lg bg-muted flex-shrink-0 flex items-center justify-center">
-                <span className="text-xs text-muted-foreground">Photo</span>
+              <div className="w-12 h-14 rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center border">
+                {person.image ? (
+                  <img
+                    src={person.image}
+                    alt={person.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <UserCircle className="h-6 w-6 text-muted-foreground/40" />
+                )}
               </div>
               <div>
                 <h3 className="font-semibold text-sm">{person.name}</h3>
@@ -1199,13 +1337,21 @@ function LeadershipBlock({
                 variant="outline"
                 size="sm"
                 className="text-xs"
-                onClick={() =>
-                  onNavigate &&
-                  onNavigate(
-                    "content-page",
-                    ((data.ctaLink as string) || "").replace("/page/", ""),
-                  )
-                }
+                onClick={() => {
+                  const ctaLink = (data.ctaLink as string) || "";
+                  if (ctaLink && onNavigate) {
+                    onNavigate(
+                      ctaLink.startsWith("/page/")
+                        ? "content-page"
+                        : ctaLink === "/contact"
+                          ? "contact"
+                          : "catalogue",
+                      ctaLink.replace("/page/", ""),
+                    );
+                  } else if (onNavigate) {
+                    onNavigate("contact");
+                  }
+                }}
               >
                 {ctaText}
                 <ArrowRight className="ml-2 h-3 w-3" />
@@ -1222,7 +1368,7 @@ function PartnerLogosBlock({ data }: { data: Record<string, unknown> }) {
   const heading = (data.heading as string) || "";
   const testimonials =
     (data.testimonials as Array<{ quote: string; author: string }>) || [];
-  const logoCount = (data.logoCount as number) || 0;
+  const logos = (data.logos as string[]) || [];
 
   return (
     <section className="bg-muted/30 border-y">
@@ -1259,15 +1405,19 @@ function PartnerLogosBlock({ data }: { data: Record<string, unknown> }) {
               ))}
             </div>
           )}
-          {logoCount > 0 && (
-            <div className="flex flex-wrap justify-center gap-8 items-center border-t pt-8">
-              {Array.from({ length: logoCount }).map((_, i) => (
-                <div
+          {logos.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-12 items-center border-t pt-12">
+              {logos.filter(Boolean).map((logo, i) => (
+                <motion.img
                   key={i}
-                  className="h-8 w-16 rounded bg-muted border flex items-center justify-center text-xs text-muted-foreground"
-                >
-                  Logo {i + 1}
-                </div>
+                  initial={{ opacity: 0, filter: "grayscale(100%)" }}
+                  whileInView={{ opacity: 0.6, filter: "grayscale(100%)" }}
+                  whileHover={{ opacity: 1, filter: "grayscale(0%)" }}
+                  viewport={{ once: true }}
+                  src={logo}
+                  alt="Partner Logo"
+                  className="h-8 md:h-10 w-auto object-contain transition-all"
+                />
               ))}
             </div>
           )}
@@ -1313,10 +1463,24 @@ function StickyCtaBlock({
                     : "text-muted-foreground"
               }
               onClick={() => {
-                if (btn.action === "enquiry")
-                  onNavigate && onNavigate("contact");
-                else if (btn.action === "whatsapp")
-                  window.open("https://wa.me/", "_blank");
+                if (btn.action === "enquiry") {
+                  onNavigate?.("contact");
+                } else if (btn.action === "whatsapp") {
+                  window.open(btn.link || "https://wa.me/", "_blank");
+                } else if (btn.action === "phone") {
+                  window.location.href = btn.link || "tel:";
+                } else if (btn.action === "link") {
+                  if (btn.link?.startsWith("/")) {
+                    onNavigate?.(
+                      btn.link.startsWith("/page/")
+                        ? "content-page"
+                        : "catalogue",
+                      btn.link.replace("/page/", ""),
+                    );
+                  } else if (btn.link) {
+                    window.open(btn.link, "_blank");
+                  }
+                }
               }}
             >
               {btn.type === "whatsapp" && (
@@ -1757,6 +1921,7 @@ function AboutBlock({
   const image = (data.image as string) || "";
   const imagePosition = (data.imagePosition as string) || "left";
   const buttonText = (data.buttonText as string) || "";
+  const buttonLink = (data.buttonLink as string) || "";
 
   return (
     <section className="py-12">
@@ -1776,7 +1941,20 @@ function AboutBlock({
           {buttonText && (
             <Button
               variant="outline"
-              onClick={() => onNavigate && onNavigate("contact")}
+              onClick={() => {
+                if (buttonLink && onNavigate) {
+                  onNavigate(
+                    buttonLink.startsWith("/page/")
+                      ? "content-page"
+                      : buttonLink === "/contact"
+                        ? "contact"
+                        : "catalogue",
+                    buttonLink.replace("/page/", ""),
+                  );
+                } else if (onNavigate) {
+                  onNavigate("contact");
+                }
+              }}
             >
               {buttonText}
             </Button>

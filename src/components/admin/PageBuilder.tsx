@@ -56,6 +56,9 @@ import {
   Smartphone,
   Tablet,
   Monitor,
+  Copy,
+  FileCode,
+  Settings2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +68,7 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MediaPickerField } from "@/components/admin/MediaPickerField";
 import {
   Dialog,
@@ -143,6 +147,7 @@ function SortableBlockCard({
   total,
   onEdit,
   onDelete,
+  onDuplicate,
   onMoveUp,
   onMoveDown,
 }: {
@@ -151,6 +156,7 @@ function SortableBlockCard({
   total: number;
   onEdit: (block: PageBlock) => void;
   onDelete: (block: PageBlock) => void;
+  onDuplicate: (block: PageBlock) => void;
   onMoveUp: (index: number) => void;
   onMoveDown: (index: number) => void;
 }) {
@@ -222,7 +228,17 @@ function SortableBlockCard({
           variant="ghost"
           size="icon"
           className="h-7 w-7"
+          onClick={() => onDuplicate(block)}
+          title="Duplicate Block"
+        >
+          <Copy className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
           onClick={() => onEdit(block)}
+          title="Edit Block"
         >
           <Pencil className="h-4 w-4" />
         </Button>
@@ -252,20 +268,49 @@ function BlockEditDialog({
   onSave: (block: PageBlock) => void;
 }) {
   const [localData, setLocalData] = useState<Record<string, unknown>>({});
+  const [jsonError, setJsonError] = useState<string | null>(null);
+  const [jsonText, setJsonText] = useState("");
+  const [activeTab, setActiveTab] = useState("ui");
 
   const handleOpen = (blk: PageBlock | null) => {
     if (blk) {
       setLocalData({ ...blk.data });
+      setJsonText(JSON.stringify(blk.data, null, 2));
+      setJsonError(null);
+      setActiveTab("ui");
     }
   };
 
   const handleSave = () => {
     if (!block) return;
-    onSave({ ...block, data: { ...localData } });
+    if (activeTab === "json") {
+      try {
+        const parsed = JSON.parse(jsonText);
+        onSave({ ...block, data: parsed });
+      } catch (e) {
+        setJsonError((e as Error).message);
+        return;
+      }
+    } else {
+      onSave({ ...block, data: { ...localData } });
+    }
   };
 
   const updateField = (key: string, value: unknown) => {
-    setLocalData((prev) => ({ ...prev, [key]: value }));
+    const newData = { ...localData, [key]: value };
+    setLocalData(newData);
+    setJsonText(JSON.stringify(newData, null, 2));
+  };
+
+  const handleJsonChange = (val: string) => {
+    setJsonText(val);
+    try {
+      const parsed = JSON.parse(val);
+      setLocalData(parsed);
+      setJsonError(null);
+    } catch (e) {
+      setJsonError((e as Error).message);
+    }
   };
 
   if (!block) return null;
@@ -280,14 +325,34 @@ function BlockEditDialog({
         else onClose();
       }}
     >
-      <DialogContent className="max-w-2xl max-h-[90vh]">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0">
+        <DialogHeader className="p-6 pb-0">
           <DialogTitle>Edit {defaults.label}</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="max-h-[calc(90vh-140px)] pr-4">
-          <div className="grid gap-4 py-4">
-            {/* Common fields based on block type */}
-            {block.type === "hero" && (
+
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="flex-1 flex flex-col min-h-0"
+        >
+          <div className="px-6 border-b">
+            <TabsList className="grid w-full grid-cols-2 mt-2">
+              <TabsTrigger value="ui" className="flex items-center gap-2">
+                <Settings2 className="h-4 w-4" />
+                UI Editor
+              </TabsTrigger>
+              <TabsTrigger value="json" className="flex items-center gap-2">
+                <FileCode className="h-4 w-4" />
+                JSON Editor
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="ui" className="flex-1 min-h-0 m-0">
+            <ScrollArea className="h-[calc(90vh-220px)] px-6">
+              <div className="grid gap-4 py-4">
+                {/* Common fields based on block type */}
+                {block.type === "hero" && (
               <>
                 <div className="space-y-2">
                   <Label>Title</Label>
@@ -1254,19 +1319,34 @@ function BlockEditDialog({
                         updateField("cards", arr);
                       }}
                     />
-                    <Input
-                      placeholder="CTA text"
-                      value={card.cta}
-                      onChange={(e) => {
-                        const arr = [
-                          ...((localData.cards as Array<
-                            Record<string, string>
-                          >) || []),
-                        ];
-                        arr[i] = { ...arr[i], cta: e.target.value };
-                        updateField("cards", arr);
-                      }}
-                    />
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Input
+                        placeholder="CTA text"
+                        value={card.cta}
+                        onChange={(e) => {
+                          const arr = [
+                            ...((localData.cards as Array<
+                              Record<string, string>
+                            >) || []),
+                          ];
+                          arr[i] = { ...arr[i], cta: e.target.value };
+                          updateField("cards", arr);
+                        }}
+                      />
+                      <Input
+                        placeholder="CTA link"
+                        value={card.link}
+                        onChange={(e) => {
+                          const arr = [
+                            ...((localData.cards as Array<
+                              Record<string, string>
+                            >) || []),
+                          ];
+                          arr[i] = { ...arr[i], link: e.target.value };
+                          updateField("cards", arr);
+                        }}
+                      />
+                    </div>
                   </Card>
                 ))}
                 <Button
@@ -1275,7 +1355,12 @@ function BlockEditDialog({
                   onClick={() => {
                     const arr = [
                       ...((localData.cards as Array<unknown>) || []),
-                      { title: "New", description: "", cta: "Enquire" },
+                      {
+                        title: "New",
+                        description: "",
+                        cta: "Enquire",
+                        link: "/contact",
+                      },
                     ];
                     updateField("cards", arr);
                   }}
@@ -1510,35 +1595,12 @@ function BlockEditDialog({
                   onChange={(v) => updateField("thumbnailUrl", v)}
                   placeholder="Thumbnail URL"
                 />
-                <div className="space-y-2">
-                  <Label>Heading</Label>
-                  <Input
-                    value={(localData.heading as string) || ""}
-                    onChange={(e) => updateField("heading", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Input
-                    value={(localData.description as string) || ""}
-                    onChange={(e) => updateField("description", e.target.value)}
-                  />
-                </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Video URL</Label>
                     <Input
                       value={(localData.videoUrl as string) || ""}
                       onChange={(e) => updateField("videoUrl", e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Thumbnail URL</Label>
-                    <Input
-                      value={(localData.thumbnailUrl as string) || ""}
-                      onChange={(e) =>
-                        updateField("thumbnailUrl", e.target.value)
-                      }
                     />
                   </div>
                 </div>
@@ -1661,6 +1723,22 @@ function BlockEditDialog({
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label>Success Message</Label>
+                  <Input
+                    value={(localData.successMessage as string) || ""}
+                    onChange={(e) =>
+                      updateField("successMessage", e.target.value)
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>API Endpoint</Label>
+                  <Input
+                    value={(localData.apiEndpoint as string) || ""}
+                    onChange={(e) => updateField("apiEndpoint", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label>Submit Button Text</Label>
                   <Input
                     value={(localData.submitText as string) || ""}
@@ -1674,6 +1752,185 @@ function BlockEditDialog({
                     onChange={(e) => updateField("disclaimer", e.target.value)}
                   />
                 </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="lead-message-field"
+                    checked={!!localData.messageField}
+                    onCheckedChange={(val) =>
+                      updateField("messageField", !!val)
+                    }
+                  />
+                  <Label htmlFor="lead-message-field">Show Message Field</Label>
+                </div>
+                <Separator />
+                <Label className="text-base font-semibold">Form Fields</Label>
+                {(
+                  (localData.fields as Array<{
+                    name: string;
+                    label: string;
+                    type: string;
+                    required: boolean;
+                    placeholder: string;
+                    options?: string[];
+                  }>) || []
+                ).map((field, i) => (
+                  <Card key={i} className="p-4 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">
+                        Field {i + 1}: {field.name}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-rose-600"
+                        onClick={() => {
+                          const fields = [
+                            ...((localData.fields as Array<unknown>) || []),
+                          ];
+                          fields.splice(i, 1);
+                          updateField("fields", fields);
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-1">
+                        <Label className="text-[10px] uppercase">Name</Label>
+                        <Input
+                          placeholder="name"
+                          value={field.name}
+                          onChange={(e) => {
+                            const fields = [
+                              ...((localData.fields as Array<
+                                Record<string, unknown>
+                              >) || []),
+                            ];
+                            fields[i] = { ...fields[i], name: e.target.value };
+                            updateField("fields", fields);
+                          }}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px] uppercase">Label</Label>
+                        <Input
+                          placeholder="Label"
+                          value={field.label}
+                          onChange={(e) => {
+                            const fields = [
+                              ...((localData.fields as Array<
+                                Record<string, unknown>
+                              >) || []),
+                            ];
+                            fields[i] = { ...fields[i], label: e.target.value };
+                            updateField("fields", fields);
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-1">
+                        <Label className="text-[10px] uppercase">Type</Label>
+                        <select
+                          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
+                          value={field.type}
+                          onChange={(e) => {
+                            const fields = [
+                              ...((localData.fields as Array<
+                                Record<string, unknown>
+                              >) || []),
+                            ];
+                            fields[i] = { ...fields[i], type: e.target.value };
+                            updateField("fields", fields);
+                          }}
+                        >
+                          <option value="text">Text</option>
+                          <option value="email">Email</option>
+                          <option value="tel">Phone</option>
+                          <option value="select">Select</option>
+                          <option value="textarea">Textarea</option>
+                        </select>
+                      </div>
+                      <div className="flex items-center gap-2 pt-6">
+                        <Checkbox
+                          id={`field-req-${i}`}
+                          checked={field.required}
+                          onCheckedChange={(val) => {
+                            const fields = [
+                              ...((localData.fields as Array<
+                                Record<string, unknown>
+                              >) || []),
+                            ];
+                            fields[i] = { ...fields[i], required: !!val };
+                            updateField("fields", fields);
+                          }}
+                        />
+                        <Label htmlFor={`field-req-${i}`}>Required</Label>
+                      </div>
+                    </div>
+                    <Input
+                      placeholder="Placeholder"
+                      value={field.placeholder}
+                      onChange={(e) => {
+                        const fields = [
+                          ...((localData.fields as Array<
+                            Record<string, unknown>
+                          >) || []),
+                        ];
+                        fields[i] = {
+                          ...fields[i],
+                          placeholder: e.target.value,
+                        };
+                        updateField("fields", fields);
+                      }}
+                    />
+                    {field.type === "select" && (
+                      <div className="space-y-1">
+                        <Label className="text-[10px] uppercase">
+                          Options (one per line)
+                        </Label>
+                        <Textarea
+                          placeholder="Option 1&#10;Option 2"
+                          value={(field.options || []).join("\n")}
+                          onChange={(e) => {
+                            const fields = [
+                              ...((localData.fields as Array<
+                                Record<string, unknown>
+                              >) || []),
+                            ];
+                            fields[i] = {
+                              ...fields[i],
+                              options: e.target.value
+                                .split("\n")
+                                .filter(Boolean),
+                            };
+                            updateField("fields", fields);
+                          }}
+                        />
+                      </div>
+                    )}
+                  </Card>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const fields = [
+                      ...((localData.fields as Array<Record<string, unknown>>) ||
+                        []),
+                      {
+                        name: "new_field",
+                        label: "New Field",
+                        type: "text",
+                        required: false,
+                        placeholder: "",
+                      },
+                    ];
+                    updateField("fields", fields);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Add Field
+                </Button>
               </>
             )}
 
@@ -1722,6 +1979,19 @@ function BlockEditDialog({
                         <X className="h-3 w-3" />
                       </Button>
                     </div>
+                    <MediaPickerField
+                      label="Photo"
+                      value={member.image}
+                      onChange={(v) => {
+                        const arr = [
+                          ...((localData.members as Array<
+                            Record<string, string>
+                          >) || []),
+                        ];
+                        arr[i] = { ...arr[i], image: v };
+                        updateField("members", arr);
+                      }}
+                    />
                     <Input
                       placeholder="Name"
                       value={member.name}
@@ -1777,12 +2047,21 @@ function BlockEditDialog({
                 >
                   <Plus className="mr-2 h-4 w-4" /> Add Member
                 </Button>
-                <div className="space-y-2">
-                  <Label>CTA Text</Label>
-                  <Input
-                    value={(localData.ctaText as string) || ""}
-                    onChange={(e) => updateField("ctaText", e.target.value)}
-                  />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>CTA Text</Label>
+                    <Input
+                      value={(localData.ctaText as string) || ""}
+                      onChange={(e) => updateField("ctaText", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>CTA Link</Label>
+                    <Input
+                      value={(localData.ctaLink as string) || ""}
+                      onChange={(e) => updateField("ctaLink", e.target.value)}
+                    />
+                  </div>
                 </div>
               </>
             )}
@@ -1796,6 +2075,46 @@ function BlockEditDialog({
                     onChange={(e) => updateField("heading", e.target.value)}
                   />
                 </div>
+                <Separator />
+                <Label className="text-base font-semibold">Logos</Label>
+                {((localData.logos as string[]) || []).map((logo, i) => (
+                  <div key={i} className="flex gap-2">
+                    <div className="flex-1">
+                      <MediaPickerField
+                        value={logo}
+                        onChange={(v) => {
+                          const arr = [...((localData.logos as string[]) || [])];
+                          arr[i] = v;
+                          updateField("logos", arr);
+                        }}
+                        placeholder="Logo URL"
+                      />
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 shrink-0 text-rose-600 mt-6"
+                      onClick={() => {
+                        const arr = [...((localData.logos as string[]) || [])];
+                        arr.splice(i, 1);
+                        updateField("logos", arr);
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const arr = [...((localData.logos as string[]) || []), ""];
+                    updateField("logos", arr);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Add Logo
+                </Button>
+
                 <Separator />
                 <Label className="text-base font-semibold">Testimonials</Label>
                 {(
@@ -1867,18 +2186,6 @@ function BlockEditDialog({
                 >
                   <Plus className="mr-2 h-4 w-4" /> Add Testimonial
                 </Button>
-                <div className="space-y-2">
-                  <Label>Number of Partner Logos to Display</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    max={20}
-                    value={(localData.logoCount as number) || 0}
-                    onChange={(e) =>
-                      updateField("logoCount", Number(e.target.value))
-                    }
-                  />
-                </div>
               </>
             )}
 
@@ -2213,6 +2520,19 @@ function BlockEditDialog({
                         </select>
                       </div>
                     </div>
+                    <Input
+                      placeholder="Link (e.g. /contact or tel: or https://)"
+                      value={btn.link}
+                      onChange={(e) => {
+                        const arr = [
+                          ...((localData.buttons as Array<
+                            Record<string, string>
+                          >) || []),
+                        ];
+                        arr[i] = { ...arr[i], link: e.target.value };
+                        updateField("buttons", arr);
+                      }}
+                    />
                   </Card>
                 ))}
                 <Button
@@ -2231,70 +2551,105 @@ function BlockEditDialog({
               </>
             )}
 
-            {/* Common Style Controls */}
-            <Separator className="my-2" />
-            <div className="space-y-3">
-              <Label className="text-base font-semibold">Style Settings</Label>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="space-y-2">
-                  <Label>Background Color</Label>
-                  <div className="flex gap-2">
-                    <input
-                      type="color"
-                      className="h-9 w-9 rounded-md border border-input cursor-pointer"
-                      value={(localData.bgColor as string) || "#ffffff"}
-                      onChange={(e) => updateField("bgColor", e.target.value)}
-                    />
+                {/* Common Style Controls */}
+                <Separator className="my-2" />
+                <div className="space-y-3">
+                  <Label className="text-base font-semibold">
+                    Style Settings
+                  </Label>
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label>Background Color</Label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          className="h-9 w-9 rounded-md border border-input cursor-pointer"
+                          value={(localData.bgColor as string) || "#ffffff"}
+                          onChange={(e) =>
+                            updateField("bgColor", e.target.value)
+                          }
+                        />
+                        <Input
+                          placeholder="#ffffff"
+                          value={(localData.bgColor as string) || ""}
+                          onChange={(e) =>
+                            updateField("bgColor", e.target.value)
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Padding Top</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={200}
+                        placeholder="px"
+                        value={(localData.paddingTop as number) ?? 80}
+                        onChange={(e) =>
+                          updateField("paddingTop", Number(e.target.value))
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Padding Bottom</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={200}
+                        placeholder="px"
+                        value={(localData.paddingBottom as number) ?? 80}
+                        onChange={(e) =>
+                          updateField("paddingBottom", Number(e.target.value))
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Custom CSS Class</Label>
                     <Input
-                      placeholder="#ffffff"
-                      value={(localData.bgColor as string) || ""}
-                      onChange={(e) => updateField("bgColor", e.target.value)}
+                      placeholder="e.g. max-w-4xl mx-auto"
+                      value={(localData.customClass as string) || ""}
+                      onChange={(e) =>
+                        updateField("customClass", e.target.value)
+                      }
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Padding Top</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    max={200}
-                    placeholder="px"
-                    value={(localData.paddingTop as number) ?? 80}
-                    onChange={(e) =>
-                      updateField("paddingTop", Number(e.target.value))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Padding Bottom</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    max={200}
-                    placeholder="px"
-                    value={(localData.paddingBottom as number) ?? 80}
-                    onChange={(e) =>
-                      updateField("paddingBottom", Number(e.target.value))
-                    }
-                  />
-                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Custom CSS Class</Label>
-                <Input
-                  placeholder="e.g. max-w-4xl mx-auto"
-                  value={(localData.customClass as string) || ""}
-                  onChange={(e) => updateField("customClass", e.target.value)}
+            </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="json" className="flex-1 min-h-0 m-0">
+            <div className="flex flex-col h-[calc(90vh-220px)] p-6 gap-4">
+              <div className="flex-1 relative">
+                <Textarea
+                  value={jsonText}
+                  onChange={(e) => handleJsonChange(e.target.value)}
+                  className={`h-full font-mono text-sm resize-none ${jsonError ? "border-rose-500 focus-visible:ring-rose-500" : ""}`}
+                  placeholder="Paste block JSON data here..."
                 />
               </div>
+              {jsonError && (
+                <div className="text-xs text-rose-500 bg-rose-50 p-2 rounded border border-rose-200">
+                  <strong>Invalid JSON:</strong> {jsonError}
+                </div>
+              )}
+              <div className="text-xs text-muted-foreground">
+                Editing the JSON directly allows you to add any custom data
+                fields to the block.
+              </div>
             </div>
-          </div>
-        </ScrollArea>
-        <DialogFooter>
+          </TabsContent>
+        </Tabs>
+
+        <DialogFooter className="p-6 pt-2 border-t">
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>Save Changes</Button>
+          <Button onClick={handleSave} disabled={!!jsonError}>
+            Save Changes
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -2339,6 +2694,22 @@ export function PageBuilder({ blocks, onChange }: PageBuilderProps) {
     (type: BlockType) => {
       const newBlock = createBlock(type);
       onChange([...blocks, newBlock]);
+    },
+    [blocks, onChange],
+  );
+
+  const handleDuplicateBlock = useCallback(
+    (block: PageBlock) => {
+      const duplicated = {
+        ...block,
+        id: `block-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      };
+      const index = blocks.findIndex((b) => b.id === block.id);
+      if (index !== -1) {
+        const newBlocks = [...blocks];
+        newBlocks.splice(index + 1, 0, duplicated);
+        onChange(newBlocks);
+      }
     },
     [blocks, onChange],
   );
@@ -2544,6 +2915,7 @@ export function PageBuilder({ blocks, onChange }: PageBuilderProps) {
                         total={blocks.length}
                         onEdit={setEditingBlock}
                         onDelete={setDeleteBlock}
+                        onDuplicate={handleDuplicateBlock}
                         onMoveUp={handleMoveUp}
                         onMoveDown={handleMoveDown}
                       />
