@@ -10,6 +10,7 @@ import {
   AlertCircle,
   TrendingUp,
   FileText,
+  FileEdit,
   User as UserIcon,
   ShieldCheck,
   DollarSign,

@@ -17,7 +17,6 @@ export async function PUT(
 
     const quote = await db.quote.findUnique({
       where: { id },
-      include: { items: true },
     });
 
     if (!quote) {
@@ -52,7 +51,7 @@ export async function PUT(
             email: true,
           },
         },
-        items: true,
+        Company: true,
       },
     });
 

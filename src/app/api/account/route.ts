@@ -19,14 +19,18 @@ export async function GET(request: NextRequest) {
         name: true,
         role: true,
         isActive: true,
-        companyName: true,
-        taxId: true,
-        businessAddress: true,
         phone: true,
         avatar: true,
         isVerified: true,
         tier: true,
         createdAt: true,
+        Company: {
+          select: {
+            name: true,
+            taxId: true,
+            address: true,
+          },
+        },
         _count: {
           select: {
             Order: true,
@@ -40,7 +44,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ user });
+    const { Company, ...rest } = user;
+    return NextResponse.json({
+      user: {
+        ...rest,
+        companyName: Company?.name || null,
+        taxId: Company?.taxId || null,
+        businessAddress: Company?.address || null,
+      },
+    });
   } catch (error) {
     console.error('Account GET error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -67,9 +79,31 @@ export async function PUT(request: NextRequest) {
 
     if (name !== undefined) updateData.name = name;
     if (phone !== undefined) updateData.phone = phone;
-    if (companyName !== undefined) updateData.companyName = companyName;
-    if (taxId !== undefined) updateData.taxId = taxId;
-    if (businessAddress !== undefined) updateData.businessAddress = businessAddress;
+
+    // Update company fields via Company relation
+    if (companyName !== undefined || taxId !== undefined || businessAddress !== undefined) {
+      const userWithCompany = await db.user.findUnique({
+        where: { id: userId },
+        select: { companyId: true },
+      });
+
+      if (userWithCompany?.companyId) {
+        const companyUpdate: Record<string, unknown> = {};
+        if (companyName !== undefined) companyUpdate.name = companyName;
+        if (taxId !== undefined) companyUpdate.taxId = taxId;
+        if (businessAddress !== undefined) companyUpdate.address = businessAddress;
+        await db.company.update({
+          where: { id: userWithCompany.companyId },
+          data: companyUpdate,
+        });
+      } else if (companyName !== undefined) {
+        // Create a new company for this user
+        const newCompany = await db.company.create({
+          data: { name: companyName, taxId: taxId || null, address: businessAddress || null },
+        });
+        updateData.companyId = newCompany.id;
+      }
+    }
 
     // Password change
     if (newPassword) {
@@ -99,17 +133,30 @@ export async function PUT(request: NextRequest) {
         email: true,
         name: true,
         role: true,
-        companyName: true,
-        taxId: true,
-        businessAddress: true,
         phone: true,
         avatar: true,
         isVerified: true,
         tier: true,
+        Company: {
+          select: {
+            name: true,
+            taxId: true,
+            address: true,
+          },
+        },
       },
     });
 
-    return NextResponse.json({ user: updatedUser, message: 'Profile updated' });
+    const { Company: updatedCompany, ...restUser } = updatedUser;
+    return NextResponse.json({
+      user: {
+        ...restUser,
+        companyName: updatedCompany?.name || null,
+        taxId: updatedCompany?.taxId || null,
+        businessAddress: updatedCompany?.address || null,
+      },
+      message: 'Profile updated',
+    });
   } catch (error) {
     console.error('Account PUT error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

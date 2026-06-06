@@ -26,7 +26,8 @@ model Store {
   settings      String   @default("{}") // JSON: per-store config (currency, tax_rate, etc.)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  User          User     @relation(fields: [ownerUserId], references: [id])
+  Owner        User    @relation("StoreOwner", fields: [ownerUserId], references: [id])
+  CurrentUsers   User[]   @relation("CurrentUserStore")
   Product       Product[]
   Category      Category[]
   Order         Order[]
@@ -45,90 +46,11 @@ model Store {
 
 // ─── User & Auth ───────────────────────────────────────────────
 
-model Category {
-  id              String    @id @default(cuid())
-  name            String
-  slug            String    @unique
-  description     String?
-  image           String?
-  parentId        String?
-  sortOrder       Int       @default(0)
-  isActive        Boolean   @default(true)
-  metaTitle       String?
-  metaDescription String?
-  customSchema    String?   @default("{}")
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @default(now())
-  Product         Product[]
-  parent          Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
-  children        Category[] @relation("CategoryToCategory")
-}
-
-model ContentPage {
-  id              String   @id @default(cuid())
-  title           String
-  slug            String   @unique
-  content         String   @default("")
-  blocks          String   @default("[]")
-  heroImage       String?
-  metaTitle       String?
-  metaDescription String?
-  ogImage         String?
-  customSchema    String?  @default("{}")
-  isActive        Boolean  @default(true)
-  sortOrder       Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @default(now())
-}
-
-model Enquiry {
-  id             String   @id @default(cuid())
-  name           String
-  email          String
-  phone          String?
-  companyName    String?
-  companyEmail   String?
-  companyPhone   String?
-  companyAddress String?
-  quantity       Int?
-  subject        String
-  message        String
-  productId      String?
-  type           String   @default("product")
-  status         String   @default("new")
-  userId         String?
-  companyId      String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @default(now())
-  Product        Product? @relation(fields: [productId], references: [id])
-  User           User?    @relation(fields: [userId], references: [id])
-  Company        Company? @relation(fields: [companyId], references: [id])
-  Quote          Quote?
-}
-
-model Media {
-  id           String   @id @default(cuid())
-  filename     String
-  originalName String
-  mimeType     String
-  size         Int
-  width        Int?
-  height       Int?
-  alt          String?
-  url          String
-  thumbnails   String   @default("{}")
-  folder       String   @default("/")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @default(now())
-}
-
 model NewsletterSubscriber {
   id        String   @id @default(cuid())
   email     String   @unique
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
-
-  @@index([currentStoreId])
 }
 
 model PasswordResetToken {
@@ -309,49 +231,6 @@ model OrderItem {
   @@index([orderId])
 }
 
-// ─── B2B / Quotes ──────────────────────────────────────────────
-
-model Quote {
-  id            String      @id @default(cuid())
-  storeId       String?     // tenant isolation
-  quoteNumber   String      @unique
-  userId        String
-  status        String      @default("draft")
-  subtotal      Float
-  discount      Float       @default(0)
-  tax           Float       @default(0)
-  total         Float
-  currency      String      @default("USD")
-  validUntil    DateTime?
-  notes         String?
-  adminNotes    String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  User          User        @relation(fields: [userId], references: [id])
-  Store         Store?      @relation(fields: [storeId], references: [id])
-  items         QuoteItem[]
-
-  @@index([userId])
-  @@index([status])
-  @@index([quoteNumber])
-  @@index([storeId])
-}
-
-model QuoteItem {
-  id          String  @id @default(cuid())
-  quoteId     String
-  productId   String
-  name        String
-  sku         String?
-  price       Float
-  quantity    Int
-  total       Float
-  images      String  @default("[]")
-  Quote       Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
-
-  @@index([quoteId])
-}
-
 // ─── Cart & Wishlist ───────────────────────────────────────────
 
 model Cart {
@@ -529,11 +408,14 @@ model Enquiry {
   type           String   @default("product")
   status         String   @default("new")
   userId         String?
+  companyId      String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now())
   Product        Product? @relation(fields: [productId], references: [id])
   User           User?    @relation(fields: [userId], references: [id])
+  Company        Company? @relation(fields: [companyId], references: [id])
   Store          Store?   @relation(fields: [storeId], references: [id])
+  Quote          Quote?
 
   @@index([storeId])
 }
@@ -568,24 +450,63 @@ model SiteSetting {
 }
 
 model User {
-  id                 String               @id @default(cuid())
-  email              String               @unique
-  name               String
-  password           String
-  role               String               @default("clerk")
-  isActive           Boolean              @default(true)
-  companyId          String?
-  isVerified         Boolean              @default(false)
-  tier               String               @default("standard") // standard, silver, gold, platinum
-  documents          String               @default("[]") // JSON array of document URLs
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @default(now())
-  ActivityLog        ActivityLog[]
-  BlogPost           BlogPost[]
-  Enquiry            Enquiry[]
-  PasswordResetToken PasswordResetToken[]
-  Company            Company?             @relation(fields: [companyId], references: [id])
-  Quote              Quote[]
+  id                      String               @id @default(cuid())
+  email                   String               @unique
+  name                    String
+  password                String
+  role                    String               @default("clerk")
+  isActive                Boolean              @default(true)
+  companyId               String?
+  isVerified              Boolean              @default(false)
+  tier                    String               @default("standard")
+  documents               String               @default("[]")
+  addresses               String               @default("[]")
+  phone                   String?
+  avatar                  String?
+  currentStoreId          String?
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @default(now())
+  ActivityLog             ActivityLog[]
+  BlogPost                BlogPost[]
+  Enquiry                 Enquiry[]
+  PasswordResetToken      PasswordResetToken[]
+  EmailVerificationToken  EmailVerificationToken[]
+  Company                 Company?             @relation(fields: [companyId], references: [id])
+  Quote                   Quote[]
+  Store                   Store?               @relation("CurrentUserStore", fields: [currentStoreId], references: [id])
+  OwnedStores             Store[]              @relation("StoreOwner")
+  Order                   Order[]
+  Cart                    Cart?
+  Wishlist                Wishlist?
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String?
+  entityId  String?
+  details   String?
+  userName  String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+  User      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  type      String   @default("info")
+  userId    String?
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
 }
 
 model Company {
@@ -604,18 +525,32 @@ model Company {
 }
 
 model Quote {
-  id          String    @id @default(cuid())
-  enquiryId   String?   @unique
-  companyId   String?
-  userId      String
-  items       String    @default("[]") // JSON array of {productId, variantId, quantity, unitPrice}
-  totalAmount Float
-  status      String    @default("draft") // draft, sent, accepted, rejected, expired
-  validUntil  DateTime?
-  notes       String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @default(now())
-  Enquiry     Enquiry?  @relation(fields: [enquiryId], references: [id])
-  Company     Company?  @relation(fields: [companyId], references: [id])
-  User        User      @relation(fields: [userId], references: [id])
+  id            String    @id @default(cuid())
+  storeId       String?
+  enquiryId     String?   @unique
+  companyId     String?
+  userId        String
+  quoteNumber   String    @unique
+  items         String    @default("[]")
+  totalAmount   Float
+  subtotal      Float     @default(0)
+  discount      Float     @default(0)
+  tax           Float     @default(0)
+  total         Float     @default(0)
+  currency      String    @default("USD")
+  status        String    @default("draft")
+  validUntil    DateTime?
+  notes         String?
+  adminNotes    String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now())
+  Enquiry       Enquiry?  @relation(fields: [enquiryId], references: [id])
+  Company       Company?  @relation(fields: [companyId], references: [id])
+  User          User      @relation(fields: [userId], references: [id])
+  Store         Store?    @relation(fields: [storeId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([quoteNumber])
+  @@index([storeId])
 }

@@ -745,6 +745,7 @@ function AudienceCardsBlock({
       title: string;
       description: string;
       cta: string;
+      link?: string;
     }>) || [];
 
   return (
@@ -1313,7 +1314,7 @@ function LeadershipBlock({
   const label = (data.label as string) || "";
   const heading = (data.heading as string) || "";
   const members =
-    (data.members as Array<{ name: string; role: string; bio: string; photo?: string }>) || [];
+    (data.members as Array<{ name: string; role: string; bio: string; image?: string; photo?: string }>) || [];
   const ctaText = (data.ctaText as string) || "";
 
   return (
@@ -1401,27 +1402,32 @@ function PartnerLogosBlock({ data }: { data: Record<string, unknown> }) {
   const heading = (data.heading as string) || "";
   const testimonials =
     (data.testimonials as Array<{ quote: string; author: string }>) || [];
-  const logos = (data.logos as string[]) || [];
+  const logos = (data.logos as Array<string | { url: string; alt?: string }> | string[]) || [];
+  const logoCount = (data.logoCount as number) || 0;
 
   const renderLogos = () => {
     if (logos.length > 0) {
       return (
         <div className="flex flex-wrap justify-center gap-8 items-center border-t pt-8">
-          {logos.map((logo, i) => (
-            <div key={i} className="h-10 w-24 flex items-center justify-center">
-              {logo.url ? (
-                <img
-                  src={logo.url}
-                  alt={logo.alt || `Partner ${i + 1}`}
-                  className="max-h-full max-w-full object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all"
-                />
-              ) : (
-                <div className="h-8 w-16 rounded bg-muted border flex items-center justify-center text-xs text-muted-foreground">
-                  Logo {i + 1}
-                </div>
-              )}
-            </div>
-          ))}
+          {logos.map((logo, i) => {
+            const logoUrl = typeof logo === 'string' ? logo : logo.url;
+            const logoAlt = typeof logo === 'string' ? `Partner ${i + 1}` : (logo.alt || `Partner ${i + 1}`);
+            return (
+              <div key={i} className="h-10 w-24 flex items-center justify-center">
+                {logoUrl ? (
+                  <img
+                    src={logoUrl}
+                    alt={logoAlt}
+                    className="max-h-full max-w-full object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all"
+                  />
+                ) : (
+                  <div className="h-8 w-16 rounded bg-muted border flex items-center justify-center text-xs text-muted-foreground">
+                    Logo {i + 1}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       );
     }
@@ -1479,18 +1485,22 @@ function PartnerLogosBlock({ data }: { data: Record<string, unknown> }) {
           )}
           {logos.length > 0 && (
             <div className="flex flex-wrap justify-center gap-12 items-center border-t pt-12">
-              {logos.filter(Boolean).map((logo, i) => (
-                <motion.img
-                  key={i}
-                  initial={{ opacity: 0, filter: "grayscale(100%)" }}
-                  whileInView={{ opacity: 0.6, filter: "grayscale(100%)" }}
-                  whileHover={{ opacity: 1, filter: "grayscale(0%)" }}
-                  viewport={{ once: true }}
-                  src={logo}
-                  alt="Partner Logo"
-                  className="h-8 md:h-10 w-auto object-contain transition-all"
-                />
-              ))}
+              {logos.filter(Boolean).map((logo, i) => {
+                const logoUrl = typeof logo === 'string' ? logo : logo.url;
+                const logoAlt = typeof logo === 'string' ? 'Partner Logo' : (logo.alt || 'Partner Logo');
+                return (
+                  <motion.img
+                    key={i}
+                    initial={{ opacity: 0, filter: "grayscale(100%)" }}
+                    whileInView={{ opacity: 0.6, filter: "grayscale(100%)" }}
+                    whileHover={{ opacity: 1, filter: "grayscale(0%)" }}
+                    viewport={{ once: true }}
+                    src={logoUrl}
+                    alt={logoAlt}
+                    className="h-8 md:h-10 w-auto object-contain transition-all"
+                  />
+                );
+              })}
             </div>
           )}
         </motion.div>
@@ -1509,7 +1519,7 @@ function StickyCtaBlock({
   const { settings } = useAppStore();
   const text = (data.text as string) || "";
   const buttons =
-    (data.buttons as Array<{ text: string; type: string; action: string }>) ||
+    (data.buttons as Array<{ text: string; type: string; action: string; link?: string }>) ||
     [];
   const whatsappNumber = settings?.whatsapp_number || "";
 
