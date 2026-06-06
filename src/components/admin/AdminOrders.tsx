@@ -48,6 +48,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { adminFetch } from '@/lib/admin-fetch';
+import { formatPrice } from '@/lib/pricing';
 
 interface OrderItem {
   id: string;
@@ -196,13 +197,6 @@ export function AdminOrders() {
     }
   };
 
-  const formatCurrency = (amount: number, currency = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-    }).format(amount);
-  };
-
   const pendingApprovalCount = orders.filter(o => o.status === 'pending_approval').length;
 
   return (
@@ -296,7 +290,7 @@ export function AdminOrders() {
                       <span className="text-sm">{order.items.length} item(s)</span>
                     </TableCell>
                     <TableCell className="font-medium">
-                      {formatCurrency(order.total, order.currency)}
+                      {formatPrice(order.total, order.currency)}
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary" className={`${statusColors[order.status]} capitalize`}>
@@ -410,11 +404,11 @@ export function AdminOrders() {
                             {item.sku || '-'}
                           </TableCell>
                           <TableCell className="text-sm text-right">
-                            {formatCurrency(item.price, viewOrder.currency)}
+                            {formatPrice(item.price, viewOrder.currency)}
                           </TableCell>
                           <TableCell className="text-sm text-right">{item.quantity}</TableCell>
                           <TableCell className="text-sm text-right font-medium">
-                            {formatCurrency(item.total, viewOrder.currency)}
+                            {formatPrice(item.total, viewOrder.currency)}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -454,20 +448,20 @@ export function AdminOrders() {
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span>{formatCurrency(viewOrder.subtotal, viewOrder.currency)}</span>
+                    <span>{formatPrice(viewOrder.subtotal, viewOrder.currency)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Shipping</span>
-                    <span>{viewOrder.shippingCost === 0 ? 'Free' : formatCurrency(viewOrder.shippingCost, viewOrder.currency)}</span>
+                    <span>{viewOrder.shippingCost === 0 ? 'Free' : formatPrice(viewOrder.shippingCost, viewOrder.currency)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Tax</span>
-                    <span>{formatCurrency(viewOrder.tax, viewOrder.currency)}</span>
+                    <span>{formatPrice(viewOrder.tax, viewOrder.currency)}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between text-sm font-bold">
                     <span>Total</span>
-                    <span>{formatCurrency(viewOrder.total, viewOrder.currency)}</span>
+                    <span>{formatPrice(viewOrder.total, viewOrder.currency)}</span>
                   </div>
                   {viewOrder.paymentMethod && (
                     <div className="flex justify-between text-sm">

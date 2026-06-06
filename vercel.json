@@ -1,4 +1,10 @@
 {
   "framework": "nextjs",
-  "buildCommand": "next build"
+  "buildCommand": "next build",
+  "crons": [
+    {
+      "path": "/api/cron/cart-abandonment",
+      "schedule": "0 10 * * *"
+    }
+  ]
 }

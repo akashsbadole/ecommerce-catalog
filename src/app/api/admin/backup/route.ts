@@ -1,19 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { verifyToken } from '@/lib/auth-edge';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
 // GET /api/admin/backup - Export all data as JSON
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    const token = authHeader.split(' ')[1];
-    const payload = await verifyToken(token);
-    if (!payload || payload.role !== 'admin') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
 
     const [
       products,
@@ -41,6 +34,10 @@ export async function GET(request: NextRequest) {
       db.siteSetting.findMany(),
     ]);
 
+    // Filter sensitive settings from backup
+    const SENSITIVE_KEYS = ['smtp_pass', 'smtp_user', 'smtp_password', 'payment_razorpay_key_secret', 'jwt_secret', 'api_key', 'secret_key'];
+    const filteredSettings = settings.filter(s => !SENSITIVE_KEYS.some(k => s.key.toLowerCase().includes(k)));
+
     const backup = {
       version: '1.0',
       createdAt: new Date().toISOString(),
@@ -55,7 +52,7 @@ export async function GET(request: NextRequest) {
         contentPages,
         media,
         redirects,
-        settings,
+        settings: filteredSettings,
       },
     };
 
@@ -74,15 +71,8 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/backup - Restore from JSON backup
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    const token = authHeader.split(' ')[1];
-    const payload = await verifyToken(token);
-    if (!payload || payload.role !== 'admin') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
 
     const formData = await request.formData();
     const file = formData.get('file') as File;

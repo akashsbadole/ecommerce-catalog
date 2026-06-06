@@ -127,7 +127,7 @@ function SidebarContent({
           <ShoppingBag className="h-5 w-5 text-emerald-600" />
         )}
         <span className="text-lg font-bold">
-          {settings?.site_name || 'Style'}<span className="text-emerald-600">{settings?.site_name ? '' : 'Store'}</span>
+          {settings?.site_name || 'My Store'}
         </span>
         <Badge variant="secondary" className="ml-auto text-xs">Admin</Badge>
       </div>
@@ -212,6 +212,7 @@ function SidebarContent({
 
 export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminDashboardProps) {
   const isMobile = useIsMobile();
+  const { settings } = useAppStore();
   const [currentTab, setCurrentTab] = useState(activeTab);
 
   // Sync activeTab prop changes
@@ -397,7 +398,7 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
             <div className="flex items-center gap-2">
               <ShoppingBag className="h-4 w-4 text-emerald-600" />
               <span className="font-semibold text-sm">
-                Style<span className="text-emerald-600">Store</span>
+                {settings?.site_name || 'My Store'}
               </span>
             </div>
             <Badge variant="secondary" className="text-xs ml-1">Admin</Badge>

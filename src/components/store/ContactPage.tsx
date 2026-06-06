@@ -33,9 +33,9 @@ export function ContactPage({ settings }: ContactPageProps) {
     message: '',
   });
 
-  const companyEmail = settings?.contact_email || 'hello@stylestore.com';
-  const companyPhone = settings?.contact_phone || '+1 (555) 123-4567';
-  const companyAddress = settings?.contact_address || '123 Style Avenue, Fashion District, NY 10001';
+  const companyEmail = settings?.site_email || settings?.contact_email || '';
+  const companyPhone = settings?.site_phone || settings?.contact_phone || '';
+  const companyAddress = settings?.site_address || settings?.contact_address || '';
   const businessHours = settings?.business_hours || 'Mon-Fri: 9:00 AM - 6:00 PM';
 
   // SEO: set document title and meta description

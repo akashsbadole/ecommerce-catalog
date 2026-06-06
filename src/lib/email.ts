@@ -15,6 +15,13 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
       return false;
     }
 
+    const user = getSetting('smtp_user');
+    const pass = getSetting('smtp_pass');
+    if (!user || !pass) {
+      console.log('SMTP credentials not configured, skipping email');
+      return false;
+    }
+
     const transporter = nodemailer.createTransport({
       host,
       port: parseInt(getSetting('smtp_port') || '587'),
@@ -39,6 +46,21 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
     console.error('Email error:', error);
     return false;
   }
+}
+
+/**
+ * Check if SMTP is configured and return status.
+ * Used by admin UI to show warnings.
+ */
+export async function getSmtpStatus(): Promise<{ configured: boolean; host: string; user: string }> {
+  const getSetting = await getSiteSettings();
+  const host = getSetting('smtp_host');
+  const user = getSetting('smtp_user');
+  return {
+    configured: !!(host && user),
+    host: host || '',
+    user: user || '',
+  };
 }
 
 // Professional HTML email templates

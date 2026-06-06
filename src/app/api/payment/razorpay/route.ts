@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { resolveUserId } from '@/lib/auth-helpers';
-import { getGlobalSetting } from '@/lib/settings';
+import { getGlobalSetting, getSetting } from '@/lib/settings';
+import { getStoreId } from '@/lib/store-db';
 import crypto from 'crypto';
 
 // POST /api/payment/razorpay - Create Razorpay order
@@ -13,7 +14,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { amount, currency = 'USD', orderId } = body;
+    const { amount, currency: requestedCurrency, orderId } = body;
+
+    // Get store currency as fallback
+    const storeId = getStoreId(request);
+    const currency = requestedCurrency || await getSetting('currency', storeId) || 'USD';
 
     // Get Razorpay settings
     const [keyIdValue, keySecretValue, enabledValue] = await Promise.all([
@@ -80,8 +85,25 @@ export async function POST(request: NextRequest) {
 // POST /api/payment/razorpay/verify - Verify payment
 export async function PUT(request: NextRequest) {
   try {
+    const userId = await resolveUserId(request);
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = body;
+
+    if (!orderId) {
+      return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
+    }
+
+    // Verify the order belongs to this user
+    const order = await db.order.findFirst({
+      where: { id: orderId, userId },
+    });
+    if (!order) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
 
     // Get Razorpay secret
     const keySecretValue = await getGlobalSetting('payment_razorpay_key_secret');

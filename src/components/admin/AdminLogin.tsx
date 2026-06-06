@@ -127,7 +127,7 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
                   <Input
                     id="admin-email"
                     type="email"
-                    placeholder="admin@stylestore.com"
+                    placeholder="admin@store.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -237,7 +237,7 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
                   <Input
                     id="forgot-email"
                     type="email"
-                    placeholder="admin@stylestore.com"
+                    placeholder="admin@store.com"
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
                     required

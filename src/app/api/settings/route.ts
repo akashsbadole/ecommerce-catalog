@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendEmail } from '@/lib/email';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
 // Settings keys that should never be exposed to the public
 const SENSITIVE_KEYS = [
@@ -9,8 +10,10 @@ const SENSITIVE_KEYS = [
   'smtp_password', 'api_key', 'secret_key', 'access_token', 'private_key',
 ];
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
     const settings = await db.siteSetting.findMany();
     const settingsMap: Record<string, string> = {};
     for (const s of settings) {

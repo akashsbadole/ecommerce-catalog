@@ -1,5 +1,5 @@
 
-export function generateProductSchema(product: any, siteUrl: string, brandName?: string) {
+export function generateProductSchema(product: any, siteUrl: string, brandName?: string, currency: string = 'USD') {
   const images = (() => {
     try {
       const arr = JSON.parse(product.images || '[]');
@@ -23,7 +23,7 @@ export function generateProductSchema(product: any, siteUrl: string, brandName?:
     offers: {
       '@type': 'Offer',
       url: `${siteUrl}/product/${product.slug}`,
-      priceCurrency: 'USD',
+      priceCurrency: currency,
       price: product.price,
       availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'
     }
@@ -69,7 +69,9 @@ export function generateArticleSchema(post: any, siteUrl: string, brandName?: st
     try {
       const overrides = JSON.parse(post.customSchema);
       return { ...schema, ...overrides };
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Failed to parse blog post custom schema:', e);
+    }
   }
 
   return schema;

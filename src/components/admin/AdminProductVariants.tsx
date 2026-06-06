@@ -109,14 +109,10 @@ function getStockBadge(stock: number, threshold: number) {
   );
 }
 
-const formatPrice = (price: number | null) => {
-  if (price === null || price === undefined) return '—';
-  return libFormatPrice(price, 'USD');
-};
-
 export function AdminProductVariants({ productId, lowStockThreshold = 10, onVariantsChange }: AdminProductVariantsProps) {
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currency, setCurrency] = useState('USD');
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -150,6 +146,27 @@ export function AdminProductVariants({ productId, lowStockThreshold = 10, onVari
   useEffect(() => {
     fetchVariants();
   }, [productId]);
+
+  // Fetch store currency
+  useEffect(() => {
+    async function fetchCurrency() {
+      try {
+        const res = await adminFetch('/api/settings');
+        if (res.ok) {
+          const data = await res.json();
+          const settings = data.settings || [];
+          const curr = settings.find((s: any) => s.key === 'currency');
+          if (curr?.value) setCurrency(curr.value);
+        }
+      } catch { /* ignore */ }
+    }
+    fetchCurrency();
+  }, []);
+
+  const formatPriceValue = (price: number | null) => {
+    if (price === null || price === undefined) return '—';
+    return libFormatPrice(price, currency);
+  };
 
   const handleOpenAdd = () => {
     setEditingVariant(null);
@@ -324,10 +341,10 @@ export function AdminProductVariants({ productId, lowStockThreshold = 10, onVari
                   <TableCell className="text-muted-foreground">
                     {variant.sku || '—'}
                   </TableCell>
-                  <TableCell>{formatPrice(variant.price)}</TableCell>
+                  <TableCell>{formatPriceValue(variant.price)}</TableCell>
                   <TableCell className="hidden sm:table-cell">
                     <span className="text-amber-700 dark:text-amber-400">
-                      {formatPrice(variant.wholesalePrice)}
+                      {formatPriceValue(variant.wholesalePrice)}
                     </span>
                   </TableCell>
                   <TableCell>

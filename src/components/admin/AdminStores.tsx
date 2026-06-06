@@ -325,7 +325,7 @@ export function AdminStores() {
                 </div>
               </div>
               <div className="text-right text-sm text-emerald-700 dark:text-emerald-300">
-                <p className="font-mono">{activeStore.slug}.wcommerce.com</p>
+                <p className="font-mono">{activeStore.slug}.{process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || 'wcommerce.com'}</p>
                 {activeStore.domain && (
                   <p className="text-xs opacity-75">{activeStore.domain}</p>
                 )}
@@ -389,7 +389,7 @@ export function AdminStores() {
                     <div className="flex items-center gap-1.5">
                       <Globe className="h-3.5 w-3.5 shrink-0" />
                       <span className="font-mono text-xs truncate">
-                        {store.slug}.wcommerce.com
+                        {store.slug}.{process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || 'wcommerce.com'}
                       </span>
                     </div>
                     {store.domain && (
@@ -486,7 +486,7 @@ export function AdminStores() {
               <p className="text-xs text-muted-foreground">
                 {editingStore
                   ? 'Slug cannot be changed after creation'
-                  : 'Auto-generated from name. Your store will be at {slug}.wcommerce.com'}
+                  : `Auto-generated from name. Your store will be at {slug}.${process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || 'wcommerce.com'}`}
               </p>
             </div>
 

@@ -4,6 +4,7 @@ import { resolveUserId } from '@/lib/auth-helpers';
 import { sendOrderConfirmationToCustomer, sendOrderNotificationToAdmin, getSiteSettings } from '@/lib/email';
 import { getGlobalSetting, getSetting } from '@/lib/settings';
 import { getStoreId } from '@/lib/store-db';
+import { logError } from '@/lib/error-logger';
 
 function generateOrderNumber(): string {
   const now = new Date();
@@ -190,6 +191,9 @@ export async function POST(request: NextRequest) {
     const approvalThreshold = parseFloat(thresholdValue || '0');
     const requiresApproval = approvalThreshold > 0 && total >= approvalThreshold;
 
+    // Get store currency
+    const currency = await getSetting('currency', storeId) || 'USD';
+
     // Create order in a transaction
     const order = await db.$transaction(async (tx) => {
       const newOrder = await tx.order.create({
@@ -203,7 +207,7 @@ export async function POST(request: NextRequest) {
           shippingCost,
           tax,
           total,
-          currency: 'USD',
+          currency,
           shippingName: shippingName || null,
           shippingEmail: shippingEmail || null,
           shippingPhone: shippingPhone || null,
@@ -261,8 +265,12 @@ export async function POST(request: NextRequest) {
     // Send order emails (non-blocking)
     const emailSettings = await getSiteSettings();
     const siteName = emailSettings('site_name') || 'Store';
-    sendOrderConfirmationToCustomer(order, order.items, siteName).catch(() => {});
-    sendOrderNotificationToAdmin(order, order.items, siteName).catch(() => {});
+    sendOrderConfirmationToCustomer(order, order.items, siteName).catch((err) =>
+      logError(err, { category: 'email', context: 'Order confirmation to customer' })
+    );
+    sendOrderNotificationToAdmin(order, order.items, siteName).catch((err) =>
+      logError(err, { category: 'email', context: 'Order notification to admin' })
+    );
 
     return NextResponse.json({
       order,

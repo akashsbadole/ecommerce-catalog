@@ -771,7 +771,17 @@ export function AdminSettings() {
           </CardTitle>
           <CardDescription>Configure email settings for notifications</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
+        <CardContent className="space-y-4">
+          {!settings.smtp_host && (
+            <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm dark:border-amber-800 dark:bg-amber-950">
+              <Info className="h-4 w-4 mt-0.5 text-amber-600 dark:text-amber-400 shrink-0" />
+              <div>
+                <p className="font-medium text-amber-800 dark:text-amber-200">SMTP not configured</p>
+                <p className="text-amber-700 dark:text-amber-300 mt-1">Email notifications (order confirmations, password resets) will not be sent until SMTP is configured.</p>
+              </div>
+            </div>
+          )}
+          <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="smtp_host">SMTP Host</Label>
             <Input
@@ -838,6 +848,7 @@ export function AdminSettings() {
             <span className="text-sm text-muted-foreground">
               Sends a test email to the site email address
             </span>
+          </div>
           </div>
         </CardContent>
       </Card>

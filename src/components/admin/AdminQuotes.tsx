@@ -49,6 +49,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { adminFetch } from '@/lib/admin-fetch';
+import { formatPrice } from '@/lib/pricing';
 
 interface QuoteItem {
   id: string;
@@ -203,13 +204,6 @@ export function AdminQuotes() {
     }
   };
 
-  const formatCurrency = (amount: number, currency = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-    }).format(amount);
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -299,7 +293,7 @@ export function AdminQuotes() {
                       <span className="text-sm">{quote.items.length} item(s)</span>
                     </TableCell>
                     <TableCell className="font-medium">
-                      {formatCurrency(quote.total, quote.currency)}
+                      {formatPrice(quote.total, quote.currency)}
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary" className={`${statusColors[quote.status]} capitalize`}>
@@ -413,11 +407,11 @@ export function AdminQuotes() {
                             {item.sku || '-'}
                           </TableCell>
                           <TableCell className="text-sm text-right">
-                            {formatCurrency(item.price, viewQuote.currency)}
+                            {formatPrice(item.price, viewQuote.currency)}
                           </TableCell>
                           <TableCell className="text-sm text-right">{item.quantity}</TableCell>
                           <TableCell className="text-sm text-right font-medium">
-                            {formatCurrency(item.total, viewQuote.currency)}
+                            {formatPrice(item.total, viewQuote.currency)}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -461,7 +455,7 @@ export function AdminQuotes() {
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span>{formatCurrency(viewQuote.subtotal, viewQuote.currency)}</span>
+                    <span>{formatPrice(viewQuote.subtotal, viewQuote.currency)}</span>
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="admin-quote-discount" className="text-sm">Discount</Label>
@@ -491,7 +485,7 @@ export function AdminQuotes() {
                   <div className="flex justify-between text-sm font-bold">
                     <span>Total</span>
                     <span>
-                      {formatCurrency(
+                      {formatPrice(
                         viewQuote.subtotal - parseFloat(discount || '0') + parseFloat(tax || '0'),
                         viewQuote.currency
                       )}

@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
+import { formatPrice } from '@/lib/pricing';
 
 interface QuoteItem {
   id: string;
@@ -95,13 +96,6 @@ export default function BuyerPortalPage() {
   }, [auth.user, auth.token, navigate]);
 
   if (!auth.user) return null;
-
-  const formatCurrency = (amount: number, currency = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-    }).format(amount);
-  };
 
   const activeQuotes = quotes.filter(q => ['draft', 'sent'].includes(q.status));
   const recentQuotes = quotes.slice(0, 5);
@@ -214,7 +208,7 @@ export default function BuyerPortalPage() {
                     <div className="space-y-1">
                       <p className="text-sm font-medium font-mono">{quote.quoteNumber}</p>
                       <p className="text-xs text-muted-foreground">
-                        {quote.items.length} item(s) &middot; {formatCurrency(quote.total, quote.currency)}
+                        {quote.items.length} item(s) &middot; {formatPrice(quote.total, quote.currency)}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {new Date(quote.createdAt).toLocaleDateString()}

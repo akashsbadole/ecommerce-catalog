@@ -260,7 +260,8 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
     // JSON-LD structured data
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     const brandName = settings?.site_name || 'Store';
-    const jsonLd = generateProductSchema(product, siteUrl, brandName);
+    const currency = settings?.currency || 'USD';
+    const jsonLd = generateProductSchema(product, siteUrl, brandName, currency);
 
     const scriptEl = document.createElement('script');
     scriptEl.type = 'application/ld+json';

@@ -68,6 +68,7 @@ model User {
   BlogPost           BlogPost[]
   Enquiry            Enquiry[]
   PasswordResetToken PasswordResetToken[]
+  EmailVerificationToken EmailVerificationToken[]
   Cart               Cart?
   Wishlist           Wishlist?
   Order              Order[]
@@ -78,6 +79,19 @@ model User {
 }
 
 model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  User      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@index([token])
+}
+
+model EmailVerificationToken {
   id        String    @id @default(cuid())
   userId    String
   token     String    @unique

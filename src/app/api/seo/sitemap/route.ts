@@ -67,10 +67,10 @@ export async function GET(request: NextRequest) {
       urls.push(`  <url>\n    <loc>${baseUrl}/category/${category.slug}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>`);
     }
 
-    // Content Pages
+    // Content Pages — use /{slug} to match app routing
     for (const page of contentPages) {
       const lastmod = page.updatedAt.toISOString().split('T')[0];
-      urls.push(`  <url>\n    <loc>${baseUrl}/pages/${page.slug}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>\n  </url>`);
+      urls.push(`  <url>\n    <loc>${baseUrl}/${page.slug}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>\n  </url>`);
     }
 
     // Blog Posts
@@ -78,6 +78,9 @@ export async function GET(request: NextRequest) {
       const lastmod = post.updatedAt.toISOString().split('T')[0];
       urls.push(`  <url>\n    <loc>${baseUrl}/blog/${post.slug}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>`);
     }
+
+    // Blog listing page
+    urls.push(`  <url>\n    <loc>${baseUrl}/blog</loc>\n    <lastmod>${siteLastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>`);
 
     // Contact
     urls.push(`  <url>\n    <loc>${baseUrl}/contact</loc>\n    <lastmod>${siteLastmod}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>\n  </url>`);

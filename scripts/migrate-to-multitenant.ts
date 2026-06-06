@@ -22,9 +22,9 @@ async function main() {
       slug: 'default',
       ownerUserId: (await prisma.user.findFirst({ where: { role: 'admin' } }))?.id || '',
       settings: JSON.stringify({
-        currency: 'USD',
+        currency: process.env.STORE_CURRENCY || 'USD',
         tax_rate: '0',
-        site_name: 'StyleStore',
+        site_name: process.env.NEXT_PUBLIC_SITE_NAME || 'My Store',
       }),
       theme: JSON.stringify({
         primaryColor: '#10b981',
@@ -147,7 +147,8 @@ async function main() {
   console.log('🎉 Migration complete!');
   console.log(`\nDefault store ID: ${defaultStore.id}`);
   console.log(`Default store slug: ${defaultStore.slug}`);
-  console.log(`\nAccess your store at: ${defaultStore.slug}.wcommerce.com`);
+  const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || 'wcommerce.com';
+  console.log(`\nAccess your store at: ${defaultStore.slug}.${platformDomain}`);
 }
 
 main()

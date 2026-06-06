@@ -3,6 +3,10 @@ import { db } from '@/lib/db';
 import { getGlobalSetting, getSetting } from '@/lib/settings';
 import { getStoreId } from '@/lib/store-db';
 import { sendOrderConfirmationToCustomer, sendOrderNotificationToAdmin, getSiteSettings } from '@/lib/email';
+import { logError } from '@/lib/error-logger';
+import { checkRateLimit } from '@/lib/rate-limit';
+
+const GUEST_ORDER_RATE_LIMIT = { maxRequests: 5, windowMs: 60 * 60 * 1000, prefix: 'guest-order' };
 
 function generateOrderNumber(): string {
   const now = new Date();
@@ -14,6 +18,10 @@ function generateOrderNumber(): string {
 // POST /api/orders/guest - Create order as guest (no auth required)
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 5 guest orders per hour per IP
+    const rateLimitResponse = checkRateLimit(request, GUEST_ORDER_RATE_LIMIT);
+    if (rateLimitResponse) return rateLimitResponse;
+
     const body = await request.json();
     const {
       items,
@@ -124,6 +132,9 @@ export async function POST(request: NextRequest) {
     const approvalThreshold = parseFloat(thresholdValue || '0');
     const requiresApproval = approvalThreshold > 0 && total >= approvalThreshold;
 
+    // Get store currency
+    const currency = await getSetting('currency', storeId) || 'USD';
+
     // Create order in a transaction
     const order = await db.$transaction(async (tx) => {
       const newOrder = await tx.order.create({
@@ -136,7 +147,7 @@ export async function POST(request: NextRequest) {
           shippingCost,
           tax,
           total,
-          currency: 'USD',
+          currency,
           shippingName: shippingName || null,
           shippingEmail: shippingEmail || null,
           shippingPhone: shippingPhone || null,
@@ -170,11 +181,15 @@ export async function POST(request: NextRequest) {
       const emailSettings = await getSiteSettings();
       const siteName = emailSettings('site_name') || 'Store';
       if (shippingEmail) {
-        sendOrderConfirmationToCustomer(order, order.items, siteName).catch(() => {});
+        sendOrderConfirmationToCustomer(order, order.items, siteName).catch((err) =>
+          logError(err, { category: 'email', context: 'Guest order confirmation' })
+        );
       }
-      sendOrderNotificationToAdmin(order, order.items, siteName).catch(() => {});
-    } catch {
-      // Email sending is non-critical
+      sendOrderNotificationToAdmin(order, order.items, siteName).catch((err) =>
+        logError(err, { category: 'email', context: 'Guest order notification to admin' })
+      );
+    } catch (err) {
+      logError(err, { category: 'email', context: 'Guest order email setup' });
     }
 
     return NextResponse.json({

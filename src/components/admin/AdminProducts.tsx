@@ -185,7 +185,7 @@ function parseImages(images: string): string[] {
   return images.split(',').map(s => s.trim()).filter(Boolean);
 }
 
-function getFirstImage(product: Product): string {
+function getFirstImageUrl(product: Product): string {
   const imgs = parseImages(product.images);
   return imgs.length > 0 ? imgs[0] : '';
 }
@@ -196,6 +196,7 @@ export function AdminProducts() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [currency, setCurrency] = useState('USD');
 
   // Dialog state
   const [formOpen, setFormOpen] = useState(false);
@@ -279,6 +280,22 @@ export function AdminProducts() {
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
+
+  // Fetch store currency
+  useEffect(() => {
+    async function fetchCurrency() {
+      try {
+        const res = await adminFetch('/api/settings');
+        if (res.ok) {
+          const data = await res.json();
+          const settings = data.settings || [];
+          const curr = settings.find((s: any) => s.key === 'currency');
+          if (curr?.value) setCurrency(curr.value);
+        }
+      } catch { /* ignore */ }
+    }
+    fetchCurrency();
+  }, []);
 
   const handleOpenAdd = () => {
     setEditingProduct(null);
@@ -555,7 +572,7 @@ export function AdminProducts() {
   };
 
   const formatPrice = (price: number) => {
-    return libFormatPrice(price, 'USD');
+    return libFormatPrice(price, currency);
   };
 
   const getStockBadge = (stock: number, threshold: number) => {
@@ -876,7 +893,7 @@ export function AdminProducts() {
               </TableHeader>
               <TableBody>
                 {products.map((product) => {
-                  const firstImg = getFirstImage(product);
+                  const firstImg = getFirstImageUrl(product);
                   return (
                     <TableRow key={product.id} className={selectedIds.includes(product.id) ? 'bg-muted/50' : ''}>
                       <TableCell>
@@ -1519,8 +1536,8 @@ export function AdminProducts() {
                         className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted/50 text-left transition-colors border-b last:border-b-0"
                         onClick={() => handleAddRelated(rp)}
                       >
-                        {getFirstImage(rp) ? (
-                          <img src={getFirstImage(rp)} alt={rp.name} className="h-8 w-8 rounded object-cover bg-muted" />
+                        {getFirstImageUrl(rp) ? (
+                          <img src={getFirstImageUrl(rp)} alt={rp.name} className="h-8 w-8 rounded object-cover bg-muted" />
                         ) : (
                           <div className="flex h-8 w-8 items-center justify-center rounded bg-muted"><ImageIcon className="h-3 w-3 text-muted-foreground" /></div>
                         )}

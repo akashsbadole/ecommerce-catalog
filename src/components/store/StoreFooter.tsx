@@ -13,9 +13,10 @@ interface StoreFooterProps {
 }
 
 export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
-  const companyEmail = settings?.contact_email || 'hello@stylestore.com';
-  const companyPhone = settings?.contact_phone || '+1 (555) 123-4567';
-  const companyAddress = settings?.contact_address || '123 Style Avenue, Fashion District, NY 10001';
+  const companyEmail = settings?.site_email || settings?.contact_email || '';
+  const companyPhone = settings?.site_phone || settings?.contact_phone || '';
+  const companyAddress = settings?.site_address || settings?.contact_address || '';
+  const siteName = settings?.site_name || 'My Store';
 
   // Social media links from settings
   const facebookUrl = settings?.facebook_url || '#';
@@ -73,13 +74,11 @@ export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
             <div className="flex items-center gap-2">
               <ShoppingBag className="h-5 w-5 text-primary" />
               <span className="text-lg font-bold tracking-tight">
-                Style<span className="text-primary">Store</span>
+                {siteName}
               </span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Your premier destination for quality products and exceptional service. 
-              Discover our curated collection of premium items designed to elevate 
-              your everyday experience.
+              {settings?.site_description || 'Your trusted online store for quality products and exceptional service.'}
             </p>
             <div className="flex items-center gap-3 pt-2">
               <a href={facebookUrl} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="text-muted-foreground transition-colors hover:text-foreground">

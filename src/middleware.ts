@@ -14,20 +14,9 @@ const PUBLIC_GET_PREFIXES = [
   '/api/categories',
   '/api/banners',
   '/api/seo',
-  '/api/settings',
   '/api/content-pages',
   '/api/blog',
-  '/api/media',
-  '/api/redirects',
   '/api/health',
-  '/api/dashboard',
-  '/api/admin',
-  '/api/enquiries',
-  '/api/activity-logs',
-  '/api/notifications',
-  '/api/users',
-  '/api/export',
-  '/api/newsletter',
   '/api/stores',
 ];
 
@@ -37,10 +26,8 @@ const PUBLIC_POST_PATHS = [
   '/api/contact',
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
-  '/api/auth/change-password',
   '/api/auth/register',
   '/api/newsletter/subscribe',
-  '/api/content-pages/seed',
   '/api/stores', // Allow store creation
 ];
 
@@ -54,7 +41,7 @@ const USER_AUTH_GET_PREFIXES = [
   '/api/stores',
 ];
 
-// User-authenticated POST/PUT/DELETE endpoints
+// User-authenticated mutation endpoints
 const USER_AUTH_MUTATION_PREFIXES = [
   '/api/cart',
   '/api/wishlist',
@@ -62,6 +49,7 @@ const USER_AUTH_MUTATION_PREFIXES = [
   '/api/account',
   '/api/quotes',
   '/api/stores',
+  '/api/auth/change-password',
 ];
 
 // Platform admin paths (no store context needed)
@@ -360,7 +348,7 @@ export async function middleware(request: NextRequest) {
   const token = authHeader.split(' ')[1];
   const payload = await verifyToken(token);
   if (!payload) {
-    console.log('Middleware: Invalid token', token);
+    console.log('Middleware: Invalid token');
     return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
   }
 

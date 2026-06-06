@@ -101,18 +101,7 @@ function MobileNavItem({ link, onNavigate }: { link: NavItem; onNavigate: (page:
 
 const navLinksDefault = [
   { label: "Home", page: "home" },
-  { label: "Manufacturing", page: "content-page", slug: "manufacturing" },
-  { label: "Products", page: "content-page", slug: "products" },
   { label: "Catalogue", page: "catalogue" },
-  {
-    label: "About Us",
-    page: "content-page",
-    slug: "about-us",
-    children: [
-      { label: "About Us", page: "content-page", slug: "about-us" },
-      { label: "Contact Us", page: "content-page", slug: "contact" },
-    ],
-  },
 ];
 
 export function StoreHeader({ onNavigate }: StoreHeaderProps) {
@@ -136,15 +125,16 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
         const res = await fetch('/api/content-pages');
         if (res.ok) {
           const data = await res.json();
-          const pages = (data.pages || []).filter((p: any) => p.isActive);
-          const links = pages.map((p: any) => ({
-            label: p.title,
-            page: 'content-page' as const,
-            slug: p.slug,
-          }));
-          // Add fixed links
-          links.push({ label: 'Products', page: 'catalogue' as const });
-          links.push({ label: 'Contact Us', page: 'content-page' as const, slug: 'contact' });
+          const pages = (data.pages || []).filter((p: any) => p.isActive && !['home', 'catalogue'].includes(p.slug));
+          const links = [
+            { label: 'Home', page: 'home' as const },
+            ...pages.map((p: any) => ({
+              label: p.title,
+              page: 'content-page' as const,
+              slug: p.slug,
+            })),
+            { label: 'Catalogue', page: 'catalogue' as const },
+          ];
           setNavLinks(links);
         }
       } catch {

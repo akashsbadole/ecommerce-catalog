@@ -16,18 +16,30 @@ export async function GET(request: NextRequest) {
     // Try trigram similarity first, fallback to ILIKE
     let suggestions;
     try {
-      const storeClause = storeId ? `AND "storeId" = '${storeId}'` : '';
-      suggestions = await db.$queryRawUnsafe(
-        `SELECT DISTINCT name, similarity(name, $1) as sim
-         FROM "Product"
-         WHERE "isActive" = true
-         AND "deletedAt" IS NULL
-         ${storeClause}
-         AND name % $1
-         ORDER BY sim DESC
-         LIMIT $2`,
-        q, limit
-      );
+      if (storeId) {
+        suggestions = await db.$queryRawUnsafe(
+          `SELECT DISTINCT name, similarity(name, $1) as sim
+           FROM "Product"
+           WHERE "isActive" = true
+           AND "deletedAt" IS NULL
+           AND "storeId" = $3
+           AND name % $1
+           ORDER BY sim DESC
+           LIMIT $2`,
+          q, limit, storeId
+        );
+      } else {
+        suggestions = await db.$queryRawUnsafe(
+          `SELECT DISTINCT name, similarity(name, $1) as sim
+           FROM "Product"
+           WHERE "isActive" = true
+           AND "deletedAt" IS NULL
+           AND name % $1
+           ORDER BY sim DESC
+           LIMIT $2`,
+          q, limit
+        );
+      }
     } catch {
       // Fallback: use ILIKE
       const storeFilter = storeId ? { storeId } : {};
