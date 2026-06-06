@@ -184,21 +184,25 @@ export const BLOCK_DEFAULTS: Record<
           title: "B2B brands",
           description: "Bulk supply of finished goods under your brand",
           cta: "Enquire now",
+          link: "/contact",
         },
         {
           title: "Private label",
           description: "Custom packaging, your branding, our recipe",
           cta: "Get details",
+          link: "/contact",
         },
         {
           title: "Distributors",
           description: "Trade pricing, consistent supply, multi-SKU range",
           cta: "Partner with us",
+          link: "/contact",
         },
         {
           title: "Institutional buyers",
           description: "Canteens, airlines, hospitality, govt procurement",
           cta: "Send requirement",
+          link: "/contact",
         },
       ],
     },
@@ -345,11 +349,13 @@ export const BLOCK_DEFAULTS: Record<
           name: "Director name",
           role: "Co-founder & Director",
           bio: "20+ yrs FMCG distribution background. Placeholder bio line.",
+          image: "",
         },
         {
           name: "Director name",
           role: "Co-founder & Director",
           bio: "Operations & manufacturing lead. Placeholder bio line.",
+          image: "",
         },
       ],
     },
@@ -359,6 +365,7 @@ export const BLOCK_DEFAULTS: Record<
     icon: "Building",
     defaultData: {
       heading: "Trusted by brands across India",
+      logos: ["", "", ""],
       testimonials: [
         {
           quote:
@@ -376,7 +383,6 @@ export const BLOCK_DEFAULTS: Record<
           author: "Company name, State",
         },
       ],
-      logoCount: 5,
     },
   },
   "blog-grid": {
@@ -439,9 +445,24 @@ export const BLOCK_DEFAULTS: Record<
     defaultData: {
       text: "Ready to manufacture at scale?",
       buttons: [
-        { text: "Get bulk quote", type: "primary", action: "enquiry" },
-        { text: "WhatsApp us", type: "whatsapp", action: "whatsapp" },
-        { text: "+91 XXXXX XXXXX", type: "phone", action: "phone" },
+        {
+          text: "Get bulk quote",
+          type: "primary",
+          action: "enquiry",
+          link: "/contact",
+        },
+        {
+          text: "WhatsApp us",
+          type: "whatsapp",
+          action: "whatsapp",
+          link: "https://wa.me/91XXXXXXXXXX",
+        },
+        {
+          text: "+91 XXXXX XXXXX",
+          type: "phone",
+          action: "phone",
+          link: "tel:+91XXXXXXXXXX",
+        },
       ],
     },
   },
