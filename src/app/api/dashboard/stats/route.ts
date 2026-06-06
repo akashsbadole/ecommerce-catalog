@@ -111,6 +111,15 @@ export async function GET(request: NextRequest) {
       recentActivity,
       enquiryStats,
       conversionRate,
+      quoteStats: {
+        total: await db.quote.count(),
+        sent: await db.quote.count({ where: { status: 'sent' } }),
+        accepted: await db.quote.count({ where: { status: 'accepted' } }),
+        totalAmount: (await db.quote.aggregate({
+          where: { status: 'accepted' },
+          _sum: { totalAmount: true }
+        }))._sum.totalAmount || 0,
+      }
     });
   } catch (error) {
     console.error('Dashboard stats error:', error);

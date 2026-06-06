@@ -87,6 +87,9 @@ const defaultSettings: Settings = {
   payment_razorpay_key_id: '',
   payment_razorpay_key_secret: '',
   payment_razorpay_mode: 'test',
+  b2b_discount_silver: '0.05',
+  b2b_discount_gold: '0.10',
+  b2b_discount_platinum: '0.15',
 };
 
 export function AdminSettings() {
@@ -666,6 +669,44 @@ export function AdminSettings() {
                 handleSettingChange('b2b_verify_new_accounts', String(checked))
               }
             />
+          </div>
+
+          <Separator className="sm:col-span-2" />
+
+          <div className="sm:col-span-2 space-y-4">
+            <h3 className="text-sm font-medium flex items-center gap-2">
+              <Info className="h-4 w-4" />
+              B2B Tier Discount Percentages
+            </h3>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="discount-silver">Silver Tier (%)</Label>
+                <Input
+                  id="discount-silver"
+                  type="number"
+                  value={Math.round(Number(settings.b2b_discount_silver || 0.05) * 100)}
+                  onChange={(e) => handleSettingChange('b2b_discount_silver', String(Number(e.target.value) / 100))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="discount-gold">Gold Tier (%)</Label>
+                <Input
+                  id="discount-gold"
+                  type="number"
+                  value={Math.round(Number(settings.b2b_discount_gold || 0.10) * 100)}
+                  onChange={(e) => handleSettingChange('b2b_discount_gold', String(Number(e.target.value) / 100))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="discount-platinum">Platinum Tier (%)</Label>
+                <Input
+                  id="discount-platinum"
+                  type="number"
+                  value={Math.round(Number(settings.b2b_discount_platinum || 0.15) * 100)}
+                  onChange={(e) => handleSettingChange('b2b_discount_platinum', String(Number(e.target.value) / 100))}
+                />
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

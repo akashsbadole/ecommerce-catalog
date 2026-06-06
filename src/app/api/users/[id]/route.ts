@@ -77,6 +77,9 @@ export async function PUT(
       data.role = role;
     }
     if (isActive !== undefined) data.isActive = isActive;
+    if (body.isVerified !== undefined) data.isVerified = body.isVerified;
+    if (body.tier !== undefined) data.tier = body.tier;
+    if (body.companyId !== undefined) data.companyId = body.companyId;
 
     // Handle password change
     if (password !== undefined && password !== '') {

@@ -7,9 +7,33 @@ export const TIER_DISCOUNTS: Record<UserTier, number> = {
   platinum: 0.15 // 15% off
 };
 
-export function calculateTieredPrice(basePrice: number, tier: string | null | undefined): number {
+export function calculateTieredPrice(basePrice: number, tier: string | null | undefined, settings?: Record<string, string>): number {
   const userTier = (tier?.toLowerCase() || 'standard') as UserTier;
-  const discount = TIER_DISCOUNTS[userTier] || 0;
+
+  let discount = TIER_DISCOUNTS[userTier] || 0;
+
+  // Override with dynamic settings if available
+  if (settings) {
+    const parseDiscount = (val: string | undefined) => {
+      if (val === undefined || val === '') return null;
+      const n = Number(val);
+      return isNaN(n) ? null : n;
+    };
+
+    if (userTier === 'silver') {
+      const d = parseDiscount(settings.b2b_discount_silver);
+      if (d !== null) discount = d;
+    }
+    if (userTier === 'gold') {
+      const d = parseDiscount(settings.b2b_discount_gold);
+      if (d !== null) discount = d;
+    }
+    if (userTier === 'platinum') {
+      const d = parseDiscount(settings.b2b_discount_platinum);
+      if (d !== null) discount = d;
+    }
+  }
+
   return basePrice * (1 - discount);
 }
 

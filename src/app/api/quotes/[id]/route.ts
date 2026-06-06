@@ -1,140 +1,111 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { resolveUserId } from '@/lib/auth-helpers';
 
-// GET /api/quotes/[id] - Get single quote details
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = await resolveUserId(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    const reqUserId = request.headers.get('x-user-id');
+    const reqUserRole = request.headers.get('x-user-role');
     const { id } = await params;
 
-    const quote = await db.quote.findFirst({
-      where: { id, userId },
+    const quote = await db.quote.findUnique({
+      where: { id },
       include: {
-        items: true,
-      },
+        Enquiry: {
+          include: { Product: true }
+        },
+        Company: true,
+        User: { select: { id: true, name: true, email: true } }
+      }
     });
 
     if (!quote) {
       return NextResponse.json({ error: 'Quote not found' }, { status: 404 });
     }
 
+    // Authorization: Buyers can only see their own quotes or their company's quotes
+    if (reqUserRole === 'buyer') {
+      const user = await db.user.findUnique({ where: { id: reqUserId || '' }, select: { companyId: true } });
+      if (!user || (quote.userId !== reqUserId && quote.companyId !== user.companyId)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    }
+
     return NextResponse.json({ quote });
   } catch (error) {
-    console.error('Quote GET error:', error);
+    console.error('Get quote error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-function generateOrderNumber(): string {
-  const now = new Date();
-  const date = now.toISOString().slice(0, 10).replace(/-/g, '');
-  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-  return `ORD-${date}-${random}`;
-}
-
-// PUT /api/quotes/[id] - Update quote (status change: sent, approved, rejected)
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = await resolveUserId(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    const reqUserId = request.headers.get('x-user-id');
+    const reqUserRole = request.headers.get('x-user-role');
     const { id } = await params;
     const body = await request.json();
-    const { status, notes } = body;
+    const { status, items, totalAmount, notes, validUntil } = body;
 
-    const allowedStatuses = ['sent', 'approved', 'rejected'];
-    if (status && !allowedStatuses.includes(status)) {
-      return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
-    }
-
-    const quote = await db.quote.findFirst({
-      where: { id, userId },
-      include: { items: true },
-    });
-
+    const quote = await db.quote.findUnique({ where: { id } });
     if (!quote) {
       return NextResponse.json({ error: 'Quote not found' }, { status: 404 });
     }
 
-    if (quote.status === 'converted') {
-      return NextResponse.json(
-        { error: 'Cannot modify a converted quote' },
-        { status: 400 }
-      );
+    const data: any = {};
+
+    if (reqUserRole === 'buyer') {
+      // Buyers can only accept or decline their own/company quotes
+      const user = await db.user.findUnique({ where: { id: reqUserId || '' }, select: { companyId: true } });
+      if (!user || (quote.userId !== reqUserId && quote.companyId !== user.companyId)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+
+      if (status && (status === 'accepted' || status === 'declined')) {
+        data.status = status;
+      } else {
+        return NextResponse.json({ error: 'Buyers can only update status to accepted or declined' }, { status: 403 });
+      }
+    } else if (reqUserRole === 'admin' || reqUserRole === 'clerk') {
+      if (status) data.status = status;
+      if (items) data.items = JSON.stringify(items);
+      if (totalAmount !== undefined) data.totalAmount = totalAmount;
+      if (notes !== undefined) data.notes = notes;
+      if (validUntil) data.validUntil = new Date(validUntil);
+    } else {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-
-    if (status === 'approved') {
-      // Auto-convert to order
-      const order = await db.$transaction(async (tx) => {
-        const newOrder = await tx.order.create({
-          data: {
-            userId,
-            orderNumber: generateOrderNumber(),
-            status: 'pending',
-            paymentStatus: 'pending',
-            subtotal: quote.subtotal,
-            tax: quote.tax,
-            total: quote.total,
-            currency: quote.currency,
-            notes: quote.notes,
-            items: {
-              create: quote.items.map((item) => ({
-                productId: item.productId,
-                name: item.name,
-                sku: item.sku,
-                price: item.price,
-                quantity: item.quantity,
-                total: item.total,
-                images: item.images,
-              })),
-            },
-          },
-        });
-
-        // Mark quote as converted
-        await tx.quote.update({
-          where: { id },
-          data: { status: 'converted' },
-        });
-
-        return newOrder;
-      });
-
-      return NextResponse.json({
-        order,
-        message: 'Quote approved and converted to order',
-      });
-    }
-
-    const updateData: Record<string, unknown> = {};
-    if (status) updateData.status = status;
-    if (notes !== undefined) updateData.notes = notes;
 
     const updatedQuote = await db.quote.update({
       where: { id },
-      data: updateData,
-      include: { items: true },
+      data
     });
 
-    return NextResponse.json({
-      quote: updatedQuote,
-      message: 'Quote updated successfully',
-    });
+    return NextResponse.json({ quote: updatedQuote });
   } catch (error) {
-    console.error('Quote PUT error:', error);
+    console.error('Update quote error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const reqUserRole = request.headers.get('x-user-role');
+    if (reqUserRole !== 'admin' && reqUserRole !== 'clerk') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    const { id } = await params;
+    await db.quote.delete({ where: { id } });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Delete quote error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

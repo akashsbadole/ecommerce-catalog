@@ -306,7 +306,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
   const getEffectivePrice = (basePrice: number) => {
     const isTieredEnabled = settings?.b2b_enable_tiered_pricing === 'true';
     if (!isTieredEnabled) return basePrice;
-    return calculateTieredPrice(basePrice, userTier);
+    return calculateTieredPrice(basePrice, userTier, siteSettings || undefined);
   };
 
   const isRFQ = form.enquiryType === 'rfq';

@@ -1,174 +1,92 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { resolveUserId } from '@/lib/auth-helpers';
-import { getGlobalSetting } from '@/lib/settings';
 
-function generateQuoteNumber(): string {
-  const now = new Date();
-  const date = now.toISOString().slice(0, 10).replace(/-/g, '');
-  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-  return `QT-${date}-${random}`;
-}
-
-// GET /api/quotes - Get user's quotes
 export async function GET(request: NextRequest) {
   try {
-    const userId = await resolveUserId(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+    const companyId = searchParams.get('companyId');
     const status = searchParams.get('status');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const skip = (page - 1) * limit;
 
-    const where: Record<string, unknown> = { userId };
-    if (status) {
-      where.status = status;
+    const reqUserId = request.headers.get('x-user-id');
+    const reqUserRole = request.headers.get('x-user-role');
+
+    const where: any = {};
+
+    if (reqUserRole === 'buyer') {
+      const user = await db.user.findUnique({ where: { id: reqUserId || '' }, select: { companyId: true } });
+      if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+      where.OR = [
+        { userId: reqUserId },
+      ];
+      if (user.companyId) {
+        where.OR.push({ companyId: user.companyId });
+      }
+    } else {
+      if (userId) where.userId = userId;
+      if (companyId) where.companyId = companyId;
     }
 
-    const [quotes, total] = await Promise.all([
-      db.quote.findMany({
-        where,
-        include: {
-          items: {
-            select: {
-              id: true,
-              productId: true,
-              name: true,
-              sku: true,
-              price: true,
-              quantity: true,
-              total: true,
-              images: true,
-            },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-      }),
-      db.quote.count({ where }),
-    ]);
+    if (status) where.status = status;
 
-    return NextResponse.json({
-      quotes,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
+    const quotes = await db.quote.findMany({
+      where,
+      include: {
+        Enquiry: {
+          include: { Product: true }
+        },
+        Company: true,
+        User: { select: { id: true, name: true, email: true } }
       },
+      orderBy: { createdAt: 'desc' },
     });
+
+    return NextResponse.json({ quotes });
   } catch (error) {
-    console.error('Quotes GET error:', error);
+    console.error('Get quotes error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-// POST /api/quotes - Create quote from items
 export async function POST(request: NextRequest) {
   try {
-    const userId = await resolveUserId(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const role = request.headers.get('x-user-role');
+    if (role !== 'admin' && role !== 'clerk') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const body = await request.json();
-    const { items, notes, validUntil, currency } = body;
+    const { enquiryId, companyId, userId, items, totalAmount, notes, validUntil } = body;
 
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return NextResponse.json({ error: 'Items are required' }, { status: 400 });
+    if (!userId || !totalAmount) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
-
-    // Validate and build quote items
-    const quoteItems: Array<{
-      productId: string;
-      name: string;
-      sku: string | null;
-      price: number;
-      quantity: number;
-      total: number;
-      images: string;
-    }> = [];
-    let subtotal = 0;
-
-    for (const item of items) {
-      if (!item.productId || !item.quantity || !item.price) {
-        return NextResponse.json(
-          { error: 'Each item must have productId, quantity, and price' },
-          { status: 400 }
-        );
-      }
-
-      const product = await db.product.findUnique({
-        where: { id: item.productId },
-        select: {
-          id: true,
-          name: true,
-          sku: true,
-          images: true,
-          isActive: true,
-          deletedAt: true,
-        },
-      });
-
-      if (!product || !product.isActive || product.deletedAt) {
-        return NextResponse.json(
-          { error: `Product "${item.productId}" not found or unavailable` },
-          { status: 400 }
-        );
-      }
-
-      const itemTotal = item.price * item.quantity;
-      subtotal += itemTotal;
-
-      quoteItems.push({
-        productId: product.id,
-        name: product.name,
-        sku: product.sku,
-        price: item.price,
-        quantity: item.quantity,
-        total: itemTotal,
-        images: product.images,
-      });
-    }
-
-    // Tax calculation from site settings
-    const taxRateValue = await getGlobalSetting('tax_rate');
-    const taxRate = parseFloat(taxRateValue || '0');
-    const tax = Math.round(subtotal * taxRate * 100) / 100;
-
-    const total = subtotal + tax;
 
     const quote = await db.quote.create({
       data: {
-        quoteNumber: generateQuoteNumber(),
+        enquiryId,
+        companyId,
         userId,
-        status: 'draft',
-        subtotal,
-        tax,
-        total,
-        currency: currency || 'USD',
+        items: JSON.stringify(items || []),
+        totalAmount,
+        notes,
         validUntil: validUntil ? new Date(validUntil) : null,
-        notes: notes || null,
-        items: {
-          create: quoteItems,
-        },
-      },
-      include: {
-        items: true,
-      },
+        status: 'sent'
+      }
     });
 
-    return NextResponse.json({
-      quote,
-      message: 'Quote created successfully',
-    }, { status: 201 });
+    // Update enquiry status if linked
+    if (enquiryId) {
+      await db.enquiry.update({
+        where: { id: enquiryId },
+        data: { status: 'replied' }
+      });
+    }
+
+    return NextResponse.json({ quote }, { status: 201 });
   } catch (error) {
-    console.error('Quote POST error:', error);
+    console.error('Create quote error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

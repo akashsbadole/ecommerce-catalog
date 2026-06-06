@@ -24,6 +24,7 @@ const PUBLIC_GET_PREFIXES = [
 const PUBLIC_POST_PATHS = [
   '/api/enquiries',
   '/api/contact',
+  '/api/auth/register',
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
   '/api/auth/register',
@@ -173,30 +174,24 @@ const ROLE_PERMISSIONS: Record<string, {
       '/api/import/woocommerce',
       '/api/admin/backup',
       '/api/admin/quotes',
+      '/api/companies',
+      '/api/quotes',
     ],
     write: [
       '/api/enquiries',
       '/api/notifications',
-      '/api/upload',
-      '/api/payment/razorpay',
-      '/api/import/shopify',
-      '/api/import/woocommerce',
-      '/api/admin/backup',
-      '/api/admin/quotes',
+      '/api/quotes',
     ],
   },
-  editor: {
-    read: ['*'],
-    write: [
-      '/api/products',
-      '/api/categories',
-      '/api/blog',
-      '/api/banners',
-      '/api/content-pages',
-      '/api/media',
-      '/api/upload',
+  buyer: {
+    read: [
+      '/api/quotes',
       '/api/enquiries',
-      '/api/redirects',
+      '/api/companies', // Allowed to see their own company
+    ],
+    write: [
+      '/api/quotes', // To accept quotes
+      '/api/enquiries',
     ],
   },
 };
@@ -269,6 +264,12 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hostname = request.headers.get('host') || '';
 
+  // Security: Prevent header spoofing by stripping x-user headers from incoming requests
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.delete('x-user-id');
+  requestHeaders.delete('x-user-role');
+  requestHeaders.delete('x-user-email');
+
   // For non-API routes, check redirects first
   if (!pathname.startsWith('/api/') && !pathname.startsWith('/_next/') && !pathname.startsWith('/_proxy/') && !pathname.includes('.')) {
     const redirect = await checkRedirect(pathname, request);
@@ -296,46 +297,16 @@ export async function middleware(request: NextRequest) {
 
   // Allow public auth endpoints
   if (PUBLIC_API_PATHS.some(p => pathname.startsWith(p))) {
-    const requestHeaders = new Headers(request.headers);
-    if (storeId) requestHeaders.set('x-store-id', storeId);
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
   // Allow public GET endpoints
   if (request.method === 'GET' && PUBLIC_GET_PREFIXES.some(p => pathname.startsWith(p))) {
-    const requestHeaders = new Headers(request.headers);
-    if (storeId) requestHeaders.set('x-store-id', storeId);
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
   // Allow public POST endpoints
   if (request.method === 'POST' && PUBLIC_POST_PATHS.some(p => pathname.startsWith(p))) {
-    const requestHeaders = new Headers(request.headers);
-    if (storeId) requestHeaders.set('x-store-id', storeId);
-    return NextResponse.next({ request: { headers: requestHeaders } });
-  }
-
-  // Check user-authenticated endpoints (cart, wishlist, orders, account)
-  // These require a valid token but not admin RBAC
-  const isUserAuthGet = request.method === 'GET' && USER_AUTH_GET_PREFIXES.some(p => pathname.startsWith(p));
-  const isUserAuthMutation = (request.method === 'POST' || request.method === 'PUT' || request.method === 'DELETE') && USER_AUTH_MUTATION_PREFIXES.some(p => pathname.startsWith(p));
-
-  if (isUserAuthGet || isUserAuthMutation) {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    const token = authHeader.split(' ')[1];
-    const payload = await verifyToken(token);
-    if (!payload) {
-      return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
-    }
-    // Add user info to headers for downstream use
-    const requestHeaders = new Headers(request.headers);
-    requestHeaders.set('x-user-id', payload.userId);
-    requestHeaders.set('x-user-role', payload.role);
-    requestHeaders.set('x-user-email', payload.email);
-    if (storeId) requestHeaders.set('x-store-id', storeId);
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
@@ -363,7 +334,6 @@ export async function middleware(request: NextRequest) {
   }
 
   // Add user info to headers for downstream use
-  const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-user-id', payload.userId);
   requestHeaders.set('x-user-role', payload.role);
   requestHeaders.set('x-user-email', payload.email);
