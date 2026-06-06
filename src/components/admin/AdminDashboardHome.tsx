@@ -14,6 +14,7 @@ import {
   FileText,
   CheckCircle2,
   DollarSign,
+  AlertTriangle,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { adminFetch } from '@/lib/admin-fetch';
@@ -82,6 +83,21 @@ export function AdminDashboardHome({ onNavigate }: { onNavigate?: (tab: string) 
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentEnquiries, setRecentEnquiries] = useState<EnquiryRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [smtpConfigured, setSmtpConfigured] = useState(true);
+
+  useEffect(() => {
+    async function checkSmtp() {
+      try {
+        const res = await adminFetch('/api/settings');
+        if (res.ok) {
+          const data = await res.json();
+          const hasSmtp = data.settings?.smtp_host && data.settings?.smtp_user;
+          setSmtpConfigured(!!hasSmtp);
+        }
+      } catch {}
+    }
+    checkSmtp();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,7 +132,7 @@ export function AdminDashboardHome({ onNavigate }: { onNavigate?: (tab: string) 
         { label: 'Total Products', value: stats.productStats.total, icon: Package, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/40' },
         { label: 'Active Products', value: stats.productStats.active, icon: BarChart3, color: 'text-teal-600', bg: 'bg-teal-50 dark:bg-teal-950/40' },
         { label: 'Categories', value: stats.productStats.categories, icon: FolderOpen, color: 'text-violet-600', bg: 'bg-violet-50 dark:bg-violet-950/40' },
-        { label: 'New Enquiries', value: stats.enquiryStats.newCount, icon: MessageSquare, color: 'bg-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/40' },
+        { label: 'New Enquiries', value: stats.enquiryStats.newCount, icon: MessageSquare, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/40' },
         { label: 'Total Enquiries', value: stats.enquiryStats.total, icon: Star, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-950/40' },
         { label: 'RFQ Requests', value: stats.enquiryStats.rfqCount, icon: FileText, color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-950/40' },
         { label: 'Sent Quotes', value: stats.quoteStats?.sent || 0, icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/40' },
@@ -142,8 +158,7 @@ export function AdminDashboardHome({ onNavigate }: { onNavigate?: (tab: string) 
     { id: 'categories', label: 'Manage Categories', icon: FolderOpen },
     { id: 'enquiries', label: 'View Enquiries', icon: MessageSquare },
     { id: 'banners', label: 'Manage Banners', icon: ImageIcon },
-    { id: 'settings', label: 'SEO Settings', icon: Search },
-    { id: 'settings', label: 'Site Settings', icon: Star },
+    { id: 'settings', label: 'Settings', icon: Star },
   ];
 
   return (
@@ -152,6 +167,16 @@ export function AdminDashboardHome({ onNavigate }: { onNavigate?: (tab: string) 
         <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
         <p className="text-muted-foreground mt-1">Overview of your store performance</p>
       </div>
+
+      {!smtpConfigured && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
+          <div>
+            <p className="font-medium text-yellow-800">Email not configured</p>
+            <p className="text-sm text-yellow-700">SMTP settings are not set up. Order confirmation emails and notifications won't be sent. Go to Settings to configure SMTP.</p>
+          </div>
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

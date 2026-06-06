@@ -14,6 +14,16 @@ import {
   Search,
   Building2,
   Info,
+  Store,
+  ShoppingCart,
+  Heart,
+  Tag,
+  Upload,
+  Image,
+  CreditCard,
+  Download,
+  Database,
+  Truck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -22,9 +32,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { adminFetch } from '@/lib/admin-fetch';
+import { AdminImport } from '@/components/admin/AdminImport';
+import { AdminBackup } from '@/components/admin/AdminBackup';
 
 interface Settings {
   [key: string]: string;
@@ -33,14 +46,17 @@ interface Settings {
 const defaultSettings: Settings = {
   site_name: '',
   site_description: '',
+  site_logo: '',
   currency: 'USD',
   currency_symbol: '$',
   site_email: '',
   site_phone: '',
   site_address: '',
+  whatsapp_number: '',
   facebook_url: '',
   instagram_url: '',
   twitter_url: '',
+  linkedin_url: '',
   smtp_host: '',
   smtp_port: '587',
   smtp_user: '',
@@ -58,6 +74,19 @@ const defaultSettings: Settings = {
   b2b_enable_tiered_pricing: 'false',
   b2b_enable_buyer_portal: 'false',
   b2b_verify_new_accounts: 'false',
+  tax_rate: '0',
+  order_approval_threshold: '0',
+  catalog_mode: 'ecommerce',
+  catalog_show_prices: 'true',
+  catalog_enable_cart: 'true',
+  catalog_enable_wishlist: 'true',
+  shipping_method: 'free',
+  shipping_rate: '0',
+  shipping_free_above: '0',
+  payment_razorpay_enabled: 'false',
+  payment_razorpay_key_id: '',
+  payment_razorpay_key_secret: '',
+  payment_razorpay_mode: 'test',
   b2b_discount_silver: '0.05',
   b2b_discount_gold: '0.10',
   b2b_discount_platinum: '0.15',
@@ -154,7 +183,7 @@ export function AdminSettings() {
   const metaDescColor = metaDescLength > 160 ? 'text-rose-500' : metaDescLength > 140 ? 'text-amber-500' : 'text-muted-foreground';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-h-[calc(100vh-8rem)] overflow-y-auto pr-2">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -189,7 +218,7 @@ export function AdminSettings() {
               id="site_name"
               value={settings.site_name}
               onChange={(e) => handleSettingChange('site_name', e.target.value)}
-              placeholder="StyleStore"
+              placeholder="My Store"
             />
           </div>
           <div className="space-y-2">
@@ -218,6 +247,96 @@ export function AdminSettings() {
               onChange={(e) => handleSettingChange('currency_symbol', e.target.value)}
               placeholder="$"
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="tax_rate">Tax Rate (%)</Label>
+            <Input
+              id="tax_rate"
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              value={settings.tax_rate}
+              onChange={(e) => handleSettingChange('tax_rate', e.target.value)}
+              placeholder="0"
+            />
+            <p className="text-xs text-muted-foreground">
+              Percentage applied to orders at checkout
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="order_approval_threshold">Order Approval Threshold</Label>
+            <Input
+              id="order_approval_threshold"
+              type="number"
+              min="0"
+              step="0.01"
+              value={settings.order_approval_threshold || '0'}
+              onChange={(e) => handleSettingChange('order_approval_threshold', e.target.value)}
+              placeholder="0 (disabled)"
+            />
+            <p className="text-xs text-muted-foreground">
+              Orders above this total require admin approval. Set to 0 to disable.
+            </p>
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label>Site Logo</Label>
+            <div className="flex items-start gap-4">
+              {settings.site_logo ? (
+                <div className="relative w-20 h-20 rounded-lg border overflow-hidden bg-muted flex-shrink-0">
+                  <img
+                    src={settings.site_logo}
+                    alt="Site logo"
+                    className="w-full h-full object-contain"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleSettingChange('site_logo', '')}
+                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center text-xs hover:bg-destructive/90"
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <label className="w-20 h-20 rounded-lg border border-dashed flex flex-col items-center justify-center bg-muted cursor-pointer hover:bg-muted/80 flex-shrink-0">
+                  <Upload className="h-5 w-5 text-muted-foreground mb-1" />
+                  <span className="text-[10px] text-muted-foreground">Upload</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const formData = new FormData();
+                      formData.append('files', file);
+                      try {
+                        const res = await adminFetch('/api/upload', { method: 'POST', body: formData });
+                        const data = await res.json();
+                        if (data.files?.[0]?.url) {
+                          handleSettingChange('site_logo', data.files[0].url);
+                          toast.success('Logo uploaded');
+                        } else {
+                          toast.error(data.files?.[0]?.error || 'Upload failed');
+                        }
+                      } catch {
+                        toast.error('Upload failed');
+                      }
+                    }}
+                  />
+                </label>
+              )}
+              <div className="flex-1 space-y-2">
+                <Input
+                  value={settings.site_logo}
+                  onChange={(e) => handleSettingChange('site_logo', e.target.value)}
+                  placeholder="Paste image URL or upload a file"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Recommended: Square image, at least 200x200px. Supports JPG, PNG, SVG, WebP.
+                </p>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -291,7 +410,7 @@ export function AdminSettings() {
               placeholder="https://instagram.com/yourpage"
             />
           </div>
-          <div className="space-y-2 sm:col-span-2">
+          <div className="space-y-2">
             <Label htmlFor="twitter_url">Twitter URL</Label>
             <Input
               id="twitter_url"
@@ -299,6 +418,27 @@ export function AdminSettings() {
               onChange={(e) => handleSettingChange('twitter_url', e.target.value)}
               placeholder="https://twitter.com/yourpage"
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="linkedin_url">LinkedIn URL</Label>
+            <Input
+              id="linkedin_url"
+              value={settings.linkedin_url}
+              onChange={(e) => handleSettingChange('linkedin_url', e.target.value)}
+              placeholder="https://linkedin.com/company/yourpage"
+            />
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="whatsapp_number">WhatsApp Number</Label>
+            <Input
+              id="whatsapp_number"
+              value={settings.whatsapp_number}
+              onChange={(e) => handleSettingChange('whatsapp_number', e.target.value)}
+              placeholder="+91 98765 43210"
+            />
+            <p className="text-xs text-muted-foreground">
+              Include country code. Used for WhatsApp button in sticky bar and product pages.
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -321,7 +461,7 @@ export function AdminSettings() {
               id="seo_default_title"
               value={settings.seo_default_title}
               onChange={(e) => handleSettingChange('seo_default_title', e.target.value)}
-              placeholder="StyleStore - Premium Products"
+              placeholder="My Store - Premium Products"
             />
             <p className="text-xs text-muted-foreground">
               Used as the default page title across the site. Best practice: 50-60 characters.
@@ -571,6 +711,98 @@ export function AdminSettings() {
         </CardContent>
       </Card>
 
+      {/* Catalog / Ecommerce Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Store className="h-4 w-4" />
+            Catalog / Ecommerce
+          </CardTitle>
+          <CardDescription>
+            Choose how your store operates - full ecommerce with cart/checkout, or catalog-only with enquiry forms.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="catalog_mode" className="cursor-pointer">
+                Catalog Mode
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                When enabled, prices are hidden and customers submit enquiries instead of purchasing directly
+              </p>
+            </div>
+            <Switch
+              id="catalog_mode"
+              checked={settings.catalog_mode === 'catalog'}
+              onCheckedChange={(checked) =>
+                handleSettingChange('catalog_mode', checked ? 'catalog' : 'ecommerce')
+              }
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="catalog_show_prices" className="cursor-pointer">
+                <div className="flex items-center gap-1.5">
+                  <Tag className="h-3.5 w-3.5" />
+                  Show Prices
+                </div>
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Display product prices on the catalogue and product pages
+              </p>
+            </div>
+            <Switch
+              id="catalog_show_prices"
+              checked={settings.catalog_show_prices === 'true'}
+              onCheckedChange={(checked) =>
+                handleSettingChange('catalog_show_prices', String(checked))
+              }
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="catalog_enable_cart" className="cursor-pointer">
+                <div className="flex items-center gap-1.5">
+                  <ShoppingCart className="h-3.5 w-3.5" />
+                  Enable Cart
+                </div>
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Allow customers to add products to cart and checkout
+              </p>
+            </div>
+            <Switch
+              id="catalog_enable_cart"
+              checked={settings.catalog_enable_cart === 'true'}
+              onCheckedChange={(checked) =>
+                handleSettingChange('catalog_enable_cart', String(checked))
+              }
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="catalog_enable_wishlist" className="cursor-pointer">
+                <div className="flex items-center gap-1.5">
+                  <Heart className="h-3.5 w-3.5" />
+                  Enable Wishlist
+                </div>
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Allow customers to save products to their wishlist
+              </p>
+            </div>
+            <Switch
+              id="catalog_enable_wishlist"
+              checked={settings.catalog_enable_wishlist === 'true'}
+              onCheckedChange={(checked) =>
+                handleSettingChange('catalog_enable_wishlist', String(checked))
+              }
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Email / SMTP Settings */}
       <Card>
         <CardHeader>
@@ -580,7 +812,17 @@ export function AdminSettings() {
           </CardTitle>
           <CardDescription>Configure email settings for notifications</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
+        <CardContent className="space-y-4">
+          {!settings.smtp_host && (
+            <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm dark:border-amber-800 dark:bg-amber-950">
+              <Info className="h-4 w-4 mt-0.5 text-amber-600 dark:text-amber-400 shrink-0" />
+              <div>
+                <p className="font-medium text-amber-800 dark:text-amber-200">SMTP not configured</p>
+                <p className="text-amber-700 dark:text-amber-300 mt-1">Email notifications (order confirmations, password resets) will not be sent until SMTP is configured.</p>
+              </div>
+            </div>
+          )}
+          <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="smtp_host">SMTP Host</Label>
             <Input
@@ -648,8 +890,135 @@ export function AdminSettings() {
               Sends a test email to the site email address
             </span>
           </div>
+          </div>
         </CardContent>
       </Card>
+
+      {/* Shipping */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Truck className="h-5 w-5" />
+            Shipping
+          </CardTitle>
+          <CardDescription>Configure shipping rates for your store</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Shipping Method</Label>
+            <Select value={settings.shipping_method} onValueChange={(v) => handleSettingChange('shipping_method', v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="free">Free Shipping</SelectItem>
+                <SelectItem value="flat_rate">Flat Rate</SelectItem>
+                <SelectItem value="flat_rate_free_above">Flat Rate (Free Above Threshold)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {settings.shipping_method !== 'free' && (
+            <>
+              <div className="space-y-2">
+                <Label>Shipping Rate ({settings.currency_symbol || '$'})</Label>
+                <Input type="number" step="0.01" value={settings.shipping_rate} onChange={(e) => handleSettingChange('shipping_rate', e.target.value)} />
+              </div>
+              {settings.shipping_method === 'flat_rate_free_above' && (
+                <div className="space-y-2">
+                  <Label>Free Above Amount ({settings.currency_symbol || '$'})</Label>
+                  <Input type="number" step="0.01" value={settings.shipping_free_above} onChange={(e) => handleSettingChange('shipping_free_above', e.target.value)} />
+                  <p className="text-xs text-muted-foreground">Orders above this amount get free shipping</p>
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Payment Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <CreditCard className="h-4 w-4" />
+            Payment Gateway (Razorpay)
+          </CardTitle>
+          <CardDescription>
+            Configure Razorpay to accept online payments. Get API keys from{' '}
+            <a href="https://dashboard.razorpay.com/" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+              Razorpay Dashboard
+            </a>
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="payment_razorpay_enabled" className="cursor-pointer">
+                Enable Razorpay
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Accept payments via Razorpay (UPI, Cards, Netbanking, Wallets)
+              </p>
+            </div>
+            <Switch
+              id="payment_razorpay_enabled"
+              checked={settings.payment_razorpay_enabled === 'true'}
+              onCheckedChange={(checked) =>
+                handleSettingChange('payment_razorpay_enabled', String(checked))
+              }
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="payment_razorpay_mode" className="cursor-pointer">
+                Test Mode
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Use test keys for development. Switch to Live for production.
+              </p>
+            </div>
+            <Switch
+              id="payment_razorpay_mode"
+              checked={settings.payment_razorpay_mode === 'test'}
+              onCheckedChange={(checked) =>
+                handleSettingChange('payment_razorpay_mode', checked ? 'test' : 'live')
+              }
+            />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="payment_razorpay_key_id">
+                {settings.payment_razorpay_mode === 'test' ? 'Test' : 'Live'} Key ID
+              </Label>
+              <Input
+                id="payment_razorpay_key_id"
+                value={settings.payment_razorpay_key_id}
+                onChange={(e) => handleSettingChange('payment_razorpay_key_id', e.target.value)}
+                placeholder="rzp_test_xxxxxxxxxxxxxxxx"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="payment_razorpay_key_secret">
+                {settings.payment_razorpay_mode === 'test' ? 'Test' : 'Live'} Key Secret
+              </Label>
+              <Input
+                id="payment_razorpay_key_secret"
+                type="password"
+                value={settings.payment_razorpay_key_secret}
+                onChange={(e) => handleSettingChange('payment_razorpay_key_secret', e.target.value)}
+                placeholder="xxxxxxxxxxxxxxxxxxxxxxxx"
+              />
+            </div>
+          </div>
+          <div className="rounded-lg bg-muted p-3 text-xs text-muted-foreground">
+            <p className="font-medium mb-1">Supported payment methods:</p>
+            <p>UPI, Credit/Debit Cards, Netbanking, Wallets, EMI, PayLater</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Import Products */}
+      <AdminImport />
+
+      {/* Backup & Restore */}
+      <AdminBackup />
 
       {/* Bottom Save */}
       <div className="flex justify-end">

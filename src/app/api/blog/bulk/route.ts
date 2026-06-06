@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     if (!['publish', 'unpublish', 'delete', 'restore', 'permanent-delete'].includes(action)) {
       return NextResponse.json(
-        { error: 'action must be publish, unpublish, or delete' },
+        { error: 'action must be publish, unpublish, delete, restore, or permanent-delete' },
         { status: 400 }
       );
     }

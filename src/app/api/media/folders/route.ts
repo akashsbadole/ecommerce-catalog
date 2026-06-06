@@ -39,10 +39,30 @@ export async function POST(request: NextRequest) {
       select: { folder: true },
     });
 
+    if (existing) {
+      return NextResponse.json({
+        folder: sanitized,
+        alreadyExists: true,
+        message: 'Folder already exists',
+      });
+    }
+
+    // Create a placeholder entry so the folder appears in the list
+    await db.media.create({
+      data: {
+        filename: '.keep',
+        originalName: '.keep',
+        mimeType: 'text/plain',
+        size: 0,
+        url: `${sanitized}/.keep`,
+        folder: sanitized,
+      },
+    });
+
     return NextResponse.json({
       folder: sanitized,
-      alreadyExists: !!existing,
-      message: existing ? 'Folder already exists' : 'Folder ready for use',
+      alreadyExists: false,
+      message: 'Folder created',
     });
   } catch (error) {
     console.error('Create folder error:', error);

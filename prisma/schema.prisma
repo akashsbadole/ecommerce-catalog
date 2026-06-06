@@ -8,159 +8,49 @@ datasource db {
   directUrl  = env("DIRECT_URL")
 }
 
-model ActivityLog {
-  id        String   @id @default(cuid())
-  userId    String?
-  userName  String?
-  action    String
-  entity    String?
-  entityId  String?
-  details   String?
-  ipAddress String?
-  createdAt DateTime @default(now())
-  User      User?    @relation(fields: [userId], references: [id])
+// ─── Platform Models ───────────────────────────────────────────
 
-  @@index([createdAt])
-  @@index([entity])
-  @@index([action])
+model Store {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique // used as subdomain: {slug}.wcommerce.com
+  domain        String?  @unique // custom domain: shop.example.com
+  logo          String?
+  favicon       String?
+  description   String?
+  theme         String   @default("{}") // JSON: colors, fonts, layout
+  plan          String   @default("free") // free, basic, pro, enterprise
+  isActive      Boolean  @default(true)
+  isPaused      Boolean  @default(false)
+  ownerUserId   String
+  settings      String   @default("{}") // JSON: per-store config (currency, tax_rate, etc.)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  Owner        User    @relation("StoreOwner", fields: [ownerUserId], references: [id])
+  CurrentUsers   User[]   @relation("CurrentUserStore")
+  Product       Product[]
+  Category      Category[]
+  Order         Order[]
+  Coupon        Coupon[]
+  Quote         Quote[]
+  BlogPost      BlogPost[]
+  Banner        Banner[]
+  ContentPage   ContentPage[]
+  Enquiry       Enquiry[]
+  Media         Media[]
+  Redirect      Redirect[]
+
+  @@index([ownerUserId])
+  @@index([isActive])
 }
 
-model Banner {
-  id        String   @id @default(cuid())
-  title     String
-  subtitle  String?
-  image     String?
-  link      String?
-  linkText  String?
-  sortOrder Int      @default(0)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
-}
-
-model BlogPost {
-  id              String    @id @default(cuid())
-  title           String
-  slug            String    @unique
-  excerpt         String?
-  content         String    @default("")
-  coverImage      String?
-  authorId        String?
-  metaTitle       String?
-  metaDescription String?
-  ogImage         String?
-  blocks          String    @default("[]")
-  tags            String?
-  customSchema    String?   @default("{}")
-  isPublished     Boolean   @default(false)
-  publishedAt     DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @default(now())
-  deletedAt       DateTime?
-  User            User?     @relation(fields: [authorId], references: [id])
-
-  @@index([deletedAt])
-}
-
-model Category {
-  id              String    @id @default(cuid())
-  name            String
-  slug            String    @unique
-  description     String?
-  image           String?
-  parentId        String?
-  sortOrder       Int       @default(0)
-  isActive        Boolean   @default(true)
-  metaTitle       String?
-  metaDescription String?
-  customSchema    String?   @default("{}")
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @default(now())
-  Product         Product[]
-  parent          Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
-  children        Category[] @relation("CategoryToCategory")
-}
-
-model ContentPage {
-  id              String   @id @default(cuid())
-  title           String
-  slug            String   @unique
-  content         String   @default("")
-  blocks          String   @default("[]")
-  heroImage       String?
-  metaTitle       String?
-  metaDescription String?
-  ogImage         String?
-  customSchema    String?  @default("{}")
-  isActive        Boolean  @default(true)
-  sortOrder       Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @default(now())
-}
-
-model Enquiry {
-  id             String   @id @default(cuid())
-  name           String
-  email          String
-  phone          String?
-  companyName    String?
-  companyEmail   String?
-  companyPhone   String?
-  companyAddress String?
-  quantity       Int?
-  subject        String
-  message        String
-  productId      String?
-  type           String   @default("product")
-  status         String   @default("new")
-  userId         String?
-  companyId      String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @default(now())
-  Product        Product? @relation(fields: [productId], references: [id])
-  User           User?    @relation(fields: [userId], references: [id])
-  Company        Company? @relation(fields: [companyId], references: [id])
-  Quote          Quote?
-}
-
-model Media {
-  id           String   @id @default(cuid())
-  filename     String
-  originalName String
-  mimeType     String
-  size         Int
-  width        Int?
-  height       Int?
-  alt          String?
-  url          String
-  thumbnails   String   @default("{}")
-  folder       String   @default("/")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @default(now())
-}
+// ─── User & Auth ───────────────────────────────────────────────
 
 model NewsletterSubscriber {
   id        String   @id @default(cuid())
   email     String   @unique
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
-
-  @@index([email])
-}
-
-model Notification {
-  id        String   @id @default(cuid())
-  userId    String?
-  title     String
-  message   String
-  type      String   @default("info")
-  isRead    Boolean  @default(false)
-  link      String?
-  createdAt DateTime @default(now())
-
-  @@index([createdAt])
-  @@index([isRead])
-  @@index([userId])
 }
 
 model PasswordResetToken {
@@ -176,8 +66,24 @@ model PasswordResetToken {
   @@index([token])
 }
 
+model EmailVerificationToken {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  User      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@index([token])
+}
+
+// ─── Catalog ───────────────────────────────────────────────────
+
 model Product {
   id                String           @id @default(cuid())
+  storeId           String?          // tenant isolation
   name              String
   slug              String           @unique
   description       String?
@@ -201,14 +107,45 @@ model Product {
   stock             Int              @default(0)
   lowStockThreshold Int              @default(10)
   relatedProductIds String           @default("[]")
+  documents         String           @default("[]")
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @default(now())
   Enquiry           Enquiry[]
   Category          Category?        @relation(fields: [categoryId], references: [id])
+  Store             Store?           @relation(fields: [storeId], references: [id])
   ProductVariant    ProductVariant[]
   ProductTier       ProductTier[]
+  CartItem          CartItem[]
+  WishlistItem      WishlistItem[]
+  OrderItem         OrderItem[]
 
   @@index([deletedAt])
+  @@index([storeId])
+}
+
+model Category {
+  id              String    @id @default(cuid())
+  storeId         String?   // tenant isolation
+  name            String
+  slug            String    @unique
+  description     String?
+  image           String?
+  parentId        String?
+  sortOrder       Int       @default(0)
+  isActive        Boolean   @default(true)
+  metaTitle       String?
+  metaDescription String?
+  customSchema    String?   @default("{}")
+  deletedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now())
+  Product         Product[]
+  Store           Store?    @relation(fields: [storeId], references: [id])
+  parent          Category? @relation("CategoryToCategory", fields: [parentId], references: [id])
+  children        Category[] @relation("CategoryToCategory")
+
+  @@index([deletedAt])
+  @@index([storeId])
 }
 
 model ProductTier {
@@ -241,42 +178,335 @@ model ProductVariant {
   @@index([productId])
 }
 
+// ─── Orders ────────────────────────────────────────────────────
+
+model Order {
+  id             String      @id @default(cuid())
+  storeId        String?     // tenant isolation
+  userId         String?
+  orderNumber    String      @unique
+  status         String      @default("pending")
+  paymentStatus  String      @default("pending")
+  paymentMethod  String?
+  subtotal       Float
+  shippingCost   Float       @default(0)
+  tax            Float       @default(0)
+  total          Float
+  currency       String      @default("USD")
+  shippingName   String?
+  shippingEmail  String?
+  shippingPhone  String?
+  shippingAddress String?
+  billingName    String?
+  billingEmail   String?
+  billingAddress String?
+  notes          String?
+  trackingNumber String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  User           User?       @relation(fields: [userId], references: [id])
+  Store          Store?      @relation(fields: [storeId], references: [id])
+  items          OrderItem[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([orderNumber])
+  @@index([storeId])
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  productId   String
+  variantId   String?
+  name        String
+  sku         String?
+  price       Float
+  quantity    Int
+  total       Float
+  images      String   @default("[]")
+  Order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  Product     Product  @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+}
+
+// ─── Cart & Wishlist ───────────────────────────────────────────
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  User      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+
+  @@unique([userId])
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  productId String
+  variantId String?
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  Product   Product  @relation(fields: [productId], references: [id])
+
+  @@unique([cartId, productId, variantId])
+}
+
+model Wishlist {
+  id        String         @id @default(cuid())
+  userId    String
+  createdAt DateTime       @default(now())
+  User      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     WishlistItem[]
+
+  @@unique([userId])
+}
+
+model WishlistItem {
+  id          String    @id @default(cuid())
+  wishlistId  String
+  productId   String
+  createdAt   DateTime  @default(now())
+  Wishlist    Wishlist  @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  Product     Product   @relation(fields: [productId], references: [id])
+
+  @@unique([wishlistId, productId])
+}
+
+// ─── Discounts ─────────────────────────────────────────────────
+
+model Coupon {
+  id        String    @id @default(cuid())
+  storeId   String?   // tenant isolation
+  code      String
+  type      String
+  value     Float
+  minOrder  Float     @default(0)
+  maxUses   Int?
+  usedCount Int       @default(0)
+  startsAt  DateTime?
+  expiresAt DateTime?
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  Store     Store?    @relation(fields: [storeId], references: [id])
+
+  @@unique([code])
+  @@index([storeId])
+}
+
+// ─── Content / CMS ─────────────────────────────────────────────
+
+model BlogPost {
+  id              String    @id @default(cuid())
+  storeId         String?   // tenant isolation
+  title           String
+  slug            String    @unique
+  excerpt         String?
+  content         String    @default("")
+  coverImage      String?
+  authorId        String?
+  metaTitle       String?
+  metaDescription String?
+  ogImage         String?
+  blocks          String    @default("[]")
+  tags            String?
+  customSchema    String?   @default("{}")
+  isPublished     Boolean   @default(false)
+  publishedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now())
+  deletedAt       DateTime?
+  User            User?     @relation(fields: [authorId], references: [id])
+  Store           Store?    @relation(fields: [storeId], references: [id])
+
+  @@index([deletedAt])
+  @@index([storeId])
+}
+
+model ContentPage {
+  id              String   @id @default(cuid())
+  storeId         String?  // tenant isolation
+  title           String
+  slug            String   @unique
+  content         String   @default("")
+  blocks          String   @default("[]")
+  heroImage       String?
+  metaTitle       String?
+  metaDescription String?
+  ogImage         String?
+  customSchema    String?  @default("{}")
+  isActive        Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now())
+  Store           Store?   @relation(fields: [storeId], references: [id])
+
+  @@index([storeId])
+}
+
+model Banner {
+  id        String   @id @default(cuid())
+  storeId   String?  // tenant isolation
+  title     String
+  subtitle  String?
+  image     String?
+  link      String?
+  linkText  String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  Store     Store?   @relation(fields: [storeId], references: [id])
+
+  @@index([storeId])
+}
+
+// ─── Media ─────────────────────────────────────────────────────
+
+model Media {
+  id           String   @id @default(cuid())
+  storeId      String?  // tenant isolation
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  width        Int?
+  height       Int?
+  alt          String?
+  url          String
+  thumbnails   String   @default("{}")
+  folder       String   @default("/")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now())
+  Store        Store?   @relation(fields: [storeId], references: [id])
+
+  @@index([storeId])
+}
+
+// ─── Enquiries ─────────────────────────────────────────────────
+
+model Enquiry {
+  id             String   @id @default(cuid())
+  storeId        String?  // tenant isolation
+  name           String
+  email          String
+  phone          String?
+  companyName    String?
+  companyEmail   String?
+  companyPhone   String?
+  companyAddress String?
+  quantity       Int?
+  subject        String
+  message        String
+  productId      String?
+  type           String   @default("product")
+  status         String   @default("new")
+  userId         String?
+  companyId      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now())
+  Product        Product? @relation(fields: [productId], references: [id])
+  User           User?    @relation(fields: [userId], references: [id])
+  Company        Company? @relation(fields: [companyId], references: [id])
+  Store          Store?   @relation(fields: [storeId], references: [id])
+  Quote          Quote?
+
+  @@index([storeId])
+}
+
+// ─── Redirects ─────────────────────────────────────────────────
+
 model Redirect {
   id        String   @id @default(cuid())
+  storeId   String?  // tenant isolation
   from      String   @unique
   to        String
   type      String   @default("301")
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
+  Store     Store?   @relation(fields: [storeId], references: [id])
+
+  @@index([storeId])
 }
+
+// ─── Settings ──────────────────────────────────────────────────
 
 model SiteSetting {
   id        String   @id @default(cuid())
-  key       String   @unique
+  storeId   String?  // null = global platform setting, non-null = store-specific
+  key       String
   value     String
   updatedAt DateTime @default(now())
+
+  @@unique([storeId, key])
+  @@index([storeId])
 }
 
 model User {
-  id                 String               @id @default(cuid())
-  email              String               @unique
-  name               String
-  password           String
-  role               String               @default("clerk")
-  isActive           Boolean              @default(true)
-  companyId          String?
-  isVerified         Boolean              @default(false)
-  tier               String               @default("standard") // standard, silver, gold, platinum
-  documents          String               @default("[]") // JSON array of document URLs
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @default(now())
-  ActivityLog        ActivityLog[]
-  BlogPost           BlogPost[]
-  Enquiry            Enquiry[]
-  PasswordResetToken PasswordResetToken[]
-  Company            Company?             @relation(fields: [companyId], references: [id])
-  Quote              Quote[]
+  id                      String               @id @default(cuid())
+  email                   String               @unique
+  name                    String
+  password                String
+  role                    String               @default("clerk")
+  isActive                Boolean              @default(true)
+  companyId               String?
+  isVerified              Boolean              @default(false)
+  tier                    String               @default("standard")
+  documents               String               @default("[]")
+  addresses               String               @default("[]")
+  phone                   String?
+  avatar                  String?
+  currentStoreId          String?
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @default(now())
+  ActivityLog             ActivityLog[]
+  BlogPost                BlogPost[]
+  Enquiry                 Enquiry[]
+  PasswordResetToken      PasswordResetToken[]
+  EmailVerificationToken  EmailVerificationToken[]
+  Company                 Company?             @relation(fields: [companyId], references: [id])
+  Quote                   Quote[]
+  Store                   Store?               @relation("CurrentUserStore", fields: [currentStoreId], references: [id])
+  OwnedStores             Store[]              @relation("StoreOwner")
+  Order                   Order[]
+  Cart                    Cart?
+  Wishlist                Wishlist?
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String?
+  entityId  String?
+  details   String?
+  userName  String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+  User      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  type      String   @default("info")
+  userId    String?
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
 }
 
 model Company {
@@ -295,18 +525,32 @@ model Company {
 }
 
 model Quote {
-  id          String    @id @default(cuid())
-  enquiryId   String?   @unique
-  companyId   String?
-  userId      String
-  items       String    @default("[]") // JSON array of {productId, variantId, quantity, unitPrice}
-  totalAmount Float
-  status      String    @default("draft") // draft, sent, accepted, rejected, expired
-  validUntil  DateTime?
-  notes       String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @default(now())
-  Enquiry     Enquiry?  @relation(fields: [enquiryId], references: [id])
-  Company     Company?  @relation(fields: [companyId], references: [id])
-  User        User      @relation(fields: [userId], references: [id])
+  id            String    @id @default(cuid())
+  storeId       String?
+  enquiryId     String?   @unique
+  companyId     String?
+  userId        String
+  quoteNumber   String    @unique
+  items         String    @default("[]")
+  totalAmount   Float
+  subtotal      Float     @default(0)
+  discount      Float     @default(0)
+  tax           Float     @default(0)
+  total         Float     @default(0)
+  currency      String    @default("USD")
+  status        String    @default("draft")
+  validUntil    DateTime?
+  notes         String?
+  adminNotes    String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now())
+  Enquiry       Enquiry?  @relation(fields: [enquiryId], references: [id])
+  Company       Company?  @relation(fields: [companyId], references: [id])
+  User          User      @relation(fields: [userId], references: [id])
+  Store         Store?    @relation(fields: [storeId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([quoteNumber])
+  @@index([storeId])
 }

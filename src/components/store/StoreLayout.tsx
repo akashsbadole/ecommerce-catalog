@@ -6,6 +6,7 @@ import { StoreHeader } from './StoreHeader';
 import { StoreFooter } from './StoreFooter';
 import { BackToTop } from './BackToTop';
 import { CookieConsent } from './CookieConsent';
+import { CompareBar } from './CompareBar';
 
 interface StoreLayoutProps {
   currentPage: string;
@@ -28,7 +29,7 @@ export function StoreLayout({ currentPage, onNavigate, children }: StoreLayoutPr
   useEffect(() => {
     if (!settings) return;
 
-    const siteName = settings.site_name || 'StyleStore';
+    const siteName = settings.site_name || 'My Store';
     const siteDesc = settings.site_description || 'Premium Products & B2B Wholesale Supplier';
     const contactEmail = settings.contact_email || '';
     const contactPhone = settings.contact_phone || '';
@@ -93,6 +94,8 @@ export function StoreLayout({ currentPage, onNavigate, children }: StoreLayoutPr
       <StoreFooter onNavigate={onNavigate} settings={settings} />
 
       <BackToTop />
+
+      <CompareBar />
 
       <CookieConsent />
     </div>

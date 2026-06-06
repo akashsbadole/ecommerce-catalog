@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAppStore } from '@/lib/store';
 import {
   ShoppingBag,
   LayoutDashboard,
@@ -12,11 +13,13 @@ import {
   FileText,
   BookOpen,
   ArrowRightLeft,
+  Tag,
   Settings,
   LogOut,
   Menu,
   ChevronRight,
   Users,
+  Store,
   ClipboardList,
   Search,
   Download,
@@ -47,12 +50,15 @@ import { AdminDashboardHome } from '@/components/admin/AdminDashboardHome';
 import { AdminProducts } from '@/components/admin/AdminProducts';
 import { AdminCategories } from '@/components/admin/AdminCategories';
 import { AdminEnquiries } from '@/components/admin/AdminEnquiries';
+import { AdminQuotes } from '@/components/admin/AdminQuotes';
+import { AdminOrders } from '@/components/admin/AdminOrders';
 import { AdminBanners } from '@/components/admin/AdminBanners';
 import { AdminSettings } from '@/components/admin/AdminSettings';
 import { AdminMedia } from '@/components/admin/AdminMedia';
 import { AdminPages } from '@/components/admin/AdminPages';
 import { AdminBlog } from '@/components/admin/AdminBlog';
 import { AdminRedirects } from '@/components/admin/AdminRedirects';
+import { AdminCoupons } from '@/components/admin/AdminCoupons';
 import { AdminUsers } from '@/components/admin/AdminUsers';
 import { AdminCompanies } from '@/components/admin/AdminCompanies';
 import { AdminActivityLog } from '@/components/admin/AdminActivityLog';
@@ -75,6 +81,9 @@ const sidebarItems = [
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'products', label: 'Products', icon: Package },
   { id: 'categories', label: 'Categories', icon: FolderOpen },
+  { id: 'quotes', label: 'Quotes', icon: FileText },
+  { id: 'orders', label: 'Orders', icon: ShoppingBag },
+  { id: 'coupons', label: 'Coupons', icon: Tag },
   { id: 'enquiries', label: 'Enquiries', icon: MessageSquare },
   { id: 'media', label: 'Media', icon: ImageIcon },
   { id: 'pages', label: 'Pages', icon: FileText },
@@ -103,13 +112,23 @@ function SidebarContent({
   onLogout: () => void;
   onNavigate: (page: string) => void;
 }) {
+  const { settings } = useAppStore();
+
   return (
     <div className="flex h-full flex-col">
       {/* Logo */}
       <div className="flex items-center gap-2 px-4 py-4">
-        <ShoppingBag className="h-5 w-5 text-emerald-600" />
+        {settings?.site_logo ? (
+          <img
+            src={settings.site_logo}
+            alt={settings.site_name || 'Logo'}
+            className="h-6 w-auto object-contain"
+          />
+        ) : (
+          <ShoppingBag className="h-5 w-5 text-emerald-600" />
+        )}
         <span className="text-lg font-bold">
-          Style<span className="text-emerald-600">Store</span>
+          {settings?.site_name || 'My Store'}
         </span>
         <Badge variant="secondary" className="ml-auto text-xs">Admin</Badge>
       </div>
@@ -194,7 +213,13 @@ function SidebarContent({
 
 export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminDashboardProps) {
   const isMobile = useIsMobile();
+  const { settings } = useAppStore();
   const [currentTab, setCurrentTab] = useState(activeTab);
+
+  // Sync activeTab prop changes
+  useEffect(() => {
+    setCurrentTab(activeTab);
+  }, [activeTab]);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [changePwdOpen, setChangePwdOpen] = useState(false);
@@ -290,6 +315,12 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
         return <AdminCategories />;
       case 'enquiries':
         return <AdminEnquiries />;
+      case 'quotes':
+        return <AdminQuotes />;
+      case 'orders':
+        return <AdminOrders />;
+      case 'coupons':
+        return <AdminCoupons />;
       case 'banners':
         return <AdminBanners />;
       case 'media':
@@ -368,7 +399,7 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
             <div className="flex items-center gap-2">
               <ShoppingBag className="h-4 w-4 text-emerald-600" />
               <span className="font-semibold text-sm">
-                Style<span className="text-emerald-600">Store</span>
+                {settings?.site_name || 'My Store'}
               </span>
             </div>
             <Badge variant="secondary" className="text-xs ml-1">Admin</Badge>

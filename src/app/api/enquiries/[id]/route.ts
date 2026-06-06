@@ -17,10 +17,14 @@ export async function PUT(
       );
     }
 
+    const validStatuses = ['new', 'contacted', 'in_progress', 'resolved', 'closed'];
+    
     const enquiry = await db.enquiry.update({
       where: { id },
       data: {
-        ...(body.status !== undefined && { status: body.status }),
+        ...(body.status !== undefined && {
+          status: validStatuses.includes(body.status) ? body.status : existing.status
+        }),
         ...(body.name !== undefined && { name: body.name }),
         ...(body.email !== undefined && { email: body.email }),
         ...(body.phone !== undefined && {

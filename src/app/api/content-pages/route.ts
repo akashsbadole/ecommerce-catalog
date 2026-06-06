@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { contentPageSchema } from '@/lib/validations';
+import { getStoreId } from '@/lib/store-db';
 
 export async function GET(request: NextRequest) {
   try {
+    const storeId = getStoreId(request);
     const { searchParams } = new URL(request.url);
     const all = searchParams.get('all');
     const search = searchParams.get('search');
@@ -24,7 +26,7 @@ export async function GET(request: NextRequest) {
     }
 
     const contentPages = await db.contentPage.findMany({
-      where,
+      where: { ...where, ...(storeId ? { storeId } : {}) },
       orderBy: { sortOrder: 'asc' },
     });
 
@@ -57,6 +59,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Slug already in use' }, { status: 409 });
     }
 
+    const storeId = getStoreId(request);
     const contentPage = await db.contentPage.create({
       data: {
         title: validatedData.title,
@@ -69,6 +72,7 @@ export async function POST(request: NextRequest) {
         ogImage: validatedData.ogImage || null,
         isActive: validatedData.isActive ?? true,
         sortOrder: validatedData.sortOrder ?? 0,
+        ...(storeId ? { storeId } : {}),
       },
     });
 

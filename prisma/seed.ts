@@ -426,29 +426,37 @@ async function main() {
   }
   console.log('Created 3 banners');
 
-  // Create site settings
+  // Create site settings — use env var fallbacks for generic deployment
+  const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'My Store';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const siteEmail = process.env.SITE_EMAIL || '';
+  const sitePhone = process.env.SITE_PHONE || '';
+  const siteAddress = process.env.SITE_ADDRESS || '';
+  const currency = process.env.STORE_CURRENCY || 'USD';
+  const currencySymbol = process.env.STORE_CURRENCY_SYMBOL || '$';
+
   const settings = [
-    { key: 'site_name', value: 'Purva Bites' },
-    { key: 'site_description', value: 'Premier manufacturer and dealer of high-quality roasted makhana, premium dry fruits, flavored khakhra, flavored bhakhri and healthy snacks.' },
-    { key: 'site_email', value: 'info@purvabites.com' },
-    { key: 'site_phone', value: '+91 12345 67890' },
-    { key: 'site_address', value: 'Surat, Gujarat, India' },
-    { key: 'currency', value: 'INR' },
-    { key: 'currency_symbol', value: '₹' },
-    { key: 'social_facebook', value: 'https://facebook.com/purvabites' },
-    { key: 'social_instagram', value: 'https://instagram.com/purvabites' },
-    { key: 'social_twitter', value: '' },
-    { key: 'whatsapp_number', value: '+919876543210' },
-    { key: 'smtp_host', value: '' },
-    { key: 'smtp_port', value: '587' },
-    { key: 'smtp_user', value: '' },
-    { key: 'smtp_pass', value: '' },
-    { key: 'email_from', value: 'noreply@purvabites.com' },
-    { key: 'seo_default_title', value: 'Purva Bites - Premium Roasted Makhana, Dry Fruits & Healthy Snacks' },
-    { key: 'seo_default_description', value: 'Purva Bites is a premier manufacturer and dealer of high-quality roasted makhana, premium dry fruits, flavored khakhra, flavored bhakhri and healthy snacks.' },
-    { key: 'seo_ga_id', value: '' },
-    { key: 'seo_fb_pixel', value: '' },
-    { key: 'seo_canonical_url', value: 'https://purvabites.com' },
+    { key: 'site_name', value: siteName },
+    { key: 'site_description', value: 'Your trusted online store for quality products.' },
+    { key: 'site_email', value: siteEmail },
+    { key: 'site_phone', value: sitePhone },
+    { key: 'site_address', value: siteAddress },
+    { key: 'currency', value: currency },
+    { key: 'currency_symbol', value: currencySymbol },
+    { key: 'social_facebook', value: process.env.SOCIAL_FACEBOOK || '' },
+    { key: 'social_instagram', value: process.env.SOCIAL_INSTAGRAM || '' },
+    { key: 'social_twitter', value: process.env.SOCIAL_TWITTER || '' },
+    { key: 'whatsapp_number', value: process.env.WHATSAPP_NUMBER || '' },
+    { key: 'smtp_host', value: process.env.SMTP_HOST || '' },
+    { key: 'smtp_port', value: process.env.SMTP_PORT || '587' },
+    { key: 'smtp_user', value: process.env.SMTP_USER || '' },
+    { key: 'smtp_pass', value: process.env.SMTP_PASS || '' },
+    { key: 'email_from', value: process.env.EMAIL_FROM || '' },
+    { key: 'seo_default_title', value: `${siteName} - Your Trusted Online Store` },
+    { key: 'seo_default_description', value: `${siteName} is a trusted online store offering quality products at competitive prices.` },
+    { key: 'seo_ga_id', value: process.env.SEO_GA_ID || '' },
+    { key: 'seo_fb_pixel', value: process.env.SEO_FB_PIXEL || '' },
+    { key: 'seo_canonical_url', value: siteUrl },
     { key: 'b2b_show_company_fields', value: 'true' },
     { key: 'b2b_require_company', value: 'false' },
     { key: 'b2b_default_moq', value: '1' },
@@ -464,15 +472,15 @@ async function main() {
   }
   console.log('Created site settings');
 
-  // Create content pages
+  // Create content pages — use siteName from settings above
   const pages = [
     {
       title: 'About Us',
       slug: 'about-us',
       heroImage: '/products/smartwatch.png',
-      content: '<h2>Welcome to StyleStore</h2><p>StyleStore is your destination for premium products. We curate the finest selection of electronics, accessories, and home goods to bring you quality that stands the test of time.</p><h3>Our Mission</h3><p>Founded with a passion for quality, we believe everyone deserves access to products that enhance their daily lives. Our team carefully selects each product based on design, functionality, and durability.</p><h3>Why Choose Us</h3><ul><li><strong>Quality First:</strong> Every product undergoes rigorous quality testing</li><li><strong>Competitive Pricing:</strong> Wholesale prices for bulk orders</li><li><strong>Expert Support:</strong> Our team is always ready to help</li><li><strong>Fast Shipping:</strong> Quick delivery worldwide</li></ul><h3>Our Values</h3><p>We are committed to sustainability, ethical sourcing, and exceptional customer service. Every purchase you make contributes to a better future.</p>',
-      metaTitle: 'About StyleStore - Our Story',
-      metaDescription: 'Learn about StyleStore, your trusted partner for premium electronics, accessories, and home products.',
+      content: `<h2>Welcome to ${siteName}</h2><p>${siteName} is your destination for premium products. We curate the finest selection to bring you quality that stands the test of time.</p><h3>Our Mission</h3><p>Founded with a passion for quality, we believe everyone deserves access to products that enhance their daily lives. Our team carefully selects each product based on design, functionality, and durability.</p><h3>Why Choose Us</h3><ul><li><strong>Quality First:</strong> Every product undergoes rigorous quality testing</li><li><strong>Competitive Pricing:</strong> Wholesale prices for bulk orders</li><li><strong>Expert Support:</strong> Our team is always ready to help</li><li><strong>Fast Shipping:</strong> Quick delivery worldwide</li></ul><h3>Our Values</h3><p>We are committed to sustainability, ethical sourcing, and exceptional customer service. Every purchase you make contributes to a better future.</p>`,
+      metaTitle: `About ${siteName} - Our Story`,
+      metaDescription: `Learn about ${siteName}, your trusted partner for quality products.`,
       isActive: true,
       sortOrder: 1,
     },
@@ -508,26 +516,26 @@ async function main() {
       title: '5 Must-Have Tech Accessories for 2025',
       slug: 'must-have-tech-accessories-2025',
       excerpt: 'Discover the essential tech accessories that will elevate your daily workflow and lifestyle this year.',
-      content: '<h2>The Top Tech Accessories of 2025</h2><p>Technology continues to evolve at a rapid pace, and the right accessories can make all the difference in your daily life. Here are our top picks for 2025.</p><h3>1. Wireless Charging Pad</h3><p>A high-quality wireless charging pad is a desk essential. Look for one with fast charging capabilities and multiple coil support for flexible positioning.</p><h3>2. USB-C Hub</h3><p>With laptops shipping fewer ports, a USB-C hub is indispensable. Choose one with HDMI, USB-A, SD card reader, and power delivery.</p><h3>3. Noise-Cancelling Earbuds</h3><p>Perfect for focus work or commuting, modern ANC earbuds offer incredible sound quality and battery life.</p><h3>4. Portable Power Bank</h3><p>Keep your devices charged on the go with a high-capacity power bank that supports fast charging for all your devices.</p><h3>5. Laptop Stand</h3><p>Ergonomic and practical, a good laptop stand improves your posture and keeps your workspace tidy.</p><p>Stay tuned for more product reviews and tech recommendations from the StyleStore team!</p>',
+      content: '<h2>The Top Tech Accessories of 2025</h2><p>Technology continues to evolve at a rapid pace, and the right accessories can make all the difference in your daily life. Here are our top picks for 2025.</p><h3>1. Wireless Charging Pad</h3><p>A high-quality wireless charging pad is a desk essential. Look for one with fast charging capabilities and multiple coil support for flexible positioning.</p><h3>2. USB-C Hub</h3><p>With laptops shipping fewer ports, a USB-C hub is indispensable. Choose one with HDMI, USB-A, SD card reader, and power delivery.</p><h3>3. Noise-Cancelling Earbuds</h3><p>Perfect for focus work or commuting, modern ANC earbuds offer incredible sound quality and battery life.</p><h3>4. Portable Power Bank</h3><p>Keep your devices charged on the go with a high-capacity power bank that supports fast charging for all your devices.</p><h3>5. Laptop Stand</h3><p>Ergonomic and practical, a good laptop stand improves your posture and keeps your workspace tidy.</p><p>Stay tuned for more product reviews and recommendations from our team!</p>',
       coverImage: '/products/headphones.png',
       authorId: admin.id,
       tags: JSON.stringify(['tech', 'accessories', '2025', 'reviews']),
       isPublished: true,
       publishedAt: new Date('2025-01-15'),
-      metaTitle: '5 Must-Have Tech Accessories for 2025 | StyleStore Blog',
+      metaTitle: '5 Must-Have Tech Accessories for 2025 | Blog',
       metaDescription: 'Discover the essential tech accessories that will elevate your daily workflow and lifestyle this year.',
     },
     {
       title: 'Wholesale Buying Guide: Tips for B2B Buyers',
       slug: 'wholesale-buying-guide-b2b',
       excerpt: 'Essential tips and strategies for businesses looking to purchase products at wholesale prices.',
-      content: '<h2>Complete B2B Wholesale Buying Guide</h2><p>Buying wholesale can be a game-changer for your business, but it requires knowledge and strategy. This guide covers everything you need to know.</p><h3>Understanding Minimum Order Quantities (MOQ)</h3><p>Most suppliers set MOQs to ensure profitability. Understanding MOQs helps you plan your inventory and budget effectively. At StyleStore, our MOQs start from as low as 1 unit for some products.</p><h3>Negotiating Better Prices</h3><p>Volume is your best negotiating tool. Consider these strategies:</p><ul><li>Order larger quantities for better per-unit pricing</li><li>Establish long-term supplier relationships</li><li>Ask about seasonal discounts and promotions</li><li>Inquire about tiered pricing structures</li></ul><h3>Quality Assurance</h3><p>Always request samples before placing large orders. Check product specifications, materials, and finish quality.</p><h3>Shipping and Logistics</h3><p>Plan your logistics carefully. Consider lead times, shipping costs, and customs duties for international orders.</p><p>Ready to start buying wholesale? <a href="/catalogue">Browse our catalogue</a> or <a href="/contact">contact our sales team</a> for personalized quotes.</p>',
+      content: '<h2>Complete B2B Wholesale Buying Guide</h2><p>Buying wholesale can be a game-changer for your business, but it requires knowledge and strategy. This guide covers everything you need to know.</p><h3>Understanding Minimum Order Quantities (MOQ)</h3><p>Most suppliers set MOQs to ensure profitability. Understanding MOQs helps you plan your inventory and budget effectively. Our MOQs start from as low as 1 unit for some products.</p><h3>Negotiating Better Prices</h3><p>Volume is your best negotiating tool. Consider these strategies:</p><ul><li>Order larger quantities for better per-unit pricing</li><li>Establish long-term supplier relationships</li><li>Ask about seasonal discounts and promotions</li><li>Inquire about tiered pricing structures</li></ul><h3>Quality Assurance</h3><p>Always request samples before placing large orders. Check product specifications, materials, and finish quality.</p><h3>Shipping and Logistics</h3><p>Plan your logistics carefully. Consider lead times, shipping costs, and customs duties for international orders.</p><p>Ready to start buying wholesale? <a href="/catalogue">Browse our catalogue</a> or <a href="/contact">contact our sales team</a> for personalized quotes.</p>',
       coverImage: '/products/bag.png',
       authorId: admin.id,
       tags: JSON.stringify(['wholesale', 'B2B', 'buying guide', 'business']),
       isPublished: true,
       publishedAt: new Date('2025-02-01'),
-      metaTitle: 'Wholesale Buying Guide for B2B Buyers | StyleStore Blog',
+      metaTitle: 'Wholesale Buying Guide for B2B Buyers | Blog',
       metaDescription: 'Essential tips and strategies for businesses looking to purchase products at wholesale prices.',
     },
     {
@@ -539,7 +547,7 @@ async function main() {
       authorId: clerk.id,
       tags: JSON.stringify(['headphones', 'guide', 'audio', 'reviews']),
       isPublished: false,
-      metaTitle: 'How to Choose the Right Headphones | StyleStore Blog',
+      metaTitle: 'How to Choose the Right Headphones | Blog',
       metaDescription: 'A comprehensive guide to finding the perfect headphones for your needs.',
     },
   ];

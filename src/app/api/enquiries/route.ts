@@ -3,14 +3,21 @@ import { db } from '@/lib/db';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { createNotification } from '@/lib/notifications';
 import { enquirySchema } from '@/lib/validations';
+import { getStoreId } from '@/lib/store-db';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
 // Max 10 enquiry submissions per hour per IP (POST only)
 const ENQUIRY_RATE_LIMIT = { maxRequests: 10, windowMs: 60 * 60 * 1000, prefix: 'enquiries-post' };
 
 export async function GET(request: NextRequest) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
+    const storeId = getStoreId(request);
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
+    const search = searchParams.get('search');
+    const type = searchParams.get('type');
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '50', 10);
 
@@ -18,12 +25,26 @@ export async function GET(request: NextRequest) {
     if (status) {
       where.status = status;
     }
+    if (type) {
+      where.type = type;
+    }
+    if (search) {
+      where.OR = [
+        { name: { contains: search } },
+        { email: { contains: search } },
+        { subject: { contains: search } },
+        { message: { contains: search } },
+        { phone: { contains: search } },
+      ];
+    }
 
     const skip = (Math.max(1, page) - 1) * Math.min(Math.max(1, limit), 100);
 
+    const scopedWhere = { ...where, ...(storeId ? { storeId } : {}) };
+
     const [enquiries, total] = await Promise.all([
       db.enquiry.findMany({
-        where,
+        where: scopedWhere,
         include: {
           Product: { select: { id: true, name: true } },
           User: { select: { id: true, name: true, email: true, companyId: true } },
@@ -33,7 +54,7 @@ export async function GET(request: NextRequest) {
         skip,
         take: Math.min(Math.max(1, limit), 100),
       }),
-      db.enquiry.count({ where }),
+      db.enquiry.count({ where: scopedWhere }),
     ]);
 
     return NextResponse.json({
@@ -70,6 +91,7 @@ export async function POST(request: NextRequest) {
     }
     const validatedData = result.data;
 
+    const storeId = getStoreId(request);
     const enquiry = await db.enquiry.create({
       data: {
         name: validatedData.name,
@@ -86,6 +108,7 @@ export async function POST(request: NextRequest) {
         type: validatedData.type || 'product',
         status: 'new',
         userId: (body as Record<string, unknown>).userId as string | undefined || null,
+        ...(storeId ? { storeId } : {}),
       },
     });
 

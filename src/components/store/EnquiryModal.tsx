@@ -336,7 +336,14 @@ export function EnquiryModal({
             Cancel
           </Button>
           <Button
-            onClick={handleSubmit as unknown as () => void}
+            onClick={() => {
+              // Create a synthetic event to prevent default behavior
+              const syntheticEvent = {
+                preventDefault: () => {},
+                stopPropagation: () => {},
+              } as React.FormEvent;
+              handleSubmit(syntheticEvent);
+            }}
             className="bg-primary hover:bg-primary/80 text-white"
             disabled={submitting}
           >

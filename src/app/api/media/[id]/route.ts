@@ -24,6 +24,13 @@ export async function DELETE(
     for (const filePath of filesToDelete) {
       try {
         const fullPath = path.join(process.cwd(), 'public', filePath);
+        // Security: validate that the resolved path stays within public directory
+        const publicDir = path.join(process.cwd(), 'public');
+        const resolvedPath = path.resolve(fullPath);
+        if (!resolvedPath.startsWith(publicDir)) {
+          console.warn(`Skipping file outside public directory: ${filePath}`);
+          continue;
+        }
         await unlink(fullPath);
       } catch {}
     }

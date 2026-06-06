@@ -13,8 +13,17 @@ import { Eye, MessageSquare, TrendingUp, Package, Clock, PieChart as PieIcon } f
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
 
+interface AnalyticsData {
+  summary: { totalEnquiries: number; newEnquiries: number; conversionRate: number; };
+  viewsData: Array<{ date: string; views: number; enquiries: number }>;
+  popularProducts: Array<{ name: string; _count: { Enquiry: number } }>;
+  categoryStats: Array<{ name: string; _count: { Product: number } }>;
+}
+
+
+
 export function AdminAnalytics() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,6 +42,8 @@ export function AdminAnalytics() {
     load();
   }, []);
 
+  const [error, setError] = useState<string | null>(null);
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -45,6 +56,7 @@ export function AdminAnalytics() {
     );
   }
 
+  if (error) return <div className='text-center py-8 text-muted-foreground'>{error}</div>;
   if (!data) return null;
 
   return (
@@ -62,7 +74,7 @@ export function AdminAnalytics() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{data.summary.totalEnquiries}</div>
-            <p className="text-xs text-emerald-600">Last {data.viewsData.length} days</p>
+            <p className="text-xs text-emerald-600">Last {data.viewsData?.length ?? 0} days</p>
           </CardContent>
         </Card>
         <Card>
@@ -91,8 +103,8 @@ export function AdminAnalytics() {
             <Eye className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">~420</div>
-            <p className="text-xs text-emerald-600">+12% from last week</p>
+            <div className="text-2xl font-bold">{data.viewsData?.length ?? 0} days</div>
+            <p className="text-xs text-muted-foreground">views data period</p>
           </CardContent>
         </Card>
       </div>
@@ -169,7 +181,7 @@ export function AdminAnalytics() {
                     outerRadius={80}
                     label
                   >
-                    {data.categoryStats.map((entry: any, index: number) => (
+                    {data.categoryStats?.map((entry: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>

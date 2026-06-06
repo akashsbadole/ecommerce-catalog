@@ -7,8 +7,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const category = await db.category.findUnique({
-      where: { id },
+    const category = await db.category.findFirst({
+      where: { id, deletedAt: null },
     });
     if (!category) {
       return NextResponse.json({ error: 'Category not found' }, { status: 404 });
@@ -27,7 +27,7 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
-    const existing = await db.category.findUnique({ where: { id } });
+    const existing = await db.category.findFirst({ where: { id, deletedAt: null } });
     if (!existing) {
       return NextResponse.json(
         { error: 'Category not found' },
@@ -38,7 +38,7 @@ export async function PUT(
     // Check slug uniqueness if slug is being updated
     if (body.slug !== undefined && body.slug !== existing.slug) {
       const slugExists = await db.category.findFirst({
-        where: { slug: body.slug, NOT: { id } },
+        where: { slug: body.slug, NOT: { id }, deletedAt: null },
       });
       if (slugExists) {
         return NextResponse.json({ error: 'Slug already in use' }, { status: 409 });
@@ -82,13 +82,15 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const permanent = searchParams.get('permanent') === 'true';
 
-    const existing = await db.category.findUnique({ where: { id } });
+    const existing = await db.category.findFirst({ where: { id, deletedAt: null } });
     if (!existing) {
       return NextResponse.json(
         { error: 'Category not found' },
@@ -96,7 +98,28 @@ export async function DELETE(
       );
     }
 
-    await db.category.delete({ where: { id } });
+    // Check if category has products
+    const productCount = await db.product.count({
+      where: { categoryId: id, deletedAt: null },
+    });
+
+    if (permanent) {
+      // Only allow permanent delete if no active products
+      if (productCount > 0) {
+        return NextResponse.json(
+          { error: `Cannot permanently delete category with ${productCount} active products. Remove or reassign products first.` },
+          { status: 400 }
+        );
+      }
+      await db.category.delete({ where: { id } });
+      return NextResponse.json({ message: 'Category permanently deleted' });
+    }
+
+    // Soft delete - set deletedAt timestamp
+    await db.category.update({
+      where: { id },
+      data: { deletedAt: new Date(), isActive: false },
+    });
 
     return NextResponse.json({
       message: 'Category deleted successfully',

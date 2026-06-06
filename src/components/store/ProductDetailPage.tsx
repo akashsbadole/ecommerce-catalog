@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import DOMPurify from 'dompurify';
 import {
   ArrowLeft,
   ShoppingCart,
@@ -14,6 +15,8 @@ import {
   Building2,
   Minus,
   MessageCircle,
+  GitCompareArrows,
+  FileText,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -45,6 +48,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { SocialShare } from './SocialShare';
+import { trackProductView } from './RecentlyViewedProducts';
 import { useAppStore } from '@/lib/store';
 import { calculateTieredPrice, formatPrice as libFormatPrice } from '@/lib/pricing';
 import { generateProductSchema } from '@/lib/seo/schema-generator';
@@ -78,6 +82,7 @@ interface Product {
   Category: { id: string; name: string; slug: string } | null;
   isFeatured: boolean;
   specifications: string | null;
+  documents: string | null;
   metaTitle: string | null;
   metaDescription: string | null;
   stock: number;
@@ -93,6 +98,9 @@ interface ProductDetailPageProps {
 export function ProductDetailPage({ productId, onNavigate }: ProductDetailPageProps) {
   const auth = useAppStore((state) => state.auth);
   const settings = useAppStore((state) => state.settings);
+  const addToCompare = useAppStore((state) => state.addToCompare);
+  const removeFromCompare = useAppStore((state) => state.removeFromCompare);
+  const isInCompare = useAppStore((state) => state.isInCompare);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -102,6 +110,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -143,6 +152,14 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
             ...prev,
             message: `I'm interested in ${data.product.name}. Please provide more information.`,
           }));
+          // Track recently viewed
+          trackProductView({
+            id: data.product.id,
+            name: data.product.name,
+            slug: data.product.slug,
+            price: data.product.price,
+            images: data.product.images,
+          });
         } else {
           toast.error('Product not found');
           onNavigate('catalogue');
@@ -198,15 +215,41 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
     fetchRelated();
   }, [product?.relatedProductIds]);
 
+  // Fetch algorithmic recommendations
+  useEffect(() => {
+    if (!productId) return;
+    // Only fetch if no manual related products
+    if (product?.relatedProductIds) {
+      try {
+        const ids = JSON.parse(product.relatedProductIds);
+        if (Array.isArray(ids) && ids.length > 0) return;
+      } catch {}
+    }
+
+    const fetchRecommendations = async () => {
+      try {
+        const res = await fetch(`/api/products/${productId}/recommendations?limit=8`);
+        if (res.ok) {
+          const data = await res.json();
+          setRecommendedProducts(data.products || []);
+        }
+      } catch {}
+    };
+    fetchRecommendations();
+  }, [productId, product?.relatedProductIds]);
+
   // SEO: dynamic title, meta description, JSON-LD
   useEffect(() => {
     if (!product) return;
 
-    const title = product.metaTitle || `${product.name} | StyleStore`;
+    const siteName = settings?.site_name || 'My Store';
+    const prevTitle = document.title;
+    const title = product.metaTitle || `${product.name} | ${siteName}`;
     document.title = title;
 
-    const metaDesc = product.metaDescription || product.shortDescription || `Shop ${product.name} at StyleStore. Premium quality at competitive prices.`;
+    const metaDesc = product.metaDescription || product.shortDescription || `Shop ${product.name} at ${siteName}. Premium quality at competitive prices.`;
     let metaEl = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
+    const prevMetaContent = metaEl?.getAttribute('content') || '';
     if (!metaEl) {
       metaEl = document.createElement('meta');
       metaEl.setAttribute('name', 'description');
@@ -215,8 +258,10 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
     metaEl.setAttribute('content', metaDesc);
 
     // JSON-LD structured data
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://purvabites.com';
-    const jsonLd = generateProductSchema(product, siteUrl);
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const brandName = settings?.site_name || 'Store';
+    const currency = settings?.currency || 'USD';
+    const jsonLd = generateProductSchema(product, siteUrl, brandName, currency);
 
     const scriptEl = document.createElement('script');
     scriptEl.type = 'application/ld+json';
@@ -227,6 +272,8 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
     document.head.appendChild(scriptEl);
 
     return () => {
+      document.title = prevTitle;
+      if (metaEl) metaEl.setAttribute('content', prevMetaContent);
       const el = document.getElementById('product-jsonld');
       if (el) el.remove();
     };
@@ -398,14 +445,49 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
       </nav>
 
       {/* Back Button */}
-      <Button
-        variant="ghost"
-        className="w-fit"
-        onClick={() => onNavigate('catalogue')}
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Catalogue
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          className="w-fit"
+          onClick={() => onNavigate('catalogue')}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Catalogue
+        </Button>
+        {(() => {
+          const inCompare = isInCompare(product.id);
+          return (
+            <Button
+              variant={inCompare ? 'default' : 'outline'}
+              size="sm"
+              className={inCompare ? 'bg-primary hover:bg-primary/80 text-white' : ''}
+              onClick={() => {
+                if (inCompare) {
+                  removeFromCompare(product.id);
+                } else {
+                  addToCompare({
+                    id: product.id,
+                    name: product.name,
+                    slug: product.slug,
+                    price: product.price,
+                    comparePrice: product.comparePrice,
+                    images: product.images,
+                    stock: product.stock,
+                    sku: product.sku,
+                    description: product.description,
+                    shortDescription: product.shortDescription,
+                    minOrderQty: product.minOrderQty,
+                    Category: product.Category,
+                  });
+                }
+              }}
+            >
+              <GitCompareArrows className="mr-1.5 h-4 w-4" />
+              {inCompare ? 'In Compare' : 'Compare'}
+            </Button>
+          );
+        })()}
+      </div>
 
       {/* Product Detail */}
       <div className="grid gap-8 lg:grid-cols-2">
@@ -418,7 +500,6 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                 alt={product.name}
                 fill
                 className="object-cover"
-                unoptimized
               />
             ) : (
               <div className="flex h-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
@@ -440,7 +521,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                   className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
                     idx === selectedImage
                       ? 'border-primary'
-                      : 'border-transparent hover:border-gray-300'
+                      : 'border-transparent hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
                   <Image
@@ -448,7 +529,6 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                     alt={`${product.name} ${idx + 1}`}
                     fill
                     className="object-cover"
-                    unoptimized
                   />
                 </button>
               ))}
@@ -675,11 +755,18 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
           )}
 
           {product.description && (
-            <div className="prose prose-sm max-w-none">
-              <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                {product.description}
-              </p>
-            </div>
+            <div
+              className="prose prose-sm max-w-none text-muted-foreground leading-relaxed"
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(product.description, {
+                  ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+                    'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'table', 'thead', 'tbody', 'tr', 'th', 'td',
+                    'hr', 'div', 'span', 'pre', 'code', 'figure', 'figcaption'],
+                  ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'style', 'target', 'rel',
+                    'colspan', 'rowspan'],
+                }),
+              }}
+            />
           )}
 
           {/* Specifications */}
@@ -705,6 +792,45 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
               </div>
             </>
           )}
+
+          {/* Documents / Datasheets */}
+          {(() => {
+            let docs: Array<{ name: string; url: string; size?: number }> = [];
+            try {
+              docs = product.documents ? JSON.parse(product.documents) : [];
+            } catch { /* ignore */ }
+            if (docs.length === 0) return null;
+            return (
+              <>
+                <Separator />
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Documents & Datasheets</h3>
+                  <div className="space-y-2">
+                    {docs.map((doc, idx) => (
+                      <a
+                        key={idx}
+                        href={doc.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                      >
+                        <FileText className="h-5 w-5 text-red-500 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{doc.name}</p>
+                          {doc.size && (
+                            <p className="text-xs text-muted-foreground">
+                              {(doc.size / 1024).toFixed(1)} KB
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-xs text-muted-foreground">PDF</span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </>
+            );
+          })()}
         </div>
       </div>
 
@@ -926,16 +1052,20 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
         </CardContent>
       </Card>
 
-      {/* Related Products */}
-      {relatedProducts.length > 0 && (
+      {/* Related / Recommended Products */}
+      {(relatedProducts.length > 0 || recommendedProducts.length > 0) && (
         <div className="space-y-4">
           <Separator />
           <div>
-            <h3 className="text-xl font-semibold">Related Products</h3>
-            <p className="text-sm text-muted-foreground mt-1">You may also be interested in</p>
+            <h3 className="text-xl font-semibold">
+              {relatedProducts.length > 0 ? 'Related Products' : 'You May Also Like'}
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              {relatedProducts.length > 0 ? 'You may also be interested in' : 'Recommended for you'}
+            </p>
           </div>
           <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 snap-x">
-            {relatedProducts.map((rp) => {
+            {(relatedProducts.length > 0 ? relatedProducts : recommendedProducts).map((rp) => {
               const rpImages = (() => { try { return JSON.parse(rp.images || '[]'); } catch { return []; } })();
               const rpImg = rpImages.length > 0 ? rpImages[0] : null;
               return (
@@ -947,7 +1077,7 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                 >
                   <div className="relative aspect-square overflow-hidden rounded-t-lg bg-muted">
                     {rpImg ? (
-                      <Image src={rpImg} alt={rp.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" unoptimized />
+                      <Image src={rpImg} alt={rp.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
                     ) : (
                       <div className="flex h-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
                         <ShoppingCart className="h-10 w-10 text-gray-400" />

@@ -1,0 +1,72 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { getStoreId } from '@/lib/store-db';
+
+// GET /api/store/settings - Get store-specific settings
+export async function GET(request: NextRequest) {
+  try {
+    const storeId = getStoreId(request);
+
+    if (!storeId) {
+      // No store context — return global settings
+      const settings = await db.siteSetting.findMany({
+        where: { storeId: null },
+      });
+      const result: Record<string, string> = {};
+      for (const s of settings) result[s.key] = s.value;
+      return NextResponse.json({ settings: result });
+    }
+
+    // Get store-specific settings + global fallback
+    const allSettings = await db.siteSetting.findMany({
+      where: { OR: [{ storeId }, { storeId: null }] },
+    });
+
+    const result: Record<string, string> = {};
+    // Apply global first
+    for (const s of allSettings) {
+      if (s.storeId === null) result[s.key] = s.value;
+    }
+    // Override with store-specific
+    for (const s of allSettings) {
+      if (s.storeId === storeId) result[s.key] = s.value;
+    }
+
+    return NextResponse.json({ settings: result, storeId });
+  } catch (error) {
+    console.error('Store settings GET error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+// PUT /api/store/settings - Update store settings
+export async function PUT(request: NextRequest) {
+  try {
+    const storeId = getStoreId(request);
+    if (!storeId) {
+      return NextResponse.json({ error: 'Store context required' }, { status: 400 });
+    }
+
+    const body = await request.json();
+    const { settings } = body;
+
+    if (!settings || typeof settings !== 'object') {
+      return NextResponse.json({ error: 'Settings object required' }, { status: 400 });
+    }
+
+    // Upsert each setting for this store
+    for (const [key, value] of Object.entries(settings)) {
+      if (typeof value !== 'string') continue;
+      await db.siteSetting.upsert({
+        where: { storeId_key: { storeId, key } },
+        update: { value },
+        create: { storeId, key, value },
+      });
+    }
+
+    return NextResponse.json({ message: 'Settings updated successfully' });
+  } catch (error) {
+    console.error('Store settings PUT error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

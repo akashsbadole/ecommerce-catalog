@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getStoreId } from '@/lib/store-db';
 
 export async function GET(request: NextRequest) {
   try {
+    const storeId = getStoreId(request);
     const { searchParams } = new URL(request.url);
     const all = searchParams.get('all');
     const where: Record<string, unknown> = {};
@@ -11,7 +13,7 @@ export async function GET(request: NextRequest) {
     }
 
     const banners = await db.banner.findMany({
-      where,
+      where: { ...where, ...(storeId ? { storeId } : {}) },
       orderBy: { sortOrder: 'asc' },
     });
 
@@ -38,6 +40,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const storeId = getStoreId(request);
     const banner = await db.banner.create({
       data: {
         title,
@@ -47,6 +50,7 @@ export async function POST(request: NextRequest) {
         linkText: linkText || null,
         sortOrder: sortOrder ?? 0,
         isActive: isActive ?? true,
+        ...(storeId ? { storeId } : {}),
       },
     });
 

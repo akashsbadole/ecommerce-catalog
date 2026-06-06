@@ -27,6 +27,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ found: false }, { status: 200 });
   } catch (error) {
     console.error('Redirect check error:', error);
-    return NextResponse.json({ found: false }, { status: 200 });
+    // Return 500 so callers know the check failed, not just "no redirect found"
+    return NextResponse.json(
+      { found: false, error: 'Redirect check failed' },
+      { status: 500 }
+    );
   }
 }

@@ -11,6 +11,14 @@ import { CmsPage } from '@/components/store/CmsPage';
 import { ContentPageView } from '@/components/store/ContentPageView';
 import { BlogPage } from '@/components/store/BlogPage';
 import { BlogPostView } from '@/components/store/BlogPostView';
+import { CartPage } from '@/components/store/CartPage';
+import { WishlistPage } from '@/components/store/WishlistPage';
+import { OrdersPage } from '@/components/store/OrdersPage';
+import { OrderDetailPage } from '@/components/store/OrderDetailPage';
+import { AccountPage } from '@/components/store/AccountPage';
+import { CheckoutPage } from '@/components/store/CheckoutPage';
+import { QuickOrderPage } from '@/components/store/QuickOrderPage';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import BuyerPortalPage from '@/app/portal/page';
 
 export default function MainApp() {
@@ -20,7 +28,10 @@ export default function MainApp() {
     isAdmin,
     adminUser,
     setAdminLogin,
-    setAdminLogout
+    setAdminLogout,
+    fetchCart,
+    fetchWishlist,
+    auth,
   } = useAppStore();
 
   // Check if we're on an admin route - if so, don't render store UI
@@ -43,6 +54,19 @@ export default function MainApp() {
         else navigate('blog');
       } else if (segments[0] === 'portal') {
         navigate('portal');
+      } else if (segments[0] === 'cart') {
+        navigate('cart');
+      } else if (segments[0] === 'wishlist') {
+        navigate('wishlist');
+      } else if (segments[0] === 'orders') {
+        if (segments[1]) navigate('order-detail', segments[1]);
+        else navigate('orders');
+      } else if (segments[0] === 'account') {
+        navigate('account');
+      } else if (segments[0] === 'checkout') {
+        navigate('checkout');
+      } else if (segments[0] === 'quick-order') {
+        navigate('quick-order');
       } else if (CMS_PAGES.includes(segments[0])) {
         navigate('content-page', segments[0]);
       } else {
@@ -69,6 +93,14 @@ export default function MainApp() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  // Fetch cart and wishlist when user is logged in
+  useEffect(() => {
+    if (auth.token) {
+      fetchCart();
+      fetchWishlist();
+    }
+  }, [auth.token, fetchCart, fetchWishlist]);
+
   // Public pages (wrapped in store layout)
   const renderPage = () => {
     switch (currentPage.type) {
@@ -86,6 +118,20 @@ export default function MainApp() {
         return <BlogPostView postId={currentPage.postId} onNavigate={navigate} />;
       case 'portal':
         return <BuyerPortalPage />;
+      case 'cart':
+        return <CartPage onNavigate={navigate} />;
+      case 'wishlist':
+        return <WishlistPage onNavigate={navigate} />;
+      case 'orders':
+        return <OrdersPage onNavigate={navigate} />;
+      case 'order-detail':
+        return <OrderDetailPage orderId={currentPage.orderId} onNavigate={navigate} />;
+      case 'account':
+        return <AccountPage onNavigate={navigate} />;
+      case 'checkout':
+        return <CheckoutPage onNavigate={navigate} />;
+      case 'quick-order':
+        return <QuickOrderPage onNavigate={navigate} />;
       default:
         return (
           <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -124,7 +170,9 @@ export default function MainApp() {
 
   return (
     <StoreLayout currentPage={currentPage.type} onNavigate={navigate}>
-      {renderPage()}
+      <ErrorBoundary>
+        {renderPage()}
+      </ErrorBoundary>
     </StoreLayout>
   );
 }

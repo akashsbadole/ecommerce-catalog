@@ -1,5 +1,5 @@
 
-export function generateProductSchema(product: any, siteUrl: string) {
+export function generateProductSchema(product: any, siteUrl: string, brandName?: string, currency: string = 'USD') {
   const images = (() => {
     try {
       const arr = JSON.parse(product.images || '[]');
@@ -18,14 +18,14 @@ export function generateProductSchema(product: any, siteUrl: string) {
     image: images,
     brand: {
       '@type': 'Brand',
-      name: 'Purva Bites'
+      name: brandName || 'Store'
     },
     offers: {
       '@type': 'Offer',
       url: `${siteUrl}/product/${product.slug}`,
-      priceCurrency: 'INR',
+      priceCurrency: currency,
       price: product.price,
-      availability: 'https://schema.org/InStock'
+      availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'
     }
   };
 
@@ -42,7 +42,8 @@ export function generateProductSchema(product: any, siteUrl: string) {
   return schema;
 }
 
-export function generateArticleSchema(post: any, siteUrl: string) {
+export function generateArticleSchema(post: any, siteUrl: string, brandName?: string) {
+  const name = brandName || 'My Store';
   const schema: any = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
@@ -51,11 +52,11 @@ export function generateArticleSchema(post: any, siteUrl: string) {
     image: post.coverImage.startsWith('http') ? post.coverImage : `${siteUrl}${post.coverImage}`,
     author: {
       '@type': 'Organization',
-      name: 'Purva Bites'
+      name
     },
     publisher: {
       '@type': 'Organization',
-      name: 'Purva Bites',
+      name,
       logo: {
         '@type': 'ImageObject',
         url: `${siteUrl}/logo.png`
@@ -68,7 +69,9 @@ export function generateArticleSchema(post: any, siteUrl: string) {
     try {
       const overrides = JSON.parse(post.customSchema);
       return { ...schema, ...overrides };
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Failed to parse blog post custom schema:', e);
+    }
   }
 
   return schema;

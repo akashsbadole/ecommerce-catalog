@@ -2,23 +2,39 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { logActivity } from '@/lib/activity-log';
 import { categorySchema } from '@/lib/validations';
+import { getStoreId } from '@/lib/store-db';
 
 export async function GET(request: NextRequest) {
   try {
+    const storeId = getStoreId(request);
     const { searchParams } = new URL(request.url);
     const all = searchParams.get('all');
+    const includeDeleted = searchParams.get('includeDeleted');
     const where: Record<string, unknown> = {};
+
+    // Always exclude soft-deleted unless explicitly requested
+    if (!includeDeleted) {
+      where.deletedAt = null;
+    }
+
     if (!all) {
       where.isActive = true;
     }
 
     const categories = await db.category.findMany({
-      where,
+      where: { ...where, ...(storeId ? { storeId } : {}) },
       orderBy: { sortOrder: 'asc' },
       include: all ? { _count: { select: { Product: true } } } : undefined,
     });
 
-    return NextResponse.json({ categories });
+    const response = NextResponse.json({ categories });
+
+    // Cache public category listings for 10 minutes
+    if (!includeDeleted) {
+      response.headers.set('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=1200');
+    }
+
+    return response;
   } catch (error) {
     console.error('Get categories error:', error);
     return NextResponse.json(
@@ -41,12 +57,15 @@ export async function POST(request: NextRequest) {
     }
     const validatedData = result.data;
 
-    // Check slug uniqueness
-    const existingSlug = await db.category.findUnique({ where: { slug: validatedData.slug } });
+    // Check slug uniqueness (excluding soft-deleted)
+    const existingSlug = await db.category.findFirst({
+      where: { slug: validatedData.slug, deletedAt: null },
+    });
     if (existingSlug) {
       return NextResponse.json({ error: 'Slug already in use' }, { status: 409 });
     }
 
+    const storeId = getStoreId(request);
     const category = await db.category.create({
       data: {
         name: validatedData.name,
@@ -57,8 +76,9 @@ export async function POST(request: NextRequest) {
         isActive: validatedData.isActive ?? true,
         metaTitle: validatedData.metaTitle || null,
         metaDescription: validatedData.metaDescription || null,
-        customSchema: body.customSchema || null,
+        customSchema: (validatedData as Record<string, unknown>).customSchema as string || null,
         parentId: body.parentId || null,
+        ...(storeId ? { storeId } : {}),
       },
     });
 

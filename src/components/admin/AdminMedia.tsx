@@ -49,6 +49,16 @@ import {
 import { toast } from 'sonner';
 import { adminFetch } from '@/lib/admin-fetch';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface MediaItem {
   id: string;
@@ -106,6 +116,7 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MediaItem | null>(null);
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState<MediaItem | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [editAltOpen, setEditAltOpen] = useState(false);
   const [editAlt, setEditAlt] = useState('');
@@ -140,7 +151,8 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
         setTotal(data.total);
         setPage(data.page);
       }
-    } catch {
+    } catch (error) {
+      console.error('Failed to load media:', error);
       toast.error('Failed to load media');
     } finally {
       setLoading(false);
@@ -167,8 +179,8 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
         const data = await res.json();
         setFolders(data.folders || []);
       }
-    } catch {
-      // ignore
+    } catch (error) {
+      console.error('Failed to load folders:', error);
     }
   }, []);
 
@@ -198,7 +210,8 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
       } else {
         toast.error('Failed to create folder');
       }
-    } catch {
+    } catch (error) {
+      console.error('Failed to create folder:', error);
       toast.error('Failed to create folder');
     }
   };
@@ -220,7 +233,8 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
       } else {
         toast.error('Failed to move file');
       }
-    } catch {
+    } catch (error) {
+      console.error('Failed to move file:', error);
       toast.error('Failed to move file');
     }
   };
@@ -249,7 +263,8 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
       } else {
         toast.error('Upload failed');
       }
-    } catch {
+    } catch (error) {
+      console.error('Upload failed:', error);
       toast.error('Upload failed');
     } finally {
       setUploading(false);
@@ -258,7 +273,7 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
   };
 
   const handleDelete = async (item: MediaItem) => {
-    if (!confirm(`Delete "${item.originalName}"?`)) return;
+    setDeleteConfirmItem(null);
     try {
       const res = await adminFetch(`/api/media/${item.id}`, { method: 'DELETE' });
       if (res.ok) {
@@ -271,7 +286,8 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
       } else {
         toast.error('Delete failed');
       }
-    } catch {
+    } catch (error) {
+      console.error('Delete failed:', error);
       toast.error('Delete failed');
     }
   };
@@ -302,7 +318,8 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
         setEditAltOpen(false);
         fetchMedia(page, search);
       }
-    } catch {
+    } catch (error) {
+      console.error('Failed to update alt text:', error);
       toast.error('Update failed');
     }
   };
@@ -560,7 +577,7 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             className="text-destructive"
-                            onClick={() => handleDelete(item)}
+                            onClick={() => setDeleteConfirmItem(item)}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
@@ -906,6 +923,28 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
           </div>
         </DialogContent>
       </Dialog>
+
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteConfirmItem} onOpenChange={() => setDeleteConfirmItem(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Media</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this file? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteConfirmItem && handleDelete(deleteConfirmItem)}
+              className="bg-rose-600 hover:bg-rose-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

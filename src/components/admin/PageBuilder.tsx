@@ -1273,6 +1273,7 @@ function BlockEditDialog({
                     title: string;
                     description: string;
                     cta: string;
+                    link?: string;
                   }>) || []
                 ).map((card, i) => (
                   <Card key={i} className="p-4 space-y-2">
@@ -1957,6 +1958,7 @@ function BlockEditDialog({
                     name: string;
                     role: string;
                     bio: string;
+                    image?: string;
                   }>) || []
                 ).map((member, i) => (
                   <Card key={i} className="p-4 space-y-2">
@@ -1981,7 +1983,7 @@ function BlockEditDialog({
                     </div>
                     <MediaPickerField
                       label="Photo"
-                      value={member.image}
+                      value={member.image || ''}
                       onChange={(v) => {
                         const arr = [
                           ...((localData.members as Array<
@@ -2441,6 +2443,7 @@ function BlockEditDialog({
                     text: string;
                     type: string;
                     action: string;
+                    link?: string;
                   }>) || []
                 ).map((btn, i) => (
                   <Card key={i} className="p-4 space-y-2">

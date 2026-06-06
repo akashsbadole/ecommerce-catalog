@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
     const { id } = await params;
     const user = await db.user.findUnique({
       where: { id },
@@ -62,7 +65,17 @@ export async function PUT(
       }
       data.email = trimmedEmail;
     }
-    if (role !== undefined) data.role = role;
+    if (role !== undefined) {
+      // Only allow admin or clerk roles
+      const userRole = request.headers.get('x-user-role');
+      if (userRole !== 'admin') {
+        return NextResponse.json({ error: 'Only admins can change user roles' }, { status: 403 });
+      }
+      if (!['admin', 'clerk', 'editor'].includes(role)) {
+        return NextResponse.json({ error: 'Invalid role. Must be admin, clerk, or editor' }, { status: 400 });
+      }
+      data.role = role;
+    }
     if (isActive !== undefined) data.isActive = isActive;
     if (body.isVerified !== undefined) data.isVerified = body.isVerified;
     if (body.tier !== undefined) data.tier = body.tier;

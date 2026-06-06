@@ -104,8 +104,9 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
     }
 
     // JSON-LD
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://purvabites.com';
-    const jsonLd = generateArticleSchema(post, siteUrl);
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const brandName = process.env.NEXT_PUBLIC_SITE_NAME || 'My Store';
+    const jsonLd = generateArticleSchema(post, siteUrl, brandName);
     const scriptId = 'blog-jsonld';
     const existingScript = document.getElementById(scriptId);
     if (existingScript) existingScript.remove();

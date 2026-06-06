@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageBlockRenderer } from './PageBlockRenderer';
+import { RecentlyViewedProducts } from './RecentlyViewedProducts';
 import type { PageBlock } from '@/lib/page-blocks';
 
 interface HomePageProps {
@@ -59,21 +60,22 @@ export function HomePage({ onNavigate, settings }: HomePageProps) {
 
   // SEO
   useEffect(() => {
-    document.title = 'Purva Bites - Premium Roasted Makhana, Dry Fruits & Healthy Snacks';
+    const siteName = settings?.site_name || 'My Store';
+    document.title = `${siteName} - Premium Products & B2B Wholesale Supplier`;
     let metaEl = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
     if (!metaEl) {
       metaEl = document.createElement('meta');
       metaEl.setAttribute('name', 'description');
       document.head.appendChild(metaEl);
     }
-    metaEl.setAttribute('content', 'Purva Bites is a premier manufacturer and dealer of high-quality roasted makhana, premium dry fruits, flavored khakhra, flavored bhakhri and healthy snacks.');
+    metaEl.setAttribute('content', `${siteName} is a premier manufacturer and dealer of high-quality products, premium dry fruits, and healthy snacks.`);
 
     const websiteJsonLd = {
       '@context': 'https://schema.org',
       '@type': 'WebSite',
-      name: 'Purva Bites',
+      name: siteName,
       url: typeof window !== 'undefined' ? window.location.origin : '',
-      description: 'Premium Roasted Makhana, Dry Fruits & Healthy Snacks',
+      description: 'Premium Products & B2B Wholesale Supplier',
       potentialAction: {
         '@type': 'SearchAction',
         target: {
@@ -87,8 +89,8 @@ export function HomePage({ onNavigate, settings }: HomePageProps) {
     const orgJsonLd = {
       '@context': 'https://schema.org',
       '@type': 'Organization',
-      name: 'Purva Bites',
-      description: 'Premium Roasted Makhana, Dry Fruits & Healthy Snacks',
+      name: siteName,
+      description: 'Premium Products & B2B Wholesale Supplier',
       url: typeof window !== 'undefined' ? window.location.origin : '',
       logo: typeof window !== 'undefined' ? `${window.location.origin}/logo.png` : '',
       contactPoint: {
@@ -152,6 +154,9 @@ export function HomePage({ onNavigate, settings }: HomePageProps) {
   return (
     <div className="flex flex-col">
       <PageBlockRenderer blocks={blocks} onNavigate={onNavigate} />
+      <div className="container mx-auto px-4 py-12">
+        <RecentlyViewedProducts onNavigate={onNavigate} />
+      </div>
     </div>
   );
 }

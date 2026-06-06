@@ -1,7 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getStoreId } from '@/lib/store-db';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const storeId = getStoreId(request);
   try {
     const settings = await db.siteSetting.findMany();
     const getSetting = (key: string) =>
@@ -12,21 +14,35 @@ export async function GET() {
     const baseUrl = siteUrl.replace(/\/$/, '');
 
     // Fetch all active products and categories
-    const [products, categories] = await Promise.all([
+    const storeFilter = storeId ? { storeId } : {};
+    const [products, categories, contentPages, blogPosts] = await Promise.all([
       db.product.findMany({
-        where: { isActive: true },
+        where: { isActive: true, ...storeFilter },
         select: { slug: true, updatedAt: true },
         orderBy: { updatedAt: 'desc' },
       }),
       db.category.findMany({
+        where: { isActive: true, deletedAt: null, ...storeFilter },
+        select: { slug: true, updatedAt: true },
+        orderBy: { updatedAt: 'desc' },
+      }),
+      db.contentPage.findMany({
         where: { isActive: true },
+        select: { slug: true, updatedAt: true },
+        orderBy: { updatedAt: 'desc' },
+      }),
+      db.blogPost.findMany({
+        where: { isPublished: true },
         select: { slug: true, updatedAt: true },
         orderBy: { updatedAt: 'desc' },
       }),
     ]);
 
     // Get the most recent update across all entities
-    const allDates = products.map((p) => p.updatedAt).concat(categories.map((c) => c.updatedAt));
+    const allDates = products.map((p) => p.updatedAt)
+      .concat(categories.map((c) => c.updatedAt))
+      .concat(contentPages.map((p) => p.updatedAt))
+      .concat(blogPosts.map((p) => p.updatedAt));
     const siteLastmod = allDates.length > 0
       ? allDates.sort((a, b) => b.getTime() - a.getTime())[0].toISOString().split('T')[0]
       : new Date().toISOString().split('T')[0];
@@ -50,6 +66,21 @@ export async function GET() {
       const lastmod = category.updatedAt.toISOString().split('T')[0];
       urls.push(`  <url>\n    <loc>${baseUrl}/category/${category.slug}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>`);
     }
+
+    // Content Pages — use /{slug} to match app routing
+    for (const page of contentPages) {
+      const lastmod = page.updatedAt.toISOString().split('T')[0];
+      urls.push(`  <url>\n    <loc>${baseUrl}/${page.slug}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>\n  </url>`);
+    }
+
+    // Blog Posts
+    for (const post of blogPosts) {
+      const lastmod = post.updatedAt.toISOString().split('T')[0];
+      urls.push(`  <url>\n    <loc>${baseUrl}/blog/${post.slug}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>`);
+    }
+
+    // Blog listing page
+    urls.push(`  <url>\n    <loc>${baseUrl}/blog</loc>\n    <lastmod>${siteLastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>`);
 
     // Contact
     urls.push(`  <url>\n    <loc>${baseUrl}/contact</loc>\n    <lastmod>${siteLastmod}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>\n  </url>`);

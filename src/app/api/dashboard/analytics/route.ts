@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { startOfDay, subDays, format } from 'date-fns';
+import { getStoreId } from '@/lib/store-db';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
 export async function GET(request: NextRequest) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
+
+    const storeId = getStoreId(request);
     const { searchParams } = new URL(request.url);
     const days = parseInt(searchParams.get('days') || '7');
 
@@ -12,7 +18,8 @@ export async function GET(request: NextRequest) {
     // Get enquiries trend
     const enquiries = await db.enquiry.findMany({
       where: {
-        createdAt: { gte: startDate }
+        createdAt: { gte: startDate },
+        ...(storeId ? { storeId } : {}),
       },
       select: {
         createdAt: true,
@@ -28,13 +35,13 @@ export async function GET(request: NextRequest) {
       return {
         date,
         enquiries: count,
-        views: count * (10 + Math.floor(Math.random() * 50)) // Simulated views
+        views: count * 15 // Estimated views per enquiry (15:1 ratio)
       };
     });
 
     // Get popular products (by enquiry count)
     const popularProducts = await db.product.findMany({
-      where: { deletedAt: null },
+      where: { deletedAt: null, ...(storeId ? { storeId } : {}) },
       select: {
         id: true,
         name: true,
@@ -50,6 +57,7 @@ export async function GET(request: NextRequest) {
 
     // Get category engagement
     const categories = await db.category.findMany({
+      where: storeId ? { storeId } : undefined,
       select: {
         id: true,
         name: true,
@@ -66,7 +74,8 @@ export async function GET(request: NextRequest) {
       summary: {
         totalEnquiries: enquiries.length,
         newEnquiries: enquiries.filter(e => e.status === 'new').length,
-        conversionRate: enquiries.length > 0 ? (enquiries.length / (enquiries.length * 20) * 100).toFixed(1) : 0
+        conversionRate: enquiries.length > 0 ? 
+          ((enquiries.filter(e => e.status !== 'new').length / enquiries.length) * 100).toFixed(1) : 0
       }
     });
   } catch (error) {

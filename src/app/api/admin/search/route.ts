@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getStoreId } from '@/lib/store-db';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
 export async function GET(request: NextRequest) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
+
+    const storeId = getStoreId(request);
     const { searchParams } = new URL(request.url);
     const q = (searchParams.get('q') || '').trim();
 
@@ -18,6 +24,8 @@ export async function GET(request: NextRequest) {
 
     const searchCondition = { contains: q };
 
+    const storeFilter = storeId ? { storeId } : {};
+
     // Search across multiple models in parallel
     const [products, categories, blogPosts, pages, users] = await Promise.all([
       db.product.findMany({
@@ -26,25 +34,26 @@ export async function GET(request: NextRequest) {
             { name: searchCondition },
             { sku: searchCondition },
           ],
+          ...storeFilter,
         },
         select: { id: true, name: true, sku: true, isActive: true, slug: true },
         take: 8,
         orderBy: { updatedAt: 'desc' },
       }),
       db.category.findMany({
-        where: { name: searchCondition },
+        where: { name: searchCondition, ...storeFilter },
         select: { id: true, name: true, slug: true, isActive: true },
         take: 8,
         orderBy: { updatedAt: 'desc' },
       }),
       db.blogPost.findMany({
-        where: { title: searchCondition },
+        where: { title: searchCondition, ...storeFilter },
         select: { id: true, title: true, slug: true, isPublished: true },
         take: 8,
         orderBy: { updatedAt: 'desc' },
       }),
       db.contentPage.findMany({
-        where: { title: searchCondition },
+        where: { title: searchCondition, ...storeFilter },
         select: { id: true, title: true, slug: true, isActive: true },
         take: 8,
         orderBy: { updatedAt: 'desc' },
@@ -55,6 +64,7 @@ export async function GET(request: NextRequest) {
             { name: searchCondition },
             { email: searchCondition },
           ],
+          ...storeFilter,
         },
         select: { id: true, name: true, email: true, role: true, isActive: true },
         take: 8,

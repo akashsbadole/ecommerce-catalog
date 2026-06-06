@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   Menu,
@@ -11,6 +12,12 @@ import {
   User,
   LogOut,
   LayoutDashboard,
+  Heart,
+  ShoppingCart,
+  Package,
+  ChevronDown,
+  Clock,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -29,8 +36,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getFirstImage } from '@/lib/utils';
+import { formatPrice as libFormatPrice } from '@/lib/pricing';
 
 interface StoreHeaderProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -45,24 +60,98 @@ interface SearchResult {
   Category: { id: string; name: string } | null;
 }
 
-const navLinks = [
+interface NavItem {
+  label: string;
+  page: string;
+  slug?: string;
+  children?: NavItem[];
+}
+
+function MobileNavItem({ link, onNavigate }: { link: NavItem; onNavigate: (page: string, data?: unknown) => void }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="flex flex-col">
+      <Button
+        variant="ghost"
+        className="justify-start text-base"
+        onClick={() => setOpen(!open)}
+      >
+        {link.label}
+        <ChevronDown className={`ml-auto h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
+      </Button>
+      {open && (
+        <div className="ml-4 flex flex-col gap-1">
+          {link.children?.map((child) => (
+            <SheetClose asChild key={child.slug}>
+              <Button
+                variant="ghost"
+                className="justify-start text-sm"
+                onClick={() => onNavigate(child.page, child.slug)}
+              >
+                {child.label}
+              </Button>
+            </SheetClose>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const navLinksDefault = [
   { label: "Home", page: "home" },
-  { label: "About us", page: "content-page", slug: "about-us" },
-  { label: "Manufacturing", page: "content-page", slug: "manufacturing" },
-  { label: "Products", page: "content-page", slug: "products" },
   { label: "Catalogue", page: "catalogue" },
-  { label: "Contact", page: "content-page", slug: "contact" },
 ];
 
 export function StoreHeader({ onNavigate }: StoreHeaderProps) {
-  const { auth, logout, settings } = useAppStore();
+  const { auth, logout, settings, cart, wishlist } = useAppStore();
+  const isEcommerce = settings?.catalog_mode !== 'catalog';
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [navLinks, setNavLinks] = useState<{ label: string; page: string; slug?: string; children?: NavItem[] }[]>(navLinksDefault);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch dynamic navigation links from content pages
+  useEffect(() => {
+    async function fetchNavLinks() {
+      try {
+        const res = await fetch('/api/content-pages');
+        if (res.ok) {
+          const data = await res.json();
+          const pages = (data.pages || []).filter((p: any) => p.isActive && !['home', 'catalogue'].includes(p.slug));
+          const links = [
+            { label: 'Home', page: 'home' as const },
+            ...pages.map((p: any) => ({
+              label: p.title,
+              page: 'content-page' as const,
+              slug: p.slug,
+            })),
+            { label: 'Catalogue', page: 'catalogue' as const },
+          ];
+          setNavLinks(links);
+        }
+      } catch {
+        // fallback to default links
+        setNavLinks(navLinksDefault);
+      }
+    }
+    fetchNavLinks();
+  }, []);
+
+  // Load search history from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('search_history');
+      if (stored) setSearchHistory(JSON.parse(stored));
+    } catch { /* ignore */ }
+  }, []);
 
   // Cmd+K / Ctrl+K keyboard shortcut
   useEffect(() => {
@@ -92,6 +181,13 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
     return () => window.clearTimeout(resetTimer);
   }, [searchOpen]);
 
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
   const doSearch = useCallback(async (query: string) => {
     if (!query.trim()) {
       setSearchResults([]);
@@ -113,6 +209,29 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
     }
   }, []);
 
+  const saveSearchToHistory = (query: string) => {
+    if (!query.trim()) return;
+    setSearchHistory((prev) => {
+      const filtered = prev.filter((q) => q.toLowerCase() !== query.toLowerCase());
+      const next = [query, ...filtered].slice(0, 10);
+      try { localStorage.setItem('search_history', JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  };
+
+  const removeSearchFromHistory = (query: string) => {
+    setSearchHistory((prev) => {
+      const next = prev.filter((q) => q !== query);
+      try { localStorage.setItem('search_history', JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  };
+
+  const clearSearchHistory = () => {
+    setSearchHistory([]);
+    try { localStorage.removeItem('search_history'); } catch { /* ignore */ }
+  };
+
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -122,24 +241,13 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
   };
 
   const handleResultClick = (productId: string) => {
+    saveSearchToHistory(searchQuery);
     setSearchOpen(false);
     onNavigate("product", productId);
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(price);
-  };
-
-  const getFirstImage = (images: string): string | null => {
-    try {
-      const arr = JSON.parse(images);
-      return Array.isArray(arr) && arr.length > 0 ? arr[0] : null;
-    } catch {
-      return null;
-    }
+    return libFormatPrice(price, settings?.currency || 'USD');
   };
 
   return (
@@ -151,9 +259,17 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
             onClick={() => onNavigate("home")}
             className="flex items-center gap-2 transition-opacity hover:opacity-80"
           >
-            <ShoppingBag className="h-6 w-6 text-primary" />
+            {settings?.site_logo ? (
+              <img
+                src={settings.site_logo}
+                alt={settings.site_name || 'Logo'}
+                className="h-8 w-auto object-contain"
+              />
+            ) : (
+              <ShoppingBag className="h-6 w-6 text-primary" />
+            )}
             <span className="text-xl font-bold tracking-tight">
-              Style<span className="text-primary">Store</span>
+              {settings?.site_name || 'My Store'}
             </span>
           </button>
 
@@ -163,16 +279,38 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
             role="navigation"
             aria-label="Main navigation"
           >
-            {navLinks.map((link) => (
-              <Button
-                key={link.slug || link.page}
-                variant="ghost"
-                className="text-sm font-medium"
-                onClick={() => onNavigate(link.page, link.slug)}
-              >
-                {link.label}
-              </Button>
-            ))}
+            {navLinks.map((link) =>
+              link.children ? (
+                <DropdownMenu key={link.slug || link.page}>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="text-sm font-medium">
+                      {link.label}
+                      <ChevronDown className="ml-1 h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {link.children.map((child) => (
+                      <DropdownMenuItem
+                        key={child.slug}
+                        onClick={() => onNavigate(child.page, child.slug)}
+                        className="cursor-pointer"
+                      >
+                        {child.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button
+                  key={link.slug || link.page}
+                  variant="ghost"
+                  className="text-sm font-medium"
+                  onClick={() => onNavigate(link.page, link.slug)}
+                >
+                  {link.label}
+                </Button>
+              ),
+            )}
             <Separator orientation="vertical" className="mx-2 h-6" />
             {/* Search Button */}
             <Button
@@ -187,6 +325,36 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                 <span className="text-xs">⌘</span>K
               </kbd>
             </Button>
+            {/* Wishlist Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative"
+              onClick={() => onNavigate("wishlist")}
+              aria-label="Wishlist"
+            >
+              <Heart className="h-5 w-5" />
+              {wishlist.itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] font-bold text-white flex items-center justify-center">
+                  {wishlist.itemCount > 99 ? "99+" : wishlist.itemCount}
+                </span>
+              )}
+            </Button>
+            {/* Cart Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative"
+              onClick={() => onNavigate("cart")}
+              aria-label="Shopping cart"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {cart.itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] font-bold text-white flex items-center justify-center">
+                  {cart.itemCount > 99 ? "99+" : cart.itemCount}
+                </span>
+              )}
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -196,28 +364,49 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
               <FileText className="mr-1.5 h-4 w-4" />
               Request Quote
             </Button>
+            {isEcommerce && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-sm"
+                onClick={() => onNavigate("quick-order")}
+              >
+                <ShoppingCart className="mr-1.5 h-3.5 w-3.5" />
+                Quick Order
+              </Button>
+            )}
             {auth.user ? (
               <div className="flex items-center gap-2">
                 {settings?.b2b_enable_buyer_portal === "true" && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-sm flex items-center gap-1.5"
-                    onClick={() => onNavigate("portal")}
-                  >
-                    <LayoutDashboard className="h-4 w-4" />
-                    Portal
-                  </Button>
-                )}
-                {(auth.user.role === "admin" || auth.user.role === "clerk") && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-sm flex items-center gap-1.5"
-                    onClick={() => (window.location.href = "/admin")}
-                  >
-                    Admin
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-sm flex items-center gap-1.5"
+                      >
+                        <LayoutDashboard className="h-4 w-4" />
+                        Portal
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() => onNavigate("account")}
+                        className="cursor-pointer"
+                      >
+                        <User className="mr-2 h-4 w-4" />
+                        My Account
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onNavigate("orders")}
+                        className="cursor-pointer"
+                      >
+                        <Package className="mr-2 h-4 w-4" />
+                        Orders
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 )}
                 <Button
                   variant="ghost"
@@ -233,7 +422,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                 variant="outline"
                 size="sm"
                 className="text-sm"
-                onClick={() => (window.location.href = "/admin")}
+                onClick={() => router.push("/admin")}
               >
                 Login
               </Button>
@@ -251,8 +440,16 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
             <SheetContent side="right" className="w-72">
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2">
-                  <ShoppingBag className="h-5 w-5 text-primary" />
-                  StyleStore
+                  {settings?.site_logo ? (
+                    <img
+                      src={settings.site_logo}
+                      alt={settings.site_name || 'Logo'}
+                      className="h-6 w-auto object-contain"
+                    />
+                  ) : (
+                    <ShoppingBag className="h-5 w-5 text-primary" />
+                  )}
+                  {settings?.site_name || 'My Store'}
                 </SheetTitle>
               </SheetHeader>
               <nav
@@ -260,18 +457,48 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                 role="navigation"
                 aria-label="Mobile navigation"
               >
-                {navLinks.map((link) => (
-                  <SheetClose asChild key={link.slug || link.page}>
-                    <Button
-                      variant="ghost"
-                      className="justify-start text-base"
-                      onClick={() => onNavigate(link.page, link.slug)}
-                    >
-                      {link.label}
-                    </Button>
-                  </SheetClose>
-                ))}
+                {navLinks.map((link) =>
+                  link.children ? (
+                    <MobileNavItem
+                      key={link.slug || link.page}
+                      link={link}
+                      onNavigate={onNavigate}
+                    />
+                  ) : (
+                    <SheetClose asChild key={link.slug || link.page}>
+                      <Button
+                        variant="ghost"
+                        className="justify-start text-base"
+                        onClick={() => onNavigate(link.page, link.slug)}
+                      >
+                        {link.label}
+                      </Button>
+                    </SheetClose>
+                  ),
+                )}
                 <Separator className="my-2" />
+                {/* Mobile Cart & Wishlist */}
+                <SheetClose asChild>
+                  <Button
+                    variant="ghost"
+                    className="justify-start text-base"
+                    onClick={() => onNavigate("cart")}
+                  >
+                    <ShoppingCart className="mr-2 h-4 w-4" />
+                    Cart {cart.itemCount > 0 && `(${cart.itemCount})`}
+                  </Button>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Button
+                    variant="ghost"
+                    className="justify-start text-base"
+                    onClick={() => onNavigate("wishlist")}
+                  >
+                    <Heart className="mr-2 h-4 w-4" />
+                    Wishlist{" "}
+                    {wishlist.itemCount > 0 && `(${wishlist.itemCount})`}
+                  </Button>
+                </SheetClose>
                 <SheetClose asChild>
                   <Button
                     variant="outline"
@@ -292,31 +519,43 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                     Request Quote
                   </Button>
                 </SheetClose>
+                {isEcommerce && (
+                  <SheetClose asChild>
+                    <Button
+                      variant="ghost"
+                      className="justify-start text-base"
+                      onClick={() => onNavigate("quick-order")}
+                    >
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      Quick Order
+                    </Button>
+                  </SheetClose>
+                )}
                 {auth.user ? (
                   <>
                     {settings?.b2b_enable_buyer_portal === "true" && (
-                      <SheetClose asChild>
-                        <Button
-                          variant="ghost"
-                          className="justify-start text-base"
-                          onClick={() => onNavigate("portal")}
-                        >
-                          <LayoutDashboard className="mr-2 h-4 w-4" />
-                          Buyer Portal
-                        </Button>
-                      </SheetClose>
-                    )}
-                    {(auth.user.role === "admin" ||
-                      auth.user.role === "clerk") && (
-                      <SheetClose asChild>
-                        <Button
-                          variant="ghost"
-                          className="justify-start text-base"
-                          onClick={() => (window.location.href = "/admin")}
-                        >
-                          Admin Panel
-                        </Button>
-                      </SheetClose>
+                      <>
+                        <SheetClose asChild>
+                          <Button
+                            variant="ghost"
+                            className="justify-start text-base"
+                            onClick={() => onNavigate("account")}
+                          >
+                            <User className="mr-2 h-4 w-4" />
+                            My Account
+                          </Button>
+                        </SheetClose>
+                        <SheetClose asChild>
+                          <Button
+                            variant="ghost"
+                            className="justify-start text-base"
+                            onClick={() => onNavigate("orders")}
+                          >
+                            <Package className="mr-2 h-4 w-4" />
+                            Orders
+                          </Button>
+                        </SheetClose>
+                      </>
                     )}
                     <SheetClose asChild>
                       <Button
@@ -334,7 +573,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                     <Button
                       variant="outline"
                       className="justify-start text-base"
-                      onClick={() => (window.location.href = "/admin")}
+                      onClick={() => router.push("/admin")}
                     >
                       Login / Partner Access
                     </Button>
@@ -360,6 +599,12 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
               placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchQuery.trim()) {
+                  saveSearchToHistory(searchQuery);
+                  doSearch(searchQuery);
+                }
+              }}
               className="flex h-12 w-full bg-transparent px-3 py-3 text-sm outline-none placeholder:text-muted-foreground"
             />
             {searchQuery && (
@@ -415,7 +660,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                             alt={product.name}
                             fill
                             className="object-cover"
-                            unoptimized
+
                           />
                         </div>
                       ) : (
@@ -439,18 +684,61 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                 })}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <Search className="h-8 w-8 text-muted-foreground/50" />
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Start typing to search products
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Press{" "}
-                  <kbd className="rounded border bg-muted px-1 font-mono text-[10px]">
-                    Esc
-                  </kbd>{" "}
-                  to close
-                </p>
+              <div className="flex flex-col py-2">
+                {searchHistory.length > 0 && (
+                  <div className="px-3 py-2 flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Recent Searches</span>
+                    <button
+                      onClick={clearSearchHistory}
+                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      Clear
+                    </button>
+                  </div>
+                )}
+                {searchHistory.length > 0 ? (
+                  <div className="px-2">
+                    {searchHistory.map((query, idx) => (
+                      <div key={idx} className="flex items-center gap-2 group">
+                        <button
+                          onClick={() => {
+                            setSearchQuery(query);
+                            doSearch(query);
+                          }}
+                          className="flex flex-1 items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-muted transition-colors"
+                        >
+                          <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          <span className="text-sm">{query}</span>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeSearchFromHistory(query);
+                          }}
+                          className="shrink-0 p-1 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                          aria-label={`Remove "${query}" from history`}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <Search className="h-8 w-8 text-muted-foreground/50" />
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Start typing to search products
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Press{" "}
+                      <kbd className="rounded border bg-muted px-1 font-mono text-[10px]">
+                        Esc
+                      </kbd>{" "}
+                      to close
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

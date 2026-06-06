@@ -65,11 +65,13 @@ export async function POST(request: NextRequest) {
 
     const quote = await db.quote.create({
       data: {
+        quoteNumber: `QT-${Date.now()}`,
         enquiryId,
         companyId,
         userId,
         items: JSON.stringify(items || []),
         totalAmount,
+        subtotal: totalAmount,
         notes,
         validUntil: validUntil ? new Date(validUntil) : null,
         status: 'sent'

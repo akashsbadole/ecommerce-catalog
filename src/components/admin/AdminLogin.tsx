@@ -48,7 +48,7 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
           id: data.User?.id || data.id,
           email: data.User?.email || data.email,
           name: data.User?.name || data.name,
-          role: data.User?.role || data.role || 'admin',
+          role: data.User?.role || data.role || 'viewer',
         };
         const token = data.token || null;
         onLogin(user, token || undefined);
@@ -127,7 +127,7 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
                   <Input
                     id="admin-email"
                     type="email"
-                    placeholder="admin@stylestore.com"
+                    placeholder="admin@store.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -176,12 +176,7 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
                 </Button>
               </form>
 
-              {/* Demo Credentials */}
-              <div className="mt-6 rounded-lg border border-dashed border-emerald-200 bg-emerald-50/50 p-3 text-xs text-muted-foreground">
-                <p className="mb-1 font-medium text-emerald-700">Demo Credentials</p>
-                <p>Admin: <span className="font-mono">admin@store.com</span> / <span className="font-mono">admin123</span></p>
-                <p>Clerk: <span className="font-mono">clerk@store.com</span> / <span className="font-mono">clerk123</span></p>
-              </div>
+              {/* Demo credentials removed for security */}
 
               {/* B2B Registration Link */}
               <div className="mt-6 flex flex-col gap-2 text-center">
@@ -251,7 +246,7 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
                   <Input
                     id="forgot-email"
                     type="email"
-                    placeholder="admin@stylestore.com"
+                    placeholder="admin@store.com"
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
                     required
@@ -295,7 +290,7 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
         )}
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          StyleStore CMS &mdash; Admin Panel
+          My Store CMS &mdash; Admin Panel
         </p>
       </div>
     </div>

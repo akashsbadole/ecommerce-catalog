@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import DOMPurify from "dompurify";
+import { useAppStore } from "@/lib/store";
 import {
   Image,
   LayoutGrid,
@@ -44,7 +45,55 @@ import {
   CreditCard,
   Check,
 } from "lucide-react";
-import * as LucideIcons from "lucide-react";
+import { getFirstImage } from "@/lib/utils";
+import { formatPrice } from "@/lib/pricing";
+
+// Curated icon map for dynamic resolution (instead of importing entire library)
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Image,
+  LayoutGrid,
+  MousePointerClick,
+  Quote,
+  Images,
+  Type,
+  MoveVertical,
+  Minus,
+  Package,
+  HelpCircle,
+  Star,
+  ChevronDown,
+  ShoppingCart,
+  ChevronLeft,
+  ChevronRight,
+  GalleryHorizontal,
+  Layers,
+  User,
+  TrendingUp,
+  Users,
+  Factory,
+  Video,
+  Award,
+  FormInput,
+  UserCircle,
+  Building,
+  ArrowDownToLine,
+  Building2,
+  ShieldCheck,
+  Clock,
+  Verified,
+  Play,
+  Phone,
+  MessageCircle,
+  Send,
+  ArrowRight,
+  Mail,
+  Newspaper,
+  CreditCard,
+  Check,
+  Heart: () => null, // Placeholder for wishlist icon
+  Lock: () => null, // Placeholder for security icon
+  Globe: () => null, // Placeholder for global icon
+};
 import { motion, useInView, animate } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -115,12 +164,7 @@ const SANITIZE_OPTIONS = {
 
 // Dynamic icon resolver
 function LucideIcon({ name, className }: { name: string; className?: string }) {
-  const IconComponent = (
-    LucideIcons as unknown as Record<
-      string,
-      React.ComponentType<{ className?: string }>
-    >
-  )[name];
+  const IconComponent = iconMap[name];
   if (IconComponent) {
     return <IconComponent className={className} />;
   }
@@ -413,9 +457,14 @@ function SpacerBlock({ data }: { data: Record<string, unknown> }) {
 
 function DividerBlock({ data }: { data: Record<string, unknown> }) {
   const style = (data.style as string) || "solid";
+  const borderClass = style === "dashed" 
+    ? "border-dashed" 
+    : style === "dotted" 
+    ? "border-dotted" 
+    : "border-solid";
   return (
     <hr
-      className={`my-8 border-${style === "dashed" ? "dashed" : style === "dotted" ? "dotted" : "solid"} border-border`}
+      className={`my-8 ${borderClass} border-border`}
     />
   );
 }
@@ -462,22 +511,6 @@ function ProductsBlock({
     };
     fetchProducts();
   }, [maxProducts]);
-
-  const getFirstImage = (images: string) => {
-    try {
-      const arr = JSON.parse(images);
-      return Array.isArray(arr) && arr.length > 0 ? arr[0] : null;
-    } catch {
-      return null;
-    }
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(price);
-  };
 
   return (
     <section className="py-12">
@@ -712,6 +745,7 @@ function AudienceCardsBlock({
       title: string;
       description: string;
       cta: string;
+      link?: string;
     }>) || [];
 
   return (
@@ -1280,7 +1314,7 @@ function LeadershipBlock({
   const label = (data.label as string) || "";
   const heading = (data.heading as string) || "";
   const members =
-    (data.members as Array<{ name: string; role: string; bio: string }>) || [];
+    (data.members as Array<{ name: string; role: string; bio: string; image?: string; photo?: string }>) || [];
   const ctaText = (data.ctaText as string) || "";
 
   return (
@@ -1368,7 +1402,51 @@ function PartnerLogosBlock({ data }: { data: Record<string, unknown> }) {
   const heading = (data.heading as string) || "";
   const testimonials =
     (data.testimonials as Array<{ quote: string; author: string }>) || [];
-  const logos = (data.logos as string[]) || [];
+  const logos = (data.logos as Array<string | { url: string; alt?: string }> | string[]) || [];
+  const logoCount = (data.logoCount as number) || 0;
+
+  const renderLogos = () => {
+    if (logos.length > 0) {
+      return (
+        <div className="flex flex-wrap justify-center gap-8 items-center border-t pt-8">
+          {logos.map((logo, i) => {
+            const logoUrl = typeof logo === 'string' ? logo : logo.url;
+            const logoAlt = typeof logo === 'string' ? `Partner ${i + 1}` : (logo.alt || `Partner ${i + 1}`);
+            return (
+              <div key={i} className="h-10 w-24 flex items-center justify-center">
+                {logoUrl ? (
+                  <img
+                    src={logoUrl}
+                    alt={logoAlt}
+                    className="max-h-full max-w-full object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all"
+                  />
+                ) : (
+                  <div className="h-8 w-16 rounded bg-muted border flex items-center justify-center text-xs text-muted-foreground">
+                    Logo {i + 1}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+    if (logoCount > 0) {
+      return (
+        <div className="flex flex-wrap justify-center gap-8 items-center border-t pt-8">
+          {Array.from({ length: logoCount }).map((_, i) => (
+            <div
+              key={i}
+              className="h-8 w-16 rounded bg-muted border flex items-center justify-center text-xs text-muted-foreground"
+            >
+              Logo {i + 1}
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <section className="bg-muted/30 border-y">
@@ -1407,18 +1485,22 @@ function PartnerLogosBlock({ data }: { data: Record<string, unknown> }) {
           )}
           {logos.length > 0 && (
             <div className="flex flex-wrap justify-center gap-12 items-center border-t pt-12">
-              {logos.filter(Boolean).map((logo, i) => (
-                <motion.img
-                  key={i}
-                  initial={{ opacity: 0, filter: "grayscale(100%)" }}
-                  whileInView={{ opacity: 0.6, filter: "grayscale(100%)" }}
-                  whileHover={{ opacity: 1, filter: "grayscale(0%)" }}
-                  viewport={{ once: true }}
-                  src={logo}
-                  alt="Partner Logo"
-                  className="h-8 md:h-10 w-auto object-contain transition-all"
-                />
-              ))}
+              {logos.filter(Boolean).map((logo, i) => {
+                const logoUrl = typeof logo === 'string' ? logo : logo.url;
+                const logoAlt = typeof logo === 'string' ? 'Partner Logo' : (logo.alt || 'Partner Logo');
+                return (
+                  <motion.img
+                    key={i}
+                    initial={{ opacity: 0, filter: "grayscale(100%)" }}
+                    whileInView={{ opacity: 0.6, filter: "grayscale(100%)" }}
+                    whileHover={{ opacity: 1, filter: "grayscale(0%)" }}
+                    viewport={{ once: true }}
+                    src={logoUrl}
+                    alt={logoAlt}
+                    className="h-8 md:h-10 w-auto object-contain transition-all"
+                  />
+                );
+              })}
             </div>
           )}
         </motion.div>
@@ -1434,10 +1516,12 @@ function StickyCtaBlock({
   data: Record<string, unknown>;
   onNavigate?: (page: string, data?: unknown) => void;
 }) {
+  const { settings } = useAppStore();
   const text = (data.text as string) || "";
   const buttons =
-    (data.buttons as Array<{ text: string; type: string; action: string }>) ||
+    (data.buttons as Array<{ text: string; type: string; action: string; link?: string }>) ||
     [];
+  const whatsappNumber = settings?.whatsapp_number || "";
 
   return (
     <div className="sticky bottom-0 z-30 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

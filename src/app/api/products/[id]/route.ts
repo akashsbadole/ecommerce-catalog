@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-async function resolveProduct(idOrSlug: string) {
+async function resolveProduct(idOrSlug: string, includeDeleted = false) {
+  const where = {
+    OR: [
+      { id: idOrSlug },
+      { slug: idOrSlug },
+    ],
+    ...(includeDeleted ? {} : { deletedAt: null }),
+  };
+  
   return db.product.findFirst({
-    where: {
-      OR: [
-        { id: idOrSlug },
-        { slug: idOrSlug },
-      ],
-    },
+    where,
     include: { Category: true },
   });
 }
@@ -99,12 +102,12 @@ export async function PUT(
         ...(body.slug !== undefined && { slug: body.slug }),
         ...(body.description !== undefined && { description: body.description }),
         ...(body.shortDescription !== undefined && { shortDescription: body.shortDescription }),
-        ...(body.price !== undefined && { price: parseFloat(body.price) }),
+        ...(body.price !== undefined && { price: isNaN(parseFloat(body.price)) ? existing.price : parseFloat(body.price) }),
         ...(body.comparePrice !== undefined && {
-          comparePrice: body.comparePrice ? parseFloat(body.comparePrice) : null,
+          comparePrice: body.comparePrice ? (isNaN(parseFloat(body.comparePrice)) ? null : parseFloat(body.comparePrice)) : null,
         }),
         ...(body.wholesalePrice !== undefined && {
-          wholesalePrice: body.wholesalePrice ? parseFloat(body.wholesalePrice) : null,
+          wholesalePrice: body.wholesalePrice ? (isNaN(parseFloat(body.wholesalePrice)) ? null : parseFloat(body.wholesalePrice)) : null,
         }),
         ...(body.minOrderQty !== undefined && { minOrderQty: body.minOrderQty }),
         ...(body.sku !== undefined && { sku: body.sku }),

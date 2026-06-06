@@ -1,55 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import bcrypt from 'bcryptjs';
+import { parseCSV, generateRandomPassword } from '@/lib/utils';
 
-function parseCSV(text: string): string[][] {
-  const rows: string[][] = [];
-  let current = '';
-  let row: string[] = [];
-  let inQuotes = false;
-
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    const next = text[i + 1];
-
-    if (inQuotes) {
-      if (ch === '"' && next === '"') {
-        current += '"';
-        i++;
-      } else if (ch === '"') {
-        inQuotes = false;
-      } else {
-        current += ch;
-      }
-    } else {
-      if (ch === '"') {
-        inQuotes = true;
-      } else if (ch === ',') {
-        row.push(current.trim());
-        current = '';
-      } else if (ch === '\n' || (ch === '\r' && next === '\n')) {
-        row.push(current.trim());
-        current = '';
-        if (row.length > 0 && row.some(cell => cell !== '')) {
-          rows.push(row);
-        }
-        row = [];
-        if (ch === '\r') i++;
-      } else {
-        current += ch;
-      }
-    }
-  }
-
-  if (current || row.length > 0) {
-    row.push(current.trim());
-    if (row.some(cell => cell !== '')) {
-      rows.push(row);
-    }
-  }
-
-  return rows;
-}
+// Max 10MB file size
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export async function POST(request: NextRequest) {
   try {
@@ -57,6 +12,10 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File | null;
 
     if (!file) return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
+    
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: 'File size must be less than 10MB' }, { status: 400 });
+    }
 
     const text = await file.text();
     const rows = parseCSV(text);
@@ -78,7 +37,7 @@ export async function POST(request: NextRequest) {
 
       const email = getValue('email');
       const name = getValue('name');
-      const password = getValue('password') || 'Welcome123!';
+      const password = getValue('password') || generateRandomPassword();
       const role = getValue('role') || 'clerk';
 
       if (!email || !name) {

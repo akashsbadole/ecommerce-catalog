@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { EnquiryModal } from './EnquiryModal';
+import { getFirstImage } from '@/lib/utils';
+import { formatPrice } from '@/lib/pricing';
 
 interface Product {
   id: string;
@@ -44,22 +46,6 @@ export function QuickViewModal({
   onNavigate,
 }: QuickViewModalProps) {
   const [enquiryOpen, setEnquiryOpen] = useState(false);
-
-  const getFirstImage = (images: string) => {
-    try {
-      const arr = JSON.parse(images);
-      return Array.isArray(arr) && arr.length > 0 ? arr[0] : null;
-    } catch {
-      return null;
-    }
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(price);
-  };
 
   const image = getFirstImage(product.images);
   const hasDiscount = product.comparePrice && product.comparePrice > product.price;
@@ -99,7 +85,7 @@ export function QuickViewModal({
                   alt={product.name}
                   fill
                   className="object-cover"
-                  unoptimized
+
                 />
               ) : (
                 <div className="flex h-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">

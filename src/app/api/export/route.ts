@@ -1,18 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-
-function escapeCsv(value: unknown): string {
-  if (value === null || value === undefined) return '';
-  const str = String(value);
-  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-    return `"${str.replace(/"/g, '""')}"`;
-  }
-  return str;
-}
-
-function toCsvRow(row: unknown[]): string {
-  return row.map(escapeCsv).join(',') + '\n';
-}
+import { escapeCSV, toCsvRow } from '@/lib/utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -64,7 +52,12 @@ export async function GET(request: NextRequest) {
         });
         csvContent = toCsvRow(['ID', 'Title', 'Slug', 'Author', 'Published', 'Tags', 'Created At']);
         for (const p of posts) {
-          const tags = p.tags ? JSON.parse(p.tags).join('; ') : '';
+          let tags = '';
+          try {
+            tags = p.tags ? JSON.parse(p.tags).join('; ') : '';
+          } catch {
+            tags = p.tags || '';
+          }
           csvContent += toCsvRow([p.id, p.title, p.slug, p.User?.name || '', p.isPublished, tags, p.createdAt.toISOString()]);
         }
         filename = `blog-posts-${new Date().toISOString().slice(0, 10)}.csv`;
