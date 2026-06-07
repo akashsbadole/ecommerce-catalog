@@ -25,8 +25,12 @@ export async function POST(request: NextRequest) {
     if (rateLimitResponse) return rateLimitResponse;
 
     const formData = await request.formData();
-    const files = formData.getAll('files') as File[];
     const folder = (formData.get('folder') as string) || '/';
+    // Accept both 'file' (singular) and 'files' (plural) keys
+    const files = [
+      ...(formData.getAll('files') as File[]),
+      ...(formData.getAll('file') as File[]),
+    ];
 
     if (!files || files.length === 0) {
       return NextResponse.json({ error: 'No files provided' }, { status: 400 });
@@ -87,7 +91,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ files: results });
+    // Backward compat: include top-level url for single-file uploads
+    const firstSuccess = results.find(r => r.url);
+    return NextResponse.json({
+      files: results,
+      url: firstSuccess?.url,
+      id: firstSuccess?.id,
+    });
   } catch (error) {
     console.error('Upload error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
