@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
         metaTitle: validatedData.metaTitle || null,
         metaDescription: validatedData.metaDescription || null,
         ogImage: validatedData.ogImage || null,
-        blocks: body.blocks ? (typeof body.blocks === 'string' ? body.blocks : JSON.stringify(body.blocks)) : '[]',
+        blocks: validatedData.blocks || '[]',
         tags: validatedData.tags ? JSON.stringify(validatedData.tags) : null,
         isPublished: validatedData.isPublished ?? false,
         publishedAt: validatedData.isPublished ? new Date() : null,

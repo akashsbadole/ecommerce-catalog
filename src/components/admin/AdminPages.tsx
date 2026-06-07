@@ -225,6 +225,7 @@ export function AdminPages() {
       });
       if (res.ok) {
         toast.success('Page blocks saved');
+        fetchPages();
       } else {
         const err = await res.json();
         toast.error(err.error || 'Failed to save blocks');

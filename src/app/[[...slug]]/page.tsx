@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useAppStore } from "@/lib/store";
-import { usePathname } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 import { StoreLayout } from "@/components/store/StoreLayout";
 import { HomePage } from "@/components/store/HomePage";
 import { CataloguePage } from "@/components/store/CataloguePage";
@@ -20,32 +20,29 @@ import { CheckoutPage } from "@/components/store/CheckoutPage";
 import { QuickOrderPage } from "@/components/store/QuickOrderPage";
 import { AboutPage } from "@/components/store/AboutPage";
 import { ManufacturingPage } from "@/components/store/ManufacturingPage";
-// import { ProductsPage } from '@/components/store/ProductsPage';
 import { ContactPage } from "@/components/store/ContactPage";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import BuyerPortalPage from "@/app/portal/page";
 
-export default function MainApp() {
-  const {
-    currentPage,
-    navigate,
-    isAdmin,
-    adminUser,
-    setAdminLogin,
-    setAdminLogout,
-    fetchCart,
-    fetchWishlist,
-    auth,
-  } = useAppStore();
+const CMS_PAGES = ["catalogue"];
 
-  // Check if we're on an admin route - if so, don't render store UI
+export default function CatchAllPage() {
+  const currentPage = useAppStore((s) => s.currentPage);
+  const navigate = useAppStore((s) => s.navigate);
+  const auth = useAppStore((s) => s.auth);
+  const fetchCart = useAppStore((s) => s.fetchCart);
+  const fetchWishlist = useAppStore((s) => s.fetchWishlist);
+
   const pathname = usePathname();
+  const params = useParams();
   const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
 
-  // CMS-driven page slugs (excluding dedicated pages: about, manufacturing, products, contact)
-  const CMS_PAGES = ["catalogue"];
+  const fullPath = useMemo(() => {
+    const slugParam = params.slug;
+    const slugPath = (Array.isArray(slugParam) ? slugParam : slugParam ? [slugParam] : []).join("/") || "";
+    return slugPath ? `/${slugPath}` : "/";
+  }, [params.slug]);
 
-  // Route from URL on initial load and handle browser back/forward
   useEffect(() => {
     const routeFromPath = (path: string) => {
       if (path === "/" || path === "") return;
@@ -53,6 +50,8 @@ export default function MainApp() {
       if (segments[0] === "catalogue") {
         if (segments[1]) navigate("product", segments[1]);
         else navigate("catalogue");
+      } else if (segments[0] === "product") {
+        if (segments[1]) navigate("product", segments[1]);
       } else if (segments[0] === "about") {
         navigate("about");
       } else if (segments[0] === "manufacturing") {
@@ -86,12 +85,10 @@ export default function MainApp() {
       }
     };
 
-    // Initial route from URL
-    if (!isAdminRoute && pathname !== "/") {
-      routeFromPath(pathname);
+    if (!isAdminRoute && fullPath !== "/") {
+      routeFromPath(fullPath);
     }
 
-    // Handle browser back/forward
     const handlePopState = () => {
       const currentPath = window.location.pathname;
       if (currentPath === "/" || currentPath === "") {
@@ -103,9 +100,8 @@ export default function MainApp() {
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+  }, [fullPath, navigate]);
 
-  // Fetch cart and wishlist when user is logged in
   useEffect(() => {
     if (auth.token) {
       fetchCart();
@@ -113,7 +109,6 @@ export default function MainApp() {
     }
   }, [auth.token, fetchCart, fetchWishlist]);
 
-  // Public pages (wrapped in store layout)
   const renderPage = () => {
     switch (currentPage.type) {
       case "home":
@@ -133,16 +128,12 @@ export default function MainApp() {
         return <AboutPage onNavigate={navigate} />;
       case "manufacturing":
         return <ManufacturingPage onNavigate={navigate} />;
-      // case 'products':
-      //   return <ProductsPage onNavigate={navigate} />;
       case "contact":
         return <ContactPage onNavigate={navigate} />;
       case "blog":
         return <BlogPage onNavigate={navigate} />;
       case "blog-post":
-        return (
-          <BlogPostView postId={currentPage.postId} onNavigate={navigate} />
-        );
+        return <BlogPostView postId={currentPage.postId} onNavigate={navigate} />;
       case "portal":
         return <BuyerPortalPage />;
       case "cart":
@@ -153,10 +144,7 @@ export default function MainApp() {
         return <OrdersPage onNavigate={navigate} />;
       case "order-detail":
         return (
-          <OrderDetailPage
-            orderId={currentPage.orderId}
-            onNavigate={navigate}
-          />
+          <OrderDetailPage orderId={currentPage.orderId} onNavigate={navigate} />
         );
       case "account":
         return <AccountPage onNavigate={navigate} />;
@@ -198,7 +186,6 @@ export default function MainApp() {
     }
   };
 
-  // Don't render store layout if on admin route (handled by /app/admin)
   if (isAdminRoute) {
     return null;
   }

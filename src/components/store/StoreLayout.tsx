@@ -15,7 +15,8 @@ interface StoreLayoutProps {
 }
 
 export function StoreLayout({ currentPage, onNavigate, children }: StoreLayoutProps) {
-  const { settings, fetchSettings } = useAppStore();
+  const settings = useAppStore((s) => s.settings);
+  const fetchSettings = useAppStore((s) => s.fetchSettings);
   const prevPageRef = useRef(currentPage);
 
   // Fetch settings on mount if not already loaded

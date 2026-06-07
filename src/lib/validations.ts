@@ -36,20 +36,6 @@ export const categorySchema = z.object({
   metaDescription: z.string().max(160).optional().nullable(),
 });
 
-export const blogPostSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(200),
-  slug: z.string().min(1).max(200).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
-  excerpt: z.string().max(500).optional().nullable(),
-  content: z.string().optional().default(''),
-  coverImage: z.string().optional().nullable(),
-  authorId: z.string().optional().nullable(),
-  metaTitle: z.string().max(70).optional().nullable(),
-  metaDescription: z.string().max(160).optional().nullable(),
-  ogImage: z.string().optional().nullable(),
-  tags: z.string().optional().nullable(),
-  isPublished: z.boolean().default(false),
-});
-
 export const enquirySchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
   email: z.string().email('Invalid email'),
@@ -84,13 +70,32 @@ export const contentPageSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200),
   slug: z.string().min(1).max(200).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   content: z.string().default(''),
-  blocks: z.string().default('[]'),
+  blocks: z.union([z.string(), z.array(z.any())]).transform(val =>
+    typeof val === 'string' ? val : JSON.stringify(val)
+  ).default('[]'),
   heroImage: z.string().optional().nullable(),
   metaTitle: z.string().max(70).optional().nullable(),
   metaDescription: z.string().max(160).optional().nullable(),
   ogImage: z.string().optional().nullable(),
   isActive: z.boolean().default(true),
   sortOrder: z.number().int().default(0),
+});
+
+export const blogPostSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(200),
+  slug: z.string().min(1).max(200).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  excerpt: z.string().max(500).optional().nullable(),
+  content: z.string().optional().default(''),
+  coverImage: z.string().optional().nullable(),
+  authorId: z.string().optional().nullable(),
+  blocks: z.union([z.string(), z.array(z.any())]).transform(val =>
+    typeof val === 'string' ? val : JSON.stringify(val)
+  ).default('[]'),
+  metaTitle: z.string().max(70).optional().nullable(),
+  metaDescription: z.string().max(160).optional().nullable(),
+  ogImage: z.string().optional().nullable(),
+  tags: z.string().optional().nullable(),
+  isPublished: z.boolean().default(false),
 });
 
 export const forgotPasswordSchema = z.object({
