@@ -44,6 +44,12 @@ import {
   Newspaper,
   CreditCard,
   Check,
+  Columns,
+  GitBranch,
+  BarChart3,
+  GitMerge,
+  MapPin,
+  Workflow,
 } from "lucide-react";
 import { getFirstImage } from "@/lib/utils";
 import { formatPrice } from "@/lib/pricing";
@@ -1609,6 +1615,15 @@ const BLOCK_ICONS: Record<
   "sticky-cta": ArrowDownToLine,
   "blog-grid": Newspaper,
   "pricing-table": CreditCard,
+  "hero-split": Columns,
+  "timeline": GitBranch,
+  "metrics-bar": BarChart3,
+  "process-flow": GitMerge,
+  "packaging-grid": Package,
+  "certification-cards": Award,
+  "address-cards": MapPin,
+  "quick-connect": Phone,
+  "crm-flow": Workflow,
 };
 
 function BlogGridBlock({
@@ -1907,6 +1922,291 @@ function PricingTableBlock({
   );
 }
 
+function HeroSplitBlock({
+  data,
+  onNavigate,
+}: {
+  data: Record<string, unknown>;
+  onNavigate?: (page: string, data?: unknown) => void;
+}) {
+  const title = (data.title as string) || "";
+  const subtitle = (data.subtitle as string) || "";
+  const description = (data.description as string) || "";
+  const buttons = (data.buttons as Array<{ text: string; link: string; variant: string }>) || [];
+  const badges = (data.badges as string[]) || [];
+
+  return (
+    <section className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white py-24 px-4">
+      <div className="absolute inset-0 bg-black/40" />
+      <div className="relative container mx-auto max-w-5xl text-center">
+        {badges.length > 0 && (
+          <div className="flex gap-2 justify-center mb-6">
+            {badges.map((badge) => (
+              <span key={badge} className="inline-flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1 text-xs text-gray-300">
+                {badge}
+              </span>
+            ))}
+          </div>
+        )}
+        {subtitle && <p className="text-xs uppercase tracking-[0.2em] text-gray-400 mb-3">{subtitle}</p>}
+        <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4 whitespace-pre-line">{title}</h1>
+        {description && <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed mb-8">{description}</p>}
+        {buttons.length > 0 && (
+          <div className="flex gap-4 justify-center">
+            {buttons.map((btn) => (
+              <button
+                key={btn.text}
+                onClick={() => {
+                  if (btn.link) {
+                    const page = btn.link === '/contact' ? 'contact' : btn.link === '/catalogue' ? 'catalogue' : 'content-page';
+                    onNavigate?.(page, btn.link.replace('/page/', '').replace('/', ''));
+                  }
+                }}
+                className={`text-sm font-medium rounded-full px-6 py-2.5 transition-colors ${
+                  btn.variant === 'primary' ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                }`}
+              >
+                {btn.text}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function TimelineBlock({ data }: { data: Record<string, unknown> }) {
+  const title = (data.title as string) || "";
+  const subtitle = (data.subtitle as string) || "";
+  const items = (data.items as Array<{ year: string; title: string; description: string; current?: boolean }>) || [];
+
+  return (
+    <section className="py-16 px-4">
+      <div className="container mx-auto max-w-5xl">
+        {subtitle && <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">{subtitle}</p>}
+        <h2 className="text-2xl font-bold mb-10">{title}</h2>
+        <div className="space-y-0">
+          {items.map((item, i) => (
+            <div key={i} className="flex gap-4 items-start">
+              <div className="flex flex-col items-center">
+                <div className={`w-3 h-3 rounded-full flex-shrink-0 mt-1.5 ${item.current ? 'bg-emerald-600' : 'bg-primary'}`} />
+                {i < items.length - 1 && <div className="w-px h-8 bg-border" />}
+              </div>
+              <div className="pb-6">
+                <p className={`text-xs font-semibold ${item.current ? 'text-emerald-600' : 'text-primary'}`}>{item.year}</p>
+                <p className="text-sm font-semibold mt-0.5">{item.title}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MetricsBarBlock({ data }: { data: Record<string, unknown> }) {
+  const stats = (data.stats as Array<{ value: string; label: string }>) || [];
+
+  return (
+    <section className="py-12 px-4 bg-muted/40">
+      <div className="container mx-auto max-w-5xl">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {stats.map((stat) => (
+            <div key={stat.label} className="bg-background border rounded-lg p-5 text-center">
+              <div className="text-3xl font-bold">{stat.value}</div>
+              <div className="text-xs text-muted-foreground mt-1">{stat.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ProcessFlowBlock({ data }: { data: Record<string, unknown> }) {
+  const title = (data.title as string) || "";
+  const subtitle = (data.subtitle as string) || "";
+  const steps = (data.steps as Array<{ title: string; description: string; icon: string }>) || [];
+  const trustItems = (data.trustItems as string[]) || [];
+
+  return (
+    <section className="py-16 px-4">
+      <div className="container mx-auto max-w-5xl">
+        {subtitle && <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">{subtitle}</p>}
+        <h2 className="text-2xl font-bold mb-2">{title}</h2>
+        <div className="flex flex-col md:flex-row items-start gap-2 mt-8">
+          {steps.map((step, i) => (
+            <div key={step.title} className="flex items-start flex-1">
+              <div className="flex flex-col items-center text-center flex-1">
+                <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-3 text-lg font-bold">
+                  {i + 1}
+                </div>
+                <p className="text-sm font-semibold mb-1">{step.title}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{step.description}</p>
+              </div>
+              {i < steps.length - 1 && (
+                <div className="hidden md:flex items-start pt-5 px-1 text-muted-foreground">→</div>
+              )}
+            </div>
+          ))}
+        </div>
+        {trustItems.length > 0 && (
+          <div className="mt-10 bg-muted/50 border rounded-lg p-4 flex flex-wrap gap-6 items-center">
+            {trustItems.map((item) => (
+              <span key={item} className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <span className="text-emerald-600">✓</span> {item}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function PackagingGridBlock({ data, onNavigate }: { data: Record<string, unknown>; onNavigate?: (page: string, data?: unknown) => void }) {
+  const title = (data.title as string) || "";
+  const subtitle = (data.subtitle as string) || "";
+  const items = (data.items as Array<{ title: string; description: string; tag: string; highlight: boolean }>) || [];
+
+  return (
+    <section className="py-12 px-4 bg-muted/40">
+      <div className="container mx-auto max-w-5xl">
+        <h2 className="text-2xl font-bold mb-2">{title}</h2>
+        {subtitle && <p className="text-sm text-muted-foreground mb-8">{subtitle}</p>}
+        <div className="grid md:grid-cols-3 gap-6">
+          {items.map((item) => (
+            <div key={item.title} className={`rounded-xl p-5 text-center ${item.highlight ? 'border-2 border-primary bg-background relative' : 'border bg-background'}`}>
+              {item.highlight && <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded whitespace-nowrap">Most requested</span>}
+              <div className="h-24 bg-muted rounded-lg mb-4 flex items-center justify-center text-xs text-muted-foreground">
+                {item.title} photo
+              </div>
+              <h3 className="text-sm font-semibold mb-2">{item.title}</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed mb-3">{item.description}</p>
+              <span className={`text-[10px] px-2 py-0.5 rounded ${item.highlight ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'}`}>{item.tag}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CertificationCardsBlock({ data }: { data: Record<string, unknown> }) {
+  const title = (data.title as string) || "";
+  const certs = (data.certs as Array<{ name: string; description: string }>) || [];
+  const footerText = (data.footerText as string) || "";
+
+  return (
+    <section className="py-16 px-4 bg-muted/40">
+      <div className="container mx-auto max-w-5xl">
+        <h2 className="text-2xl font-bold mb-8">{title}</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          {certs.map((cert) => (
+            <div key={cert.name} className="bg-background border rounded-xl p-5 text-center">
+              <div className="w-12 h-12 bg-muted rounded-lg mx-auto mb-3 flex items-center justify-center text-xs font-bold text-muted-foreground">
+                {cert.name.substring(0, 4)}
+              </div>
+              <p className="text-sm font-semibold mb-1">{cert.name}</p>
+              <p className="text-xs text-muted-foreground">{cert.description}</p>
+            </div>
+          ))}
+        </div>
+        {footerText && (
+          <div className="bg-background border rounded-lg p-4">
+            <p className="text-xs text-muted-foreground">{footerText}</p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function AddressCardsBlock({ data, onNavigate }: { data: Record<string, unknown>; onNavigate?: (page: string, data?: unknown) => void }) {
+  const title = (data.title as string) || "";
+  const cards = (data.cards as Array<{ type: string; title: string; address?: string; description?: string; badge?: string }>) || [];
+
+  return (
+    <section className="py-12 px-4 bg-muted/40">
+      <div className="container mx-auto max-w-5xl">
+        <h2 className="text-lg font-bold mb-8">{title}</h2>
+        <div className="grid md:grid-cols-3 gap-6">
+          {cards.map((card) => (
+            <div key={card.title} className={`bg-background border rounded-xl p-5 ${card.type === 'factory' ? 'border-t-4 border-t-primary' : card.type === 'visit' ? 'bg-emerald-50 border-emerald-200 border-t-4 border-t-emerald-600' : 'border-t-4 border-t-muted'}`}>
+              <div className="flex items-center gap-2 mb-4">
+                <p className="text-sm font-semibold">{card.title}</p>
+                {card.badge && <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded ml-auto">{card.badge}</span>}
+              </div>
+              {card.address && <p className="text-xs text-muted-foreground leading-relaxed mb-3 whitespace-pre-line">{card.address}</p>}
+              {card.description && <p className="text-xs text-muted-foreground leading-relaxed mb-4">{card.description}</p>}
+              {card.type === 'visit' && (
+                <button onClick={() => onNavigate?.('manufacturing')} className="w-full bg-emerald-600 text-white text-xs font-medium rounded py-2.5 hover:bg-emerald-700 transition-colors">
+                  Schedule a factory visit →
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function QuickConnectBlock({ data, onNavigate }: { data: Record<string, unknown>; onNavigate?: (page: string, data?: unknown) => void }) {
+  const title = (data.title as string) || "";
+  const channels = (data.channels as Array<{ type: string; title: string; description: string; value: string }>) || [];
+
+  return (
+    <section className="py-12 px-4">
+      <div className="container mx-auto max-w-5xl">
+        <h2 className="text-lg font-bold mb-8">{title}</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {channels.map((ch) => (
+            <div key={ch.title} className={`rounded-xl p-5 text-center border ${ch.type === 'whatsapp' ? 'bg-emerald-50 border-emerald-200' : 'bg-background'}`}>
+              <p className="text-sm font-semibold mb-1">{ch.title}</p>
+              <p className="text-xs text-muted-foreground leading-relaxed mb-3">{ch.description}</p>
+              <p className={`text-sm font-medium mb-3 ${ch.type === 'whatsapp' ? 'text-emerald-600' : ch.type === 'phone' ? 'text-primary' : 'text-amber-600'}`}>{ch.value}</p>
+              <button
+                onClick={() => {
+                  if (ch.type === 'catalogue') onNavigate?.('catalogue');
+                  else if (ch.type === 'whatsapp' || ch.type === 'phone' || ch.type === 'email') onNavigate?.('contact');
+                }}
+                className="w-full text-xs font-medium rounded py-2.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                {ch.type === 'whatsapp' ? 'Open WhatsApp →' : ch.type === 'phone' ? 'Tap to call' : ch.type === 'email' ? 'Copy email' : 'Get catalogue'}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CrmFlowBlock({ data }: { data: Record<string, unknown> }) {
+  const title = (data.title as string) || "";
+  const steps = (data.steps as Array<{ num: number; title: string; description: string }>) || [];
+
+  return (
+    <section className="py-12 px-4 bg-gray-900 text-white">
+      <div className="container mx-auto max-w-5xl">
+        <h2 className="text-lg font-bold text-center mb-8">{title}</h2>
+        <div className="grid grid-cols-5 gap-0">
+          {steps.map((step, i) => (
+            <div key={step.num} className={`text-center px-3 ${i < steps.length - 1 ? 'border-r border-white/10' : ''}`}>
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center mx-auto mb-3 text-xs font-bold">{step.num}</div>
+              <p className="text-xs font-semibold mb-1">{step.title}</p>
+              <p className="text-[10px] text-gray-400 leading-relaxed">{step.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function SliderBlock({
   data,
   onNavigate,
@@ -2150,6 +2450,24 @@ export function PageBlockRenderer({
         return <BlogGridBlock data={data} onNavigate={onNavigate} />;
       case "pricing-table":
         return <PricingTableBlock data={data} onNavigate={onNavigate} />;
+      case "hero-split":
+        return <HeroSplitBlock data={data} onNavigate={onNavigate} />;
+      case "timeline":
+        return <TimelineBlock data={data} />;
+      case "metrics-bar":
+        return <MetricsBarBlock data={data} />;
+      case "process-flow":
+        return <ProcessFlowBlock data={data} />;
+      case "packaging-grid":
+        return <PackagingGridBlock data={data} onNavigate={onNavigate} />;
+      case "certification-cards":
+        return <CertificationCardsBlock data={data} />;
+      case "address-cards":
+        return <AddressCardsBlock data={data} onNavigate={onNavigate} />;
+      case "quick-connect":
+        return <QuickConnectBlock data={data} onNavigate={onNavigate} />;
+      case "crm-flow":
+        return <CrmFlowBlock data={data} />;
       default:
         return null;
     }

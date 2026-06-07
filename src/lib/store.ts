@@ -6,6 +6,9 @@ export type Page =
   | { type: "catalogue" }
   | { type: "product"; productId: string }
   | { type: "contact" }
+  | { type: "about" }
+  | { type: "manufacturing" }
+  // | { type: "products" }
   | { type: "content-page"; slug: string }
   | { type: "blog" }
   | { type: "blog-post"; postId: string }
@@ -135,7 +138,11 @@ interface AppState {
   // Cart
   cart: CartState;
   fetchCart: () => Promise<void>;
-  addToCart: (productId: string, quantity?: number, variantId?: string) => Promise<boolean>;
+  addToCart: (
+    productId: string,
+    quantity?: number,
+    variantId?: string,
+  ) => Promise<boolean>;
   updateCartItem: (itemId: string, quantity: number) => Promise<void>;
   removeFromCart: (itemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
@@ -187,6 +194,21 @@ export const useAppStore = create<AppState>()(
             if (typeof window !== "undefined")
               window.history.pushState({}, "", "/contact");
             break;
+          case "about":
+            set({ currentPage: { type: "about" } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", "/about");
+            break;
+          case "manufacturing":
+            set({ currentPage: { type: "manufacturing" } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", "/manufacturing");
+            break;
+          // case "products":
+          //   set({ currentPage: { type: "products" } });
+          //   if (typeof window !== "undefined")
+          //     window.history.pushState({}, "", "/products");
+          //   break;
           case "content-page": {
             const rawSlug = (data as string) || "";
             const slug = rawSlug.replace(/^\/+/, "");
@@ -296,11 +318,22 @@ export const useAppStore = create<AppState>()(
       login: (user, token) =>
         set({
           auth: { user, token },
-          isAdmin: user.role === "admin" || user.role === "clerk" || user.role === "editor",
+          isAdmin:
+            user.role === "admin" ||
+            user.role === "clerk" ||
+            user.role === "editor",
           adminUser:
-            user.role === "admin" || user.role === "clerk" || user.role === "editor" ? user : null,
+            user.role === "admin" ||
+            user.role === "clerk" ||
+            user.role === "editor"
+              ? user
+              : null,
           adminToken:
-            user.role === "admin" || user.role === "clerk" || user.role === "editor" ? token : null,
+            user.role === "admin" ||
+            user.role === "clerk" ||
+            user.role === "editor"
+              ? token
+              : null,
         }),
       logout: () => {
         set({
@@ -312,16 +345,13 @@ export const useAppStore = create<AppState>()(
           cart: { items: [], total: 0, itemCount: 0, loading: false },
           wishlist: { items: [], itemCount: 0, loading: false },
         });
-        // Clear cart and wishlist on server
-        fetch("/api/cart", { method: "DELETE" }).catch(() => {});
-        fetch("/api/wishlist", { method: "DELETE" }).catch(() => {});
       },
 
       settings: null,
       setSettings: (settings) => set({ settings }),
       fetchSettings: async () => {
         try {
-          const res = await fetch("/api/settings");
+          const res = await fetch("/api/settings/public");
           if (res.ok) {
             const data = await res.json();
             set({ settings: data.settings || {} });
@@ -365,9 +395,11 @@ export const useAppStore = create<AppState>()(
         if (!auth.token) {
           // Guest cart: store locally
           try {
-            const localCartKey = 'guest_cart';
+            const localCartKey = "guest_cart";
             const stored = localStorage.getItem(localCartKey);
-            const guestCart = stored ? JSON.parse(stored) : { items: [], total: 0, itemCount: 0 };
+            const guestCart = stored
+              ? JSON.parse(stored)
+              : { items: [], total: 0, itemCount: 0 };
 
             // Fetch product details
             const res = await fetch(`/api/products/${productId}`);
@@ -376,7 +408,9 @@ export const useAppStore = create<AppState>()(
             const product = data.product;
 
             const existingIdx = guestCart.items.findIndex(
-              (i: any) => i.productId === productId && i.variantId === (variantId || null)
+              (i: any) =>
+                i.productId === productId &&
+                i.variantId === (variantId || null),
             );
 
             if (existingIdx >= 0) {
@@ -402,10 +436,12 @@ export const useAppStore = create<AppState>()(
             }
 
             guestCart.total = guestCart.items.reduce(
-              (sum: number, i: any) => sum + i.Product.price * i.quantity, 0
+              (sum: number, i: any) => sum + i.Product.price * i.quantity,
+              0,
             );
             guestCart.itemCount = guestCart.items.reduce(
-              (sum: number, i: any) => sum + i.quantity, 0
+              (sum: number, i: any) => sum + i.quantity,
+              0,
             );
 
             localStorage.setItem(localCartKey, JSON.stringify(guestCart));

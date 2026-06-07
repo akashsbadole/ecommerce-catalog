@@ -23,7 +23,16 @@ export type BlockType =
   | "partner-logos"
   | "sticky-cta"
   | "blog-grid"
-  | "pricing-table";
+  | "pricing-table"
+  | "hero-split"
+  | "timeline"
+  | "metrics-bar"
+  | "process-flow"
+  | "packaging-grid"
+  | "certification-cards"
+  | "address-cards"
+  | "quick-connect"
+  | "crm-flow";
 
 export interface PageBlock {
   id: string;
@@ -463,6 +472,127 @@ export const BLOCK_DEFAULTS: Record<
           action: "phone",
           link: "tel:+91XXXXXXXXXX",
         },
+      ],
+    },
+  },
+  "hero-split": {
+    label: "Hero Split",
+    icon: "Columns",
+    defaultData: {
+      title: "Your headline here",
+      subtitle: "Supporting text goes here",
+      description: "",
+      backgroundImage: "",
+      height: "medium",
+      alignment: "left",
+      buttons: [
+        { text: "Primary CTA", link: "/contact", variant: "primary" },
+        { text: "Secondary CTA", link: "/catalogue", variant: "outline" },
+      ],
+      badges: [],
+    },
+  },
+  timeline: {
+    label: "Timeline",
+    icon: "GitBranch",
+    defaultData: {
+      title: "Our Journey",
+      subtitle: "How we got here",
+      items: [
+        { year: "2010", title: "Founded", description: "Company established." },
+        { year: "2015", title: "Expansion", description: "New facility and production lines." },
+        { year: "Today", title: "Growing", description: "Serving brands across India.", current: true },
+      ],
+    },
+  },
+  "metrics-bar": {
+    label: "Metrics Bar",
+    icon: "BarChart3",
+    defaultData: {
+      stats: [
+        { value: "5", label: "Production lines" },
+        { value: "5,000+", label: "MT / year capacity" },
+        { value: "80+", label: "Active SKUs" },
+        { value: "15+", label: "Years experience" },
+      ],
+    },
+  },
+  "process-flow": {
+    label: "Process Flow",
+    icon: "GitMerge",
+    defaultData: {
+      title: "Our Process",
+      subtitle: "From start to finish",
+      steps: [
+        { title: "Step 1", description: "Description of step 1", icon: "ClipboardCheck" },
+        { title: "Step 2", description: "Description of step 2", icon: "Settings" },
+        { title: "Step 3", description: "Description of step 3", icon: "CheckCircle" },
+      ],
+      trustItems: ["Quality assured", "Batch tracked", "Certified process"],
+    },
+  },
+  "packaging-grid": {
+    label: "Packaging Grid",
+    icon: "Package",
+    defaultData: {
+      title: "Packaging formats",
+      subtitle: "Choose what works for your business",
+      items: [
+        { title: "Branded retail", description: "Ready-branded packs for distributors", tag: "Distributor friendly", highlight: false },
+        { title: "Private label", description: "Your brand, our manufacturing", tag: "Most requested", highlight: true },
+        { title: "Bulk / institutional", description: "5kg, 10kg, 25kg formats", tag: "Bulk format", highlight: false },
+      ],
+    },
+  },
+  "certification-cards": {
+    label: "Certification Cards",
+    icon: "Award",
+    defaultData: {
+      title: "Certified. Audited. Trusted.",
+      certs: [
+        { name: "FSSAI", description: "Food safety & standards authority" },
+        { name: "ISO", description: "Quality management systems" },
+        { name: "BIS", description: "Bureau of Indian standards" },
+      ],
+      footerText: "All certifications are current and regularly renewed.",
+    },
+  },
+  "address-cards": {
+    label: "Address Cards",
+    icon: "MapPin",
+    defaultData: {
+      title: "Our locations",
+      cards: [
+        { type: "factory", title: "Manufacturing facility", address: "[Factory address]", badge: "Primary" },
+        { type: "office", title: "Corporate office", address: "[Office address]", badge: "" },
+        { type: "visit", title: "Planning a factory visit?", description: "We welcome B2B buyers to visit our facility." },
+      ],
+    },
+  },
+  "quick-connect": {
+    label: "Quick Connect",
+    icon: "Phone",
+    defaultData: {
+      title: "Prefer a quicker channel?",
+      channels: [
+        { type: "whatsapp", title: "WhatsApp us", description: "Quick questions, product photos", value: "+91 XXXXX XXXXX" },
+        { type: "phone", title: "Call us directly", description: "For urgent requirements", value: "+91 XXXXX XXXXX" },
+        { type: "email", title: "Email us", description: "For detailed enquiries", value: "sales@purvabites.com" },
+        { type: "catalogue", title: "Download catalogue", description: "Review at your own pace", value: "PDF · 24 pages · free" },
+      ],
+    },
+  },
+  "crm-flow": {
+    label: "CRM Flow",
+    icon: "Workflow",
+    defaultData: {
+      title: "What happens after you get in touch",
+      steps: [
+        { num: 1, title: "Enquiry received", description: "Logged in CRM automatically" },
+        { num: 2, title: "Auto-acknowledgement", description: "Email confirmation within minutes" },
+        { num: 3, title: "Sales team review", description: "Routed to the right person" },
+        { num: 4, title: "First response", description: "Call or WhatsApp within 4-24 hours" },
+        { num: 5, title: "Proposal / sample", description: "Pricing or sample dispatch" },
       ],
     },
   },

@@ -27,7 +27,6 @@ export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
 
   // Customer service links that navigate to content pages
   const customerServiceLinks = [
-    { label: 'About Us', page: 'content-page', data: 'about-us' },
     { label: 'Shipping Info', page: 'content-page', data: 'shipping-info' },
     { label: 'Returns & Exchanges', page: 'content-page', data: 'returns-exchanges' },
     { label: 'Privacy Policy', page: 'content-page', data: 'privacy-policy' },
@@ -102,14 +101,16 @@ export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
             <ul className="space-y-2">
               {[
                 { label: 'Home', page: 'home' },
+                { label: 'About Us', page: 'about' },
+                { label: 'Manufacturing', page: 'manufacturing' },
+                { label: 'Products', page: 'products' },
                 { label: 'Catalogue', page: 'catalogue' },
-                { label: 'About Us', page: 'content-page', data: 'about-us' },
                 { label: 'Blog', page: 'blog' },
                 { label: 'Contact Us', page: 'contact' },
               ].map((link) => (
                 <li key={link.label}>
                   <button
-                    onClick={() => onNavigate(link.page, (link as Record<string, string>).data)}
+                    onClick={() => onNavigate(link.page)}
                     className="text-sm text-muted-foreground transition-colors hover:text-foreground hover:underline"
                   >
                     {link.label}

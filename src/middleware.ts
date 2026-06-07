@@ -18,6 +18,7 @@ const PUBLIC_GET_PREFIXES = [
   '/api/blog',
   '/api/health',
   '/api/stores',
+  '/api/settings/public',
 ];
 
 // Public POST endpoints
@@ -30,6 +31,7 @@ const PUBLIC_POST_PATHS = [
   '/api/auth/register',
   '/api/newsletter/subscribe',
   '/api/stores', // Allow store creation
+  '/api/content-pages/seed', // Allow page seeding
 ];
 
 // User-authenticated GET endpoints (require Bearer token, not admin RBAC)

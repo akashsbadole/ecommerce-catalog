@@ -11,7 +11,6 @@ import {
   Search,
   User,
   LogOut,
-  LayoutDashboard,
   Heart,
   ShoppingCart,
   Package,
@@ -44,8 +43,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getFirstImage } from '@/lib/utils';
-import { formatPrice as libFormatPrice } from '@/lib/pricing';
+import { getFirstImage } from "@/lib/utils";
+import { formatPrice as libFormatPrice } from "@/lib/pricing";
 
 interface StoreHeaderProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -67,91 +66,73 @@ interface NavItem {
   children?: NavItem[];
 }
 
-function MobileNavItem({ link, onNavigate }: { link: NavItem; onNavigate: (page: string, data?: unknown) => void }) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="flex flex-col">
-      <Button
-        variant="ghost"
-        className="justify-start text-base"
-        onClick={() => setOpen(!open)}
-      >
-        {link.label}
-        <ChevronDown className={`ml-auto h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
-      </Button>
-      {open && (
-        <div className="ml-4 flex flex-col gap-1">
-          {link.children?.map((child) => (
-            <SheetClose asChild key={child.slug}>
-              <Button
-                variant="ghost"
-                className="justify-start text-sm"
-                onClick={() => onNavigate(child.page, child.slug)}
-              >
-                {child.label}
-              </Button>
-            </SheetClose>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-const navLinksDefault = [
+const mainNavLinks: NavItem[] = [
   { label: "Home", page: "home" },
+  { label: "About Us", page: "about" },
+  { label: "Manufacturing", page: "manufacturing" },
+  // { label: "Products", page: "products" },
   { label: "Catalogue", page: "catalogue" },
+  { label: "Contact Us", page: "contact" },
 ];
 
 export function StoreHeader({ onNavigate }: StoreHeaderProps) {
   const { auth, logout, settings, cart, wishlist } = useAppStore();
-  const isEcommerce = settings?.catalog_mode !== 'catalog';
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [searchHistory, setSearchHistory] = useState<string[]>([]);
-  const [navLinks, setNavLinks] = useState<{ label: string; page: string; slug?: string; children?: NavItem[] }[]>(navLinksDefault);
+  const [searchHistory, setSearchHistory] = useState<string[]>(() => {
+    try {
+      const stored =
+        typeof window !== "undefined"
+          ? localStorage.getItem("search_history")
+          : null;
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [dynamicNavLinks, setDynamicNavLinks] = useState<NavItem[]>([]);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch dynamic navigation links from content pages
+  // Merge dynamic content pages into main nav
   useEffect(() => {
     async function fetchNavLinks() {
       try {
-        const res = await fetch('/api/content-pages');
+        const res = await fetch("/api/content-pages");
         if (res.ok) {
           const data = await res.json();
-          const pages = (data.pages || []).filter((p: any) => p.isActive && !['home', 'catalogue'].includes(p.slug));
-          const links = [
-            { label: 'Home', page: 'home' as const },
-            ...pages.map((p: any) => ({
+          const pages = (data.pages || []).filter(
+            (p: any) =>
+              p.isActive &&
+              ![
+                "home",
+                "catalogue",
+                "about-us",
+                "manufacturing",
+                "contact",
+              ].includes(p.slug),
+          );
+          if (pages.length > 0) {
+            const links: NavItem[] = pages.map((p: any) => ({
               label: p.title,
-              page: 'content-page' as const,
+              page: "content-page",
               slug: p.slug,
-            })),
-            { label: 'Catalogue', page: 'catalogue' as const },
-          ];
-          setNavLinks(links);
+            }));
+            setDynamicNavLinks(links);
+          }
         }
       } catch {
-        // fallback to default links
-        setNavLinks(navLinksDefault);
+        setDynamicNavLinks([]);
       }
     }
     fetchNavLinks();
   }, []);
 
-  // Load search history from localStorage
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('search_history');
-      if (stored) setSearchHistory(JSON.parse(stored));
-    } catch { /* ignore */ }
-  }, []);
+  const allNavLinks = [...mainNavLinks, ...dynamicNavLinks];
 
   // Cmd+K / Ctrl+K keyboard shortcut
   useEffect(() => {
@@ -212,9 +193,15 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
   const saveSearchToHistory = (query: string) => {
     if (!query.trim()) return;
     setSearchHistory((prev) => {
-      const filtered = prev.filter((q) => q.toLowerCase() !== query.toLowerCase());
+      const filtered = prev.filter(
+        (q) => q.toLowerCase() !== query.toLowerCase(),
+      );
       const next = [query, ...filtered].slice(0, 10);
-      try { localStorage.setItem('search_history', JSON.stringify(next)); } catch { /* ignore */ }
+      try {
+        localStorage.setItem("search_history", JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
       return next;
     });
   };
@@ -222,14 +209,22 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
   const removeSearchFromHistory = (query: string) => {
     setSearchHistory((prev) => {
       const next = prev.filter((q) => q !== query);
-      try { localStorage.setItem('search_history', JSON.stringify(next)); } catch { /* ignore */ }
+      try {
+        localStorage.setItem("search_history", JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
       return next;
     });
   };
 
   const clearSearchHistory = () => {
     setSearchHistory([]);
-    try { localStorage.removeItem('search_history'); } catch { /* ignore */ }
+    try {
+      localStorage.removeItem("search_history");
+    } catch {
+      /* ignore */
+    }
   };
 
   const handleSearchChange = (value: string) => {
@@ -247,341 +242,314 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
   };
 
   const formatPrice = (price: number) => {
-    return libFormatPrice(price, settings?.currency || 'USD');
+    return libFormatPrice(price, settings?.currency || "USD");
   };
 
   return (
     <>
+      {/* === TOP BAR === */}
+      <div className="bg-muted/50 border-b text-xs">
+        <div className="container mx-auto flex h-9 items-center justify-between px-4">
+          {/* Left: contact info or welcome */}
+          <div className="hidden md:flex items-center gap-4 text-muted-foreground">
+            {auth.user ? (
+              <span>
+                Welcome,{" "}
+                <span className="font-medium text-foreground">
+                  {auth.user.name || auth.user.email}
+                </span>
+              </span>
+            ) : (
+              <span>Welcome to {settings?.site_name || "Our Store"}</span>
+            )}
+          </div>
+          {/* Right: utility links */}
+          <div className="flex items-center gap-1 ml-auto">
+            {auth.user ? (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs gap-1.5"
+                  onClick={() => onNavigate("account")}
+                >
+                  <User className="h-3 w-3" />
+                  <span className="hidden sm:inline">My Account</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs gap-1.5"
+                  onClick={() => onNavigate("orders")}
+                >
+                  <Package className="h-3 w-3" />
+                  <span className="hidden sm:inline">Orders</span>
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs gap-1.5"
+                onClick={() => router.push("/admin")}
+              >
+                <User className="h-3 w-3" />
+                <span className="hidden sm:inline">Login</span>
+              </Button>
+            )}
+            <Separator orientation="vertical" className="mx-0.5 h-4" />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative h-7 w-7"
+              onClick={() => onNavigate("wishlist")}
+              aria-label="Wishlist"
+            >
+              <Heart className="h-3.5 w-3.5" />
+              {wishlist.itemCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 h-3.5 min-w-[14px] rounded-full bg-rose-500 text-[9px] font-bold text-white flex items-center justify-center px-0.5">
+                  {wishlist.itemCount > 99 ? "99+" : wishlist.itemCount}
+                </span>
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative h-7 w-7"
+              onClick={() => onNavigate("cart")}
+              aria-label="Shopping cart"
+            >
+              <ShoppingCart className="h-3.5 w-3.5" />
+              {cart.itemCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 h-3.5 min-w-[14px] rounded-full bg-primary text-[9px] font-bold text-white flex items-center justify-center px-0.5">
+                  {cart.itemCount > 99 ? "99+" : cart.itemCount}
+                </span>
+              )}
+            </Button>
+            <Separator orientation="vertical" className="mx-0.5 h-4" />
+            <ThemeToggle />
+          </div>
+        </div>
+      </div>
+
+      {/* === MAIN NAVIGATION BAR === */}
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        <div className="container mx-auto flex h-14 items-center justify-between px-4">
           {/* Logo */}
           <button
             onClick={() => onNavigate("home")}
-            className="flex items-center gap-2 transition-opacity hover:opacity-80"
+            className="flex items-center gap-2 transition-opacity hover:opacity-80 shrink-0"
           >
             {settings?.site_logo ? (
               <img
                 src={settings.site_logo}
-                alt={settings.site_name || 'Logo'}
+                alt={settings.site_name || "Logo"}
                 className="h-8 w-auto object-contain"
               />
             ) : (
               <ShoppingBag className="h-6 w-6 text-primary" />
             )}
-            <span className="text-xl font-bold tracking-tight">
-              {settings?.site_name || 'My Store'}
+            <span className="text-lg font-bold tracking-tight hidden sm:inline">
+              {settings?.site_name || "My Store"}
             </span>
           </button>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation - Center */}
           <nav
-            className="hidden md:flex items-center gap-1"
+            className="hidden lg:flex items-center gap-0.5"
             role="navigation"
             aria-label="Main navigation"
           >
-            {navLinks.map((link) =>
-              link.children ? (
-                <DropdownMenu key={link.slug || link.page}>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="text-sm font-medium">
-                      {link.label}
-                      <ChevronDown className="ml-1 h-3.5 w-3.5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    {link.children.map((child) => (
-                      <DropdownMenuItem
-                        key={child.slug}
-                        onClick={() => onNavigate(child.page, child.slug)}
-                        className="cursor-pointer"
-                      >
-                        {child.label}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <Button
-                  key={link.slug || link.page}
-                  variant="ghost"
-                  className="text-sm font-medium"
-                  onClick={() => onNavigate(link.page, link.slug)}
-                >
-                  {link.label}
-                </Button>
-              ),
-            )}
-            <Separator orientation="vertical" className="mx-2 h-6" />
-            {/* Search Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-sm text-muted-foreground"
-              onClick={() => setSearchOpen(true)}
-            >
-              <Search className="mr-1.5 h-3.5 w-3.5" />
-              Search
-              <kbd className="pointer-events-none ml-2 hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
-                <span className="text-xs">⌘</span>K
-              </kbd>
-            </Button>
-            {/* Wishlist Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative"
-              onClick={() => onNavigate("wishlist")}
-              aria-label="Wishlist"
-            >
-              <Heart className="h-5 w-5" />
-              {wishlist.itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] font-bold text-white flex items-center justify-center">
-                  {wishlist.itemCount > 99 ? "99+" : wishlist.itemCount}
-                </span>
-              )}
-            </Button>
-            {/* Cart Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative"
-              onClick={() => onNavigate("cart")}
-              aria-label="Shopping cart"
-            >
-              <ShoppingCart className="h-5 w-5" />
-              {cart.itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] font-bold text-white flex items-center justify-center">
-                  {cart.itemCount > 99 ? "99+" : cart.itemCount}
-                </span>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-sm border-primary/20 text-primary/80 hover:bg-primary/5 hover:text-primary-dark dark:border-primary-dark dark:text-primary/40 dark:hover:bg-primary-dark dark:hover:text-primary/30"
-              onClick={() => onNavigate("catalogue")}
-            >
-              <FileText className="mr-1.5 h-4 w-4" />
-              Request Quote
-            </Button>
-            {isEcommerce && (
+            {allNavLinks.map((link) => (
               <Button
+                key={link.slug || link.page}
                 variant="ghost"
-                size="sm"
-                className="text-sm"
-                onClick={() => onNavigate("quick-order")}
+                className="text-sm font-medium px-3"
+                onClick={() => onNavigate(link.page, link.slug)}
               >
-                <ShoppingCart className="mr-1.5 h-3.5 w-3.5" />
-                Quick Order
+                {link.label}
               </Button>
-            )}
-            {auth.user ? (
-              <div className="flex items-center gap-2">
-                {settings?.b2b_enable_buyer_portal === "true" && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-sm flex items-center gap-1.5"
-                      >
-                        <LayoutDashboard className="h-4 w-4" />
-                        Portal
-                        <ChevronDown className="h-3.5 w-3.5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => onNavigate("account")}
-                        className="cursor-pointer"
-                      >
-                        <User className="mr-2 h-4 w-4" />
-                        My Account
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => onNavigate("orders")}
-                        className="cursor-pointer"
-                      >
-                        <Package className="mr-2 h-4 w-4" />
-                        Orders
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-sm text-rose-500 hover:text-rose-600 hover:bg-rose-50"
-                  onClick={() => logout()}
-                >
-                  <LogOut className="h-4 w-4" />
-                </Button>
-              </div>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-sm"
-                onClick={() => router.push("/admin")}
-              >
-                Login
-              </Button>
-            )}
-            <ThemeToggle />
+            ))}
           </nav>
 
-          {/* Mobile Menu */}
-          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon" aria-label="Open menu">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-72">
-              <SheetHeader>
-                <SheetTitle className="flex items-center gap-2">
-                  {settings?.site_logo ? (
-                    <img
-                      src={settings.site_logo}
-                      alt={settings.site_name || 'Logo'}
-                      className="h-6 w-auto object-contain"
-                    />
-                  ) : (
-                    <ShoppingBag className="h-5 w-5 text-primary" />
-                  )}
-                  {settings?.site_name || 'My Store'}
-                </SheetTitle>
-              </SheetHeader>
-              <nav
-                className="flex flex-col gap-2 px-4 pt-4"
-                role="navigation"
-                aria-label="Mobile navigation"
-              >
-                {navLinks.map((link) =>
-                  link.children ? (
-                    <MobileNavItem
-                      key={link.slug || link.page}
-                      link={link}
-                      onNavigate={onNavigate}
-                    />
-                  ) : (
+          {/* Right: Search + CTA */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Search Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => setSearchOpen(true)}
+              aria-label="Search products"
+            >
+              <Search className="h-4.5 w-4.5" />
+            </Button>
+            {/* Get Bulk Quote CTA */}
+            <Button
+              size="sm"
+              className="hidden md:flex text-sm bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 px-4"
+              onClick={() => onNavigate("catalogue")}
+            >
+              <FileText className="h-4 w-4" />
+              Get Bulk Quote
+            </Button>
+            {/* Mobile Menu Trigger */}
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+              <SheetTrigger asChild className="lg:hidden">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9"
+                  aria-label="Open menu"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-72 p-0">
+                <SheetHeader className="border-b px-4 py-3">
+                  <SheetTitle className="flex items-center gap-2 text-base">
+                    {settings?.site_logo ? (
+                      <img
+                        src={settings.site_logo}
+                        alt={settings.site_name || "Logo"}
+                        className="h-6 w-auto object-contain"
+                      />
+                    ) : (
+                      <ShoppingBag className="h-5 w-5 text-primary" />
+                    )}
+                    {settings?.site_name || "My Store"}
+                  </SheetTitle>
+                </SheetHeader>
+                <nav
+                  className="flex flex-col gap-1 px-3 pt-3"
+                  role="navigation"
+                  aria-label="Mobile navigation"
+                >
+                  {/* Main Nav Links */}
+                  {allNavLinks.map((link) => (
                     <SheetClose asChild key={link.slug || link.page}>
                       <Button
                         variant="ghost"
-                        className="justify-start text-base"
+                        className="justify-start text-sm h-9"
                         onClick={() => onNavigate(link.page, link.slug)}
                       >
                         {link.label}
                       </Button>
                     </SheetClose>
-                  ),
-                )}
-                <Separator className="my-2" />
-                {/* Mobile Cart & Wishlist */}
-                <SheetClose asChild>
-                  <Button
-                    variant="ghost"
-                    className="justify-start text-base"
-                    onClick={() => onNavigate("cart")}
-                  >
-                    <ShoppingCart className="mr-2 h-4 w-4" />
-                    Cart {cart.itemCount > 0 && `(${cart.itemCount})`}
-                  </Button>
-                </SheetClose>
-                <SheetClose asChild>
-                  <Button
-                    variant="ghost"
-                    className="justify-start text-base"
-                    onClick={() => onNavigate("wishlist")}
-                  >
-                    <Heart className="mr-2 h-4 w-4" />
-                    Wishlist{" "}
-                    {wishlist.itemCount > 0 && `(${wishlist.itemCount})`}
-                  </Button>
-                </SheetClose>
-                <SheetClose asChild>
-                  <Button
-                    variant="outline"
-                    className="justify-start text-base"
-                    onClick={() => setSearchOpen(true)}
-                  >
-                    <Search className="mr-2 h-4 w-4" />
-                    Search Products
-                  </Button>
-                </SheetClose>
-                <SheetClose asChild>
-                  <Button
-                    variant="outline"
-                    className="justify-start text-base border-primary/20 text-primary/80 hover:bg-primary/5 hover:text-primary-dark dark:border-primary-dark dark:text-primary/40 dark:hover:bg-primary-dark dark:hover:text-primary/30"
-                    onClick={() => onNavigate("catalogue")}
-                  >
-                    <FileText className="mr-2 h-4 w-4" />
-                    Request Quote
-                  </Button>
-                </SheetClose>
-                {isEcommerce && (
+                  ))}
+
+                  <Separator className="my-2" />
+
+                  {/* Account Links */}
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-1">
+                    Account
+                  </p>
+                  {auth.user ? (
+                    <>
+                      <SheetClose asChild>
+                        <Button
+                          variant="ghost"
+                          className="justify-start text-sm h-9"
+                          onClick={() => onNavigate("account")}
+                        >
+                          <User className="mr-2 h-4 w-4" />
+                          My Account
+                        </Button>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <Button
+                          variant="ghost"
+                          className="justify-start text-sm h-9"
+                          onClick={() => onNavigate("orders")}
+                        >
+                          <Package className="mr-2 h-4 w-4" />
+                          Orders
+                        </Button>
+                      </SheetClose>
+                    </>
+                  ) : (
+                    <SheetClose asChild>
+                      <Button
+                        variant="outline"
+                        className="justify-start text-sm h-9"
+                        onClick={() => router.push("/admin")}
+                      >
+                        <User className="mr-2 h-4 w-4" />
+                        Login / Partner Access
+                      </Button>
+                    </SheetClose>
+                  )}
+
+                  <Separator className="my-2" />
+
+                  {/* Cart & Wishlist */}
                   <SheetClose asChild>
                     <Button
                       variant="ghost"
-                      className="justify-start text-base"
-                      onClick={() => onNavigate("quick-order")}
+                      className="justify-start text-sm h-9"
+                      onClick={() => onNavigate("wishlist")}
                     >
-                      <ShoppingCart className="mr-2 h-4 w-4" />
-                      Quick Order
+                      <Heart className="mr-2 h-4 w-4" />
+                      Wishlist{" "}
+                      {wishlist.itemCount > 0 && `(${wishlist.itemCount})`}
                     </Button>
                   </SheetClose>
-                )}
-                {auth.user ? (
-                  <>
-                    {settings?.b2b_enable_buyer_portal === "true" && (
-                      <>
-                        <SheetClose asChild>
-                          <Button
-                            variant="ghost"
-                            className="justify-start text-base"
-                            onClick={() => onNavigate("account")}
-                          >
-                            <User className="mr-2 h-4 w-4" />
-                            My Account
-                          </Button>
-                        </SheetClose>
-                        <SheetClose asChild>
-                          <Button
-                            variant="ghost"
-                            className="justify-start text-base"
-                            onClick={() => onNavigate("orders")}
-                          >
-                            <Package className="mr-2 h-4 w-4" />
-                            Orders
-                          </Button>
-                        </SheetClose>
-                      </>
-                    )}
-                    <SheetClose asChild>
-                      <Button
-                        variant="ghost"
-                        className="justify-start text-base text-rose-500"
-                        onClick={() => logout()}
-                      >
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Logout
-                      </Button>
-                    </SheetClose>
-                  </>
-                ) : (
+                  <SheetClose asChild>
+                    <Button
+                      variant="ghost"
+                      className="justify-start text-sm h-9"
+                      onClick={() => onNavigate("cart")}
+                    >
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      Cart {cart.itemCount > 0 && `(${cart.itemCount})`}
+                    </Button>
+                  </SheetClose>
+
+                  <Separator className="my-2" />
+
+                  {/* Bulk Quote CTA */}
+                  <SheetClose asChild>
+                    <Button
+                      className="justify-start text-sm h-9 bg-primary text-primary-foreground"
+                      onClick={() => onNavigate("catalogue")}
+                    >
+                      <FileText className="mr-2 h-4 w-4" />
+                      Get Bulk Quote
+                    </Button>
+                  </SheetClose>
+
+                  {/* Search */}
                   <SheetClose asChild>
                     <Button
                       variant="outline"
-                      className="justify-start text-base"
-                      onClick={() => router.push("/admin")}
+                      className="justify-start text-sm h-9"
+                      onClick={() => setSearchOpen(true)}
                     >
-                      Login / Partner Access
+                      <Search className="mr-2 h-4 w-4" />
+                      Search Products
                     </Button>
                   </SheetClose>
-                )}
-              </nav>
-            </SheetContent>
-          </Sheet>
+
+                  {/* Logout */}
+                  {auth.user && (
+                    <>
+                      <Separator className="my-2" />
+                      <SheetClose asChild>
+                        <Button
+                          variant="ghost"
+                          className="justify-start text-sm h-9 text-rose-500"
+                          onClick={() => logout()}
+                        >
+                          <LogOut className="mr-2 h-4 w-4" />
+                          Logout
+                        </Button>
+                      </SheetClose>
+                    </>
+                  )}
+                </nav>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </header>
 
@@ -600,7 +568,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && searchQuery.trim()) {
+                if (e.key === "Enter" && searchQuery.trim()) {
                   saveSearchToHistory(searchQuery);
                   doSearch(searchQuery);
                 }
@@ -660,7 +628,6 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                             alt={product.name}
                             fill
                             className="object-cover"
-
                           />
                         </div>
                       ) : (
@@ -687,7 +654,9 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
               <div className="flex flex-col py-2">
                 {searchHistory.length > 0 && (
                   <div className="px-3 py-2 flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Recent Searches</span>
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Recent Searches
+                    </span>
                     <button
                       onClick={clearSearchHistory}
                       className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
