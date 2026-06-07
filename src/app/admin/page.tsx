@@ -18,28 +18,25 @@ async function getServerAuth() {
 
   if (!token) return { user: null, token: null };
 
-  try {
-    const payload = await verifyToken(token);
-    if (!payload) return { user: null, token: null };
+  const payload = await verifyToken(token);
+  if (!payload) return { user: null, token: null };
 
-    const dbUser = await db.user.findUnique({
-      where: { id: payload.userId },
-      select: { id: true, email: true, name: true, role: true },
-    });
+  const dbUser = await db.user.findUnique({
+    where: { id: payload.userId },
+    select: { id: true, email: true, name: true, role: true },
+  });
 
-    if (!dbUser) return { user: null, token: null };
+  if (!dbUser) return { user: null, token: null };
 
-    const user: AdminUser = {
+  return {
+    user: {
       id: dbUser.id,
       email: dbUser.email,
       name: dbUser.name,
       role: dbUser.role || payload.role,
-    };
-
-    return { user, token };
-  } catch {
-    return { user: null, token: null };
-  }
+    },
+    token,
+  };
 }
 
 export default async function AdminPage() {

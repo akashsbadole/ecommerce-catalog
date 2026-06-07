@@ -25,22 +25,37 @@ export interface JWTPayload {
   exp?: number;
 }
 
-if (!process.env.JWT_SECRET) {
-  throw new Error('JWT_SECRET environment variable is not set. Generate one with: openssl rand -hex 32');
+let _jwtSecret: Uint8Array | null = null;
+let _lastEnvValue: string | undefined;
+
+function getJwtSecret(): Uint8Array {
+  const currentEnv = process.env.JWT_SECRET;
+  if (_jwtSecret && _lastEnvValue !== currentEnv) {
+    _jwtSecret = null;
+  }
+  _lastEnvValue = currentEnv;
+
+  if (!_jwtSecret) {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error('JWT_SECRET environment variable is not set. Generate one with: openssl rand -hex 32');
+    }
+    _jwtSecret = new TextEncoder().encode(secret);
+  }
+  return _jwtSecret;
 }
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 
 export async function generateToken(user: { id: string; email: string; role: string }): Promise<string> {
   return new SignJWT({ userId: user.id, email: user.email, role: user.role })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(process.env.JWT_EXPIRES_IN || '7d')
-    .sign(JWT_SECRET);
+    .sign(getJwtSecret());
 }
 
 export async function verifyToken(token: string): Promise<JWTPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const { payload } = await jwtVerify(token, getJwtSecret());
     return payload as unknown as JWTPayload;
   } catch {
     return null;

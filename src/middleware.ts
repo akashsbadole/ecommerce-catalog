@@ -321,7 +321,7 @@ export async function middleware(request: NextRequest) {
   const token = authHeader.split(' ')[1];
   const payload = await verifyToken(token);
   if (!payload) {
-    console.log('Middleware: Invalid token');
+    console.log('Middleware: Invalid token, token length:', token?.length, 'starts with:', token?.substring(0, 20));
     return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
   }
 

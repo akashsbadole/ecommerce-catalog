@@ -45,10 +45,10 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
       if (res.ok) {
         const data = await res.json();
         const user = {
-          id: data.User?.id || data.id,
-          email: data.User?.email || data.email,
-          name: data.User?.name || data.name,
-          role: data.User?.role || data.role || 'viewer',
+          id: data.user?.id || data.User?.id || data.id,
+          email: data.user?.email || data.User?.email || data.email,
+          name: data.user?.name || data.User?.name || data.name,
+          role: data.user?.role || data.User?.role || data.role || 'viewer',
         };
         const token = data.token || null;
         onLogin(user, token || undefined);
@@ -175,8 +175,6 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
                   )}
                 </Button>
               </form>
-
-              {/* Demo credentials removed for security */}
 
               {/* B2B Registration Link */}
               <div className="mt-6 flex flex-col gap-2 text-center">
