@@ -7,6 +7,7 @@ import { StoreFooter } from './StoreFooter';
 import { BackToTop } from './BackToTop';
 import { CookieConsent } from './CookieConsent';
 import { CompareBar } from './CompareBar';
+import { MobileBottomNav } from './MobileBottomNav';
 
 interface StoreLayoutProps {
   currentPage: string;
@@ -82,7 +83,7 @@ export function StoreLayout({ currentPage, onNavigate, children }: StoreLayoutPr
     <div className="flex min-h-screen flex-col">
       <StoreHeader onNavigate={onNavigate} />
 
-      <main className="flex-1">
+      <main className="flex-1 pb-16 lg:pb-0">
         <div className="container mx-auto px-4 py-8">
           {settings
             ? isValidElement(children)
@@ -94,9 +95,15 @@ export function StoreLayout({ currentPage, onNavigate, children }: StoreLayoutPr
 
       <StoreFooter onNavigate={onNavigate} settings={settings} />
 
-      <BackToTop />
+      <MobileBottomNav onNavigate={onNavigate} />
 
-      <CompareBar />
+      <div className="md:mb-16 lg:mb-0">
+        <BackToTop />
+      </div>
+
+      <div className="md:mb-16 lg:mb-0">
+        <CompareBar />
+      </div>
 
       <CookieConsent />
     </div>

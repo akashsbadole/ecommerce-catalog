@@ -24,7 +24,7 @@ export function BackToTop() {
     <Button
       onClick={scrollToTop}
       size="icon"
-      className={`fixed bottom-6 right-6 z-50 h-11 w-11 rounded-full shadow-lg transition-all duration-300 bg-primary hover:bg-primary/80 text-white ${
+      className={`fixed bottom-20 lg:bottom-6 right-6 z-50 h-11 w-11 rounded-full shadow-lg transition-all duration-300 bg-primary hover:bg-primary/80 text-white ${
         visible
           ? 'translate-y-0 opacity-100 pointer-events-auto'
           : 'translate-y-4 opacity-0 pointer-events-none'

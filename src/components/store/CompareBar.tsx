@@ -13,7 +13,7 @@ export function CompareBar() {
   if (products.length === 0) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-[0_-2px_10px_rgba(0,0,0,0.1)]">
+    <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-[0_-2px_10px_rgba(0,0,0,0.1)]">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground shrink-0">

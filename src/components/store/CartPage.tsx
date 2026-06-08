@@ -238,7 +238,7 @@ export function CartPage({ onNavigate }: CartPageProps) {
         </div>
 
         {/* Order Summary */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 pb-20 lg:pb-0">
           <Card className="sticky top-24">
             <CardContent className="p-6">
               <h2 className="text-lg font-bold mb-4">Order Summary</h2>
@@ -276,6 +276,23 @@ export function CartPage({ onNavigate }: CartPageProps) {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* Sticky Mobile Checkout CTA */}
+      <div className="lg:hidden fixed bottom-16 left-0 right-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t p-4 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] animate-in slide-in-from-bottom duration-300">
+        <div className="flex items-center justify-between mb-3 px-1">
+          <span className="font-medium text-muted-foreground">Total Amount</span>
+          <span className="text-xl font-bold text-primary">
+            {formatPrice(cart.total)}
+          </span>
+        </div>
+        <Button
+          className="w-full h-12 text-base font-bold shadow-sm"
+          size="lg"
+          onClick={() => onNavigate("checkout")}
+        >
+          Proceed to Checkout
+        </Button>
       </div>
     </div>
   );
