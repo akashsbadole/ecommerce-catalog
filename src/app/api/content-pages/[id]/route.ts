@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
+export const dynamic = 'force-dynamic';
 import { db } from '@/lib/db';
 import { requireAdminAuth } from '@/lib/admin-auth';
 
@@ -85,6 +87,7 @@ export async function PUT(
       },
     });
 
+    revalidatePath('/', 'layout');
     return NextResponse.json({ contentPage });
   } catch (error) {
     console.error('Update content page error:', error);
@@ -115,6 +118,7 @@ export async function DELETE(
 
     await db.contentPage.delete({ where: { id } });
 
+    revalidatePath('/', 'layout');
     return NextResponse.json({
       message: 'Content page deleted successfully',
     });

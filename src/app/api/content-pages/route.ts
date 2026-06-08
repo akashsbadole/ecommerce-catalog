@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
+export const dynamic = 'force-dynamic';
 import { db } from '@/lib/db';
 import { contentPageSchema } from '@/lib/validations';
 import { getStoreId } from '@/lib/store-db';
@@ -80,6 +82,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    revalidatePath('/', 'layout');
     return NextResponse.json({ contentPage }, { status: 201 });
   } catch (error) {
     console.error('Create content page error:', error);

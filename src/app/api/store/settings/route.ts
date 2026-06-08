@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
+export const dynamic = 'force-dynamic';
 import { db } from '@/lib/db';
 import { getStoreId } from '@/lib/store-db';
 import { requireAdminAuth } from '@/lib/admin-auth';
@@ -50,10 +52,6 @@ export async function PUT(request: NextRequest) {
     if (!auth.success) return auth.response;
 
     const storeId = getStoreId(request);
-    if (!storeId) {
-      return NextResponse.json({ error: 'Store context required' }, { status: 400 });
-    }
-
     const body = await request.json();
     const { settings } = body;
 
@@ -61,16 +59,36 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Settings object required' }, { status: 400 });
     }
 
-    // Upsert each setting for this store
+    // Upsert each setting
     for (const [key, value] of Object.entries(settings)) {
       if (typeof value !== 'string') continue;
-      await db.siteSetting.upsert({
-        where: { storeId_key: { storeId, key } },
-        update: { value },
-        create: { storeId, key, value },
-      });
+
+      if (storeId) {
+        await db.siteSetting.upsert({
+          where: { storeId_key: { storeId, key } },
+          update: { value },
+          create: { storeId, key, value },
+        });
+      } else {
+        // Global setting update (admin only)
+        const existing = await db.siteSetting.findFirst({
+          where: { storeId: null, key },
+        });
+
+        if (existing) {
+          await db.siteSetting.update({
+            where: { id: existing.id },
+            data: { value },
+          });
+        } else {
+          await db.siteSetting.create({
+            data: { storeId: null, key, value },
+          });
+        }
+      }
     }
 
+    revalidatePath('/', 'layout');
     return NextResponse.json({ message: 'Settings updated successfully' });
   } catch (error) {
     console.error('Store settings PUT error:', error);
