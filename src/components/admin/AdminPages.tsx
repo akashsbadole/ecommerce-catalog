@@ -173,8 +173,13 @@ export function AdminPages() {
     setEditingPage(page);
     let parsedBlocks: PageBlock[] = [];
     try {
-      const raw = page.blocks || '[]';
-      parsedBlocks = JSON.parse(raw);
+      let raw = page.blocks || '[]';
+      if (typeof raw === 'string' && raw.startsWith('"') && raw.endsWith('"')) {
+        try {
+          raw = JSON.parse(raw);
+        } catch { /* ignore */ }
+      }
+      parsedBlocks = typeof raw === 'string' ? JSON.parse(raw) : raw;
       if (!Array.isArray(parsedBlocks)) parsedBlocks = [];
     } catch {
       parsedBlocks = [];
@@ -199,8 +204,14 @@ export function AdminPages() {
     setBuilderPageId(page.id);
     setBuilderPageTitle(page.title);
     try {
-      const raw = page.blocks || '[]';
-      const parsed = JSON.parse(raw);
+      let raw = page.blocks || '[]';
+      // Handle double-stringified JSON or weird escaping
+      if (typeof raw === 'string' && raw.startsWith('"') && raw.endsWith('"')) {
+        try {
+          raw = JSON.parse(raw);
+        } catch { /* ignore */ }
+      }
+      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
       setBuilderBlocks(Array.isArray(parsed) ? parsed : []);
   } catch (err) {
     console.error('Error parsing blocks in builder:', err);
@@ -222,7 +233,7 @@ export function AdminPages() {
       const res = await adminFetch(`/api/content-pages/${builderPageId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ blocks: JSON.stringify(builderBlocks) }),
+        body: JSON.stringify({ blocks: builderBlocks }),
       });
       if (res.ok) {
         toast.success('Page blocks saved');
@@ -258,7 +269,7 @@ export function AdminPages() {
         title: form.title.trim(),
         slug: form.slug.trim() || generateSlug(form.title),
         content: form.content.trim() || '',
-        blocks: JSON.stringify(form.blocks),
+        blocks: form.blocks,
         heroImage: form.heroImage.trim() || null,
         metaTitle: form.metaTitle.trim() || null,
         metaDescription: form.metaDescription.trim() || null,

@@ -25,9 +25,14 @@ export function HomePage({ onNavigate, settings }: HomePageProps) {
           const data = await res.json();
           const pages = data.contentPages || [];
           if (pages.length > 0) {
+            const page = pages[0];
             // Homepage exists in DB — use its blocks (even if empty)
-            if (pages[0].blocks) {
-              const parsed = JSON.parse(pages[0].blocks);
+            if (page.blocks) {
+              let raw = page.blocks;
+              if (typeof raw === 'string' && raw.startsWith('"') && raw.endsWith('"')) {
+                raw = JSON.parse(raw);
+              }
+              const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
               if (Array.isArray(parsed) && parsed.length > 0) {
                 setBlocks(parsed);
                 return;

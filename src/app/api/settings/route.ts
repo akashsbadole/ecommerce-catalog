@@ -17,10 +17,6 @@ export async function GET(request: NextRequest) {
     const settings = await db.siteSetting.findMany();
     const settingsMap: Record<string, string> = {};
     for (const s of settings) {
-      // Skip sensitive keys in public response
-      if (SENSITIVE_KEYS.some(sk => s.key.toLowerCase().includes(sk))) {
-        continue;
-      }
       settingsMap[s.key] = s.value;
     }
     return NextResponse.json({ settings: settingsMap });

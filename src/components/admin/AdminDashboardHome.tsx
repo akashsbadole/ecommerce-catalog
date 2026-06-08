@@ -88,7 +88,7 @@ export function AdminDashboardHome({ onNavigate }: { onNavigate?: (tab: string) 
   useEffect(() => {
     async function checkSmtp() {
       try {
-        const res = await adminFetch('/api/settings');
+        const res = await adminFetch('/api/store/settings');
         if (res.ok) {
           const data = await res.json();
           const hasSmtp = data.settings?.smtp_host && data.settings?.smtp_user;

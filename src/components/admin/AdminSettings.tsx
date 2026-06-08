@@ -101,7 +101,7 @@ export function AdminSettings() {
   useEffect(() => {
     async function fetchSettings() {
       try {
-        const res = await adminFetch('/api/settings');
+        const res = await adminFetch('/api/store/settings');
         if (res.ok) {
           const data = await res.json();
           setSettings({ ...defaultSettings, ...data.settings });
@@ -122,7 +122,7 @@ export function AdminSettings() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await adminFetch('/api/settings', {
+      const res = await adminFetch('/api/store/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ settings }),
