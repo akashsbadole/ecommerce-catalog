@@ -17,10 +17,6 @@ export async function GET(request: NextRequest) {
     const settings = await db.siteSetting.findMany();
     const settingsMap: Record<string, string> = {};
     for (const s of settings) {
-      // Skip sensitive keys in public response
-      if (SENSITIVE_KEYS.some(sk => s.key.toLowerCase().includes(sk))) {
-        continue;
-      }
       settingsMap[s.key] = s.value;
     }
     return NextResponse.json({ settings: settingsMap });
@@ -35,6 +31,9 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
+
     const body = await request.json();
     const { settings } = body as { settings: Record<string, string> };
 
@@ -67,6 +66,9 @@ export async function PUT(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
+
     const settings = await db.siteSetting.findMany();
     const getSetting = (key: string) =>
       settings.find((s) => s.key === key)?.value || '';

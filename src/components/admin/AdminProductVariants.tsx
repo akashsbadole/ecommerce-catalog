@@ -151,7 +151,7 @@ export function AdminProductVariants({ productId, lowStockThreshold = 10, onVari
   useEffect(() => {
     async function fetchCurrency() {
       try {
-        const res = await adminFetch('/api/settings');
+        const res = await adminFetch('/api/store/settings');
         if (res.ok) {
           const data = await res.json();
           const settings = data.settings || [];

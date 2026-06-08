@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getStoreId } from '@/lib/store-db';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
 // GET /api/store/settings - Get store-specific settings
 export async function GET(request: NextRequest) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
+
     const storeId = getStoreId(request);
 
     if (!storeId) {
@@ -42,6 +46,9 @@ export async function GET(request: NextRequest) {
 // PUT /api/store/settings - Update store settings
 export async function PUT(request: NextRequest) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
+
     const storeId = getStoreId(request);
     if (!storeId) {
       return NextResponse.json({ error: 'Store context required' }, { status: 400 });

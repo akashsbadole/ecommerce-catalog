@@ -22,13 +22,33 @@ export function CmsPage({ slug, onNavigate, fallbackBlocks }: CmsPageProps) {
         if (res.ok) {
           const data = await res.json();
           const pages = data.contentPages || [];
-          if (pages.length > 0 && pages[0].blocks) {
-            const parsed = JSON.parse(pages[0].blocks);
+          if (pages.length > 0) {
+            const page = pages[0];
+            let parsed: PageBlock[] = [];
+            try {
+              if (page.blocks) {
+                let raw = page.blocks;
+                if (typeof raw === 'string' && raw.startsWith('"') && raw.endsWith('"')) {
+                  raw = JSON.parse(raw);
+                }
+                parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+              }
+            } catch (e) {
+              console.error('Error parsing blocks:', e);
+            }
+
             if (Array.isArray(parsed) && parsed.length > 0) {
               setBlocks(parsed);
               setLoading(false);
               return;
+            } else if (page.content) {
+              // Handle legacy content-only pages
+              setBlocks([{ id: 'legacy-content', type: 'text', data: { content: page.content } }]);
+              setLoading(false);
+              return;
             }
+            // If page exists but has no blocks/content, we still want to stop loading
+            // unless we really want to seed it.
           }
         }
         // Page not found — try to seed it

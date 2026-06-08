@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SimpleThemeToggle } from "@/components/SimpleThemeToggle";
 import { useAppStore } from "@/lib/store";
 import {
   Sheet,
@@ -326,8 +327,6 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                 </span>
               )}
             </Button>
-            <Separator orientation="vertical" className="mx-0.5 h-4" />
-            <ThemeToggle />
           </div>
         </div>
       </div>
@@ -374,6 +373,9 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
 
           {/* Right: Search + CTA */}
           <div className="flex items-center gap-2 shrink-0">
+            {/* Theme Toggle */}
+            <SimpleThemeToggle className="h-9 w-9" />
+
             {/* Search Button */}
             <Button
               variant="ghost"
@@ -546,6 +548,13 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                       </SheetClose>
                     </>
                   )}
+
+                  <Separator className="my-2" />
+
+                  <div className="px-2 py-2 flex items-center justify-between">
+                    <span className="text-sm font-medium">Appearance</span>
+                    <SimpleThemeToggle className="h-9 w-9" />
+                  </div>
                 </nav>
               </SheetContent>
             </Sheet>

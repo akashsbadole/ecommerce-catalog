@@ -173,8 +173,13 @@ export function AdminPages() {
     setEditingPage(page);
     let parsedBlocks: PageBlock[] = [];
     try {
-      const raw = page.blocks || '[]';
-      parsedBlocks = JSON.parse(raw);
+      let raw = page.blocks || '[]';
+      if (typeof raw === 'string' && raw.startsWith('"') && raw.endsWith('"')) {
+        try {
+          raw = JSON.parse(raw);
+        } catch { /* ignore */ }
+      }
+      parsedBlocks = typeof raw === 'string' ? JSON.parse(raw) : raw;
       if (!Array.isArray(parsedBlocks)) parsedBlocks = [];
     } catch {
       parsedBlocks = [];
@@ -199,10 +204,17 @@ export function AdminPages() {
     setBuilderPageId(page.id);
     setBuilderPageTitle(page.title);
     try {
-      const raw = page.blocks || '[]';
-      const parsed = JSON.parse(raw);
+      let raw = page.blocks || '[]';
+      // Handle double-stringified JSON or weird escaping
+      if (typeof raw === 'string' && raw.startsWith('"') && raw.endsWith('"')) {
+        try {
+          raw = JSON.parse(raw);
+        } catch { /* ignore */ }
+      }
+      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
       setBuilderBlocks(Array.isArray(parsed) ? parsed : []);
-    } catch {
+  } catch (err) {
+    console.error('Error parsing blocks in builder:', err);
       setBuilderBlocks([]);
     }
     setBuilderMode(true);

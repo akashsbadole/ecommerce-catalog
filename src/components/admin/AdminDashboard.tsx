@@ -66,6 +66,7 @@ import { AdminDataExport } from '@/components/admin/AdminDataExport';
 import { AdminSearchDialog } from '@/components/admin/AdminSearchDialog';
 import { AdminAnalytics } from '@/components/admin/AdminAnalytics';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { SimpleThemeToggle } from '@/components/SimpleThemeToggle';
 import { NotificationBell } from '@/components/admin/NotificationBell';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
@@ -173,7 +174,7 @@ function SidebarContent({
           </div>
           <div className="flex items-center gap-1">
             <NotificationBell />
-            <ThemeToggle />
+            <SimpleThemeToggle className="h-8 w-8" />
           </div>
         </div>
         <Separator />
@@ -414,6 +415,7 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
                 <Search className="h-4 w-4" />
               </Button>
               <NotificationBell />
+              <SimpleThemeToggle className="h-8 w-8" />
               <Button
                 variant="ghost"
                 size="sm"
