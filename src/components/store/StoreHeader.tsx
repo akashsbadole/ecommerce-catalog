@@ -249,10 +249,10 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
   return (
     <>
       {/* === TOP BAR === */}
-      <div className="bg-muted/50 border-b text-xs">
+      <div className="hidden md:block bg-muted/50 border-b text-xs">
         <div className="container mx-auto flex h-9 items-center justify-between px-4">
           {/* Left: contact info or welcome */}
-          <div className="hidden md:flex items-center gap-4 text-muted-foreground">
+          <div className="flex items-center gap-4 text-muted-foreground">
             {auth.user ? (
               <span>
                 Welcome,{" "}
@@ -372,7 +372,23 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
           </nav>
 
           {/* Right: Search + CTA */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            {/* Wishlist - Mobile Only (as it's removed from top bar) */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative h-9 w-9 md:hidden"
+              onClick={() => onNavigate("wishlist")}
+              aria-label="Wishlist"
+            >
+              <Heart className="h-4.5 w-4.5" />
+              {wishlist.itemCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 h-3.5 min-w-[14px] rounded-full bg-rose-500 text-[9px] font-bold text-white flex items-center justify-center px-0.5">
+                  {wishlist.itemCount > 99 ? "99+" : wishlist.itemCount}
+                </span>
+              )}
+            </Button>
+
             {/* Theme Toggle */}
             <SimpleThemeToggle className="h-9 w-9" />
 

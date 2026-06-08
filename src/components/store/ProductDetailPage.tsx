@@ -1052,9 +1052,37 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
         </CardContent>
       </Card>
 
+      {/* Sticky Mobile CTA */}
+      <div className="lg:hidden fixed bottom-16 left-0 right-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t p-3 flex gap-3 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] animate-in slide-in-from-bottom duration-300">
+        <Button
+          className="flex-1 bg-primary hover:bg-primary/90 text-white font-semibold h-12 shadow-sm"
+          onClick={() => {
+            setForm((prev) => ({ ...prev, enquiryType: "rfq", quantity: String(product.minOrderQty || 10) }));
+            const enquirySection = document.getElementById("enquiry-section");
+            if (enquirySection) {
+              enquirySection.scrollIntoView({ behavior: "smooth" });
+            } else {
+              window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+            }
+          }}
+        >
+          <Send className="mr-2 h-4 w-4" />
+          Get Quote
+        </Button>
+        <a
+          href={`https://wa.me/${(product.whatsappNumber || siteSettings?.whatsapp_number || "").replace(/[^0-9+]/g, "")}?text=${encodeURIComponent(`Hi, I'm interested in ${product.name}. Please share more details.`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 inline-flex items-center justify-center rounded-md bg-[#25D366] px-4 py-2 text-sm font-semibold text-white hover:bg-[#20bd5a] transition-colors h-12 shadow-sm"
+        >
+          <MessageCircle className="mr-2 h-5 w-5" />
+          WhatsApp
+        </a>
+      </div>
+
       {/* Related / Recommended Products */}
       {(relatedProducts.length > 0 || recommendedProducts.length > 0) && (
-        <div className="space-y-4">
+        <div className="space-y-4 pb-20 lg:pb-0">
           <Separator />
           <div>
             <h3 className="text-xl font-semibold">
