@@ -36,7 +36,11 @@ export async function adminFetch(url: string, options: RequestInit = {}): Promis
     }
   }
 
-  return fetch(url, { ...options, headers });
+  return fetch(url, {
+    cache: 'no-store',
+    ...options,
+    headers,
+  });
 }
 
 /** @deprecated Use adminFetch instead */

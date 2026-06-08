@@ -38,6 +38,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { adminFetch } from '@/lib/admin-fetch';
 import { AdminImport } from '@/components/admin/AdminImport';
 import { AdminBackup } from '@/components/admin/AdminBackup';
+import { useAppStore } from '@/lib/store';
 
 interface Settings {
   [key: string]: string;
@@ -93,6 +94,7 @@ const defaultSettings: Settings = {
 };
 
 export function AdminSettings() {
+  const fetchGlobalSettings = useAppStore(s => s.fetchSettings);
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -129,6 +131,8 @@ export function AdminSettings() {
       });
       if (res.ok) {
         toast.success('Settings saved successfully');
+        // Update global app state to reflect new logo/site name in sidebar immediately
+        fetchGlobalSettings();
       } else {
         const err = await res.json();
         toast.error(err.error || 'Failed to save settings');
