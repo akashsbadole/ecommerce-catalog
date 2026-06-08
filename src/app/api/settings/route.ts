@@ -35,6 +35,9 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
+
     const body = await request.json();
     const { settings } = body as { settings: Record<string, string> };
 
@@ -67,6 +70,9 @@ export async function PUT(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
+
     const settings = await db.siteSetting.findMany();
     const getSetting = (key: string) =>
       settings.find((s) => s.key === key)?.value || '';
