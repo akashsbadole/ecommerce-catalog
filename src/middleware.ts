@@ -72,7 +72,7 @@ const storeCache = new Map<string, CachedStore>();
 const STORE_CACHE_TTL = 5 * 60 * 1000;
 
 const PLATFORM_DOMAINS = [
-  process.env.PLATFORM_DOMAIN || 'localhost',
+  process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || process.env.PLATFORM_DOMAIN || 'localhost',
   process.env.PLATFORM_DOMAIN || 'localhost',
 ];
 

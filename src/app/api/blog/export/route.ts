@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { escapeCSV } from '@/lib/utils';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
+  const auth = await requireAdminAuth(request);
+  if (!auth.success) return auth.response;
+
   try {
     const posts = await db.blogPost.findMany({
       where: { deletedAt: null },
@@ -10,21 +15,13 @@ export async function GET(_request: NextRequest) {
 
     const headers = ['title', 'slug', 'excerpt', 'content', 'isPublished', 'createdAt'];
 
-    function escapeCSVField(val: any): string {
-      const str = val === null || val === undefined ? '' : String(val);
-      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-        return `"${str.replace(/"/g, '""')}"`;
-      }
-      return str;
-    }
-
     const rows = posts.map((p) => [
-      escapeCSVField(p.title),
-      escapeCSVField(p.slug),
-      escapeCSVField(p.excerpt),
-      escapeCSVField(p.content),
-      escapeCSVField(p.isPublished),
-      escapeCSVField(p.createdAt.toISOString()),
+      escapeCSV(p.title),
+      escapeCSV(p.slug),
+      escapeCSV(p.excerpt),
+      escapeCSV(p.content),
+      escapeCSV(p.isPublished),
+      escapeCSV(p.createdAt.toISOString()),
     ]);
 
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');

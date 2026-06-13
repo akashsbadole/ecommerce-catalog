@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { escapeCSV } from '@/lib/utils';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
+  const auth = await requireAdminAuth(request);
+  if (!auth.success) return auth.response;
+
   try {
     const redirects = await db.redirect.findMany({
       orderBy: { createdAt: 'desc' },
@@ -9,19 +14,11 @@ export async function GET(_request: NextRequest) {
 
     const headers = ['from', 'to', 'type', 'isActive'];
 
-    function escapeCSVField(val: any): string {
-      const str = val === null || val === undefined ? '' : String(val);
-      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-        return `"${str.replace(/"/g, '""')}"`;
-      }
-      return str;
-    }
-
     const rows = redirects.map((r) => [
-      escapeCSVField(r.from),
-      escapeCSVField(r.to),
-      escapeCSVField(r.type),
-      escapeCSVField(r.isActive),
+      escapeCSV(r.from),
+      escapeCSV(r.to),
+      escapeCSV(r.type),
+      escapeCSV(r.isActive),
     ]);
 
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');

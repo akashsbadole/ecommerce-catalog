@@ -77,7 +77,7 @@ interface Category {
   metaDescription: string | null;
   customSchema?: string | null;
   parentId?: string | null;
-  _count?: { products: number };
+  _count?: { Product: number };
 }
 
 interface CategoryFormData {
@@ -519,7 +519,7 @@ export function AdminCategories() {
                       {cat.description || '—'}
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">
-                      <Badge variant="outline">{cat._count?.products || 0}</Badge>
+                      <Badge variant="outline">{cat._count?.Product || 0}</Badge>
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -776,9 +776,9 @@ export function AdminCategories() {
             <AlertDialogDescription>
               Are you sure you want to delete &ldquo;{deleteCategory?.name}&rdquo;?
               This action cannot be undone.
-              {deleteCategory && (deleteCategory._count?.products || 0) > 0 && (
+              {deleteCategory && (deleteCategory._count?.Product || 0) > 0 && (
                 <span className="block mt-2 font-medium text-rose-600">
-                  Warning: This category has {deleteCategory._count?.products} product(s)
+                  Warning: This category has {deleteCategory._count?.Product} product(s)
                   associated with it.
                 </span>
               )}

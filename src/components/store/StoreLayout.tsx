@@ -84,13 +84,11 @@ export function StoreLayout({ currentPage, onNavigate, children }: StoreLayoutPr
       <StoreHeader onNavigate={onNavigate} />
 
       <main className="flex-1 pb-16 lg:pb-0">
-        <div className="container mx-auto px-4 py-8">
-          {settings
-            ? isValidElement(children)
-              ? cloneElement(children as React.ReactElement<Record<string, unknown>>, { settings })
-              : children
-            : children}
-        </div>
+        {settings
+          ? isValidElement(children)
+            ? cloneElement(children as React.ReactElement<Record<string, unknown>>, { settings })
+            : children
+          : children}
       </main>
 
       <StoreFooter onNavigate={onNavigate} settings={settings} />

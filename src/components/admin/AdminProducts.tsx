@@ -227,6 +227,8 @@ export function AdminProducts() {
 
   // CSV import/export state
   const [importing, setImporting] = useState(false);
+  const [importPlatform, setImportPlatform] = useState<string>('auto');
+  const [showImportDialog, setShowImportDialog] = useState(false);
   const [exporting, setExporting] = useState(false);
 
   // Inline stock edit state
@@ -597,20 +599,27 @@ export function AdminProducts() {
     );
   };
 
-  const handleCSVImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleCSVImport = async (file: File) => {
     if (!file) return;
     setImporting(true);
+    setShowImportDialog(false);
     try {
       const formData = new FormData();
       formData.append('file', file);
+      if (importPlatform !== 'auto') {
+        formData.append('platform', importPlatform);
+      }
       const res = await adminFetch('/api/products/import', {
         method: 'POST',
         body: formData,
       });
       if (res.ok) {
         const data = await res.json();
-        toast.success(`Imported ${data.imported} product(s)`);
+        const platformLabel = data.platform === 'woocommerce' ? 'WooCommerce' : data.platform === 'shopify' ? 'Shopify/Shopify' : 'Native';
+        toast.success(`Imported ${data.imported} product(s) from ${platformLabel} CSV`);
+        if (data.categoriesCreated > 0) {
+          toast.info(`${data.categoriesCreated} categor(ies) auto-created`);
+        }
         if (data.errors && data.errors.length > 0) {
           toast.warning(`${data.errors.length} error(s) — check console`);
           console.warn('CSV Import Errors:', data.errors);
@@ -624,7 +633,6 @@ export function AdminProducts() {
       toast.error('Import failed');
     } finally {
       setImporting(false);
-      e.target.value = '';
     }
   };
 
@@ -716,15 +724,10 @@ export function AdminProducts() {
           <p className="text-muted-foreground mt-1">Manage your product catalogue</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <label className="cursor-pointer">
-            <input type="file" accept=".csv" className="hidden" onChange={handleCSVImport} disabled={importing} />
-            <Button variant="outline" size="sm" disabled={importing} asChild>
-              <span>
-                <FileText className="mr-1.5 h-3.5 w-3.5" />
-                {importing ? 'Importing...' : 'Import CSV'}
-              </span>
-            </Button>
-          </label>
+          <Button variant="outline" size="sm" disabled={importing} onClick={() => setShowImportDialog(true)}>
+            <FileText className="mr-1.5 h-3.5 w-3.5" />
+            {importing ? 'Importing...' : 'Import CSV'}
+          </Button>
           <Button variant="outline" size="sm" disabled={exporting} onClick={handleCSVExport}>
             <Download className="mr-1.5 h-3.5 w-3.5" />
             {exporting ? 'Exporting...' : 'Export CSV'}
@@ -1622,6 +1625,50 @@ export function AdminProducts() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* CSV Import Dialog */}
+      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Import Products from CSV</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>CSV Platform Format</Label>
+              <Select value={importPlatform} onValueChange={setImportPlatform}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">Auto Detect</SelectItem>
+                  <SelectItem value="native">Native Format</SelectItem>
+                  <SelectItem value="woocommerce">WooCommerce</SelectItem>
+                  <SelectItem value="shopify">Shopify / Shopofy</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {importPlatform === 'auto' && 'Detect format automatically from CSV headers.'}
+                {importPlatform === 'native' && 'Headers: name, price, slug, description, sku, categoryId, stock, etc.'}
+                {importPlatform === 'woocommerce' && 'Headers: post_title, regular_price, post_name, sku, tax:product_cat, images, stock, etc.'}
+                {importPlatform === 'shopify' && 'Headers: Title, Handle, Body (HTML), Variant Price, Variant SKU, Image Src, Type, etc. Rows with same Handle are merged.'}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label>Select CSV File</Label>
+              <Input
+                type="file"
+                accept=".csv"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleCSVImport(file);
+                  e.target.value = '';
+                }}
+                disabled={importing}
+              />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Permanent Delete Confirmation */}
       <AlertDialog open={!!permanentDeleteId} onOpenChange={() => setPermanentDeleteId(null)}>

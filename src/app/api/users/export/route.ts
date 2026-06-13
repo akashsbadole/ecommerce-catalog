@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { escapeCSV } from '@/lib/utils';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
+  const auth = await requireAdminAuth(request);
+  if (!auth.success) return auth.response;
+
   try {
     const users = await db.user.findMany({
       orderBy: { createdAt: 'desc' },
@@ -9,20 +14,12 @@ export async function GET(_request: NextRequest) {
 
     const headers = ['name', 'email', 'role', 'isActive', 'createdAt'];
 
-    function escapeCSVField(val: any): string {
-      const str = val === null || val === undefined ? '' : String(val);
-      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-        return `"${str.replace(/"/g, '""')}"`;
-      }
-      return str;
-    }
-
     const rows = users.map((u) => [
-      escapeCSVField(u.name),
-      escapeCSVField(u.email),
-      escapeCSVField(u.role),
-      escapeCSVField(u.isActive),
-      escapeCSVField(u.createdAt.toISOString()),
+      escapeCSV(u.name),
+      escapeCSV(u.email),
+      escapeCSV(u.role),
+      escapeCSV(u.isActive),
+      escapeCSV(u.createdAt.toISOString()),
     ]);
 
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');

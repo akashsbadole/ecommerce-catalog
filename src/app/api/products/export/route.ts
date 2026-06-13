@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { escapeCSV } from '@/lib/utils';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
+  const auth = await requireAdminAuth(request);
+  if (!auth.success) return auth.response;
+
   try {
     const products = await db.product.findMany({
       where: { deletedAt: null },
@@ -10,51 +15,30 @@ export async function GET(_request: NextRequest) {
     });
 
     const headers = [
-      'name',
-      'slug',
-      'description',
-      'shortDescription',
-      'price',
-      'comparePrice',
-      'wholesalePrice',
-      'minOrderQty',
-      'sku',
-      'categoryId',
-      'categoryName',
-      'isFeatured',
-      'isActive',
-      'sortOrder',
-      'stock',
-      'lowStockThreshold',
-      'whatsappNumber',
+      'name', 'slug', 'description', 'shortDescription', 'price',
+      'comparePrice', 'wholesalePrice', 'minOrderQty', 'sku',
+      'categoryId', 'categoryName', 'isFeatured', 'isActive',
+      'sortOrder', 'stock', 'lowStockThreshold', 'whatsappNumber',
     ];
 
-    function escapeCSVField(val: string | number | boolean | null | undefined): string {
-      const str = val === null || val === undefined ? '' : String(val);
-      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-        return `"${str.replace(/"/g, '""')}"`;
-      }
-      return str;
-    }
-
     const rows = products.map((p) => [
-      escapeCSVField(p.name),
-      escapeCSVField(p.slug),
-      escapeCSVField(p.description),
-      escapeCSVField(p.shortDescription),
-      escapeCSVField(p.price),
-      escapeCSVField(p.comparePrice),
-      escapeCSVField(p.wholesalePrice),
-      escapeCSVField(p.minOrderQty),
-      escapeCSVField(p.sku),
-      escapeCSVField(p.categoryId),
-      escapeCSVField(p.Category?.name || ''),
-      escapeCSVField(p.isFeatured),
-      escapeCSVField(p.isActive),
-      escapeCSVField(p.sortOrder),
-      escapeCSVField(p.stock),
-      escapeCSVField(p.lowStockThreshold),
-      escapeCSVField(p.whatsappNumber),
+      escapeCSV(p.name),
+      escapeCSV(p.slug),
+      escapeCSV(p.description),
+      escapeCSV(p.shortDescription),
+      escapeCSV(p.price),
+      escapeCSV(p.comparePrice),
+      escapeCSV(p.wholesalePrice),
+      escapeCSV(p.minOrderQty),
+      escapeCSV(p.sku),
+      escapeCSV(p.categoryId),
+      escapeCSV(p.Category?.name || ''),
+      escapeCSV(p.isFeatured),
+      escapeCSV(p.isActive),
+      escapeCSV(p.sortOrder),
+      escapeCSV(p.stock),
+      escapeCSV(p.lowStockThreshold),
+      escapeCSV(p.whatsappNumber),
     ]);
 
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
@@ -67,9 +51,6 @@ export async function GET(_request: NextRequest) {
     });
   } catch (error) {
     console.error('Export products error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
