@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { logActivity } from '@/lib/activity-log';
 import { blogPostSchema } from '@/lib/validations';
 import { getStoreId } from '@/lib/store-db';
+import { normalizeBlocksForStorage } from '@/lib/page-blocks';
 
 export async function GET(request: NextRequest) {
   try {
@@ -113,6 +114,15 @@ export async function POST(request: NextRequest) {
       );
     }
     const validatedData = result.data;
+    let blocks: string;
+    try {
+      blocks = normalizeBlocksForStorage(validatedData.blocks);
+    } catch {
+      return NextResponse.json(
+        { error: 'Blocks must be an array or a valid JSON string' },
+        { status: 400 }
+      );
+    }
 
     // Check slug uniqueness
     const existingSlug = await db.blogPost.findUnique({ where: { slug: validatedData.slug } });
@@ -132,7 +142,7 @@ export async function POST(request: NextRequest) {
         metaTitle: validatedData.metaTitle || null,
         metaDescription: validatedData.metaDescription || null,
         ogImage: validatedData.ogImage || null,
-        blocks: validatedData.blocks || '[]',
+        blocks,
         tags: validatedData.tags ? JSON.stringify(validatedData.tags) : null,
         isPublished: validatedData.isPublished ?? false,
         publishedAt: validatedData.isPublished ? new Date() : null,

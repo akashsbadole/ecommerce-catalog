@@ -89,7 +89,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import dynamic from "next/dynamic";
 import type { PageBlock, BlockType } from "@/lib/page-blocks";
-import { BLOCK_DEFAULTS, createBlock } from "@/lib/page-blocks";
+import {
+  BLOCK_DEFAULTS,
+  createBlock,
+  normalizeBlockData,
+  parseJsonPayload,
+} from "@/lib/page-blocks";
 
 const PreviewRenderer = dynamic(
   () =>
@@ -135,9 +140,27 @@ const BLOCK_ICONS: Record<
   "pricing-table": CreditCard,
 };
 
+const PAGE_CONTENT_BLOCK_TYPES = new Set<BlockType>([
+  "about-page-content",
+  "mfg-page-content",
+  "contact-page-content",
+  "catalogue-page-content",
+]);
+
+function getTopLevelKeys(data: Record<string, unknown>): string[] {
+  return Object.keys(data).sort();
+}
+
+function formatTopLevelKeys(data: Record<string, unknown>): string {
+  const keys = getTopLevelKeys(data);
+  if (keys.length === 0) return "No top-level fields";
+  return keys.slice(0, 6).join(", ") + (keys.length > 6 ? ", ..." : "");
+}
+
 interface PageBuilderProps {
   blocks: PageBlock[];
   onChange: (blocks: PageBlock[]) => void;
+  onNavigate?: (page: string, data?: unknown) => void;
 }
 
 // Sortable block card
@@ -199,7 +222,9 @@ function SortableBlockCard({
           <Icon className="h-4 w-4 text-muted-foreground" />
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-medium truncate">{defaults.label}</p>
+          <p className="text-sm font-medium truncate">
+            {defaults?.label || block.type}
+          </p>
           <p className="text-xs text-muted-foreground">#{index + 1}</p>
         </div>
       </div>
@@ -279,6 +304,11 @@ function BlockEditDialog({
       const dataCopy = JSON.parse(JSON.stringify(block.data || {}));
       setLocalData(dataCopy);
       setJsonText(JSON.stringify(dataCopy, null, 2));
+  const handleOpen = (blk: PageBlock | null) => {
+    if (blk) {
+      const parsedData = normalizeBlockData(blk.data);
+      setLocalData(parsedData);
+      setJsonText(JSON.stringify(parsedData, null, 2));
       setJsonError(null);
     }
   }, [block, open]);
@@ -287,8 +317,12 @@ function BlockEditDialog({
     if (!block) return;
     if (activeTab === "json") {
       try {
-        const parsed = JSON.parse(jsonText);
-        onSave({ ...block, data: parsed });
+        const parsed = parseJsonPayload(jsonText);
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+          setJsonError('Block data must be a JSON object');
+          return;
+        }
+        onSave({ ...block, data: parsed as Record<string, unknown> });
       } catch (e) {
         setJsonError((e as Error).message);
         return;
@@ -310,9 +344,13 @@ function BlockEditDialog({
   const handleJsonChange = (val: string) => {
     setJsonText(val);
     try {
-      const parsed = JSON.parse(val);
-      setLocalData(parsed);
-      setJsonError(null);
+      const parsed = parseJsonPayload(val);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        setLocalData(parsed as Record<string, unknown>);
+        setJsonError(null);
+      } else {
+        setJsonError('Block data must be a JSON object');
+      }
     } catch (e) {
       setJsonError((e as Error).message);
     }
@@ -321,6 +359,8 @@ function BlockEditDialog({
   if (!block) return null;
 
   const defaults = BLOCK_DEFAULTS[block.type];
+  const isPageContentBlock = PAGE_CONTENT_BLOCK_TYPES.has(block.type);
+  const topLevelKeys = getTopLevelKeys(localData);
 
   return (
     <Dialog
@@ -331,7 +371,7 @@ function BlockEditDialog({
     >
       <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0">
         <DialogHeader className="p-6 pb-0">
-          <DialogTitle>Edit {defaults.label}</DialogTitle>
+          <DialogTitle>Edit {defaults?.label || block.type}</DialogTitle>
         </DialogHeader>
 
         <Tabs
@@ -354,6 +394,15 @@ function BlockEditDialog({
 
           <TabsContent value="ui" className="flex-1 min-h-0 m-0">
             <ScrollArea className="h-[calc(90vh-220px)] px-6">
+              {isPageContentBlock && (
+                <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                  <p className="font-medium">Full page payload</p>
+                  <p className="mt-1 text-xs text-amber-700">
+                    This block stores nested CMS fields. Use the JSON Editor tab
+                    to update fields such as: {formatTopLevelKeys(localData)}.
+                  </p>
+                </div>
+              )}
               <div className="grid gap-4 py-4">
                 {/* Common fields based on block type */}
                 {block.type === "hero" && (
@@ -2649,6 +2698,12 @@ function BlockEditDialog({
 
           <TabsContent value="json" className="flex-1 min-h-0 m-0">
             <div className="flex flex-col h-[calc(90vh-220px)] p-6 gap-4">
+              <div className="rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
+                <p className="font-medium text-foreground">
+                  Top-level fields ({topLevelKeys.length})
+                </p>
+                <p className="mt-1">{formatTopLevelKeys(localData)}</p>
+              </div>
               <div className="flex-1 relative">
                 <Textarea
                   value={jsonText}
@@ -2683,7 +2738,7 @@ function BlockEditDialog({
   );
 }
 
-export function PageBuilder({ blocks, onChange }: PageBuilderProps) {
+export function PageBuilder({ blocks, onChange, onNavigate }: PageBuilderProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -2802,6 +2857,7 @@ export function PageBuilder({ blocks, onChange }: PageBuilderProps) {
   );
 
   const blockTypes = Object.keys(BLOCK_DEFAULTS) as BlockType[];
+  const previewNavigate = onNavigate ?? (() => {});
 
   return (
     <div className="space-y-4">
@@ -2868,7 +2924,7 @@ export function PageBuilder({ blocks, onChange }: PageBuilderProps) {
                 <p>Add blocks to see preview</p>
               </div>
             ) : (
-              <PreviewRenderer blocks={blocks} />
+              <PreviewRenderer blocks={blocks} onNavigate={previewNavigate} />
             )}
           </div>
         </div>

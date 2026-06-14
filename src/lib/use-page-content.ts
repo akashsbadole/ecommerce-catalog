@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { PageBlock } from "./page-blocks";
+import { normalizePageBlocks } from "./page-blocks";
 
 /**
  * Fetches a CMS ContentPage by slug and returns its parsed blocks.
@@ -54,25 +55,9 @@ export function useContentPage(slug: string) {
                   const refetchData = await refetch.json();
                   const refetchedPage = (refetchData.contentPages ?? [])[0];
                   if (refetchedPage) {
-                    let parsed: PageBlock[] = [];
-                    try {
-                      let raw: unknown = refetchedPage.blocks;
-                      if (
-                        typeof raw === "string" &&
-                        raw.startsWith('"') &&
-                        raw.endsWith('"')
-                      ) {
-                        raw = JSON.parse(raw);
-                      }
-                      parsed =
-                        typeof raw === "string"
-                          ? JSON.parse(raw)
-                          : (raw as PageBlock[]);
-                    } catch {
-                      parsed = [];
-                    }
+                    const parsed = normalizePageBlocks(refetchedPage.blocks);
                     if (!cancelled) {
-                      setBlocks(Array.isArray(parsed) ? parsed : null);
+                      setBlocks(parsed.length > 0 ? parsed : null);
                       setLoading(false);
                       return;
                     }
@@ -89,22 +74,9 @@ export function useContentPage(slug: string) {
           }
           return;
         }
-        let parsed: PageBlock[] = [];
-        try {
-          let raw: unknown = page.blocks;
-          if (
-            typeof raw === "string" &&
-            raw.startsWith('"') &&
-            raw.endsWith('"')
-          ) {
-            raw = JSON.parse(raw);
-          }
-          parsed = typeof raw === "string" ? JSON.parse(raw) : (raw as PageBlock[]);
-        } catch {
-          parsed = [];
-        }
+        const parsed = normalizePageBlocks(page.blocks);
         if (!cancelled) {
-          setBlocks(Array.isArray(parsed) ? parsed : null);
+          setBlocks(parsed.length > 0 ? parsed : null);
           setLoading(false);
         }
       } catch {
@@ -132,4 +104,12 @@ export function getBlockData(
   if (!blocks) return null;
   const block = blocks.find((b) => b.type === type);
   return block?.data ?? null;
+}
+
+export function getPageContentData(
+  blocks: PageBlock[] | null,
+  type: string,
+  fallback: Record<string, unknown>,
+): Record<string, unknown> {
+  return getBlockData(blocks, type) ?? fallback;
 }

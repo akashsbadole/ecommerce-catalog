@@ -5,6 +5,7 @@ import { db } from '@/lib/db';
 import { contentPageSchema } from '@/lib/validations';
 import { getStoreId } from '@/lib/store-db';
 import { requireAdminAuth } from '@/lib/admin-auth';
+import { normalizeBlocksForStorage } from '@/lib/page-blocks';
 
 export async function GET(request: NextRequest) {
   try {
@@ -58,6 +59,15 @@ export async function POST(request: NextRequest) {
       );
     }
     const validatedData = result.data;
+    let blocks: string;
+    try {
+      blocks = normalizeBlocksForStorage(validatedData.blocks);
+    } catch {
+      return NextResponse.json(
+        { error: 'Blocks must be an array or a valid JSON string' },
+        { status: 400 }
+      );
+    }
 
     // Check slug uniqueness
     const existingSlug = await db.contentPage.findUnique({ where: { slug: validatedData.slug } });
@@ -71,7 +81,7 @@ export async function POST(request: NextRequest) {
         title: validatedData.title,
         slug: validatedData.slug,
         content: validatedData.content || '',
-        blocks: validatedData.blocks || '[]',
+        blocks,
         heroImage: validatedData.heroImage || null,
         metaTitle: validatedData.metaTitle || null,
         metaDescription: validatedData.metaDescription || null,

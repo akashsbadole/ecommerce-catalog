@@ -1,11 +1,12 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useMemo } from 'react';
-import { Calendar, User, ImageIcon, Search, Tag, Send } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Input } from '@/components/ui/input';
+import { useEffect, useState, useMemo } from "react";
+import { Calendar, User, ImageIcon, Search, Tag, Send } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { SharedContactForm } from "./SharedContactForm";
 
 interface BlogPost {
   id: string;
@@ -27,10 +28,14 @@ function parseTags(tagsStr: string | null): string[] {
   if (!tagsStr) return [];
   try {
     const parsed = JSON.parse(tagsStr);
-    if (Array.isArray(parsed)) return parsed.filter((t: unknown) => typeof t === 'string');
+    if (Array.isArray(parsed))
+      return parsed.filter((t: unknown) => typeof t === "string");
   } catch {
     // If it's not valid JSON, try splitting by comma as a fallback
-    return tagsStr.split(',').map((t) => t.trim()).filter(Boolean);
+    return tagsStr
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
   }
   return [];
 }
@@ -40,12 +45,12 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
   const [loading, setLoading] = useState(true);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [allTags, setAllTags] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const params = new URLSearchParams({ published: 'true' });
+        const params = new URLSearchParams({ published: "true" });
         const res = await fetch(`/api/blog?${params.toString()}`);
         if (res.ok) {
           const data = await res.json();
@@ -84,7 +89,7 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       result = result.filter((post) =>
-        post.title.toLowerCase().includes(query)
+        post.title.toLowerCase().includes(query),
       );
     }
 
@@ -93,14 +98,17 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
 
   // Set SEO meta tags
   useEffect(() => {
-    document.title = 'Blog';
+    document.title = "Blog";
     let metaDesc = document.querySelector('meta[name="description"]');
     if (!metaDesc) {
-      metaDesc = document.createElement('meta');
-      metaDesc.setAttribute('name', 'description');
+      metaDesc = document.createElement("meta");
+      metaDesc.setAttribute("name", "description");
       document.head.appendChild(metaDesc);
     }
-    metaDesc.setAttribute('content', 'Read our latest articles, news, and updates.');
+    metaDesc.setAttribute(
+      "content",
+      "Read our latest articles, news, and updates.",
+    );
   }, []);
 
   // Count posts per tag
@@ -164,11 +172,11 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
           <div className="flex items-center gap-2 flex-wrap">
             <Tag className="h-4 w-4 text-muted-foreground mr-1" />
             <Badge
-              variant={selectedTag === null ? 'default' : 'outline'}
+              variant={selectedTag === null ? "default" : "outline"}
               className={`cursor-pointer select-none transition-colors ${
                 selectedTag === null
-                  ? 'bg-primary hover:bg-primary/80 text-white'
-                  : 'hover:bg-primary/5 hover:text-primary/80 hover:border-primary/30'
+                  ? "bg-primary hover:bg-primary/80 text-white"
+                  : "hover:bg-primary/5 hover:text-primary/80 hover:border-primary/30"
               }`}
               onClick={() => setSelectedTag(null)}
             >
@@ -177,11 +185,11 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
             {allTags.map((tag) => (
               <Badge
                 key={tag}
-                variant={selectedTag === tag ? 'default' : 'outline'}
+                variant={selectedTag === tag ? "default" : "outline"}
                 className={`cursor-pointer select-none transition-colors ${
                   selectedTag === tag
-                    ? 'bg-primary hover:bg-primary/80 text-white'
-                    : 'hover:bg-primary/5 hover:text-primary/80 hover:border-primary/30'
+                    ? "bg-primary hover:bg-primary/80 text-white"
+                    : "hover:bg-primary/5 hover:text-primary/80 hover:border-primary/30"
                 }`}
                 onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
               >
@@ -190,7 +198,14 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
             ))}
             {selectedTag && (
               <button
-                onClick={() => onNavigate('contact')}
+                onClick={() => {
+                  const form = document.getElementById("blog-enquiry-form");
+                  if (form) {
+                    form.scrollIntoView({ behavior: "smooth" });
+                  } else {
+                    onNavigate("contact");
+                  }
+                }}
                 className="inline-flex items-center gap-1.5 text-xs bg-primary text-primary-foreground rounded-full px-3 py-1.5 hover:bg-primary/90 transition-colors"
               >
                 <Send className="h-3 w-3" />
@@ -200,6 +215,27 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
           </div>
         </div>
       )}
+
+      {/* Enquire from tag filter */}
+      <section className="bg-muted/40 py-8 px-4 border-t">
+        <div className="max-w-6xl mx-auto">
+          {selectedTag && (
+            <div className="bg-background border rounded-xl p-6 shadow-sm">
+              <h3 className="text-lg font-bold mb-1">
+                Enquire about {selectedTag}
+              </h3>
+              <p className="text-xs text-muted-foreground mb-5">
+                Fill in your details and we'll respond within 24 hours
+              </p>
+              <SharedContactForm
+                initialEnquiryType="product"
+                productContext={selectedTag}
+                variant="inline"
+              />
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Blog Posts Grid */}
       {filteredPosts.length === 0 ? (
@@ -211,7 +247,7 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
               </p>
               <button
                 onClick={() => {
-                  setSearchQuery('');
+                  setSearchQuery("");
                   setSelectedTag(null);
                 }}
                 className="text-primary hover:text-primary/80 text-sm mt-2 underline"
@@ -220,7 +256,9 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
               </button>
             </>
           ) : (
-            <p className="text-muted-foreground">No blog posts published yet. Check back soon!</p>
+            <p className="text-muted-foreground">
+              No blog posts published yet. Check back soon!
+            </p>
           )}
         </div>
       ) : (
@@ -229,13 +267,13 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
             <div
               key={post.id}
               className="group cursor-pointer"
-              onClick={() => onNavigate('blog-post', post.slug)}
+              onClick={() => onNavigate("blog-post", post.slug)}
               role="link"
               tabIndex={0}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
+                if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  onNavigate('blog-post', post.slug);
+                  onNavigate("blog-post", post.slug);
                 }
               }}
             >
@@ -260,7 +298,11 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
                   {post.tags && (
                     <div className="flex flex-wrap gap-1.5">
                       {parseTags(post.tags).map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-xs font-normal">
+                        <Badge
+                          key={tag}
+                          variant="secondary"
+                          className="text-xs font-normal"
+                        >
                           {tag}
                         </Badge>
                       ))}
@@ -284,11 +326,14 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
                     {post.publishedAt && (
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {new Date(post.publishedAt).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
+                        {new Date(post.publishedAt).toLocaleDateString(
+                          "en-US",
+                          {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          },
+                        )}
                       </span>
                     )}
                     {post.User && (

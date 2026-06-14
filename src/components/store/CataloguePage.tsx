@@ -14,7 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { EnquiryModal } from './EnquiryModal';
 import { QuickViewModal } from './QuickViewModal';
 import { SharedContactForm } from './SharedContactForm';
 import { useAppStore } from '@/lib/store';
@@ -48,17 +47,16 @@ interface Product {
 
 interface CataloguePageProps {
   onNavigate: (page: string, data?: unknown) => void;
+  data?: Record<string, unknown>;
 }
 
-export function CataloguePage({ onNavigate }: CataloguePageProps) {
+export function CataloguePage({ onNavigate, data: externalData }: CataloguePageProps) {
   const { auth, settings, addToCompare, isInCompare, removeFromCompare } = useAppStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [enquiryProduct, setEnquiryProduct] = useState<Product | null>(null);
-  const [enquiryMode, setEnquiryMode] = useState<'enquire' | 'rfq'>('enquire');
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [sortBy, setSortBy] = useState('featured');
 
@@ -74,6 +72,8 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
     message: '',
   });
   const [enquirySubmitting, setEnquirySubmitting] = useState(false);
+  const [enquiryProductName, setEnquiryProductName] = useState<string | null>(null);
+  const enquiryFormRef = useRef<HTMLDivElement>(null);
 
   // Infinite scroll state
   const [visibleCount, setVisibleCount] = useState(12);
@@ -83,7 +83,8 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
   // CMS content data
   const { blocks: cmsBlocks } = useContentPage('catalogue-page-content');
   const cmsData = getBlockData(cmsBlocks, 'catalogue-page-content');
-  const pageData = (cmsData || BLOCK_DEFAULTS['catalogue-page-content'].defaultData) as Record<string, unknown>;
+  const pageData =
+    externalData ?? cmsData ?? BLOCK_DEFAULTS['catalogue-page-content'].defaultData;
   const defaultCategoryInfo = (pageData.categoryInfo || {}) as Record<string, { tags: string[]; desc: string }>;
   const packagingOptions = (pageData.packagingOptions || []) as Array<{ title: string; desc: string; tag: string; highlight: boolean }>;
   const categoryTabs = (pageData.categoryTabs || []) as Array<{ id: string; label: string }>;
@@ -183,9 +184,11 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
     return calculateTieredPrice(basePrice, userTier, settings || undefined);
   };
 
-  const handleEnquiryClick = (product: Product, mode: 'enquire' | 'rfq') => {
-    setEnquiryMode(mode);
-    setEnquiryProduct(product);
+  const handleEnquiryClick = (product: Product) => {
+    setEnquiryProductName(product.name);
+    setTimeout(() => {
+      enquiryFormRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   const handleQuickView = (product: Product, e: React.MouseEvent) => {
@@ -415,9 +418,6 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {visibleProducts.map((product) => {
                   const image = getFirstImage(product.images);
-                  const tags: string[] = [];
-                  if (product.Category) tags.push(product.Category.name);
-                  if (product.isFeatured) tags.push('Featured');
 
                   return (
                     <div key={product.id} className="border rounded-xl overflow-hidden bg-background group transition-shadow hover:shadow-lg">
@@ -439,7 +439,7 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
                         <Button
                           variant="secondary"
                           size="icon"
-                          className="absolute bottom-2 right-2 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md bg-white/90 hover:bg-white dark:bg-gray-800/90 dark:hover:bg-gray-800"
+                          className="absolute bottom-2 right-2 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md bg-white/90 hover:bg-white"
                           onClick={(e) => handleQuickView(product, e)}
                           aria-label={`Quick view ${product.name}`}
                         >
@@ -452,7 +452,7 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
                           className={`absolute bottom-2 right-12 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md ${
                             isInCompare(product.id)
                               ? 'bg-primary text-white hover:bg-primary/80'
-                              : 'bg-white/90 hover:bg-white dark:bg-gray-800/90 dark:hover:bg-gray-800'
+                              : 'bg-white/90 hover:bg-white'
                           }`}
                           onClick={(e) => handleCompareToggle(product, e)}
                           aria-label={isInCompare(product.id) ? `Remove ${product.name} from compare` : `Add ${product.name} to compare`}
@@ -460,26 +460,26 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
                           <GitCompareArrows className="h-3.5 w-3.5" />
                         </Button>
                       </div>
-                      <div className="p-3">
-                        <h3
-                          className="text-sm font-semibold mb-1 cursor-pointer hover:text-primary transition-colors line-clamp-1"
-                          onClick={() => onNavigate('category', product.Category?.slug || 'all')}
-                        >
-                          {product.name}
-                        </h3>
-                        {product.shortDescription && (
-                          <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
-                            {product.shortDescription}
-                          </p>
-                        )}
-                        <Button
-                          size="sm"
-                          className="w-full bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
-                          onClick={() => handleEnquiryClick(product, 'enquire')}
-                        >
-                          Enquire
-                        </Button>
-                      </div>
+              <div className="p-3">
+                <h3
+                  className="text-sm font-semibold mb-1 cursor-pointer hover:text-primary transition-colors line-clamp-1"
+                  onClick={() => onNavigate('category', product.Category?.slug || 'all')}
+                >
+                  {product.name}
+                </h3>
+                {product.shortDescription && (
+                  <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                    {product.shortDescription}
+                  </p>
+                )}
+                <Button
+                  size="sm"
+                  className="w-full bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
+                  onClick={() => handleEnquiryClick(product)}
+                >
+                  Enquire
+                </Button>
+              </div>
                     </div>
                   );
                 })}
@@ -517,7 +517,7 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
       {/* Packaging Showcase */}
       <section className="bg-muted/40 py-12 px-4">
         <div className="container mx-auto max-w-6xl">
-          <h2 className="text-xl font-bold mb-2">Packaging built for retail & trade</h2>
+          <h2 className="text-xl font-bold mb-2">Packaging built for bulk & trade</h2>
           <p className="text-sm text-muted-foreground mb-8">Available in three formats — choose what works for your business</p>
           <div className="grid md:grid-cols-3 gap-6">
             {packagingOptions.map((item) => (
@@ -535,42 +535,29 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
         </div>
       </section>
 
-      {/* Inline Enquiry Form */}
-      <section className="bg-primary text-primary-foreground py-12 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <h2 className="text-xl font-bold text-center mb-2">Interested in bulk or private label?</h2>
-          <p className="text-xs text-white/70 text-center mb-8">Share your requirement — our team will respond within 24 hours with pricing & sample details</p>
-          <div className="max-w-3xl mx-auto">
+      {/* Inline Enquiry Form replaces modal */}
+      <section
+        id="catalogue-contact-form"
+        ref={enquiryFormRef}
+        className="bg-muted/40 py-12 px-4 border-t"
+      >
+        <div className="container mx-auto max-w-3xl">
+          <div className="bg-background border rounded-xl p-6 shadow-sm">
+            <h3 className="text-lg font-bold mb-1">
+              {enquiryProductName
+                ? `Enquire about ${enquiryProductName}`
+                : 'Send us your bulk enquiry'}
+            </h3>
+            <p className="text-xs text-muted-foreground mb-5">Fill in your details and we'll respond within 24 hours</p>
             <SharedContactForm
               initialEnquiryType="product"
+              productContext={enquiryProductName || undefined}
               variant="inline"
               categories={categories}
             />
           </div>
         </div>
       </section>
-
-      {/* Related Links */}
-      <section className="bg-muted/40 py-6 px-4">
-        <div className="container mx-auto max-w-6xl flex items-center justify-between flex-wrap gap-4">
-          <p className="text-sm text-muted-foreground">Want full product specs, flavour lists and pack details?</p>
-          <button onClick={() => onNavigate('manufacturing')} className="text-xs border rounded-full px-4 py-2 flex items-center gap-1.5 hover:bg-muted transition-colors">
-            View manufacturing capabilities →
-          </button>
-        </div>
-      </section>
-
-      {/* Enquiry Modal */}
-      {enquiryProduct && (
-        <EnquiryModal
-          productName={enquiryProduct.name}
-          productId={enquiryProduct.id}
-          open={!!enquiryProduct}
-          onOpenChange={(open) => {
-            if (!open) setEnquiryProduct(null);
-          }}
-        />
-      )}
 
       {/* Quick View Modal */}
       {quickViewProduct && (

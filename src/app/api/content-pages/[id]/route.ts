@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 export const dynamic = 'force-dynamic';
 import { db } from '@/lib/db';
 import { requireAdminAuth } from '@/lib/admin-auth';
+import { normalizeBlocksForStorage } from '@/lib/page-blocks';
 
 export async function GET(
   _request: NextRequest,
@@ -42,6 +43,18 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
+    let blocks: string | undefined;
+
+    if (body.blocks !== undefined) {
+      try {
+        blocks = normalizeBlocksForStorage(body.blocks);
+      } catch {
+        return NextResponse.json(
+          { error: 'Blocks must be an array or a valid JSON string' },
+          { status: 400 }
+        );
+      }
+    }
 
     const existing = await db.contentPage.findUnique({ where: { id } });
     if (!existing) {
@@ -81,9 +94,7 @@ export async function PUT(
         }),
         ...(body.isActive !== undefined && { isActive: body.isActive }),
         ...(body.sortOrder !== undefined && { sortOrder: body.sortOrder }),
-        ...(body.blocks !== undefined && {
-          blocks: typeof body.blocks === 'string' ? body.blocks : JSON.stringify(body.blocks),
-        }),
+        ...(blocks !== undefined && { blocks }),
       },
     });
 

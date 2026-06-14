@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { normalizeBlocksForStorage } from '@/lib/page-blocks';
 
 async function resolveBlogPost(idOrSlug: string) {
   return db.blogPost.findFirst({
@@ -45,6 +46,18 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
+    let blocks: string | undefined;
+
+    if (body.blocks !== undefined) {
+      try {
+        blocks = normalizeBlocksForStorage(body.blocks);
+      } catch {
+        return NextResponse.json(
+          { error: 'Blocks must be an array or a valid JSON string' },
+          { status: 400 }
+        );
+      }
+    }
 
     const existing = await resolveBlogPost(id);
     if (!existing) {
@@ -96,9 +109,7 @@ export async function PUT(
         ...(body.ogImage !== undefined && {
           ogImage: body.ogImage || null,
         }),
-        ...(body.blocks !== undefined && {
-          blocks: typeof body.blocks === 'string' ? body.blocks : JSON.stringify(body.blocks),
-        }),
+        ...(blocks !== undefined && { blocks }),
         ...(body.tags !== undefined && {
           tags: body.tags ? JSON.stringify(body.tags) : null,
         }),

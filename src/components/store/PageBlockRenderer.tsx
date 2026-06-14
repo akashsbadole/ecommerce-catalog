@@ -53,6 +53,7 @@ import {
 } from "lucide-react";
 import { getFirstImage } from "@/lib/utils";
 import { formatPrice } from "@/lib/pricing";
+import { VideoModal } from "./VideoModal";
 
 // Curated icon map for dynamic resolution (instead of importing entire library)
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -115,6 +116,10 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import type { PageBlock } from "@/lib/page-blocks";
+import { AboutPage } from "./AboutPage";
+import { ManufacturingPage } from "./ManufacturingPage";
+import { ContactPage } from "./ContactPage";
+import { CataloguePage } from "./CataloguePage";
 
 // Allowed HTML tags and attributes for sanitized content
 const SANITIZE_OPTIONS = {
@@ -224,30 +229,32 @@ function HeroBlock({
       )}
       <div className="absolute inset-0 bg-black/30" />
       <div
-        className={`relative z-10 mx-auto max-w-4xl px-6 w-full ${alignClasses[alignment] || alignClasses.center}`}
+        className={`relative z-10 w-full ${alignClasses[alignment] || alignClasses.center}`}
       >
-        <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
-          {title}
-        </h1>
-        {subtitle && (
-          <p className="mt-4 text-lg text-white/90 sm:text-xl">{subtitle}</p>
-        )}
-        {buttonText && (
-          <Button
-            size="lg"
-            className="mt-6 bg-white text-primary/80 hover:bg-white/90"
-            onClick={() =>
-              onNavigate &&
-              buttonLink &&
-              onNavigate(
-                buttonLink.startsWith("/") ? "content-page" : "catalogue",
-                buttonLink.replace("/page/", ""),
-              )
-            }
-          >
-            {buttonText}
-          </Button>
-        )}
+        <div className="mx-auto max-w-4xl px-6">
+          <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="mt-4 text-lg text-white/90 sm:text-xl">{subtitle}</p>
+          )}
+          {buttonText && (
+            <Button
+              size="lg"
+              className="mt-6 bg-white text-primary/80 hover:bg-white/90"
+              onClick={() =>
+                onNavigate &&
+                buttonLink &&
+                onNavigate(
+                  buttonLink.startsWith("/") ? "content-page" : "catalogue",
+                  buttonLink.replace("/page/", ""),
+                )
+              }
+            >
+              {buttonText}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -987,13 +994,49 @@ function ProductCategoriesBlock({
   const label = (data.label as string) || "";
   const heading = (data.heading as string) || "";
   const description = (data.description as string) || "";
-  const categories =
-    (data.categories as Array<{ name: string; variants: string }>) || [];
   const ctaText = (data.ctaText as string) || "";
   const ctaLink = (data.ctaLink as string) || "";
   const ctaButtonColor = (data.ctaButtonColor as string) || "#2639ED";
   const ctaTextColor = (data.ctaTextColor as string) || "#FFFFFF";
   const showButton = data.showButton !== false;
+
+  const [apiCategories, setApiCategories] = useState<
+    Array<{
+      id: string;
+      name: string;
+      slug?: string;
+      description?: string | null;
+    }>
+  >([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const res = await fetch("/api/categories");
+        if (res.ok && !cancelled) {
+          const json = await res.json();
+          const cats = (json.categories || json.data || []).filter(
+            (c: { isActive?: boolean }) => c.isActive !== false,
+          );
+          setApiCategories(cats);
+        }
+      } catch {
+        // ignore
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const cmsCategories =
+    (data.categories as Array<{ name: string; variants: string }>) || [];
+  const categories = apiCategories.length > 0 ? apiCategories : cmsCategories;
 
   return (
     <section className="container mx-auto px-4 py-16 text-center">
@@ -1018,25 +1061,48 @@ function ProductCategoriesBlock({
             {description}
           </p>
         )}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          {categories.map((cat, i) => (
-            <motion.div
-              key={cat.name}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08, duration: 0.3 }}
-              className="group text-center cursor-pointer"
-              onClick={() => onNavigate && onNavigate("catalogue")}
-            >
-              <div className="aspect-square rounded-xl bg-muted flex items-center justify-center overflow-hidden border group-hover:border-brand/30 transition-colors">
-                <Package className="h-8 w-8 text-muted-foreground/40" />
-              </div>
-              <h3 className="font-medium text-sm mt-2">{cat.name}</h3>
-              <p className="text-xs text-muted-foreground">{cat.variants}</p>
-            </motion.div>
-          ))}
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="aspect-square rounded-xl bg-muted animate-pulse"
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+            {categories.map((cat, i) => (
+              <motion.div
+                key={cat.id || cat.name}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08, duration: 0.3 }}
+                className="group text-center cursor-pointer"
+                onClick={() =>
+                  onNavigate &&
+                  onNavigate(
+                    "category",
+                    (cat.slug || cat.name || "")
+                      .toLowerCase()
+                      .replace(/\s+/g, "-"),
+                  )
+                }
+              >
+                <div className="aspect-square rounded-xl bg-muted flex items-center justify-center overflow-hidden border group-hover:border-brand/30 transition-colors">
+                  <Package className="h-8 w-8 text-muted-foreground/40" />
+                </div>
+                <h3 className="font-medium text-sm mt-2">{cat.name}</h3>
+                {"variants" in cat && (
+                  <p className="text-xs text-muted-foreground">
+                    {(cat as { variants: string }).variants}
+                  </p>
+                )}
+              </motion.div>
+            ))}
+          </div>
+        )}
         {ctaText && showButton && (
           <div className="text-center mt-10">
             <Button
@@ -1058,7 +1124,6 @@ function ProductCategoriesBlock({
               }}
             >
               {ctaText}
-              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
         )}
@@ -1080,72 +1145,81 @@ function FactoryReelBlock({
   const ctaText = (data.ctaText as string) || "";
   const videoUrl = (data.videoUrl as string) || "";
   const thumbnailUrl = (data.thumbnailUrl as string) || "";
+  const [isVideoOpen, setIsVideoOpen] = useState(false);
 
   return (
-    <section className="relative overflow-hidden bg-foreground/5">
-      <div className="absolute inset-0 bg-gradient-to-br from-brand/10 via-transparent to-brand-teal/10" />
-      <div className="relative z-10 container mx-auto px-4 py-20">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
-        >
-          {label && (
-            <p className="text-xs uppercase tracking-[0.06em] text-muted-foreground mb-2">
-              {label}
-            </p>
-          )}
-          {heading && (
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">
-              {heading}
-            </h2>
-          )}
-          {description && (
-            <p className="text-sm text-muted-foreground max-w-md mx-auto mb-8">
-              {description}
-            </p>
-          )}
-          <div className="relative max-w-3xl mx-auto aspect-video rounded-xl overflow-hidden bg-muted border shadow-lg">
-            {thumbnailUrl ? (
-              <img
-                src={thumbnailUrl}
-                alt={heading}
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-            ) : (
-              <div className="absolute inset-0 bg-brand/5" />
+    <>
+      <section className="relative overflow-hidden bg-foreground/5">
+        <div className="absolute inset-0 bg-gradient-to-br from-brand/10 via-transparent to-brand-teal/10" />
+        <div className="relative z-10 container mx-auto px-4 py-20">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.5 }}
+            className="text-center"
+          >
+            {label && (
+              <p className="text-xs uppercase tracking-[0.06em] text-muted-foreground mb-2">
+                {label}
+              </p>
             )}
-            <div className="absolute inset-0 bg-black/20 group hover:bg-black/30 transition-colors" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <button
-                className="w-16 h-16 rounded-full bg-brand/90 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform shadow-xl text-brand-foreground"
-                onClick={() => videoUrl && window.open(videoUrl, "_blank")}
-              >
-                <Play className="h-6 w-6 ml-0.5" />
-              </button>
+            {heading && (
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">
+                {heading}
+              </h2>
+            )}
+            {description && (
+              <p className="text-sm text-muted-foreground max-w-md mx-auto mb-8">
+                {description}
+              </p>
+            )}
+            <div className="relative max-w-3xl mx-auto aspect-video rounded-xl overflow-hidden bg-muted border shadow-lg">
+              {thumbnailUrl ? (
+                <img
+                  src={thumbnailUrl}
+                  alt={heading}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              ) : (
+                <div className="absolute inset-0 bg-brand/5" />
+              )}
+              <div className="absolute inset-0 bg-black/20 group hover:bg-black/30 transition-colors" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <button
+                  className="w-16 h-16 rounded-full bg-brand/90 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform shadow-xl text-brand-foreground"
+                  onClick={() => videoUrl && setIsVideoOpen(true)}
+                >
+                  <Play className="h-6 w-6 ml-0.5" />
+                </button>
+              </div>
             </div>
-          </div>
-          {ctaText && (
-            <Button
-              variant="outline"
-              className="mt-8"
-              onClick={() =>
-                onNavigate &&
-                onNavigate(
-                  "content-page",
-                  ((data.ctaLink as string) || "").replace("/page/", ""),
-                )
-              }
-            >
-              {ctaText}
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          )}
-        </motion.div>
-      </div>
-    </section>
+            {ctaText && (
+              <Button
+                variant="outline"
+                className="mt-8"
+                onClick={() =>
+                  onNavigate &&
+                  onNavigate(
+                    "content-page",
+                    ((data.ctaLink as string) || "").replace("/page/", ""),
+                  )
+                }
+              >
+                {ctaText}
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            )}
+          </motion.div>
+        </div>
+      </section>
+      <VideoModal
+        isOpen={isVideoOpen}
+        onClose={() => setIsVideoOpen(false)}
+        videoUrl={videoUrl}
+        title={heading}
+      />
+    </>
   );
 }
 
@@ -1189,29 +1263,7 @@ function CertificationsBlock({
             ))}
           </div>
           {ctaText && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-8 text-muted-foreground"
-              onClick={() => {
-                const ctaLink = (data.ctaLink as string) || "";
-                if (ctaLink && onNavigate) {
-                  onNavigate(
-                    ctaLink.startsWith("/page/")
-                      ? "content-page"
-                      : ctaLink === "/contact"
-                        ? "contact"
-                        : "catalogue",
-                    ctaLink.replace("/page/", ""),
-                  );
-                } else if (onNavigate) {
-                  onNavigate("catalogue");
-                }
-              }}
-            >
-              {ctaText}
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+            <p className="text-xs text-muted-foreground mt-6">{ctaText}</p>
           )}
         </motion.div>
       </div>
@@ -2721,6 +2773,23 @@ export function PageBlockRenderer({
         return <QuickConnectBlock data={data} onNavigate={onNavigate} />;
       case "crm-flow":
         return <CrmFlowBlock data={data} />;
+      case "about-page-content":
+        return <AboutPage data={data} onNavigate={onNavigate || (() => {})} />;
+      case "mfg-page-content":
+        return (
+          <ManufacturingPage
+            data={data}
+            onNavigate={onNavigate || (() => {})}
+          />
+        );
+      case "contact-page-content":
+        return (
+          <ContactPage data={data} onNavigate={onNavigate || (() => {})} />
+        );
+      case "catalogue-page-content":
+        return (
+          <CataloguePage data={data} onNavigate={onNavigate || (() => {})} />
+        );
       default:
         return null;
     }

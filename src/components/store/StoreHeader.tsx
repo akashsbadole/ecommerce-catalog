@@ -65,6 +65,16 @@ interface NavItem {
   children?: NavItem[];
 }
 
+interface MenuItem {
+  id: string;
+  label: string;
+  url?: string;
+  page?: string;
+  slug?: string;
+  openInNewTab?: boolean;
+  children?: MenuItem[];
+}
+
 const mainNavLinks: NavItem[] = [
   { label: "Home", page: "home" },
   { label: "About Us", page: "about" },
@@ -94,8 +104,31 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
     }
   });
   const [dynamicNavLinks, setDynamicNavLinks] = useState<NavItem[]>([]);
+  const [primaryMenuItems, setPrimaryMenuItems] = useState<MenuItem[]>([]);
+  const [menuLoading, setMenuLoading] = useState(true);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch primary menu from API
+  useEffect(() => {
+    async function fetchPrimaryMenu() {
+      try {
+        const res = await fetch("/api/menus?location=primary");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.menu && data.items) {
+            setPrimaryMenuItems(data.items);
+          }
+        }
+      } catch {
+        // Use fallback to mainNavLinks if menu fetch fails
+        setPrimaryMenuItems([]);
+      } finally {
+        setMenuLoading(false);
+      }
+    }
+    fetchPrimaryMenu();
+  }, []);
 
   // Merge dynamic content pages into main nav
   useEffect(() => {
@@ -357,16 +390,68 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
             role="navigation"
             aria-label="Main navigation"
           >
-            {allNavLinks.map((link) => (
-              <Button
-                key={link.slug || link.page}
-                variant="ghost"
-                className="text-sm font-medium px-3"
-                onClick={() => onNavigate(link.page, link.slug)}
-              >
-                {link.label}
-              </Button>
-            ))}
+            {menuLoading ? (
+              // Loading skeleton
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="h-9 w-20 bg-muted animate-pulse rounded" />
+              ))
+            ) : primaryMenuItems.length > 0 ? (
+              // Render menu items from API
+              primaryMenuItems.map((item) => {
+                const hasChildren = item.children && item.children.length > 0;
+                return (
+                  <div key={item.id} className="relative group">
+                    <Button
+                      variant="ghost"
+                      className="text-sm font-medium px-3"
+                      onClick={() => {
+                        if (item.page) {
+                          onNavigate(item.page, item.slug);
+                        } else if (item.url) {
+                          window.open(item.url, item.openInNewTab ? "_blank" : "_self");
+                        }
+                      }}
+                    >
+                      {item.label}
+                      {hasChildren && (
+                        <ChevronDown className="ml-1 h-3 w-3" />
+                      )}
+                    </Button>
+                    {hasChildren && (
+                      <div className="absolute top-full left-0 mt-1 w-48 rounded-md bg-popover border shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                        {item.children?.map((child) => (
+                          <button
+                            key={child.id}
+                            className="w-full text-left px-4 py-2 text-sm hover:bg-muted transition-colors"
+                            onClick={() => {
+                              if (child.page) {
+                                onNavigate(child.page, child.slug);
+                              } else if (child.url) {
+                                window.open(child.url, child.openInNewTab ? "_blank" : "_self");
+                              }
+                            }}
+                          >
+                            {child.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            ) : (
+              // Fallback to mainNavLinks
+              allNavLinks.map((link) => (
+                <Button
+                  key={link.slug || link.page}
+                  variant="ghost"
+                  className="text-sm font-medium px-3"
+                  onClick={() => onNavigate(link.page, link.slug)}
+                >
+                  {link.label}
+                </Button>
+              ))
+            )}
           </nav>
 
           {/* Right: Search + CTA */}
@@ -439,17 +524,66 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                   aria-label="Mobile navigation"
                 >
                   {/* Main Nav Links */}
-                  {allNavLinks.map((link) => (
-                    <SheetClose asChild key={link.slug || link.page}>
-                      <Button
-                        variant="ghost"
-                        className="justify-start text-sm h-9"
-                        onClick={() => onNavigate(link.page, link.slug)}
-                      >
-                        {link.label}
-                      </Button>
-                    </SheetClose>
-                  ))}
+                  {menuLoading ? (
+                    // Loading skeleton
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="h-9 w-full bg-muted animate-pulse rounded" />
+                    ))
+                  ) : primaryMenuItems.length > 0 ? (
+                    // Render menu items from API
+                    primaryMenuItems.map((item) => {
+                      const hasChildren = item.children && item.children.length > 0;
+                      return (
+                        <div key={item.id}>
+                          <SheetClose asChild>
+                            <Button
+                              variant="ghost"
+                              className="justify-start text-sm h-9"
+                              onClick={() => {
+                                if (item.page) {
+                                  onNavigate(item.page, item.slug);
+                                } else if (item.url) {
+                                  window.open(item.url, item.openInNewTab ? "_blank" : "_self");
+                                }
+                              }}
+                            >
+                              {item.label}
+                            </Button>
+                          </SheetClose>
+                          {hasChildren && item.children?.map((child) => (
+                            <SheetClose asChild key={child.id}>
+                              <Button
+                                variant="ghost"
+                                className="justify-start text-sm h-9 pl-8"
+                                onClick={() => {
+                                  if (child.page) {
+                                    onNavigate(child.page, child.slug);
+                                  } else if (child.url) {
+                                    window.open(child.url, child.openInNewTab ? "_blank" : "_self");
+                                  }
+                                }}
+                              >
+                                {child.label}
+                              </Button>
+                            </SheetClose>
+                          ))}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    // Fallback to mainNavLinks
+                    allNavLinks.map((link) => (
+                      <SheetClose asChild key={link.slug || link.page}>
+                        <Button
+                          variant="ghost"
+                          className="justify-start text-sm h-9"
+                          onClick={() => onNavigate(link.page, link.slug)}
+                        >
+                          {link.label}
+                        </Button>
+                      </SheetClose>
+                    ))
+                  )}
 
                   <Separator className="my-2" />
 

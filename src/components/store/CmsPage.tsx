@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageBlockRenderer } from './PageBlockRenderer';
 import type { PageBlock } from '@/lib/page-blocks';
+import { normalizePageBlocks } from '@/lib/page-blocks';
 
 interface CmsPageProps {
   slug: string;
@@ -26,18 +27,12 @@ export function CmsPage({ slug, onNavigate, fallbackBlocks }: CmsPageProps) {
             const page = pages[0];
             let parsed: PageBlock[] = [];
             try {
-              if (page.blocks) {
-                let raw = page.blocks;
-                if (typeof raw === 'string' && raw.startsWith('"') && raw.endsWith('"')) {
-                  raw = JSON.parse(raw);
-                }
-                parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-              }
+              parsed = normalizePageBlocks(page.blocks);
             } catch (e) {
               console.error('Error parsing blocks:', e);
             }
 
-            if (Array.isArray(parsed) && parsed.length > 0) {
+            if (parsed.length > 0) {
               setBlocks(parsed);
               setLoading(false);
               return;
@@ -67,11 +62,8 @@ export function CmsPage({ slug, onNavigate, fallbackBlocks }: CmsPageProps) {
               const refetchData = await refetch.json();
               const pages = refetchData.contentPages || [];
               if (pages.length > 0 && pages[0].blocks) {
-                let parsed = pages[0].blocks;
-                if (typeof parsed === 'string' && parsed.startsWith('"') && parsed.endsWith('"')) {
-                  try { parsed = JSON.parse(parsed); } catch { /* ignore */ }
-                }
-                setBlocks(typeof parsed === 'string' ? JSON.parse(parsed) : parsed);
+                const parsed = normalizePageBlocks(pages[0].blocks);
+                setBlocks(parsed);
               }
             }
           }

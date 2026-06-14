@@ -70,6 +70,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { adminFetch } from '@/lib/admin-fetch';
 import type { PageBlock } from '@/lib/page-blocks';
 import { parseBlocks } from '@/lib/utils';
+import { normalizePageBlocks } from '@/lib/page-blocks';
 
 interface ContentPage {
   id: string;
@@ -173,6 +174,7 @@ export function AdminPages() {
   const handleOpenEdit = (page: ContentPage) => {
     setEditingPage(page);
     const parsedBlocks = parseBlocks(page.blocks);
+    const parsedBlocks = normalizePageBlocks(page.blocks || '[]');
     setForm({
       title: page.title,
       slug: page.slug,
@@ -193,6 +195,7 @@ export function AdminPages() {
     setBuilderPageId(page.id);
     setBuilderPageTitle(page.title);
     setBuilderBlocks(parseBlocks(page.blocks));
+    setBuilderBlocks(normalizePageBlocks(page.blocks || '[]'));
     setBuilderMode(true);
   };
 
@@ -204,6 +207,10 @@ export function AdminPages() {
 
   const handleBuilderSave = async () => {
     if (!builderPageId) return;
+    if (!Array.isArray(builderBlocks)) {
+      toast.error('Block data is invalid');
+      return;
+    }
     setBuilderSaving(true);
     try {
       const res = await adminFetch(`/api/content-pages/${builderPageId}`, {

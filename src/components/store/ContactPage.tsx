@@ -14,6 +14,7 @@ interface Category {
 
 interface ContactPageProps {
   onNavigate: (page: string, data?: unknown) => void;
+  data?: Record<string, unknown>;
 }
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -26,10 +27,10 @@ function ResolvedIcon({ name, className }: { name: string; className?: string })
   return null;
 }
 
-export function ContactPage({ onNavigate }: ContactPageProps) {
+export function ContactPage({ onNavigate, data: externalData }: ContactPageProps) {
   const { blocks } = useContentPage('contact-page-content');
   const rawData = getBlockData(blocks, 'contact-page-content');
-  const data = (rawData || BLOCK_DEFAULTS['contact-page-content'].defaultData) as Record<string, unknown>;
+  const data = externalData ?? rawData ?? BLOCK_DEFAULTS['contact-page-content'].defaultData;
 
   const hero = (data.hero as Record<string, unknown>) || {};
   const requirementTypes = (hero.requirementTypes as Array<{ id: string; label: string; icon: string }>) || [];
@@ -52,14 +53,14 @@ export function ContactPage({ onNavigate }: ContactPageProps) {
   return (
     <div className="flex flex-col">
       {/* CT0: Hero */}
-      <section className="bg-primary text-primary-foreground py-20 px-4">
+      <section className="bg-gradient-to-br from-[#abd0ff] via-[#8dc5ff] to-primary text-white py-20 px-4">
         <div className="container mx-auto max-w-5xl text-center">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/70 mb-4">Get in touch</p>
-          <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
+          <p className="text-xs uppercase tracking-[0.2em] text-white/80 mb-4">Get in touch</p>
+          <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4 text-white">
             {hero.title as string || 'Let\'s talk about your requirement'}
           </h1>
           {hero.subtitle as string && (
-            <p className="text-white/70 max-w-2xl mx-auto leading-relaxed mb-8">{hero.subtitle as string}</p>
+            <p className="text-white/80 max-w-2xl mx-auto leading-relaxed mb-8">{hero.subtitle as string}</p>
           )}
           <div className="flex gap-2 justify-center flex-wrap">
             {requirementTypes.map((type) => (
@@ -81,14 +82,16 @@ export function ContactPage({ onNavigate }: ContactPageProps) {
       </section>
 
       {/* CT1: Shared Contact Form */}
-      <section className="bg-primary text-primary-foreground py-12 px-4">
+      <section id="contact-form" className="bg-white py-12 px-4">
         <div className="container mx-auto max-w-3xl">
-          {(formSection.title as string) && <h2 className="text-xl font-bold text-center mb-2">{formSection.title as string}</h2>}
-          {(formSection.subtitle as string) && <p className="text-sm text-white/70 text-center mb-8">{formSection.subtitle as string}</p>}
+          {(formSection.title as string) && <h2 className="text-xl font-bold text-center mb-2 text-foreground">{formSection.title as string}</h2>}
+          {(formSection.subtitle as string) && <p className="text-sm text-muted-foreground text-center mb-8">{formSection.subtitle as string}</p>}
           <SharedContactForm
             initialEnquiryType={selectedType === 'bulk' ? 'product' : selectedType === 'pl' ? 'product' : 'contact'}
             variant="full"
             categories={categories}
+            bgColor="#2639ED"
+            textColor="#FFFFFF"
           />
         </div>
       </section>
@@ -147,7 +150,10 @@ export function ContactPage({ onNavigate }: ContactPageProps) {
                   )}
                   {card.cta && (
                     <button
-                      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                      onClick={() => {
+                        const form = document.getElementById('contact-form');
+                        if (form) form.scrollIntoView({ behavior: 'smooth' });
+                      }}
                       className="w-full bg-primary text-primary-foreground text-xs font-medium rounded py-2.5 hover:bg-primary/90 transition-colors"
                     >
                       {card.cta}

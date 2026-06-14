@@ -13,11 +13,20 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface StoreFooterProps {
   onNavigate: (page: string, data?: unknown) => void;
   settings?: Record<string, string> | null;
+}
+
+interface FooterMenuItem {
+  id: string;
+  label: string;
+  page?: string;
+  url?: string;
+  slug?: string;
+  children?: FooterMenuItem[];
 }
 
 export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
@@ -27,12 +36,35 @@ export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
     settings?.site_address || settings?.contact_address || "";
   const siteName = settings?.site_name || "My Store";
 
-  // Social media links from settings
+  const [footerMenuItems, setFooterMenuItems] = useState<FooterMenuItem[]>([]);
+  const [footerMenuLoading, setFooterMenuLoading] = useState(true);
+
   const facebookUrl = settings?.facebook_url || "#";
   const twitterUrl = settings?.twitter_url || "#";
   const instagramUrl = settings?.instagram_url || "#";
   const linkedinUrl = settings?.linkedin_url || "#";
-  // Customer service links that navigate to content pages
+
+  // Fetch footer menu from API
+  useEffect(() => {
+    async function fetchFooterMenu() {
+      try {
+        const res = await fetch("/api/menus?location=footer");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.menu && data.items) {
+            setFooterMenuItems(data.items);
+          }
+        }
+      } catch {
+        // Use fallback to hardcoded links if menu fetch fails
+        setFooterMenuItems([]);
+      } finally {
+        setFooterMenuLoading(false);
+      }
+    }
+    fetchFooterMenu();
+  }, []);
+
   const customerServiceLinks = [
     { label: "Shipping Info", page: "content-page", data: "shipping-info" },
     {
@@ -48,41 +80,10 @@ export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
     },
   ];
 
-  // Newsletter subscription
-  const [newsletterEmail, setNewsletterEmail] = useState("");
-  const [subscribing, setSubscribing] = useState(false);
-
-  const handleSubscribe = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newsletterEmail.trim()) return;
-
-    setSubscribing(true);
-    try {
-      const res = await fetch("/api/newsletter/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: newsletterEmail.trim() }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        toast.success(data.message || "Subscribed successfully!");
-        setNewsletterEmail("");
-      } else {
-        toast.error(data.error || "Failed to subscribe. Please try again.");
-      }
-    } catch {
-      toast.error("Network error. Please try again.");
-    } finally {
-      setSubscribing(false);
-    }
-  };
-
   return (
     <footer className="border-t bg-muted/30" role="contentinfo">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {/* Company Info */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
@@ -141,24 +142,71 @@ export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
               Quick Links
             </h3>
             <ul className="space-y-2">
-              {[
-                { label: "Home", page: "home" },
-                { label: "About Us", page: "about" },
-                { label: "Manufacturing", page: "manufacturing" },
-                { label: "Products", page: "products" },
-                { label: "Catalogue", page: "catalogue" },
-                { label: "Blog", page: "blog" },
-                { label: "Contact Us", page: "contact" },
-              ].map((link) => (
-                <li key={link.label}>
-                  <button
-                    onClick={() => onNavigate(link.page)}
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground hover:underline"
-                  >
-                    {link.label}
-                  </button>
-                </li>
-              ))}
+              {footerMenuLoading ? (
+                // Loading skeleton
+                Array.from({ length: 7 }).map((_, i) => (
+                  <li key={i}>
+                    <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+                  </li>
+                ))
+              ) : footerMenuItems.length > 0 ? (
+                // Render menu items from API
+                footerMenuItems.map((item) => {
+                  const hasChildren = item.children && item.children.length > 0;
+                  return (
+                    <div key={item.id}>
+                      <button
+                        onClick={() => {
+                          if (item.page) {
+                            onNavigate(item.page);
+                          } else if (item.url) {
+                            window.open(item.url, "_blank");
+                          }
+                        }}
+                        className="text-sm text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                      >
+                        {item.label}
+                      </button>
+                      {hasChildren && item.children?.map((child) => (
+                        <div key={child.id} className="pl-4 mt-1">
+                          <button
+                            onClick={() => {
+                              if (child.page) {
+                                onNavigate(child.page);
+                              } else if (child.url) {
+                                window.open(child.url, "_blank");
+                              }
+                            }}
+                            className="text-sm text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                          >
+                            {child.label}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })
+              ) : (
+                // Fallback to hardcoded links
+                [
+                  { label: "Home", page: "home" },
+                  { label: "About Us", page: "about" },
+                  { label: "Manufacturing", page: "manufacturing" },
+                  { label: "Products", page: "products" },
+                  { label: "Catalogue", page: "catalogue" },
+                  { label: "Blog", page: "blog" },
+                  { label: "Contact Us", page: "contact" },
+                ].map((link) => (
+                  <li key={link.label}>
+                    <button
+                      onClick={() => onNavigate(link.page)}
+                      className="text-sm text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                    >
+                      {link.label}
+                    </button>
+                  </li>
+                ))
+              )}
             </ul>
           </div>
 
@@ -187,30 +235,36 @@ export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
               Contact Info
             </h3>
             <ul className="space-y-3">
-              <li className="flex items-start gap-2">
-                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <a
-                  href={`mailto:${companyEmail}`}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {companyEmail}
-                </a>
-              </li>
-              <li className="flex items-start gap-2">
-                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <a
-                  href={`tel:${companyPhone}`}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {companyPhone}
-                </a>
-              </li>
-              <li className="flex items-start gap-2">
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <span className="text-sm text-muted-foreground">
-                  {companyAddress}
-                </span>
-              </li>
+              {companyEmail && (
+                <li className="flex items-start gap-2">
+                  <Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <a
+                    href={`mailto:${companyEmail}`}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {companyEmail}
+                  </a>
+                </li>
+              )}
+              {companyPhone && (
+                <li className="flex items-start gap-2">
+                  <Phone className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <a
+                    href={`tel:${companyPhone}`}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {companyPhone}
+                  </a>
+                </li>
+              )}
+              {companyAddress && (
+                <li className="flex items-start gap-2">
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <span className="text-sm text-muted-foreground">
+                    {companyAddress}
+                  </span>
+                </li>
+              )}
             </ul>
           </div>
         </div>

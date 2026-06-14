@@ -81,7 +81,8 @@ export function SharedContactForm({
     }
   };
 
-  const inputClass = `w-full rounded px-3 py-2 text-sm border border-white/20 bg-white/10 placeholder:text-gray-400 text-[${textColor}]`;
+  const inputClass = `w-full rounded px-3 py-2 text-sm border border-white/20 bg-white/10 placeholder:text-gray-400`;
+  const inputTextStyle = { color: textColor };
 
   if (variant === 'compact') {
     return (
@@ -104,8 +105,8 @@ export function SharedContactForm({
         <p className="text-xs" style={{ color: textColor }}>Fields marked * are required</p>
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <input placeholder="Your name *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputClass} required />
-        <input placeholder="Company name" value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} className={inputClass} />
+        <input placeholder="Your name *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputClass} required style={inputTextStyle} />
+        <input placeholder="Company name" value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} className={inputClass} style={inputTextStyle} />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <input placeholder="Phone number *" type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={inputClass} required />

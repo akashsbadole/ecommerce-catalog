@@ -30,14 +30,12 @@ export function StoreLayout({
   const fetchSettings = useAppStore((s) => s.fetchSettings);
   const prevPageRef = useRef(currentPage);
 
-  // Fetch settings on mount if not already loaded
   useEffect(() => {
     if (!settings) {
       fetchSettings();
     }
   }, [settings, fetchSettings]);
 
-  // Inject JSON-LD Organization structured data when settings are loaded
   useEffect(() => {
     if (!settings) return;
 
@@ -82,7 +80,6 @@ export function StoreLayout({
     };
   }, [settings]);
 
-  // Scroll to top on navigation
   useEffect(() => {
     if (prevPageRef.current !== currentPage) {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -93,11 +90,11 @@ export function StoreLayout({
   return (
     <div className="flex min-h-screen flex-col">
       {/* Announcement Bar */}
-      {settings?.announcement_text && (
+      {settings?.announcement_text ? (
         <div className="bg-primary text-center text-xs py-2 px-4">
-          <p className=" text-white">{settings.announcement_text}</p>
+          <p className="text-white">{settings.announcement_text}</p>
         </div>
-      )}
+      ) : null}
       <StoreHeader onNavigate={onNavigate} />
 
       <main className="flex-1 pb-16 lg:pb-0">

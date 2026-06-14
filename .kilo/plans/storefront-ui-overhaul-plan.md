@@ -1,252 +1,254 @@
-# WCommerce Storefront UI/UX Modification Plan
-
-## Global Design Rule
-
-All buttons, CTAs, and anchor links across the entire storefront must use the **blue background + white text** combination (`#2639ED` / `bg-primary`, `text-white`, `text-primary-foreground`). This applies to every call-to-action, link button, card action, tab, badge link, header button, footer link, and any clickable element unless explicitly overridden by CMS. Consistent blue/white CTA palette is mandatory site-wide.
+# Storefront UI Overhaul - Comprehensive Plan
 
 ## Overview
-
-Transform the storefront from hardcoded sections to a cleaner, B2B-focused layout with a unified contact form, light-only theme, and CMS-configurable blue/white CTAs.
-
----
-
-## Phase 1: Theme & Layout Foundation
-
-**Files:** `src/components/ThemeProvider.tsx`, `src/app/globals.css`, `tailwind.config.ts`, `src/components/store/StoreHeader.tsx`, `src/components/store/StoreLayout.tsx`
-
-1. **Force light mode only**
-   - Remove `next-themes` provider and all theme toggle components
-   - Remove `darkMode: "class"` from tailwind config
-   - Remove `.dark` overrides from `globals.css`, merge into `:root`
-   - Remove `<ThemeToggle />` and `<SimpleThemeToggle />` from `StoreHeader`
-
-2. **Homepage layout adjustments**
-   - Remove top navigation bar (if present in homepage wrapper; keep header minimal) - add anounce bar
-   - Add announcement bar at very top of homepage (`StoreLayout` or `HomePage` hero area)
-   - Make hero/banner full-width (remove `max-w-7xl` / container constraints from slider/hero blocks)
+Multiple page-level changes across the WCommerce storefront: Home, About, Manufacturing, Catalogue, Contact, and Blog pages. All changes are frontend-only unless explicitly noted. Theme removal is cosmetic; no new dark theme is added.
 
 ---
 
-## Phase 2: Homepage Changes
+## 1. HOME PAGE Changes
 
-**Files:** `src/components/store/HomePage.tsx`, `src/components/store/PageBlockRenderer.tsx`, `src/lib/page-blocks.ts`, `src/components/store/StickyCtaBar.tsx`
+### 1a. Announcement Bar + Top Nav Removal
+- **File**: `src/components/store/StoreHeader.tsx` (lines 249-330)
+- **File**: `src/components/store/StoreLayout.tsx` (lines 96-100)
+- **Action**: 
+  - Announcement bar already renders conditionally in `StoreLayout` (`announcement_text` setting). Make it **always-visible** (remove the `&&` condition) and styled as full-width, blue background, white text, centered.
+  - Ensure it already uses `settings?.announcement_text`. The author will fill `announcement_text` from CMS/admin settings. Default to empty string when not set.
+  - Remove the hidden top bar entirely. Delete lines 249-330 in `StoreHeader.tsx` (the `<div className="hidden ">` TOP BAR block). This removes the "Welcome / My Account / Wishlist / Cart" top strip.
 
-1. **"Who we serve" (audience-cards block)**
-   - Center-align the section
-   - Replace card links/actions with buttons: **"Enquire now"**, **"Get details"**, **"Partner with us"**, **"Send requirement"**
-   - Default style: `bg-primary` (blue `#2639ED`) background, white text
-   - Add CMS field `ctaButtonColor` / `ctaTextColor` to block data so admin can change colors
+### 1b. Light Theme Only (Remove Dark/Light Toggle)
+- **File**: `src/components/ThemeProvider.tsx`, `src/components/ThemeToggle.tsx`, `src/components/SimpleThemeToggle.tsx`
+- **Action**:
+  - Remove theme toggle buttons from header (`StoreHeader.tsx`), footer (`StoreFooter.tsx`), and mobile nav (`MobileBottomNav.tsx`).
+  - Remove `DarkModeToggle` / `ThemeToggle` from admin and any layout.
+  - Hardcode `light` theme in `globals.css` and `tailwind.config.ts` by removing the `darkMode` class strategy.
+  - Ensure all color variables in `:root` are always applied and no `.dark` overrides needed. Remove any `.dark:` variants from classNames across store components.
 
-2. **"Our product range" (product-categories block)**
-   - Center-align section
-   - Show **6 categories** instead of 5 (update default block data, grid to 3×2 or 6-col)
-   - Default button color: blue (`bg-primary`) with white text, configurable from CMS
+### 1c. Full-Width Banner
+- **File**: `src/components/store/PageBlockRenderer.tsx` (HeroBlock, lines 185-253)
+- **Action**: In `HeroBlock`, change the outer container from `mx-auto max-w-4xl` to `w-full` so the hero spans full width. Content inner container keeps `max-w-4xl mx-auto` for text alignment.
 
-3. **Hide "Ready to manufacture at scale" (sticky-cta block)**
-   - Remove `sticky-cta` from default homepage blocks
-   - Add a `visible` CMS flag so it can be re-enabled if needed
+### 1d. 4-Item Card Section (Banner Below)  
+- **File**: `src/components/store/PageBlockRenderer.tsx` (AudienceCards / `audience-cards` block)
+- **Action**: Update the `audience-cards` renderer so all 4 cards (`B2B brands`, `Private label`, `Distributors`, `Institutional buyers`) are **centered** in their container. Use `text-center` and `mx-auto` approach. Ensure CTAs render as buttons with:
+  - Blue background (`bg-primary`) and white text (`text-primary-foreground`) by default.
+  - CMS fields `ctaButtonColor` and `ctaTextColor` already exist in `BLOCK_DEFAULTS["audience-cards"]` — use them for inline styles.
 
-4. **Banner full-width**
-   - Update `slider` and `hero-split` renderers to use `w-full` without container
+### 1e. Who We Serve - Sections Center + Buttons
+- **Action**: Same as 1d. The `audience-cards` block data already has `ctaButtonColor: "#2639ED"` and `ctaTextColor: "#FFFFFF"` defaults. Render each card's CTA using these CMS-provided colors. Ensure cards are in a centered grid.
 
----
+### 1f. Our Product Range - Center Aligned, 6 Categories, Blue Button
+- **File**: `src/components/store/PageBlockRenderer.tsx` (`product-categories` block)
+- **Action**: 
+  - Add a 6th category entry to `BLOCK_DEFAULTS["product-categories"].defaultData.categories` (e.g., `Namkeen` with variants).
+  - Ensure the section header and grid are centered (`text-center` on wrapper, each card `mx-auto`).
+  - The CTA button already uses `ctaButtonColor` / `ctaTextColor` defaults (`#2639ED` / `#FFFFFF`) — keep and ensure styling is applied.
 
-## Phase 3: About Us Page
+### 1g. Hide "Ready to Manufacture at Scale" Section
+- **File**: `src/components/store/StickyCtaBar.tsx`
+- **Action**: Remove `StickyCtaBar` from `StoreLayout.tsx` rendering (delete lines 122-124 in `StoreLayout.tsx`). Alternatively, keep component file but never render it. This removes the floating bottom "Ready to manufacture at scale?" bar.
 
-**File:** `src/components/store/AboutPage.tsx`
+### 1h. Hide WhatsApp Link from Footer
+- **File**: `src/components/store/StoreFooter.tsx`
+- **Action**: Remove all WhatsApp reference lines from footer output. No WhatsApp contact display. Phone number stays as `tel:` link.
 
-1. **Hero banner background**
-   - Make hero background image configurable from CMS (add image field to hero block or About CMS page)
-   - Add fallback gradient if no image set
-
-2. **Director / Author profiles (The People behind Purva Bites)**
-   - Add CMS-configurable image support (edit inline or upload)
-   - Remove WhatsApp icon buttons
-   - Remove tag/label chips under names
-   - Add `imageUrl`, `name`, `role`, `bio` fields backed by CMS or ContentPage
-
-3. **"Ready to work with us" section**
-   - Fix color combination (too dark / low contrast currently)
-   - 2nd and 3rd cards should link to `/contact` (inline contact form trigger) instead of static text
-
----
-
-## Phase 4: Manufacturing Page
-
-**File:** `src/components/store/ManufacturingPage.tsx`
-
-1. **Production lines tab**
-   - Add "View Products" button on each production-line tab
-   - Button redirects to `/catalogue` with category filter or directly to relevant product category page, here you need to create category pages
-   - Make target category/product configurable from CMS per production line
-
-2. **"Your brand Our Factory" section**
-   - Fix color combination (current dark bg / dark text issue)
-   - Ensure text visibility; use light background with dark text or white cards
-   - Add CMS editable colors if applicable
-
-3. **Unified contact form**
-   - Add the shared contact form component (see Phase 8) to the manufacturing page
-   - Position it in a prominent CTA section
-
-4. **Certifications section**
-   - Hide/remove "Download PDF" buttons from certification cards
+### 1i. Hide Newsletter from Footer
+- **File**: `src/components/store/StoreFooter.tsx` (lines 52-80, and the newsletter subscribe section in the 4th grid column)
+- **Action**: Remove the entire newsletter subscription form block from the footer's 4th column. Replace with static contact info or remove the 4th column.
 
 ---
 
-## Phase 5: Catalogue Page
+## 2. ABOUT PAGE Changes
 
-**File:** `src/components/store/CataloguePage.tsx`
+### 2a. Banner Background Images
+- **File**: `src/components/store/AboutPage.tsx` (section A1 Hero, lines 109-126)
+- **Action**: The hero already uses `bg-gradient-to-br`. Replace with a CMS-driven `backgroundImage` field in `BLOCK_DEFAULTS["about-page-content"].defaultData`. In the About page, read `hero.backgroundImage` and render as `<img>` absolute inset-0 when present, falling back to the gradient.
 
-1. **Category tabs → Functional navigation**
-   - Clicking a category tab filters products (already does this) AND provides a category-specific header/hero
-   - Hide tag chips on product cards and category hero strip
-   - Remove "Min order quantity" display from product cards
+### 2b. Author Image/Content in About Page
+- **File**: `src/components/store/AboutPage.tsx` (A4 section, lines 229-307)
+- **Action**: Directors array already supports `imageUrl` — this is correct. The author from CMS (`quoteData.author`) currently renders as plain text. Add an optional `authorImage` field to `directors` and display it as avatar next to quotes. Ensure the quote section can accept an image for the quote author.
 
-2. **Enquire now → Inline contact form on same page**
-   - Clicking "Enquire" on a product or category opens the unified contact form inline (or modal) within the catalogue page instead of navigating away
+### 2c. Remove WhatsApp and Tagging from "People Behind Purva Bites"
+- **File**: `src/components/store/AboutPage.tsx` (A4 section, line 269-274)
+- **Action**: Remove the LinkedIn button and any social tagging from director cards. Keep only the image, name, role, bio. Optionally allow a `socialUrl` field per director, but remove hardcoded LinkedIn icon.
 
-3. **Category detail pages**
-   - Create `src/components/store/CategoryPage.tsx`
-   - Route: `/catalogue/[slug]` via catch-all or file-based route (currently hardcoded in SPA router)
-   - Each category gets its own hero, description, and product grid
-   - Add "Send enquiry" button on category page that submits via unified contact form
-
-4. **Hide elements**
-   - Remove "We do not sell retail. All orders are b2b bulk and trade only" banner
-   - Remove "Download full catalogue" button/link
-
----
-
-## Phase 6: Contact Us Page
-
-**File:** `src/components/store/ContactPage.tsx`
-
-1. **Color combos**
-   - Re-style "Get in touch" hero / form sections for better contrast
-   - Use blue (`#2639ED`) background with white text where appropriate; ensure all text passes accessibility
-
-2. **Remove / hide**
-   - WhatsApp phone number from sidebar
-   - WhatsApp button from form (keep if requested, but user said hide)
-   - "Prefer a quicker channel" section
-   - "What happens — Get in touch" CRM flow section (or move it)
-
-3. **Schedule a factory visit**
-   - Change CTA to scroll-to / open the unified contact form on the same page with enquiry type pre-selected as "factory visit"
+### 2d. "Ready to Work With Us" — Color Combination Fix + Contact Form
+- **File**: `src/components/store/AboutPage.tsx` (A8 section, lines 417-447)
+- **Action**: 
+  - Change the second and third card CTAs to use a **contact form** instead of navigation buttons. Replace `onClick={() => onNavigate(item.page)}` with an inline contact form (reuse `SharedContactForm` with `variant="compact"`), scrolled/anchor to the contact form at top of page.
+  - Restyle the section background so text is readable: use blue (`bg-primary`) with white text, not the current white card on blue which has poor contrast for the card text. Cards should be `bg-white text-gray-900` on a blue section.
+  - Default CTAs: card 1 → `View manufacturing →` (stays as nav), card 2 → inline mini form, card 3 → inline mini form.
 
 ---
 
-## Phase 7: Footer Changes
+## 3. MANUFACTURING PAGE Changes
 
-**File:** `src/components/store/StoreFooter.tsx`
+### 3a. Production Line Tab — CMS-Configurable Link
+- **File**: `src/components/store/ManufacturingPage.tsx` (M2 section, lines 191-277)
+- **File**: `src/lib/page-blocks.ts` (`mfg-page-content` defaults)
+- **Action**:
+  - In `productionLines` data, add a `ctaText` and `ctaLink` field (optional, with defaults).
+  - The existing "View Products →" button already calls `onNavigate("category", activeLineData?.id)`. Add a CMS checkbox `showProductionLineCta` (default `true`) in `BLOCK_DEFAULTS["mfg-page-content"]` so admin can show/hide the button per production line.
+  - Button labels/links should be CMS-editable per production line item.
 
-1. **Remove WhatsApp link** from contact info column
-2. **Remove Newsletter section** (entire border container + input + button)
+### 3b. "Your Brand Our Factory" — Color Fix + Text Visibility
+- **File**: `src/components/store/ManufacturingPage.tsx` (M5 section, lines 330-390)
+- **Action**: The section currently uses `bg-muted/40` with white cards. Ensure text contrast: use `bg-background` cards with `border` on a `bg-muted/40` background. The heading, body text, and CTA should all use `text-foreground` / `text-muted-foreground` properly. No color combination issues if foreground is dark on light.
 
----
+### 3c. Homepage Contact Form + CMS Color
+- **File**: `src/components/store/ManufacturingPage.tsx` (M7 section, lines 418-437)
+- **Action**:
+  - Reuse the **same** `SharedContactForm` component (already imported and used).
+  - Add `bgColor` and `textColor` (or `formBgColor`, `formTextColor`) fields to `mfg-page-content` default data.
+  - Pass these CMS values to `SharedContactForm`'s `bgColor` and `textColor` props so the form's blue color is overridable from CMS/admin.
 
-## Phase 8: Shared Contact Form Component
-
-**New file:** `src/components/store/SharedContactForm.tsx`
-
-1. Build a reusable `<SharedContactForm />` component accepting props:
-   - `initialEnquiryType` (default: "contact")
-   - `categories` (for product/category dropdown)
-   - `onSubmitSuccess` callback
-   - `variant`: "full" | "compact" | "inline"
-   - `bgColor` and `textColor` props (default blue bg / white text)
-
-2. Form fields: name, company, phone, email, productInterest (optional), quantity (optional), message, source (optional)
-
-3. Submits to `POST /api/enquiries` (existing endpoint) with proper validation
-
-4. Replace inline forms in:
-   - `ContactPage.tsx`
-   - `CataloguePage.tsx` (enquire modal/section)
-   - `ManufacturingPage.tsx`
-   - Any CMS `lead-capture` block rendering
-
-5. Ensure CMS integration so author can toggle button colors per block instance
+### 3d. Certification Section — Hide Download PDF
+- **File**: `src/components/store/ManufacturingPage.tsx` (M6 section, lines 392-416)
+- **Action**: Remove the "View all certifications" CTA or any download PDF button from the certifications grid. Keep only the certification cards display.
 
 ---
 
-## Phase 9: Blogs Page — Category Enquiry
+## 4. CATALOGUE PAGE Changes
 
-**Files:** `src/components/store/BlogPage.tsx`, `src/app/[[...slug]]/page.tsx`, `src/lib/page-blocks.ts`
+### 4a. Enable Category Tabs (Functional)
+- **File**: `src/components/store/CataloguePage.tsx` (Category Tabs section, lines 320-356)
+- **Action**: Tabs are already wired — clicking a non-"all" tab calls `onNavigate('category', cat.id)`. Already functional. Verify in `CatchAllPage` that `/catalogue/<slug>` correctly routes to `CategoryPage`.
 
-1. **Blog listing** — remove linking to individual blog post detail pages (keep grid/list view only)
-2. **Category enquiry flow**
-   - Define blog categories/tags as enquiry targets
-   - Add "Enquire about this category" button on blog cards or filter bar
-   - Clicking opens `SharedContactForm` with `initialEnquiryType` pre-filled and category context
-3. **Optionally create a generic `/blog/category/[slug]` page** for category-specific blog collections with a unified contact form at the bottom
+### 4b. Hide Tagging from Products
+- **File**: `src/components/store/CataloguePage.tsx` (Product Grid, lines 414-486)
+- **Action**: In the product card, remove the `tags` rendering (lines 418-420: `if (product.Category) tags.push(product.Category.name); if (product.isFeatured) tags.push('Featured');`). Remove the `tags` display from the card. Remove the `tag` span elements. Step 4e also covers min order quantity removal.
 
----
+### 4c. After Clicking Enquire Now → Inline Contact Form on Same Page
+- **File**: `src/components/store/CataloguePage.tsx` (EnquiryModal usage, lines 563-573 and `handleEnquiryClick`)
+- **Action**:
+  - Remove the `EnquiryModal` modal popup. Instead, replace the click handler so that clicking "Enquire" on any product **scrolls to or reveals an inline contact form** on the same Catalogue page.
+  - Add a `SharedContactForm` with `variant="inline"` or `variant="full"` at the bottom of the Catalogue page (after the product grid). Pass `productContext` from the clicked product.
+  - Click "Enquire" → set selected product state → scroll to form section smoothly.
 
-## Phase 10: CMS Admin / Content Model Updates
+### 4d. Category Pages (Dedicated Page per Category)
+- **File**: `src/components/store/CategoryPage.tsx` (already exists, lines 1-319)
+- **Status**: **Already implemented**. `/catalogue/<slug>` routes to this page via `CatchAllPage.page.tsx` (line 52).
 
-**Files:** `src/lib/page-blocks.ts`, CMS editor in admin (if separate), `prisma/schema.prisma` (if new fields needed)
+### 4e. Remove "We Do Not Sell Retail" Message
+- **File**: Search `src/components/store/CataloguePage.tsx` and related files for "retail" / "B2B" disclaimer text.
+- **Action**: Find and remove any "We do not sell retail. All orders are B2B bulk and trade only" text from the catalogue page.
 
-1. Add configurable `ctaButtonColor`, `ctaTextColor`, `ctaUrl`, `showButton` fields to block types:
-   - `audience-cards`
-   - `product-categories`
-   - `slider` / `hero-split`
-   - `sticky-cta`
+### 4f. Remove "Download Full Catalogue"
+- **File**: Search in `CataloguePage.tsx`, `HomePage`, `PageBlockRenderer.tsx`, and shared blocks for "Download full catalogue" buttons.
+- **Action**: Remove any "Download full catalogue" button/link from the Catalogue page and homepage blocks (`certifications`, `quick-connect` blocks in `PageBlockRenderer.tsx`).
 
-2. If new DB fields required per block (not just JSON in `blocks`), update `ContentPage` or relevant model and run migrations
-
-3. Ensure admin Page Builder exposes these new fields
-
----
-
-## Migration / Rollout Notes
-
-- Run `npx prisma generate` after any schema changes
-- Run `npm run build` and `npx tsc --noEmit` to verify
-- Footer and theme removals are global; test on all storefront pages
-- "Get Bulk Quote" existing theme (`StoreHeader`, `StickyCtaBar`) retains `bg-primary` behavior unless modified
+### 4g. Remove Min Order Quantity Display
+- **File**: `src/components/store/CataloguePage.tsx` (product card)
+- **Action**: Remove `minOrderQty` references in catalogue display. Products in catalogue cards should not show MOQ (B2B-only detail handled via enquiry form).
 
 ---
 
-## CMS Data Visibility & No-Cache Guarantee
+## 5. CONTACT PAGE Changes
 
-- **Admin side**: `adminFetch` in `src/lib/admin-fetch.ts` uses `cache: 'no-store'`. Every admin save/read hits the database directly with no browser or CDN cache.
-- **Frontend side**: `CmsPage.tsx`, `HomePage.tsx`, `ContentPageView.tsx`, and all CMS blocks use plain `fetch('/api/content-pages?slug=...')` with no `cache`, `revalidate`, or TTL. `ContentPage` API route sets `export const dynamic = 'force-dynamic'` with no `Cache-Control` headers.
-- **No Zustand/React Query/SWR cache** exists for CMS content. Content is re-fetched fresh on every page mount.
-- **Seed/Auto-seed** logic (`seed/route.ts`) is create-if-not-exists only; it **never overwrites** existing CMS records. If a page is deleted, frontend auto-seeds defaults, but in-place edits are never clobbered.
-- **Result**: Any content added or updated in the CMS block editor is visible immediately to admin users and to storefront visitors on the next page load. No additional cache-busting or revalidation steps are required.
+### 5a. "Get in Touch" Color Fix
+- **File**: `src/components/store/ContactPage.tsx` (Hero CT0, lines 54-81)
+- **Action**: Change from `bg-primary text-primary-foreground` to a more readable combination. Proposed: white background with blue (`text-primary`) heading, or a blue-to-light-blue gradient. The current solid blue can look heavy — add a subtle overlay/gradient for better aesthetics. Update the hero background to `bg-gradient-to-br from-[#abd0ff] to-primary` so text remains white and is readable.
 
----
+### 5b. Hide WhatsApp Number
+- **File**: `src/components/store/ContactPage.tsx`
+- **Action**: No WhatsApp number currently shown directly. Ensure no WhatsApp link/button is rendered. The `quick-connect` block in CMS handles WhatsApp — that is controlled by CMS (can be hidden).
 
-## Files to Modify (Summary)
+### 5c. Hide "WhatsApp Instead" / Quick Connect
+- **File**: `src/components/store/PageBlockRenderer.tsx` (`quick-connect` block, lines 2362+)
+- **Action**: No explicit "WhatsApp instead" section found. The `quick-connect` block renders WhatsApp as a channel — admin can remove it via CMS. No code change needed unless explicitly rendered. Leave as is; CMS-controlled.
 
-| File                                                 | Changes                                                |
-| ---------------------------------------------------- | ------------------------------------------------------ |
-| `src/components/ThemeProvider.tsx`                   | Remove next-themes, force light                        |
-| `src/app/globals.css`                                | Remove `.dark` overrides                               |
-| `tailwind.config.ts`                                 | Remove `darkMode: "class"`                             |
-| `src/components/store/StoreHeader.tsx`               | Remove theme toggles, possibly simplify nav            |
-| `src/components/store/StoreFooter.tsx`               | Remove WhatsApp link + newsletter                      |
-| `src/components/store/StoreLayout.tsx`               | Add announcement bar, full-width wrapper               |
-| `src/components/store/HomePage.tsx`                  | Update block defaults (6 categories, no sticky-cta)    |
-| `src/components/store/PageBlockRenderer.tsx`         | Pass CMS colors to blocks                              |
-| `src/lib/page-blocks.ts`                             | Add `ctaButtonColor` etc to block types                |
-| `src/components/store/AboutPage.tsx`                 | Author images, remove WhatsApp/tags, fix colors        |
-| `src/components/store/ManufacturingPage.tsx`         | Tabs → products, fix colors, add shared form, hide PDF |
-| `src/components/store/CataloguePage.tsx`             | Inline enquiry form, hide B2B banner, hide download    |
-| `src/components/store/ContactPage.tsx`               | Fix colors, hide WhatsApp/CRM/prefer quicker           |
-| `src/components/store/BlogPage.tsx`                  | Remove post pages, add category enquiry                |
-| **NEW** `src/components/store/SharedContactForm.tsx` | Reusable unified form                                  |
-| **NEW** `src/components/store/CategoryPage.tsx`      | Category-level landing page                            |
-| `src/app/[[...slug]]/page.tsx`                       | Add route for `/catalogue/[slug]`                      |
+### 5d. "Schedule a Factory Visit" → Scroll to Contact Form (Same Page)
+- **File**: `src/components/store/ContactPage.tsx` (Location Cards, lines 116-161, specifically line 150 `scrollTo`)
+- **Action**: The "Schedule a factory visit" CTA already scrolls to top (line 150: `window.scrollTo({ top: 0 })`). Change it to scroll to the contact form section instead (add an `id` to the form section `<section>` and use `document.getElementById('contact-form').scrollIntoView({ behavior: 'smooth' })`).
+
+### 5e. Remove "Prefer a Quicker Channel?" Section
+- **File**: `src/components/store/ContactPage.tsx` check if `quick-connect` block is rendered.
+- **Action**: Remove the `quick-connect` CMS block from `contact-page-content` default data in `page-blocks.ts` if present. (It is not currently in `contact-page-content` defaults, but ensure no separate render.)
+
+### 5f. Remove "What Happens After You Get in Touch" (CRM Flow)
+- **File**: `src/components/store/ContactPage.tsx` check CRM flow section
+- **Action**: If a CRM flow block is rendered on Contact page via CMS or hardcoded, remove it. Currently not visible in `ContactPage.tsx`. Verify in `PageBlockRenderer.tsx`.
 
 ---
 
-## Open Questions for User
+## 6. BLOG PAGE Changes
 
-1. **Announcement bar**: Should it be a CMS-editable block (text, link, dismissible) or a static banner?
-2. **Homepage navigation removal**: Remove entire `<nav>` / header from homepage, or just simplify links?
-3. **Contact form on same page (catalogue/manufacturing)**: Modal overlay or inline section?
-4. **Blog category pages**: Full `/blog/category/[slug]` page, or just an enquiry-trigger button on the blog listing?
-5. **Sticky CTA replacement**: Should the `sticky-cta` block type be deleted from `page-blocks.ts` and DB, or just hidden via `visible: false` default?
+### 6a. Blog Design — Category Page Instead of Product Detail
+- **File**: `src/components/store/BlogPage.tsx` (lines 1-309)
+- **Action**:
+  - Clicking on a blog post card currently calls `onNavigate('blog-post', post.slug)` which opens a full post detail page (`BlogPostView`).
+  - Add an **inline enquiry form** that appears on the Blog list page when a user clicks "Enquire" from a tag. This is already partially there (line 193: `onNavigate('contact')`). Replace this to scroll-to or reveal a `SharedContactForm` at the bottom of the blog page, pre-filled with the selected category/tag.
+  - No need for the blog post detail page to be removed entirely, but the requirement says "no need to go specific product page" — the `blog-post` route can remain but the tag-based enquiry should work from the blog list without navigating away.
+
+---
+
+## 7. SHARED CONTACT FORM — CMS Color Customization
+- **File**: `src/components/store/SharedContactForm.tsx`
+- **Action**: 
+  - The component already accepts `bgColor` and `textColor` props (lines 13-14). Ensure these are used correctly in the inline styles — currently used as style color, but the input class uses template literals which won't work with dynamic colors. Fix by applying colors via `style` prop on elements rather than CSS class strings (line 84: `text-[${textColor}]` is invalid Tailwind — use `style={{ color: textColor }}` instead).
+  - The contact form background color can be set per page via CMS fields. Ensure all pages using `SharedContactForm` pass CMS-driven colors.
+
+### CMS Contact Form Color Fields (Page Block Defaults)
+Add `formBgColor` and `formTextColor` fields to:
+- `mfg-page-content` (default: `#2639ED`, `#FFFFFF`)
+- `contact-page-content` (default: `#2639ED`, `#FFFFFF`)
+- `catalogue-page-content` (used for inline enquiry)
+- `homepage` (if Lead Capture block used)
+
+---
+
+## 8. ADDITIONAL NOTES
+
+### Removed Components
+- `src/components/ThemeToggle.tsx`
+- `src/components/SimpleThemeToggle.tsx` (if used)
+- Dark theme classes in all component files
+
+### CMS Settings References
+- `SiteSetting.announcement_text` — announcement bar text
+- `SiteSetting.whatsapp_number` — still used internally but hidden from UI (for backend links only)
+- `BLOCK_DEFAULTS` in `src/lib/page-blocks.ts` — all color/link defaults for each block
+
+### Files to Modify (Complete List)
+1. `src/components/store/StoreHeader.tsx` — remove top bar, remove theme toggles
+2. `src/components/store/StoreLayout.tsx` — announcement bar always-visible, remove StickyCtaBar
+3. `src/components/store/StoreFooter.tsx` — remove newsletter, remove WhatsApp
+4. `src/components/store/StoreFooter.tsx` or `MobileBottomNav.tsx` — remove theme toggle
+5. `src/components/store/HomePage.tsx` — banner full-width, verify 4-cards and 6-cats
+6. `src/components/ThemeProvider.tsx` — enforce light theme only
+7. `src/components/ThemeToggle.tsx` / `SimpleThemeToggle.tsx` — remove or gut
+8. `src/app/globals.css` + `tailwind.config.ts` — remove dark mode
+9. `src/components/store/PageBlockRenderer.tsx` — hero full-width, audience-cards center, product-categories 6 + center, quick-connect WhatsApp conditionally render only if enabled, sticky-cta cleanup
+10. `src/components/store/AboutPage.tsx` — hero bgImage, author image, remove LinkedIn, cta section color + contact form
+11. `src/components/store/ManufacturingPage.tsx` — production line cta cms, private label color, cta form bg, hide certification cta
+12. `src/components/store/ManufacturingPage.tsx` — hide "ready to manufacture at scale" section (already via StickyCtaBar removal)
+13. `src/components/store/CataloguePage.tsx` — hide tags, hide MOQ, inline enquiry, hide retail disclaimer, hide download catalogue
+14. `src/components/store/ContactPage.tsx` — hero color, scroll-to-form, hide crm flow
+15. `src/components/store/BlogPage.tsx` — inline enquiry from tags
+16. `src/components/store/SharedContactForm.tsx` — fix dynamic color Tailwind classes
+17. `src/lib/page-blocks.ts` — update defaults (6 categories, new fields, colors)
+
+### New Files (None Required)
+All changes use existing components. No new files needed.
+
+---
+
+## Implementation Order
+
+1. **Theme removal** (globals.css, ThemeProvider, toggle components) — foundation change
+2. **StoreHeader/Footer** (top bar, announcement bar, newsletter, WhatsApp) — layout changes
+3. **StoreLayout** (StickyCtaBar removal)
+4. **PageBlockRenderer** (hero full-width, audience-cards center, product-categories 6, sticky-cta)
+5. **AboutPage** (hero image, author image, cta color+form, LinkedIn removal)
+6. **ManufacturingPage** (production line cta, private label colors, contact form colors, certification cta removal)
+7. **CataloguePage** (hide tags, hide MOQ, hide retail, hide download, inline enquiry)
+8. **ContactPage** (hero color, scroll-to-form for factory visit)
+9. **BlogPage** (tag enquiry inline)
+10. **SharedContactForm** (fix dynamic color classes)
+11. **page-blocks.ts** (update all defaults)
+
+### Open Questions for User
+1. Replace theme toggles with what? (Just remove all toggle UI — permanently light?)
+2. Announcement bar: default text when `announcement_text` is empty — keep the bar hidden or show placeholder? (Recommend: hidden if empty)
+3. For manufacturing production line CTA: should each line link to its own category page, or to a configurable URL per line? (Current: links to category by line id)
+4. For Contact page hero: preferred exact color (gradient from `#abd0ff` → primary, or all primary blue)?
+5. Should the blog post detail page (`BlogPostView`) be removed entirely or just the navigation to it?

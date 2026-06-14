@@ -26,6 +26,7 @@ interface Category {
 
 interface ManufacturingPageProps {
   onNavigate: (page: string, data?: unknown) => void;
+  data?: Record<string, unknown>;
 }
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -53,11 +54,13 @@ function ResolvedIcon({
   return null;
 }
 
-export function ManufacturingPage({ onNavigate }: ManufacturingPageProps) {
+export function ManufacturingPage({ onNavigate, data: externalData }: ManufacturingPageProps) {
   const { blocks } = useContentPage("mfg-page-content");
   const rawData = getBlockData(blocks, "mfg-page-content");
-  const data = (rawData ||
-    BLOCK_DEFAULTS["mfg-page-content"].defaultData) as Record<string, unknown>;
+  const data =
+    externalData ??
+    rawData ??
+    BLOCK_DEFAULTS["mfg-page-content"].defaultData;
 
   const [activeLine, setActiveLine] = useState("khakhra");
   const [categories, setCategories] = useState<Category[]>([]);
@@ -76,6 +79,9 @@ export function ManufacturingPage({ onNavigate }: ManufacturingPageProps) {
       packs: string;
       desc: string;
       tags: string[];
+      ctaText?: string;
+      ctaLink?: string;
+      ctaEnabled?: boolean;
     }>) || [];
   const qualitySteps =
     (data.qualitySteps as Array<{
@@ -262,14 +268,19 @@ export function ManufacturingPage({ onNavigate }: ManufacturingPageProps) {
                       {tag}
                     </span>
                   ))}
-                  <button
-                    onClick={() =>
-                      onNavigate("category", activeLineData?.id || "khakhra")
-                    }
-                    className="text-xs bg-primary text-primary-foreground rounded px-3 py-1.5 hover:bg-primary/90 transition-colors ml-auto"
-                  >
-                    View Products →
-                  </button>
+                  {activeLineData?.ctaEnabled !== false && (
+                    <button
+                      onClick={() =>
+                        onNavigate(
+                          (activeLineData?.ctaLink as string) || "category",
+                          activeLineData?.id || "khakhra"
+                        )
+                      }
+                      className="text-xs bg-primary text-primary-foreground rounded px-3 py-1.5 hover:bg-primary/90 transition-colors ml-auto"
+                    >
+                      {activeLineData?.ctaText || "View Products →"}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -431,6 +442,8 @@ export function ManufacturingPage({ onNavigate }: ManufacturingPageProps) {
               initialEnquiryType="contact"
               variant="inline"
               categories={categories}
+              bgColor={(ctaData.formBgColor as string) || '#2639ED'}
+              textColor={(ctaData.formTextColor as string) || '#FFFFFF'}
             />
           </div>
         </div>

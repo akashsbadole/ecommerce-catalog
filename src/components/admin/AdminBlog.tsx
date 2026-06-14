@@ -74,6 +74,7 @@ import { adminFetch } from '@/lib/admin-fetch';
 import { PageBuilder } from '@/components/admin/PageBuilder';
 import type { PageBlock } from '@/lib/page-blocks';
 import { parseBlocks } from '@/lib/utils';
+import { normalizePageBlocks } from '@/lib/page-blocks';
 
 interface Author {
   id: string;
@@ -295,6 +296,7 @@ export function AdminBlog() {
     setEditingPost(post);
     const tags = parseTags(post.tags);
     const blocks = parseBlocks(post.blocks);
+    const blocks = normalizePageBlocks(post.blocks || '[]');
 
     setForm({
       title: post.title,

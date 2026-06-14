@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { PageBlockRenderer } from './PageBlockRenderer';
+import { normalizePageBlocks } from '@/lib/page-blocks';
 import { generateArticleSchema } from '@/lib/seo/schema-generator';
 
 interface BlogPostData {
@@ -166,17 +167,7 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
   }
 
   const tags = parseTags(post.tags);
-  let blocks = [];
-  try {
-    let raw: unknown = post.blocks || '[]';
-    if (typeof raw === 'string' && raw.startsWith('"') && raw.endsWith('"')) {
-      try { raw = JSON.parse(raw); } catch { /* ignore */ }
-    }
-    blocks = typeof raw === 'string' ? JSON.parse(raw) : raw;
-    if (!Array.isArray(blocks)) blocks = [];
-  } catch {
-    blocks = [];
-  }
+  const blocks = normalizePageBlocks(post.blocks || '[]');
 
   return (
     <article className="max-w-4xl mx-auto px-4 py-8">
