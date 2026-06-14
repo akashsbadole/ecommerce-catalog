@@ -69,6 +69,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { adminFetch } from '@/lib/admin-fetch';
 import type { PageBlock } from '@/lib/page-blocks';
+import { parseBlocks } from '@/lib/utils';
 import { normalizePageBlocks } from '@/lib/page-blocks';
 
 interface ContentPage {
@@ -172,6 +173,7 @@ export function AdminPages() {
 
   const handleOpenEdit = (page: ContentPage) => {
     setEditingPage(page);
+    const parsedBlocks = parseBlocks(page.blocks);
     const parsedBlocks = normalizePageBlocks(page.blocks || '[]');
     setForm({
       title: page.title,
@@ -192,6 +194,7 @@ export function AdminPages() {
   const handleOpenBuilder = (page: ContentPage) => {
     setBuilderPageId(page.id);
     setBuilderPageTitle(page.title);
+    setBuilderBlocks(parseBlocks(page.blocks));
     setBuilderBlocks(normalizePageBlocks(page.blocks || '[]'));
     setBuilderMode(true);
   };
