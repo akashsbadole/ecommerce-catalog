@@ -104,7 +104,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
         const res = await fetch("/api/content-pages");
         if (res.ok) {
           const data = await res.json();
-          const pages = (data.pages || []).filter(
+          const pages = (data.contentPages || []).filter(
             (p: any) =>
               p.isActive &&
               ![

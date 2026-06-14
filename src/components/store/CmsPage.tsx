@@ -67,7 +67,11 @@ export function CmsPage({ slug, onNavigate, fallbackBlocks }: CmsPageProps) {
               const refetchData = await refetch.json();
               const pages = refetchData.contentPages || [];
               if (pages.length > 0 && pages[0].blocks) {
-                setBlocks(JSON.parse(pages[0].blocks));
+                let parsed = pages[0].blocks;
+                if (typeof parsed === 'string' && parsed.startsWith('"') && parsed.endsWith('"')) {
+                  try { parsed = JSON.parse(parsed); } catch { /* ignore */ }
+                }
+                setBlocks(typeof parsed === 'string' ? JSON.parse(parsed) : parsed);
               }
             }
           }

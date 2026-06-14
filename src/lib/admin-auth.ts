@@ -43,7 +43,7 @@ export async function requireAdminAuth(request: NextRequest): Promise<AdminAuthR
   const token = authHeader.split(' ')[1];
   const payload = await verifyToken(token);
 
-  if (!payload || payload.role !== 'admin') {
+  if (!payload || !['admin', 'editor'].includes(payload.role)) {
     return {
       success: false,
       response: NextResponse.json({ error: 'Forbidden' }, { status: 403 }),

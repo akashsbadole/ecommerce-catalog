@@ -106,8 +106,13 @@ export function ContentPageView({ slug, onNavigate }: ContentPageViewProps) {
   const parsedBlocks: PageBlock[] = (() => {
     if (!page) return [];
     try {
-      const raw = page.blocks || '[]';
-      const parsed = JSON.parse(raw);
+      let raw: unknown = page.blocks || '[]';
+      if (typeof raw === 'string' && raw.startsWith('"') && raw.endsWith('"')) {
+        try {
+          raw = JSON.parse(raw);
+        } catch { /* ignore */ }
+      }
+      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       return [];
     } catch {

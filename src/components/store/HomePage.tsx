@@ -48,7 +48,11 @@ export function HomePage({ onNavigate, settings }: HomePageProps) {
         if (seedRes.ok) {
           const seedData = await seedRes.json();
           if (seedData.contentPage?.blocks) {
-            const parsed = JSON.parse(seedData.contentPage.blocks);
+            let raw = seedData.contentPage.blocks;
+            if (typeof raw === 'string' && raw.startsWith('"') && raw.endsWith('"')) {
+              try { raw = JSON.parse(raw); } catch { /* ignore */ }
+            }
+            const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
             if (Array.isArray(parsed) && parsed.length > 0) {
               setBlocks(parsed);
             }

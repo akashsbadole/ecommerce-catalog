@@ -295,7 +295,12 @@ export function AdminBlog() {
     const tags = parseTags(post.tags);
     let blocks: PageBlock[] = [];
     try {
-      blocks = JSON.parse(post.blocks || '[]');
+      let raw: unknown = post.blocks || '[]';
+      if (typeof raw === 'string' && raw.startsWith('"') && raw.endsWith('"')) {
+        try { raw = JSON.parse(raw); } catch { /* ignore */ }
+      }
+      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      if (Array.isArray(parsed)) blocks = parsed;
     } catch {
       blocks = [];
     }

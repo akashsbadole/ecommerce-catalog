@@ -168,7 +168,12 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
   const tags = parseTags(post.tags);
   let blocks = [];
   try {
-    blocks = JSON.parse(post.blocks || '[]');
+    let raw: unknown = post.blocks || '[]';
+    if (typeof raw === 'string' && raw.startsWith('"') && raw.endsWith('"')) {
+      try { raw = JSON.parse(raw); } catch { /* ignore */ }
+    }
+    blocks = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    if (!Array.isArray(blocks)) blocks = [];
   } catch {
     blocks = [];
   }
