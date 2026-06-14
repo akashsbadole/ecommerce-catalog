@@ -65,6 +65,7 @@ import { AdminActivityLog } from '@/components/admin/AdminActivityLog';
 import { AdminDataExport } from '@/components/admin/AdminDataExport';
 import { AdminSearchDialog } from '@/components/admin/AdminSearchDialog';
 import { AdminAnalytics } from '@/components/admin/AdminAnalytics';
+import { AdminMenus } from '@/components/admin/AdminMenus';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { SimpleThemeToggle } from '@/components/SimpleThemeToggle';
 import { NotificationBell } from '@/components/admin/NotificationBell';
@@ -95,6 +96,7 @@ const sidebarItems = [
   { id: 'companies', label: 'Companies', icon: Building2 },
   { id: 'activity-log', label: 'Activity Log', icon: ClipboardList },
   { id: 'data-export', label: 'Data Export', icon: Download },
+  { id: 'menus', label: 'Menus', icon: Menu },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
@@ -340,6 +342,8 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
         return <AdminActivityLog />;
       case 'data-export':
         return <AdminDataExport />;
+      case 'menus':
+        return <AdminMenus />;
       case 'settings':
         return <AdminSettings />;
       default:

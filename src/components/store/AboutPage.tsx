@@ -16,9 +16,11 @@ import {
 } from "lucide-react";
 import { useContentPage, getBlockData } from "@/lib/use-page-content";
 import { BLOCK_DEFAULTS } from "@/lib/page-blocks";
+import { SharedContactForm } from "./SharedContactForm";
 
 interface AboutPageProps {
   onNavigate: (page: string, data?: unknown) => void;
+  data?: Record<string, unknown>;
 }
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -47,14 +49,13 @@ function ResolvedIcon({
   return null;
 }
 
-export function AboutPage({ onNavigate }: AboutPageProps) {
+export function AboutPage({ onNavigate, data: externalData }: AboutPageProps) {
   const { blocks } = useContentPage("about-page-content");
   const rawData = getBlockData(blocks, "about-page-content");
-  const data = (rawData ||
-    BLOCK_DEFAULTS["about-page-content"].defaultData) as Record<
-    string,
-    unknown
-  >;
+  const data =
+    externalData ??
+    rawData ??
+    BLOCK_DEFAULTS["about-page-content"].defaultData;
 
   const hero = (data.hero as Record<string, string>) || {};
   const stats = (data.stats as Array<{ value: string; label: string }>) || [];
@@ -73,6 +74,7 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
       role: string;
       bio: string;
       imageUrl?: string;
+      socialUrl?: string;
     }>) || [];
   const quoteData = (data.quote as Record<string, string>) || {};
   const ctaCard = (data.ctaCard as Record<string, string>) || {};
@@ -101,12 +103,20 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
       desc: string;
       cta: string;
       page: string;
+      useForm?: boolean;
     }>) || [];
 
   return (
     <div className="flex flex-col">
       {/* A1: Hero */}
       <section className="relative bg-gradient-to-br from-gray-900 via-[#abd0ff] to-gray-900 text-white py-28 px-4">
+        {hero.backgroundImage && (
+          <img
+            src={hero.backgroundImage as string}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )}
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative container mx-auto max-w-5xl text-center">
           {(hero.estYear as string) && (
@@ -265,11 +275,18 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
                   <p className="text-xs text-muted-foreground leading-relaxed mb-4">
                     {director.bio}
                   </p>
-                  <div className="flex gap-2">
-                    <button className="text-xs border rounded px-2 py-1 flex items-center gap-1 hover:bg-muted">
-                      <Linkedin className="h-3 w-3" /> LinkedIn
-                    </button>
-                  </div>
+                  {director.socialUrl && (
+                    <div className="flex gap-2">
+                      <a
+                        href={director.socialUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs border rounded px-2 py-1 flex items-center gap-1 hover:bg-muted"
+                      >
+                        <Linkedin className="h-3 w-3" /> Connect
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -280,11 +297,20 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
                   <p className="text-sm text-primary italic leading-relaxed">
                     {quoteData.text as string}
                   </p>
-                  {(quoteData.author as string) && (
-                    <p className="text-xs text-primary/70 mt-3 font-medium">
-                      — {quoteData.author as string}
-                    </p>
-                  )}
+                  <div className="flex items-center mt-3">
+                    {(quoteData.authorImage as string) && (
+                      <img
+                        src={quoteData.authorImage as string}
+                        alt={(quoteData.author as string) || "author"}
+                        className="w-8 h-8 rounded-full object-cover mr-2"
+                      />
+                    )}
+                    {(quoteData.author as string) && (
+                      <p className="text-xs text-primary/70 font-medium">
+                        — {quoteData.author as string}
+                      </p>
+                    )}
+                  </div>
                 </div>
               ) : null}
               <div className="bg-background border rounded-xl p-5">
@@ -415,31 +441,42 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
       </section>
 
       {/* A8: CTA Strip */}
-      <section className="bg-primary text-primary-foreground py-16 px-4">
+      <section className="bg-muted/40 py-16 px-4">
         <div className="container mx-auto max-w-5xl">
-          <h2 className="text-2xl font-bold text-center mb-10">
+          <h2 className="text-2xl font-bold text-center mb-10 text-foreground">
             {(ctaData.title as string) || "Ready to work with us?"}
           </h2>
           <div className="grid md:grid-cols-3 gap-6">
-            {ctaCards.map((item) => (
+            {ctaCards.map((item, idx) => (
               <div
-                key={item.title}
-                className="bg-white/10 border border-white/20 rounded-xl p-6 text-center"
+                key={item.title || idx}
+                className="bg-primary rounded-xl p-6 text-center"
               >
                 <ResolvedIcon
                   name={item.icon}
                   className="h-6 w-6 text-white mx-auto mb-3"
                 />
-                <h3 className="text-sm font-semibold mb-2">{item.title}</h3>
+                <h3 className="text-sm font-semibold mb-2 text-white">
+                  {item.title}
+                </h3>
                 <p className="text-xs text-white/70 mb-5 leading-relaxed">
                   {item.desc}
                 </p>
-                <button
-                  onClick={() => onNavigate(item.page)}
-                  className="w-full text-xs font-medium bg-white text-primary rounded-md py-2.5 hover:bg-white/90 transition-colors"
-                >
-                  {item.cta}
-                </button>
+                {item.useForm ? (
+                  <SharedContactForm
+                    initialEnquiryType="contact"
+                    variant="compact"
+                    bgColor="#FFFFFF"
+                    textColor="#2639ED"
+                  />
+                ) : (
+                  <button
+                    onClick={() => onNavigate(item.page)}
+                    className="w-full text-xs font-medium bg-white text-primary rounded-md py-2.5 hover:bg-white/90 transition-colors"
+                  >
+                    {item.cta}
+                  </button>
+                )}
               </div>
             ))}
           </div>

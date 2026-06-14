@@ -623,7 +623,12 @@ export const BLOCK_DEFAULTS: Record<
     label: "About Page Content",
     icon: "FileText",
     defaultData: {
-      hero: { title: "Built on trust. Driven by quality.", subtitle: "From a distribution background to a full-scale FMCG manufacturing company — the Purva Bites story is one of conviction and craft", estYear: "Est. 2010 · Gujarat, India" },
+      hero: {
+        title: "Built on trust. Driven by quality.",
+        subtitle: "From a distribution background to a full-scale FMCG manufacturing company — the Purva Bites story is one of conviction and craft",
+        estYear: "Est. 2010 · Gujarat, India",
+        backgroundImage: "",
+      },
       stats: [
         { value: "15+", label: "Years in business" },
         { value: "100%", label: "Own manufacturing" },
@@ -649,8 +654,8 @@ export const BLOCK_DEFAULTS: Record<
         ],
       },
       directors: [
-        { name: "[Director name]", role: "Co-founder & Managing Director", bio: "20+ years in FMCG distribution across Gujarat. Deep knowledge of supply chains, trade networks and what manufacturing partners actually owe their clients.", imageUrl: "" },
-        { name: "[Director name]", role: "Co-founder & Operations Director", bio: "Leads day-to-day manufacturing operations, quality systems and production planning. Oversees all 5 production lines, warehouse and dispatch.", imageUrl: "" },
+        { name: "[Director name]", role: "Co-founder & Managing Director", bio: "20+ years in FMCG distribution across Gujarat. Deep knowledge of supply chains, trade networks and what manufacturing partners actually owe their clients.", imageUrl: "", authorImage: "" },
+        { name: "[Director name]", role: "Co-founder & Operations Director", bio: "Leads day-to-day manufacturing operations, quality systems and production planning. Oversees all 5 production lines, warehouse and dispatch.", imageUrl: "", authorImage: "" },
       ],
       quote: { text: "\"We started by selling other people's products. Then we decided to build something we could stand behind completely.\"", author: "[Director name], Co-founder" },
       ctaCard: { title: "Direct access to leadership", desc: "Our directors are directly involved in client conversations — especially for private label and large-volume partnerships.", cta: "Speak to us directly →" },
@@ -673,9 +678,9 @@ export const BLOCK_DEFAULTS: Record<
       cta: {
         title: "Ready to work with us?",
         cards: [
-          { icon: "Factory", title: "See our manufacturing", desc: "Tour our 5 production lines, certifications and capability", cta: "View manufacturing →", page: "manufacturing" },
-          { icon: "Target", title: "Get our catalogue", desc: "80+ SKUs, capacity details and packaging formats in one PDF", cta: "Download free →", page: "catalogue" },
-          { icon: "Linkedin", title: "Partner with us", desc: "Bulk order, private label or distribution enquiry — start here", cta: "Send enquiry →", page: "contact" },
+          { icon: "Factory", title: "See our manufacturing", desc: "Tour our 5 production lines, certifications and capability", cta: "View manufacturing →", page: "manufacturing", useForm: false },
+          { icon: "Target", title: "Get our catalogue", desc: "80+ SKUs, capacity details and packaging formats — send enquiry", cta: "Send enquiry →", page: "contact", useForm: true },
+          { icon: "Linkedin", title: "Partner with us", desc: "Bulk order, private label or distribution enquiry — start here", cta: "Send enquiry →", page: "contact", useForm: true },
         ],
       },
     },
@@ -701,11 +706,11 @@ export const BLOCK_DEFAULTS: Record<
       ],
       intro: { heading: "Built to manufacture. Not to outsource.", description: "Every product that leaves our facility is made in-house — on our machinery, by our team, under our quality controls. We operate 5 dedicated production lines with a combined annual capacity exceeding 5,000 MT, serving brands, distributors and private label partners across India." },
       productionLines: [
-        { id: "khakhra", name: "Khakhra line", flagship: true, capacity: "X,XXX kg", variants: "12+ flavours", packs: "30g · 80g · 200g · bulk", desc: "Fully automated rolling and roasting machinery. Consistent thickness, texture and flavour across batches. Available in plain, masala, methi, jeera and custom flavour profiles for private label.", tags: ["Automated rolling", "Precision roasting", "Auto weighing", "Custom flavour ready"] },
-        { id: "bhakhri", name: "Bhakhri line", flagship: false, capacity: "X,XXX kg", variants: "8+ varieties", packs: "80g · 200g · bulk", desc: "Traditional recipes with modern automation. Consistent thickness and crunch across batches. Available in multiple grain compositions.", tags: ["Traditional recipe", "Auto sheeting", "Uniform baking"] },
-        { id: "makhana", name: "Makhana line", flagship: false, capacity: "X,XXX kg", variants: "6+ flavours", packs: "30g · 80g · 200g · bulk", desc: "Specialised roasting and flavouring line for fox nuts. Light, crispy finish with even coating across all flavour variants.", tags: ["Low-oil roasting", "Even coating", "Flavour infusion"] },
-        { id: "extruder", name: "Extruder line", flagship: false, capacity: "X,XXX kg", variants: "10+ shapes", packs: "30g · 80g · 200g · bulk", desc: "High-speed extrusion for puffed and shaped snacks. Custom shapes and textures achievable for private label clients.", tags: ["Custom shapes", "High-speed", "Texture control"] },
-        { id: "digestive", name: "Digestive line", flagship: false, capacity: "X,XXX kg", variants: "5+ varieties", packs: "80g · 200g · bulk", desc: "Baked digestive biscuits and health-focused snacks. Formulations customisable for target nutrition profiles.", tags: ["Baked not fried", "Health-focused", "Custom nutrition"] },
+        { id: "khakhra", name: "Khakhra line", flagship: true, capacity: "X,XXX kg", variants: "12+ flavours", packs: "30g · 80g · 200g · bulk", desc: "Fully automated rolling and roasting machinery. Consistent thickness, texture and flavour across batches. Available in plain, masala, methi, jeera and custom flavour profiles for private label.", tags: ["Automated rolling", "Precision roasting", "Auto weighing", "Custom flavour ready"], ctaText: "View Products →", ctaLink: "category", ctaEnabled: true },
+        { id: "bhakhri", name: "Bhakhri line", flagship: false, capacity: "X,XXX kg", variants: "8+ varieties", packs: "80g · 200g · bulk", desc: "Traditional recipes with modern automation. Consistent thickness and crunch across batches. Available in multiple grain compositions.", tags: ["Traditional recipe", "Auto sheeting", "Uniform baking"], ctaText: "View Products →", ctaLink: "category", ctaEnabled: true },
+        { id: "makhana", name: "Makhana line", flagship: false, capacity: "X,XXX kg", variants: "6+ flavours", packs: "30g · 80g · 200g · bulk", desc: "Specialised roasting and flavouring line for fox nuts. Light, crispy finish with even coating across all flavour variants.", tags: ["Low-oil roasting", "Even coating", "Flavour infusion"], ctaText: "View Products →", ctaLink: "category", ctaEnabled: true },
+        { id: "extruder", name: "Extruder line", flagship: false, capacity: "X,XXX kg", variants: "10+ shapes", packs: "30g · 80g · 200g · bulk", desc: "High-speed extrusion for puffed and shaped snacks. Custom shapes and textures achievable for private label clients.", tags: ["Custom shapes", "High-speed", "Texture control"], ctaText: "View Products →", ctaLink: "category", ctaEnabled: true },
+        { id: "digestive", name: "Digestive line", flagship: false, capacity: "X,XXX kg", variants: "5+ varieties", packs: "80g · 200g · bulk", desc: "Baked digestive biscuits and health-focused snacks. Formulations customisable for target nutrition profiles.", tags: ["Baked not fried", "Health-focused", "Custom nutrition"], ctaText: "View Products →", ctaLink: "category", ctaEnabled: true },
       ],
       qualitySteps: [
         { icon: "Leaf", color: "bg-primary/10 text-primary", title: "Raw material intake", desc: "Supplier grading, moisture check, lab testing before acceptance" },
@@ -742,6 +747,8 @@ export const BLOCK_DEFAULTS: Record<
       cta: {
         title: "Ready to see it for yourself?",
         subtitle: "Share your details — we'll get back within 24 hours",
+        formBgColor: "#2639ED",
+        formTextColor: "#FFFFFF",
       },
     },
   },
@@ -819,4 +826,60 @@ export function createBlock(type: BlockType): PageBlock {
     type,
     data: { ...defaults.defaultData },
   };
+}
+
+export function parseJsonPayload(value: unknown, maxDepth = 4): unknown {
+  let current = value;
+
+  for (let depth = 0; depth < maxDepth; depth += 1) {
+    if (typeof current !== 'string') return current;
+
+    const trimmed = current.trim();
+    if (trimmed.length === 0) return current;
+
+    const looksLikeJson =
+      (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+      (trimmed.startsWith('[') && trimmed.endsWith(']')) ||
+      (trimmed.startsWith('"') && trimmed.endsWith('"'));
+
+    if (!looksLikeJson) return current;
+
+    try {
+      current = JSON.parse(trimmed);
+    } catch {
+      return current;
+    }
+  }
+
+  return current;
+}
+
+export function normalizePageBlocks(value: unknown): PageBlock[] {
+  const parsed = parseJsonPayload(value);
+  return Array.isArray(parsed) ? (parsed as PageBlock[]) : [];
+}
+
+export function normalizeBlockData(value: unknown): Record<string, unknown> {
+  const parsed = parseJsonPayload(value);
+  if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+    return parsed as Record<string, unknown>;
+  }
+  return {};
+}
+
+export function normalizeBlocksForStorage(value: unknown): string {
+  if (value === undefined || value === null) return '[]';
+  if (typeof value === 'string' && value.trim().length === 0) return '[]';
+
+  const parsed = parseJsonPayload(value);
+  if (Array.isArray(parsed)) return JSON.stringify(parsed);
+  if (typeof value === 'string') {
+    throw new Error('Blocks must be a JSON array string');
+  }
+
+  throw new Error('Blocks must be an array or a JSON string');
+}
+
+export function stringifyPageBlocks(blocks: PageBlock[]): string {
+  return JSON.stringify(blocks);
 }

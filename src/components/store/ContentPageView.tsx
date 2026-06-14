@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle } from 'lucide-react';
 import { PageBlockRenderer } from '@/components/store/PageBlockRenderer';
 import type { PageBlock } from '@/lib/page-blocks';
+import { normalizePageBlocks } from '@/lib/page-blocks';
 
 interface ContentPageData {
   id: string;
@@ -103,22 +104,7 @@ export function ContentPageView({ slug, onNavigate }: ContentPageViewProps) {
   }, [page]);
 
   // Parse blocks
-  const parsedBlocks: PageBlock[] = (() => {
-    if (!page) return [];
-    try {
-      let raw: unknown = page.blocks || '[]';
-      if (typeof raw === 'string' && raw.startsWith('"') && raw.endsWith('"')) {
-        try {
-          raw = JSON.parse(raw);
-        } catch { /* ignore */ }
-      }
-      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      return [];
-    } catch {
-      return [];
-    }
-  })();
+  const parsedBlocks: PageBlock[] = page ? normalizePageBlocks(page.blocks || '[]') : [];
 
   if (loading) {
     return (

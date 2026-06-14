@@ -694,14 +694,14 @@ export function AdminUsers() {
               <div className="space-y-2">
                 <Label>Company</Label>
                 <Select
-                  value={form.companyId}
-                  onValueChange={(val) => setForm(prev => ({ ...prev, companyId: val }))}
+                  value={form.companyId || '__none__'}
+                  onValueChange={(val) => setForm(prev => ({ ...prev, companyId: val === '__none__' ? '' : val }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select company" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No Company</SelectItem>
+                    <SelectItem value="__none__">No Company</SelectItem>
                     {companies.map((c) => (
                       <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                     ))}

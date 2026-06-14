@@ -39,6 +39,7 @@ model Store {
   Enquiry       Enquiry[]
   Media         Media[]
   Redirect      Redirect[]
+  Menu          Menu[]
 
   @@index([ownerUserId])
   @@index([isActive])
@@ -434,6 +435,45 @@ model Redirect {
   Store     Store?   @relation(fields: [storeId], references: [id])
 
   @@index([storeId])
+}
+
+model Menu {
+  id          String     @id @default(cuid())
+  storeId     String?    // tenant isolation
+  name        String
+  slug        String     @unique
+  location    String     // primary, footer, mobile, etc.
+  description String?
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  items       MenuItem[]
+  Store       Store?     @relation(fields: [storeId], references: [id])
+
+  @@unique([storeId, slug])
+  @@index([storeId])
+  @@index([location])
+}
+
+model MenuItem {
+  id        String     @id @default(cuid())
+  menuId    String
+  parentId  String?
+  label     String
+  url       String?
+  page      String?    // for internal pages: home, catalogue, content-page, etc.
+  slug      String?    // for content-page slug
+  sortOrder Int        @default(0)
+  isActive  Boolean    @default(true)
+  openInNewTab Boolean @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  menu      Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  parent    MenuItem?  @relation("MenuItemHierarchy", fields: [parentId], references: [id])
+  children  MenuItem[] @relation("MenuItemHierarchy")
+
+  @@index([menuId])
+  @@index([parentId])
 }
 
 // ─── Settings ──────────────────────────────────────────────────

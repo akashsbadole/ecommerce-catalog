@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PageBlockRenderer } from './PageBlockRenderer';
 import { RecentlyViewedProducts } from './RecentlyViewedProducts';
 import type { PageBlock } from '@/lib/page-blocks';
+import { normalizePageBlocks } from '@/lib/page-blocks';
 
 interface HomePageProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -28,12 +29,8 @@ export function HomePage({ onNavigate, settings }: HomePageProps) {
             const page = pages[0];
             // Homepage exists in DB — use its blocks (even if empty)
             if (page.blocks) {
-              let raw = page.blocks;
-              if (typeof raw === 'string' && raw.startsWith('"') && raw.endsWith('"')) {
-                raw = JSON.parse(raw);
-              }
-              const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-              if (Array.isArray(parsed) && parsed.length > 0) {
+              const parsed = normalizePageBlocks(page.blocks);
+              if (parsed.length > 0) {
                 setBlocks(parsed);
                 return;
               }
@@ -46,17 +43,13 @@ export function HomePage({ onNavigate, settings }: HomePageProps) {
         // No homepage found — create with default blocks
         const seedRes = await fetch('/api/content-pages/seed', { method: 'POST' });
         if (seedRes.ok) {
-          const seedData = await seedRes.json();
-          if (seedData.contentPage?.blocks) {
-            let raw = seedData.contentPage.blocks;
-            if (typeof raw === 'string' && raw.startsWith('"') && raw.endsWith('"')) {
-              try { raw = JSON.parse(raw); } catch { /* ignore */ }
+            const seedData = await seedRes.json();
+            if (seedData.contentPage?.blocks) {
+              const parsed = normalizePageBlocks(seedData.contentPage.blocks);
+              if (parsed.length > 0) {
+                setBlocks(parsed);
+              }
             }
-            const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              setBlocks(parsed);
-            }
-          }
         }
       } catch {
         // Fall back to empty state
