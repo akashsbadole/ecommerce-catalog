@@ -23,7 +23,10 @@ export type Page =
   | { type: "account" }
   | { type: "checkout" }
   | { type: "compare" }
-  | { type: "quick-order" };
+  | { type: "quick-order" }
+  | { type: "subscriptions" }
+  | { type: "invoices" }
+  | { type: "invoice-detail"; invoiceId: string };
 
 interface AdminUser {
   id: string;
@@ -307,6 +310,23 @@ export const useAppStore = create<AppState>()(
             set({ currentPage: { type: "quick-order" } });
             if (typeof window !== "undefined")
               window.history.pushState({}, "", "/quick-order");
+            break;
+          case "subscriptions":
+            set({ currentPage: { type: "subscriptions" } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", "/subscriptions");
+            break;
+          case "invoices":
+            set({ currentPage: { type: "invoices" } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", "/invoices");
+            break;
+          case "invoice-detail":
+            set({
+              currentPage: { type: "invoice-detail", invoiceId: data as string },
+            });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", `/invoices/${data as string}`);
             break;
         }
       },

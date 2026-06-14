@@ -25,6 +25,12 @@ import {
   Download,
   KeyRound,
   Building2,
+  Warehouse,
+  DollarSign,
+  RefreshCw,
+  ShoppingCart,
+  Mail,
+  AlertTriangle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -63,8 +69,19 @@ import { AdminUsers } from '@/components/admin/AdminUsers';
 import { AdminCompanies } from '@/components/admin/AdminCompanies';
 import { AdminActivityLog } from '@/components/admin/AdminActivityLog';
 import { AdminDataExport } from '@/components/admin/AdminDataExport';
+import { AdminInventory } from '@/components/admin/AdminInventory';
+import { AdminWarehouses } from '@/components/admin/AdminWarehouses';
+import { AdminPriceLists } from '@/components/admin/AdminPriceLists';
+import { AdminSubscriptions } from '@/components/admin/AdminSubscriptions';
+import { AdminInvoices } from '@/components/admin/AdminInvoices';
+import { AdminCartAbandonment } from '@/components/admin/AdminCartAbandonment';
 import { AdminSearchDialog } from '@/components/admin/AdminSearchDialog';
 import { AdminAnalytics } from '@/components/admin/AdminAnalytics';
+import { AdminBundles } from '@/components/admin/AdminBundles';
+import { AdminReturns } from '@/components/admin/AdminReturns';
+import { AdminCustomerGroups } from '@/components/admin/AdminCustomerGroups';
+import { AdminEmailCampaigns } from '@/components/admin/AdminEmailCampaigns';
+import { AdminLowStockAlerts } from '@/components/admin/AdminLowStockAlerts';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { SimpleThemeToggle } from '@/components/SimpleThemeToggle';
 import { NotificationBell } from '@/components/admin/NotificationBell';
@@ -85,14 +102,25 @@ const sidebarItems = [
   { id: 'quotes', label: 'Quotes', icon: FileText },
   { id: 'orders', label: 'Orders', icon: ShoppingBag },
   { id: 'coupons', label: 'Coupons', icon: Tag },
+  { id: 'bundles', label: 'Bundles', icon: Package },
   { id: 'enquiries', label: 'Enquiries', icon: MessageSquare },
   { id: 'media', label: 'Media', icon: ImageIcon },
   { id: 'pages', label: 'Pages', icon: FileText },
   { id: 'blog', label: 'Blog', icon: BookOpen },
   { id: 'banners', label: 'Banners', icon: ImageIcon },
   { id: 'redirects', label: 'Redirects', icon: ArrowRightLeft },
+  { id: 'inventory', label: 'Inventory', icon: Package },
+  { id: 'low-stock-alerts', label: 'Low Stock Alerts', icon: AlertTriangle },
+  { id: 'returns', label: 'Returns', icon: Package },
+  { id: 'warehouses', label: 'Warehouses', icon: Warehouse },
+  { id: 'price-lists', label: 'Price Lists', icon: DollarSign },
+  { id: 'subscriptions', label: 'Subscriptions', icon: RefreshCw },
+  { id: 'invoices', label: 'Invoices', icon: FileText },
+  { id: 'cart-abandonment', label: 'Cart Abandonment', icon: ShoppingCart },
   { id: 'users', label: 'Users', icon: Users },
+  { id: 'customer-groups', label: 'Customer Groups', icon: Users },
   { id: 'companies', label: 'Companies', icon: Building2 },
+  { id: 'email-campaigns', label: 'Email Campaigns', icon: Mail },
   { id: 'activity-log', label: 'Activity Log', icon: ClipboardList },
   { id: 'data-export', label: 'Data Export', icon: Download },
   { id: 'settings', label: 'Settings', icon: Settings },
@@ -322,6 +350,8 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
         return <AdminOrders />;
       case 'coupons':
         return <AdminCoupons />;
+      case 'bundles':
+        return <AdminBundles />;
       case 'banners':
         return <AdminBanners />;
       case 'media':
@@ -334,12 +364,32 @@ export function AdminDashboard({ user, activeTab, onNavigate, onLogout }: AdminD
         return <AdminRedirects />;
       case 'users':
         return <AdminUsers />;
+      case 'customer-groups':
+        return <AdminCustomerGroups />;
       case 'companies':
         return <AdminCompanies />;
+      case 'email-campaigns':
+        return <AdminEmailCampaigns />;
       case 'activity-log':
         return <AdminActivityLog />;
       case 'data-export':
         return <AdminDataExport />;
+      case 'inventory':
+        return <AdminInventory />;
+      case 'low-stock-alerts':
+        return <AdminLowStockAlerts />;
+      case 'returns':
+        return <AdminReturns />;
+      case 'warehouses':
+        return <AdminWarehouses />;
+      case 'price-lists':
+        return <AdminPriceLists />;
+      case 'subscriptions':
+        return <AdminSubscriptions />;
+      case 'invoices':
+        return <AdminInvoices />;
+      case 'cart-abandonment':
+        return <AdminCartAbandonment />;
       case 'settings':
         return <AdminSettings />;
       default:

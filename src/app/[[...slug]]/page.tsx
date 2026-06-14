@@ -18,6 +18,9 @@ import { OrderDetailPage } from "@/components/store/OrderDetailPage";
 import { AccountPage } from "@/components/store/AccountPage";
 import { CheckoutPage } from "@/components/store/CheckoutPage";
 import { QuickOrderPage } from "@/components/store/QuickOrderPage";
+import { InvoicesPage } from "@/components/store/InvoicesPage";
+import { InvoiceDetailPage } from "@/components/store/InvoiceDetailPage";
+import { SubscriptionsPage } from "@/components/store/SubscriptionsPage";
 import { ComparePage } from "@/components/store/ComparePage";
 import { AboutPage } from "@/components/store/AboutPage";
 import { ManufacturingPage } from "@/components/store/ManufacturingPage";
@@ -89,6 +92,11 @@ export default function CatchAllPage() {
         navigate("checkout");
       } else if (segments[0] === "quick-order") {
         navigate("quick-order");
+      } else if (segments[0] === "invoices") {
+        if (segments[1]) navigate("invoice-detail", segments[1]);
+        else navigate("invoices");
+      } else if (segments[0] === "subscriptions") {
+        navigate("subscriptions");
       } else if (CMS_PAGES.includes(segments[0])) {
         navigate("content-page", segments[0]);
       } else {
@@ -160,6 +168,12 @@ export default function CatchAllPage() {
         return <ComparePage onNavigate={navigate} />;
       case "quick-order":
         return <QuickOrderPage onNavigate={navigate} />;
+      case "invoices":
+        return <InvoicesPage onNavigate={navigate} />;
+      case "invoice-detail":
+        return <InvoiceDetailPage invoiceId={currentPage.invoiceId} onNavigate={navigate} />;
+      case "subscriptions":
+        return <SubscriptionsPage onNavigate={navigate} />;
       default:
         return (
           <div className="flex flex-col items-center justify-center py-20 text-center">

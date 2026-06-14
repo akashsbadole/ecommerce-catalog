@@ -354,46 +354,6 @@ function BlockEditDialog({
                 {/* Common fields based on block type */}
                 {block.type === "hero" && (
               <>
-                <div className="space-y-2">
-                  <Label>Title</Label>
-                  <Input
-                    value={(localData.title as string) || ""}
-                    onChange={(e) => updateField("title", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Subtitle</Label>
-                  <Input
-                    value={(localData.subtitle as string) || ""}
-                    onChange={(e) => updateField("subtitle", e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Button Text</Label>
-                    <Input
-                      value={(localData.buttonText as string) || ""}
-                      onChange={(e) =>
-                        updateField("buttonText", e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Button Link</Label>
-                    <Input
-                      value={(localData.buttonLink as string) || ""}
-                      onChange={(e) =>
-                        updateField("buttonLink", e.target.value)
-                      }
-                    />
-                  </div>
-                </div>
-                <MediaPickerField
-                  label="Background Image"
-                  value={(localData.backgroundImage as string) || ""}
-                  onChange={(v) => updateField("backgroundImage", v)}
-                  placeholder="Image URL"
-                />
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Height</Label>
@@ -420,6 +380,174 @@ function BlockEditDialog({
                     </select>
                   </div>
                 </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="hero-autoplay"
+                      checked={!!localData.autoplay}
+                      onCheckedChange={(val) => updateField("autoplay", !!val)}
+                    />
+                    <Label htmlFor="hero-autoplay">Autoplay</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label>Interval (ms)</Label>
+                    <Input
+                      type="number"
+                      className="w-24 h-8"
+                      value={(localData.interval as number) || 5000}
+                      onChange={(e) =>
+                        updateField("interval", Number(e.target.value))
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="hero-show-arrows"
+                      checked={!!localData.showArrows}
+                      onCheckedChange={(val) =>
+                        updateField("showArrows", !!val)
+                      }
+                    />
+                    <Label htmlFor="hero-show-arrows">Show Arrows</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="hero-show-dots"
+                      checked={!!localData.showDots}
+                      onCheckedChange={(val) =>
+                        updateField("showDots", !!val)
+                      }
+                    />
+                    <Label htmlFor="hero-show-dots">Show Dots</Label>
+                  </div>
+                </div>
+                <Separator />
+                <Label className="text-base font-semibold">Slides</Label>
+                {((localData.items as Array<Record<string, string>>) || []).map(
+                  (slide, i) => (
+                    <Card key={i} className="p-4 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">
+                          Slide {i + 1}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-rose-600"
+                          onClick={() => {
+                            const slides = [
+                              ...((localData.items as Array<unknown>) || []),
+                            ];
+                            slides.splice(i, 1);
+                            updateField("items", slides);
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <MediaPickerField
+                        label="Image"
+                        value={slide.image}
+                        onChange={(v) => {
+                          const slides = [
+                            ...((localData.items as Array<
+                              Record<string, string>
+                            >) || []),
+                          ];
+                          slides[i] = { ...slides[i], image: v };
+                          updateField("items", slides);
+                        }}
+                        placeholder="Image URL"
+                      />
+                      <Input
+                        placeholder="Title"
+                        value={slide.title}
+                        onChange={(e) => {
+                          const slides = [
+                            ...((localData.items as Array<
+                              Record<string, string>
+                            >) || []),
+                          ];
+                          slides[i] = { ...slides[i], title: e.target.value };
+                          updateField("items", slides);
+                        }}
+                      />
+                      <Input
+                        placeholder="Subtitle"
+                        value={slide.subtitle}
+                        onChange={(e) => {
+                          const slides = [
+                            ...((localData.items as Array<
+                              Record<string, string>
+                            >) || []),
+                          ];
+                          slides[i] = {
+                            ...slides[i],
+                            subtitle: e.target.value,
+                          };
+                          updateField("items", slides);
+                        }}
+                      />
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <Input
+                          placeholder="Button Text"
+                          value={slide.buttonText}
+                          onChange={(e) => {
+                            const slides = [
+                              ...((localData.items as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            slides[i] = {
+                              ...slides[i],
+                              buttonText: e.target.value,
+                            };
+                            updateField("items", slides);
+                          }}
+                        />
+                        <Input
+                          placeholder="Button Link"
+                          value={slide.buttonLink}
+                          onChange={(e) => {
+                            const slides = [
+                              ...((localData.items as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            slides[i] = {
+                              ...slides[i],
+                              buttonLink: e.target.value,
+                            };
+                            updateField("items", slides);
+                          }}
+                        />
+                      </div>
+                    </Card>
+                  ),
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const slides = [
+                      ...((localData.items as Array<Record<string, string>>) ||
+                        []),
+                      {
+                        image: "",
+                        title: "Slide",
+                        subtitle: "",
+                        buttonText: "Learn More",
+                        buttonLink: "/catalogue",
+                      },
+                    ];
+                    updateField("items", slides);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Slide
+                </Button>
               </>
             )}
 

@@ -11,7 +11,10 @@ import {
   Package,
   Wallet,
   Banknote,
+  Smartphone,
+  CircleDollarSign,
 } from 'lucide-react';
+import { PincodeChecker } from '@/components/store/PincodeChecker';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -72,8 +75,15 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   };
   const [step, setStep] = useState<'shipping' | 'review' | 'success'>('shipping');
   const [orderNumber, setOrderNumber] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'manual' | 'razorpay'>('manual');
+  const [paymentMethod, setPaymentMethod] = useState<'manual' | 'razorpay' | 'upi' | 'cod'>('manual');
   const [razorpayKeyId, setRazorpayKeyId] = useState<string | null>(null);
+  const [upiId, setUpiId] = useState('');
+  const [pincodeData, setPincodeData] = useState<{
+    pincode: string;
+    city: string;
+    state: string;
+    serviceable: boolean;
+  } | null>(null);
 
   // Shipping form
   const [shippingName, setShippingName] = useState('');
@@ -215,7 +225,94 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
     }
 
     // Authenticated checkout flow
-    if (paymentMethod === 'razorpay' && razorpayEnabled) {
+    if (paymentMethod === 'cod') {
+      // COD flow: place order directly without payment
+      setPlacing(true);
+      try {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${auth.token}`,
+          },
+          body: JSON.stringify({
+            shippingName,
+            shippingEmail,
+            shippingPhone,
+            shippingAddress,
+            paymentMethod: 'cod',
+            notes,
+            couponCode: couponApplied ? couponCode : undefined,
+            shippingPincode: pincodeData?.pincode,
+            shippingCity: pincodeData?.city,
+            shippingState: pincodeData?.state,
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setOrderNumber(data.order.orderNumber);
+          setStep('success');
+          fetchCart();
+          toast.success('Order placed! Pay on delivery.');
+        } else {
+          const data = await res.json();
+          toast.error(data.error || 'Failed to place order');
+        }
+      } catch (error) {
+        console.error('COD order placement failed:', error);
+        toast.error('Failed to place order');
+      } finally {
+        setPlacing(false);
+      }
+    } else if (paymentMethod === 'upi') {
+      // UPI flow: place order with UPI ID in notes
+      if (!upiId.trim()) {
+        toast.error('Please enter your UPI ID');
+        return;
+      }
+      setPlacing(true);
+      try {
+        const upiNotes = notes
+          ? `${notes}\nUPI ID: ${upiId}`
+          : `UPI ID: ${upiId}`;
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${auth.token}`,
+          },
+          body: JSON.stringify({
+            shippingName,
+            shippingEmail,
+            shippingPhone,
+            shippingAddress,
+            paymentMethod: 'upi',
+            notes: upiNotes,
+            couponCode: couponApplied ? couponCode : undefined,
+            shippingPincode: pincodeData?.pincode,
+            shippingCity: pincodeData?.city,
+            shippingState: pincodeData?.state,
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setOrderNumber(data.order.orderNumber);
+          setStep('success');
+          fetchCart();
+          toast.success('Order placed! Please complete UPI payment.');
+        } else {
+          const data = await res.json();
+          toast.error(data.error || 'Failed to place order');
+        }
+      } catch (error) {
+        console.error('UPI order placement failed:', error);
+        toast.error('Failed to place order');
+      } finally {
+        setPlacing(false);
+      }
+    } else if (paymentMethod === 'razorpay' && razorpayEnabled) {
       // Razorpay flow: create order first, then open Razorpay
       setPlacing(true);
       try {
@@ -268,6 +365,9 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
                   razorpayOrderId: response.razorpay_order_id,
                   notes,
                   couponCode: couponApplied ? couponCode : undefined,
+                  shippingPincode: pincodeData?.pincode,
+                  shippingCity: pincodeData?.city,
+                  shippingState: pincodeData?.state,
                 }),
               });
 
@@ -331,6 +431,9 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
             paymentMethod: 'manual',
             notes,
             couponCode: couponApplied ? couponCode : undefined,
+            shippingPincode: pincodeData?.pincode,
+            shippingCity: pincodeData?.city,
+            shippingState: pincodeData?.state,
           }),
         });
 
@@ -518,7 +621,19 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
                     rows={2}
                   />
                 </div>
-                <Button onClick={() => setStep('review')}>
+                <PincodeChecker
+                  onPincodeVerified={(data) => setPincodeData(data)}
+                  initialPincode={pincodeData?.pincode || ''}
+                />
+                <Button
+                  onClick={() => {
+                    if (!pincodeData || !pincodeData.serviceable) {
+                      toast.error('Please enter a serviceable pincode');
+                      return;
+                    }
+                    setStep('review');
+                  }}
+                >
                   Continue to Review
                 </Button>
               </CardContent>
@@ -560,7 +675,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
                   <h3 className="font-semibold text-sm">Payment Method</h3>
                   <RadioGroup
                     value={paymentMethod}
-                    onValueChange={(v) => setPaymentMethod(v as 'manual' | 'razorpay')}
+                    onValueChange={(v) => setPaymentMethod(v as 'manual' | 'razorpay' | 'upi' | 'cod')}
                     className="space-y-2"
                   >
                     <div className="flex items-center space-x-2 rounded-lg border p-3">
@@ -585,8 +700,48 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
                         </Label>
                       </div>
                     )}
+                    {settings?.upi_enabled === 'true' && (
+                      <div className="flex items-center space-x-2 rounded-lg border p-3">
+                        <RadioGroupItem value="upi" id="pay-upi" />
+                        <Label htmlFor="pay-upi" className="flex items-center gap-2 cursor-pointer flex-1">
+                          <Smartphone className="h-4 w-4" />
+                          <div>
+                            <p className="font-medium text-sm">UPI Payment</p>
+                            <p className="text-xs text-muted-foreground">Pay via Google Pay, PhonePe, Paytm, or any UPI app</p>
+                          </div>
+                        </Label>
+                      </div>
+                    )}
+                    {settings?.cod_enabled === 'true' && (
+                      <div className="flex items-center space-x-2 rounded-lg border p-3">
+                        <RadioGroupItem value="cod" id="pay-cod" />
+                        <Label htmlFor="pay-cod" className="flex items-center gap-2 cursor-pointer flex-1">
+                          <CircleDollarSign className="h-4 w-4" />
+                          <div>
+                            <p className="font-medium text-sm">Cash on Delivery</p>
+                            <p className="text-xs text-muted-foreground">Pay when your order is delivered</p>
+                          </div>
+                        </Label>
+                      </div>
+                    )}
                   </RadioGroup>
                 </div>
+
+                {/* UPI ID Input */}
+                {paymentMethod === 'upi' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="upi-id">UPI ID *</Label>
+                    <Input
+                      id="upi-id"
+                      value={upiId}
+                      onChange={(e) => setUpiId(e.target.value)}
+                      placeholder="yourname@upi"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Enter your UPI ID (e.g., name@bank, phone@upi)
+                    </p>
+                  </div>
+                )}
 
                 {/* Order Items */}
                 <div className="space-y-3">
@@ -638,7 +793,11 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
                       ? 'Processing...'
                       : paymentMethod === 'razorpay'
                         ? 'Pay & Place Order'
-                        : 'Place Order'}
+                        : paymentMethod === 'cod'
+                          ? 'Place Order (COD)'
+                          : paymentMethod === 'upi'
+                            ? 'Place Order (UPI)'
+                            : 'Place Order'}
                   </Button>
                 </div>
               </CardContent>

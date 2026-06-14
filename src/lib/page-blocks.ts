@@ -53,13 +53,23 @@ export const BLOCK_DEFAULTS: Record<
     label: "Hero Banner",
     icon: "Image",
     defaultData: {
-      title: "Welcome",
+      title: "",
       subtitle: "",
-      buttonText: "Learn More",
-      buttonLink: "/catalogue",
-      backgroundImage: "",
+      items: [
+        {
+          image: "",
+          title: "Slide 1",
+          subtitle: "Description",
+          buttonText: "Learn More",
+          buttonLink: "/catalogue",
+        },
+      ],
       height: "medium",
       alignment: "center",
+      autoplay: true,
+      interval: 5000,
+      showArrows: true,
+      showDots: true,
     },
   },
   features: {

@@ -32,7 +32,7 @@ interface Product {
 }
 
 export function CategoryPage({ slug, onNavigate }: CategoryPageProps) {
-  const [category, setCategory] = useState<{ id: string; name: string; description: string | null; image: string | null } | null>(null);
+  const [category, setCategory] = useState<{ id: string; name: string; description: string | null; image: string | null; blocks: string | null } | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -152,11 +152,20 @@ export function CategoryPage({ slug, onNavigate }: CategoryPageProps) {
       </section>
 
       {/* CMS Customizable Blocks */}
-      {cmsBlocks && cmsBlocks.length > 0 && (
-        <div className="container mx-auto max-w-5xl px-4">
-          <PageBlockRenderer blocks={cmsBlocks} onNavigate={onNavigate} />
-        </div>
-      )}
+      {(() => {
+        let blocks = cmsBlocks;
+        if (category?.blocks) {
+          try {
+            const parsed = JSON.parse(category.blocks);
+            if (Array.isArray(parsed) && parsed.length > 0) blocks = parsed;
+          } catch { /* fallback to cmsBlocks */ }
+        }
+        return blocks && blocks.length > 0 ? (
+          <div className="container mx-auto max-w-5xl px-4">
+            <PageBlockRenderer blocks={blocks} onNavigate={onNavigate} />
+          </div>
+        ) : null;
+      })()}
 
       {/* Enquiry Form */}
       {showForm && (

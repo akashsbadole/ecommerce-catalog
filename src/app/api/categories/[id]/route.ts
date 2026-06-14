@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { logActivity } from '@/lib/activity-log';
 
 export async function GET(
   _request: NextRequest,
@@ -68,8 +69,23 @@ export async function PUT(
         ...(body.parentId !== undefined && {
           parentId: body.parentId || null,
         }),
+        ...(body.blocks !== undefined && { blocks: body.blocks }),
+        ...(body.ogImage !== undefined && { ogImage: body.ogImage || null }),
       },
     });
+
+    const userId = request.headers.get('x-user-id') || undefined;
+    const userName = request.headers.get('x-user-email') || undefined;
+    const ipAddress = request.headers.get('x-forwarded-for') || undefined;
+    logActivity({
+      action: 'category.update',
+      entity: 'Category',
+      entityId: category.id,
+      userId,
+      userName,
+      ipAddress,
+      details: { name: category.name },
+    }).catch(() => {});
 
     return NextResponse.json({ category });
   } catch (error) {
@@ -112,6 +128,20 @@ export async function DELETE(
         );
       }
       await db.category.delete({ where: { id } });
+
+      const userIdPerm = request.headers.get('x-user-id') || undefined;
+      const userNamePerm = request.headers.get('x-user-email') || undefined;
+      const ipAddressPerm = request.headers.get('x-forwarded-for') || undefined;
+      logActivity({
+        action: 'category.delete.permanent',
+        entity: 'Category',
+        entityId: id,
+        userId: userIdPerm,
+        userName: userNamePerm,
+        ipAddress: ipAddressPerm,
+        details: { name: existing.name },
+      }).catch(() => {});
+
       return NextResponse.json({ message: 'Category permanently deleted' });
     }
 
@@ -120,6 +150,19 @@ export async function DELETE(
       where: { id },
       data: { deletedAt: new Date(), isActive: false },
     });
+
+    const userIdSoft = request.headers.get('x-user-id') || undefined;
+    const userNameSoft = request.headers.get('x-user-email') || undefined;
+    const ipAddressSoft = request.headers.get('x-forwarded-for') || undefined;
+    logActivity({
+      action: 'category.delete',
+      entity: 'Category',
+      entityId: id,
+      userId: userIdSoft,
+      userName: userNameSoft,
+      ipAddress: ipAddressSoft,
+      details: { name: existing.name },
+    }).catch(() => {});
 
     return NextResponse.json({
       message: 'Category deleted successfully',

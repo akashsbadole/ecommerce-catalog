@@ -48,6 +48,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { SocialShare } from './SocialShare';
+import { CrossSellSection } from './CrossSellSection';
+import { WhatsAppShare } from './WhatsAppShare';
+import { PincodeChecker } from './PincodeChecker';
 import { trackProductView } from './RecentlyViewedProducts';
 import { useAppStore } from '@/lib/store';
 import { calculateTieredPrice, formatPrice as libFormatPrice } from '@/lib/pricing';
@@ -670,6 +673,9 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
             );
           })()}
 
+          {/* Pincode Checker */}
+          <PincodeChecker productId={product.id} />
+
           {/* B2B Pricing */}
           {(product.wholesalePrice || (product.minOrderQty && product.minOrderQty > 1)) && (
             <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/30 shadow-sm overflow-hidden">
@@ -1047,6 +1053,12 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
                 <MessageCircle className="mr-2 h-4 w-4" />
                 WhatsApp
               </a>
+              <WhatsAppShare
+                productName={product.name}
+                productUrl={typeof window !== 'undefined' ? window.location.href : ''}
+                phoneNumber={product.whatsappNumber || siteSettings?.whatsapp_number}
+                mode="enquiry"
+              />
             </div>
           </form>
         </CardContent>
@@ -1125,6 +1137,9 @@ export function ProductDetailPage({ productId, onNavigate }: ProductDetailPagePr
           </div>
         </div>
       )}
+
+      {/* Cross-sell Bundles */}
+      <CrossSellSection productId={product.id} />
     </div>
   );
 }

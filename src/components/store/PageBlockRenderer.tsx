@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import DOMPurify from "dompurify";
+import useEmblaCarousel from "embla-carousel-react";
 import { useAppStore } from "@/lib/store";
 import {
   Image,
@@ -189,66 +190,161 @@ function HeroBlock({
   data: Record<string, unknown>;
   onNavigate?: (page: string, data?: unknown) => void;
 }) {
-  const bgImage = (data.backgroundImage as string) || "";
-  const title = (data.title as string) || "Welcome";
-  const subtitle = (data.subtitle as string) || "";
-  const buttonText = (data.buttonText as string) || "";
-  const buttonLink = (data.buttonLink as string) || "/catalogue";
+  const items = (() => {
+    const raw = data.items as
+      | Array<{
+          image: string;
+          title: string;
+          subtitle: string;
+          buttonText: string;
+          buttonLink: string;
+        }>
+      | undefined;
+    if (raw && Array.isArray(raw) && raw.length > 0) return raw;
+    return [
+      {
+        image: (data.backgroundImage as string) || "",
+        title: (data.title as string) || "Welcome",
+        subtitle: (data.subtitle as string) || "",
+        buttonText: (data.buttonText as string) || "",
+        buttonLink: (data.buttonLink as string) || "/catalogue",
+      },
+    ];
+  })();
+
   const height = (data.height as string) || "medium";
   const alignment = (data.alignment as string) || "center";
+  const autoplay = data.autoplay !== false;
+  const interval = (data.interval as number) || 5000;
+  const showArrows = data.showArrows !== false;
+  const showDots = data.showDots !== false;
+
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
+
+  useEffect(() => {
+    if (!emblaApi || !autoplay || items.length <= 1) return;
+    const timer = setInterval(() => {
+      emblaApi.scrollNext();
+    }, interval);
+    return () => clearInterval(timer);
+  }, [emblaApi, autoplay, interval, items.length]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    const onSelect = () => setSelectedIndex(emblaApi.selectedScrollSnap());
+    emblaApi.on("select", onSelect);
+    onSelect();
+    return () => {
+      void emblaApi.off("select", onSelect);
+    };
+  }, [emblaApi]);
 
   const heightClasses: Record<string, string> = {
-    small: "min-h-[200px] sm:min-h-[250px]",
-    medium: "min-h-[300px] sm:min-h-[400px] lg:min-h-[450px]",
-    large: "min-h-[400px] sm:min-h-[500px] lg:min-h-[600px]",
+    small: "min-h-[300px] sm:min-h-[350px]",
+    medium: "min-h-[400px] sm:min-h-[500px]",
+    large: "min-h-[500px] sm:min-h-[600px] lg:min-h-[700px]",
   };
 
   const alignClasses: Record<string, string> = {
-    left: "text-left",
-    center: "text-center",
-    right: "text-right",
+    left: "text-left items-start",
+    center: "text-center items-center",
+    right: "text-right items-end",
   };
 
   return (
-    <div
-      className={`relative flex items-center overflow-hidden w-full ${heightClasses[height] || heightClasses.medium}`}
-    >
-      {bgImage ? (
-        <img
-          src={bgImage}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-      ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary/80" />
-      )}
-      <div className="absolute inset-0 bg-black/30" />
+    <div className="w-full overflow-hidden">
       <div
-        className={`relative z-10 mx-auto max-w-4xl px-6 w-full ${alignClasses[alignment] || alignClasses.center}`}
+        className={`relative flex items-center justify-center ${heightClasses[height] || heightClasses.medium}`}
+        ref={emblaRef}
       >
-        <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
-          {title}
-        </h1>
-        {subtitle && (
-          <p className="mt-4 text-lg text-white/90 sm:text-xl">{subtitle}</p>
-        )}
-        {buttonText && (
-          <Button
-            size="lg"
-            className="mt-6 bg-white text-primary/80 hover:bg-white/90"
-            onClick={() =>
-              onNavigate &&
-              buttonLink &&
-              onNavigate(
-                buttonLink.startsWith("/") ? "content-page" : "catalogue",
-                buttonLink.replace("/page/", ""),
-              )
-            }
-          >
-            {buttonText}
-          </Button>
-        )}
+        <div className="flex w-full h-full">
+          {items.map((item, i) => (
+            <div
+              key={i}
+              className="relative flex-shrink-0 w-full h-full"
+              style={{ minWidth: "100%" }}
+            >
+              {item.image ? (
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              ) : (
+                <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary/80" />
+              )}
+              <div className="absolute inset-0 bg-black/30" />
+              <div
+                className={`relative z-10 mx-auto max-w-4xl px-6 w-full flex flex-col ${alignClasses[alignment] || alignClasses.center}`}
+              >
+                <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+                  {item.title}
+                </h1>
+                {item.subtitle && (
+                  <p className="mt-4 text-lg text-white/90 sm:text-xl max-w-2xl">
+                    {item.subtitle}
+                  </p>
+                )}
+                {item.buttonText && (
+                  <Button
+                    size="lg"
+                    className="mt-6 bg-white text-primary hover:bg-white/90"
+                    onClick={() =>
+                      onNavigate &&
+                      item.buttonLink &&
+                      onNavigate(
+                        item.buttonLink.startsWith("/") ? "content-page" : "catalogue",
+                        item.buttonLink.replace("/page/", ""),
+                      )
+                    }
+                  >
+                    {item.buttonText}
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
+      {items.length > 1 && (
+        <>
+          {showArrows && (
+            <>
+              <button
+                type="button"
+                className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/20 text-white hover:bg-black/40 backdrop-blur-sm"
+                onClick={() => emblaApi?.scrollPrev()}
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+              <button
+                type="button"
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/20 text-white hover:bg-black/40 backdrop-blur-sm"
+                onClick={() => emblaApi?.scrollNext()}
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            </>
+          )}
+          {showDots && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+              {items.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className={`h-2 rounded-full transition-all ${
+                    i === selectedIndex
+                      ? "w-6 bg-white"
+                      : "w-2 bg-white/50 hover:bg-white/80"
+                  }`}
+                  onClick={() => emblaApi?.scrollTo(i)}
+                />
+              ))}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

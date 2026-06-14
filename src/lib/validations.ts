@@ -34,6 +34,8 @@ export const categorySchema = z.object({
   isActive: z.boolean().default(true),
   metaTitle: z.string().max(70).optional().nullable(),
   metaDescription: z.string().max(160).optional().nullable(),
+  blocks: z.string().optional().nullable(),
+  ogImage: z.string().optional().nullable(),
 });
 
 export const enquirySchema = z.object({

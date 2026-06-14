@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 type LogAction =
   | 'user.login' | 'user.logout' | 'user.create' | 'user.update' | 'user.delete'
   | 'product.create' | 'product.update' | 'product.delete' | 'product.bulk'
-  | 'category.create' | 'category.update' | 'category.delete' | 'category.bulk'
+  | 'category.create' | 'category.update' | 'category.delete' | 'category.delete.permanent' | 'category.bulk'
   | 'blog.create' | 'blog.update' | 'blog.delete' | 'blog.bulk'
   | 'enquiry.update' | 'enquiry.delete'
   | 'page.create' | 'page.update' | 'page.delete'

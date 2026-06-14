@@ -24,6 +24,7 @@ model Store {
   isPaused      Boolean  @default(false)
   ownerUserId   String
   settings      String   @default("{}") // JSON: per-store config (currency, tax_rate, etc.)
+  whatsappNumber String?  // store WhatsApp number for catalogue sharing
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   Owner        User    @relation("StoreOwner", fields: [ownerUserId], references: [id])
@@ -39,6 +40,14 @@ model Store {
   Enquiry       Enquiry[]
   Media         Media[]
   Redirect      Redirect[]
+  Warehouse     Warehouse[]
+  Invoice       Invoice[]
+  ProductBundle  ProductBundle[]
+  Return         Return[]
+  CustomerGroup  CustomerGroup[]
+  PincodeService PincodeService[]
+  LowStockAlert  LowStockAlert[]
+  EmailCampaign  EmailCampaign[]
 
   @@index([ownerUserId])
   @@index([isActive])
@@ -118,6 +127,12 @@ model Product {
   CartItem          CartItem[]
   WishlistItem      WishlistItem[]
   OrderItem         OrderItem[]
+  CustomPrice       CustomPrice[]
+  Subscription      Subscription[]
+  Inventory         Inventory[]
+  BundleItems       ProductBundleItem[]
+  Visibility        ProductVisibility[]
+  LowStockAlert     LowStockAlert[]
 
   @@index([deletedAt])
   @@index([storeId])
@@ -135,6 +150,8 @@ model Category {
   isActive        Boolean   @default(true)
   metaTitle       String?
   metaDescription String?
+  ogImage         String?
+  blocks          String    @default("[]")
   customSchema    String?   @default("{}")
   deletedAt       DateTime?
   createdAt       DateTime  @default(now())
@@ -192,21 +209,33 @@ model Order {
   shippingCost   Float       @default(0)
   tax            Float       @default(0)
   total          Float
-  currency       String      @default("USD")
+  currency       String      @default("INR")
   shippingName   String?
   shippingEmail  String?
   shippingPhone  String?
   shippingAddress String?
+  shippingPincode String?
+  shippingCity   String?
+  shippingState  String?
   billingName    String?
   billingEmail   String?
   billingAddress String?
   notes          String?
   trackingNumber String?
+  warehouseId    String?
+  invoiceNumber  String?
+  gstNumber      String?
+  approvalStatus String?     @default("none") // none, pending, approved, rejected
+  approvalNotes  String?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   User           User?       @relation(fields: [userId], references: [id])
   Store          Store?      @relation(fields: [storeId], references: [id])
+  Warehouse      Warehouse?  @relation(fields: [warehouseId], references: [id])
   items          OrderItem[]
+  Invoices       Invoice[]
+  Return         Return[]
+  OrderApproval  OrderApproval[]
 
   @@index([userId])
   @@index([status])
@@ -238,6 +267,7 @@ model Cart {
   userId    String
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+  recoveryEmailSent Boolean @default(false)
   User      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   items     CartItem[]
 
@@ -478,6 +508,11 @@ model User {
   Order                   Order[]
   Cart                    Cart?
   Wishlist                Wishlist?
+  Subscription            Subscription[]
+  Invoice                 Invoice[]
+  Return                  Return[]
+  OrderApproval           OrderApproval[]
+  CustomerGroupMember     CustomerGroupMember[]
 }
 
 model ActivityLog {
@@ -517,11 +552,20 @@ model Company {
   website     String?
   isVerified  Boolean   @default(false)
   tier        String    @default("standard")
+  discountRate Float?
+  gstNumber   String?
+  creditTerms  String?  @default("prepaid") // prepaid, net-15, net-30, net-60, net-90
+  creditLimit  Float    @default(0)
+  creditUsed   Float    @default(0)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now())
   User        User[]
   Enquiry     Enquiry[]
   Quote       Quote[]
+  CustomPrice CustomPrice[]
+  Subscription Subscription[]
+  Invoice      Invoice[]
+  CustomerGroupMember CustomerGroupMember[]
 }
 
 model Quote {
@@ -537,11 +581,12 @@ model Quote {
   discount      Float     @default(0)
   tax           Float     @default(0)
   total         Float     @default(0)
-  currency      String    @default("USD")
+  currency      String    @default("INR")
   status        String    @default("draft")
   validUntil    DateTime?
   notes         String?
   adminNotes    String?
+  recoveryEmailSent Boolean @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @default(now())
   Enquiry       Enquiry?  @relation(fields: [enquiryId], references: [id])
@@ -553,4 +598,331 @@ model Quote {
   @@index([status])
   @@index([quoteNumber])
   @@index([storeId])
+}
+
+// ─── Extended B2B & Warehousing ────────────────────────────────
+
+model Warehouse {
+  id        String   @id @default(cuid())
+  storeId   String?
+  name      String
+  location  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  Store     Store?   @relation(fields: [storeId], references: [id])
+  Inventory Inventory[]
+  Order     Order[]
+
+  @@index([storeId])
+}
+
+model Inventory {
+  id          String    @id @default(cuid())
+  productId   String
+  variantId   String?
+  warehouseId String
+  stock       Int       @default(0)
+  updatedAt   DateTime  @default(now())
+  Product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  Warehouse   Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, variantId, warehouseId])
+}
+
+model CustomPrice {
+  id        String   @id @default(cuid())
+  companyId String
+  productId String
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  Company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  Product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, productId])
+}
+
+model Subscription {
+  id               String    @id @default(cuid())
+  userId           String
+  companyId        String?
+  productId        String
+  quantity         Int
+  frequency        String    @default("monthly")
+  nextDeliveryDate DateTime
+  status           String    @default("active")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @default(now())
+  User             User      @relation(fields: [userId], references: [id])
+  Company          Company?  @relation(fields: [companyId], references: [id])
+  Product          Product   @relation(fields: [productId], references: [id])
+
+  @@index([userId])
+}
+
+model Invoice {
+  id              String       @id @default(cuid())
+  storeId         String?
+  orderId         String?
+  userId          String?
+  companyId       String?
+  invoiceNumber   String       @unique
+  status          String       @default("draft")
+  subtotal        Float
+  shippingCost    Float        @default(0)
+  discount        Float        @default(0)
+  tax             Float        @default(0)
+  taxRate         Float        @default(0)
+  total           Float
+  currency        String       @default("INR")
+  gstNumber       String?
+  gstType         String?
+  notes           String?
+  billingName     String?
+  billingEmail    String?
+  billingAddress  String?
+  companyName     String?
+  companyAddress  String?
+  companyTaxId    String?
+  dueDate         DateTime?
+  paidAt          DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  Order           Order?       @relation(fields: [orderId], references: [id])
+  User            User?        @relation(fields: [userId], references: [id])
+  Company         Company?     @relation(fields: [companyId], references: [id])
+  Store           Store?       @relation(fields: [storeId], references: [id])
+  items           InvoiceItem[]
+
+  @@index([storeId])
+  @@index([orderId])
+  @@index([userId])
+  @@index([companyId])
+}
+
+model InvoiceItem {
+  id        String   @id @default(cuid())
+  invoiceId String
+  productId String?
+  name      String
+  sku       String?
+  hsnCode   String?
+  price     Float
+  quantity  Int
+  total     Float
+  gstRate   Float    @default(0)
+  gstAmount Float    @default(0)
+  Invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+}
+
+// ─── Cross-sell / Bundles ──────────────────────────────────────
+
+model ProductBundle {
+  id             String   @id @default(cuid())
+  storeId        String?
+  name           String
+  slug           String   @unique
+  description    String?
+  discountPercent Float   @default(0)
+  isActive       Boolean  @default(true)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  Store          Store?   @relation(fields: [storeId], references: [id])
+  items          ProductBundleItem[]
+
+  @@index([storeId])
+}
+
+model ProductBundleItem {
+  id        String       @id @default(cuid())
+  bundleId  String
+  productId String
+  quantity  Int          @default(1)
+  Bundle    ProductBundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  Product   Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([bundleId, productId])
+  @@index([bundleId])
+}
+
+// ─── Returns / RMA ─────────────────────────────────────────────
+
+model Return {
+  id           String   @id @default(cuid())
+  storeId      String?
+  orderId      String
+  userId       String
+  returnNumber String   @unique
+  status       String   @default("requested") // requested, approved, picked_up, received, refunded, rejected
+  reason       String
+  reasonDetail String?
+  items        String   @default("[]") // JSON: [{orderItemId, quantity, reason}]
+  total        Float    @default(0)
+  refundMethod String?  // original_payment, store_credit, bank_transfer
+  refundAmount Float    @default(0)
+  notes        String?
+  adminNotes   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  Order        Order    @relation(fields: [orderId], references: [id])
+  User         User     @relation(fields: [userId], references: [id])
+  Store        Store?   @relation(fields: [storeId], references: [id])
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([status])
+  @@index([storeId])
+}
+
+// ─── Order Approval Workflows ──────────────────────────────────
+
+model OrderApproval {
+  id          String   @id @default(cuid())
+  orderId     String
+  approverId  String?
+  status      String   @default("pending") // pending, approved, rejected
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  User        User?    @relation(fields: [approverId], references: [id])
+
+  @@index([orderId])
+  @@index([status])
+}
+
+// ─── OTP Login ─────────────────────────────────────────────────
+
+model OTP {
+  id        String   @id @default(cuid())
+  phone     String?
+  email     String?
+  otp       String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([phone])
+  @@index([email])
+  @@index([expiresAt])
+}
+
+// ─── Customer Groups (product visibility) ──────────────────────
+
+model CustomerGroup {
+  id          String   @id @default(cuid())
+  storeId     String?
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Store       Store?   @relation(fields: [storeId], references: [id])
+  members     CustomerGroupMember[]
+  products    ProductVisibility[]
+
+  @@index([storeId])
+}
+
+model CustomerGroupMember {
+  id       String        @id @default(cuid())
+  groupId  String
+  userId   String?
+  companyId String?
+  Group    CustomerGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  User     User?         @relation(fields: [userId], references: [id])
+  Company  Company?      @relation(fields: [companyId], references: [id])
+
+  @@unique([groupId, userId])
+  @@index([groupId])
+}
+
+model ProductVisibility {
+  id        String        @id @default(cuid())
+  productId String
+  groupId   String
+  isVisible Boolean       @default(true)
+  Product   Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  Group     CustomerGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, groupId])
+  @@index([productId])
+  @@index([groupId])
+}
+
+// ─── Low Stock Alerts ──────────────────────────────────────────
+
+model LowStockAlert {
+  id             String   @id @default(cuid())
+  storeId        String?
+  productId      String
+  threshold      Int      @default(10)
+  lastAlertedAt  DateTime?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  Store          Store?   @relation(fields: [storeId], references: [id])
+  Product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, productId])
+  @@index([storeId])
+}
+
+// ─── Email Marketing Automation ────────────────────────────────
+
+model EmailCampaign {
+  id           String   @id @default(cuid())
+  storeId      String?
+  name         String
+  subject      String
+  content      String   // HTML content
+  type         String   @default("manual") // manual, automated
+  triggerType  String?  // abandoned_cart, order_confirmation, welcome, custom
+  status       String   @default("draft") // draft, scheduled, sending, sent, failed
+  scheduledAt  DateTime?
+  sentAt       DateTime?
+  recipientCount Int    @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  Store        Store?   @relation(fields: [storeId], references: [id])
+  logs         EmailCampaignLog[]
+
+  @@index([storeId])
+  @@index([status])
+}
+
+model EmailCampaignLog {
+  id         String        @id @default(cuid())
+  campaignId String
+  email      String
+  userId     String?
+  sentAt     DateTime      @default(now())
+  openedAt   DateTime?
+  clickedAt  DateTime?
+  Campaign   EmailCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@index([email])
+}
+
+// ─── Pincode Serviceability ────────────────────────────────────
+
+model PincodeService {
+  id           String   @id @default(cuid())
+  storeId      String?
+  pincode      String
+  isServiceable Boolean @default(true)
+  deliveryDays Int      @default(5)
+  shippingCost Float    @default(0)
+  codAvailable Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  Store        Store?   @relation(fields: [storeId], references: [id])
+
+  @@unique([storeId, pincode])
+  @@index([storeId])
+  @@index([pincode])
 }

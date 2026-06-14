@@ -84,6 +84,8 @@ export async function POST(request: NextRequest) {
         metaTitle: validatedData.metaTitle || null,
         metaDescription: validatedData.metaDescription || null,
         customSchema: (validatedData as Record<string, unknown>).customSchema as string || null,
+        blocks: validatedData.blocks || "[]",
+        ogImage: validatedData.ogImage || null,
         parentId: body.parentId || null,
         ...(storeId ? { storeId } : {}),
       },

@@ -77,6 +77,8 @@ interface Category {
   metaDescription: string | null;
   customSchema?: string | null;
   parentId?: string | null;
+  ogImage?: string | null;
+  blocks?: string | null;
   _count?: { Product: number };
 }
 
@@ -91,6 +93,8 @@ interface CategoryFormData {
   metaDescription: string;
   customSchema: string;
   parentId: string;
+  ogImage: string;
+  blocks: string;
 }
 
 const emptyForm: CategoryFormData = {
@@ -104,6 +108,8 @@ const emptyForm: CategoryFormData = {
   metaDescription: '',
   customSchema: '',
   parentId: '',
+  ogImage: '',
+  blocks: '[]',
 };
 
 function generateSlug(name: string): string {
@@ -176,6 +182,8 @@ export function AdminCategories() {
       metaDescription: cat.metaDescription || '',
       customSchema: cat.customSchema || '',
       parentId: cat.parentId || '',
+      ogImage: cat.ogImage || '',
+      blocks: cat.blocks || '[]',
     });
     setSeoOpen(!!(cat.metaTitle || cat.metaDescription));
     setFormOpen(true);
@@ -208,6 +216,8 @@ export function AdminCategories() {
         metaDescription: form.metaDescription.trim() || null,
         customSchema: form.customSchema.trim() || null,
         parentId: form.parentId || null,
+        ogImage: form.ogImage.trim() || null,
+        blocks: form.blocks || '[]',
       };
 
       const url = editingCategory
@@ -627,6 +637,25 @@ export function AdminCategories() {
               )}
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="cat-ogimage">Open Graph Image URL</Label>
+              <Input
+                id="cat-ogimage"
+                placeholder="https://example.com/og-image.jpg"
+                value={form.ogImage}
+                onChange={(e) =>
+                  setForm(prev => ({ ...prev, ogImage: e.target.value }))
+                }
+              />
+              {form.ogImage && (
+                <img
+                  src={form.ogImage}
+                  alt="OG Preview"
+                  className="h-16 w-16 rounded-md object-cover bg-muted"
+                />
+              )}
+            </div>
+
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="cat-sort">Sort Order</Label>
@@ -746,6 +775,46 @@ export function AdminCategories() {
                     rows={3}
                     className="font-mono text-xs"
                   />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            <Separator />
+
+            {/* CMS Blocks Section (Collapsible) */}
+            <Collapsible>
+              <CollapsibleTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-between"
+                >
+                  <span className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    CMS Blocks
+                    {form.blocks !== '[]' && (
+                      <span className="text-xs text-emerald-600 font-normal">(configured)</span>
+                    )}
+                  </span>
+                  <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-3">
+                <div className="space-y-2">
+                  <Label htmlFor="cat-blocks">Blocks JSON</Label>
+                  <Textarea
+                    id="cat-blocks"
+                    placeholder='[{"type": "richtext", "content": "<p>Hello</p>"}, {"type": "image", "src": "..."}]'
+                    value={form.blocks}
+                    onChange={(e) =>
+                      setForm(prev => ({ ...prev, blocks: e.target.value }))
+                    }
+                    rows={6}
+                    className="font-mono text-xs"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Define custom PageBlockRenderer blocks as a JSON array. See the PageBlockRenderer component for supported block types.
+                  </p>
                 </div>
               </CollapsibleContent>
             </Collapsible>

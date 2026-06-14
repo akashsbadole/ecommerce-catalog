@@ -17,10 +17,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAppStore } from '@/lib/store';
 import { toast } from 'sonner';
 import { getFirstImage } from '@/lib/utils';
 import { formatPrice } from '@/lib/pricing';
+import { ReturnRequestForm } from '@/components/store/ReturnRequestForm';
 
 interface OrderDetail {
   id: string;
@@ -102,6 +104,7 @@ export function OrderDetailPage({ orderId, onNavigate }: OrderDetailPageProps) {
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [reordering, setReordering] = useState(false);
+  const [showReturnDialog, setShowReturnDialog] = useState(false);
 
   const currency = settings?.currency || 'USD';
 
@@ -420,7 +423,33 @@ export function OrderDetailPage({ orderId, onNavigate }: OrderDetailPageProps) {
             {cancelling ? 'Cancelling...' : 'Cancel Order'}
           </Button>
         )}
+        {order.status === 'delivered' && (
+          <Button
+            variant="outline"
+            onClick={() => setShowReturnDialog(true)}
+          >
+            Request Return
+          </Button>
+        )}
       </div>
+
+      {/* Return Request Dialog */}
+      <Dialog open={showReturnDialog} onOpenChange={setShowReturnDialog}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Request Return</DialogTitle>
+          </DialogHeader>
+          <ReturnRequestForm
+            orderId={order.id}
+            orderItems={order.items}
+            onSubmitted={() => {
+              setShowReturnDialog(false);
+              toast.success('Return request submitted successfully');
+            }}
+            onCancel={() => setShowReturnDialog(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
