@@ -6,7 +6,7 @@ import { usePathname, useParams } from "next/navigation";
 import { StoreLayout } from "@/components/store/StoreLayout";
 import { HomePage } from "@/components/store/HomePage";
 import { CataloguePage } from "@/components/store/CataloguePage";
-import { ProductDetailPage } from "@/components/store/ProductDetailPage";
+import { CategoryPage } from "@/components/store/CategoryPage";
 import { CmsPage } from "@/components/store/CmsPage";
 import { ContentPageView } from "@/components/store/ContentPageView";
 import { BlogPage } from "@/components/store/BlogPage";
@@ -18,6 +18,7 @@ import { OrderDetailPage } from "@/components/store/OrderDetailPage";
 import { AccountPage } from "@/components/store/AccountPage";
 import { CheckoutPage } from "@/components/store/CheckoutPage";
 import { QuickOrderPage } from "@/components/store/QuickOrderPage";
+import { ComparePage } from "@/components/store/ComparePage";
 import { AboutPage } from "@/components/store/AboutPage";
 import { ManufacturingPage } from "@/components/store/ManufacturingPage";
 import { ContactPage } from "@/components/store/ContactPage";
@@ -48,10 +49,18 @@ export default function CatchAllPage() {
       if (path === "/" || path === "") return;
       const segments = path.split("/").filter(Boolean);
       if (segments[0] === "catalogue") {
-        if (segments[1]) navigate("product", segments[1]);
+        if (segments[1]) navigate("category", segments[1]);
         else navigate("catalogue");
       } else if (segments[0] === "product") {
-        if (segments[1]) navigate("product", segments[1]);
+        if (segments[1]) {
+          fetch(`/api/products/${segments[1]}`)
+            .then((r) => r.ok ? r.json() : null)
+            .then((product) => {
+              const catSlug = product?.category?.slug || product?.Category?.slug;
+              navigate(catSlug ? "category" : "catalogue", catSlug || undefined);
+            })
+            .catch(() => navigate("catalogue"));
+        }
       } else if (segments[0] === "about") {
         navigate("about");
       } else if (segments[0] === "manufacturing") {
@@ -65,6 +74,8 @@ export default function CatchAllPage() {
         else navigate("blog");
       } else if (segments[0] === "portal") {
         navigate("portal");
+      } else if (segments[0] === "compare") {
+        navigate("compare");
       } else if (segments[0] === "cart") {
         navigate("cart");
       } else if (segments[0] === "wishlist") {
@@ -115,13 +126,8 @@ export default function CatchAllPage() {
         return <HomePage onNavigate={navigate} />;
       case "catalogue":
         return <CataloguePage onNavigate={navigate} />;
-      case "product":
-        return (
-          <ProductDetailPage
-            productId={currentPage.productId}
-            onNavigate={navigate}
-          />
-        );
+      case "category":
+        return <CategoryPage slug={currentPage.slug} onNavigate={navigate} />;
       case "content-page":
         return <CmsPage slug={currentPage.slug} onNavigate={navigate} />;
       case "about":
@@ -150,6 +156,8 @@ export default function CatchAllPage() {
         return <AccountPage onNavigate={navigate} />;
       case "checkout":
         return <CheckoutPage onNavigate={navigate} />;
+      case "compare":
+        return <ComparePage onNavigate={navigate} />;
       case "quick-order":
         return <QuickOrderPage onNavigate={navigate} />;
       default:

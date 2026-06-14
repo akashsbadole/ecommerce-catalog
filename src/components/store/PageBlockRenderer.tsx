@@ -211,7 +211,7 @@ function HeroBlock({
 
   return (
     <div
-      className={`relative flex items-center overflow-hidden ${heightClasses[height] || heightClasses.medium}`}
+      className={`relative flex items-center overflow-hidden w-full ${heightClasses[height] || heightClasses.medium}`}
     >
       {bgImage ? (
         <img
@@ -463,16 +463,13 @@ function SpacerBlock({ data }: { data: Record<string, unknown> }) {
 
 function DividerBlock({ data }: { data: Record<string, unknown> }) {
   const style = (data.style as string) || "solid";
-  const borderClass = style === "dashed" 
-    ? "border-dashed" 
-    : style === "dotted" 
-    ? "border-dotted" 
-    : "border-solid";
-  return (
-    <hr
-      className={`my-8 ${borderClass} border-border`}
-    />
-  );
+  const borderClass =
+    style === "dashed"
+      ? "border-dashed"
+      : style === "dotted"
+        ? "border-dotted"
+        : "border-solid";
+  return <hr className={`my-8 ${borderClass} border-border`} />;
 }
 
 function ProductsBlock({
@@ -753,9 +750,12 @@ function AudienceCardsBlock({
       cta: string;
       link?: string;
     }>) || [];
+  const ctaButtonColor = (data.ctaButtonColor as string) || "#2639ED";
+  const ctaTextColor = (data.ctaTextColor as string) || "#FFFFFF";
+  const showButton = data.showButton !== false;
 
   return (
-    <section className="container mx-auto px-4 py-16">
+    <section className="container mx-auto px-4 py-16 text-center">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -791,30 +791,36 @@ function AudienceCardsBlock({
               <p className="text-xs text-muted-foreground mt-2 mb-4">
                 {card.description}
               </p>
-              <Button
-                size="sm"
-                className="bg-brand text-brand-foreground hover:bg-brand-muted text-xs px-4 py-1.5 h-auto"
-                onClick={() => {
-                  if (card.link && onNavigate) {
-                    if (card.link.startsWith("/")) {
-                      onNavigate(
-                        card.link.startsWith("/page/")
-                          ? "content-page"
-                          : card.link === "/contact"
-                            ? "contact"
-                            : "catalogue",
-                        card.link.replace("/page/", ""),
-                      );
-                    } else {
-                      window.open(card.link, "_blank");
+              {showButton && (
+                <Button
+                  size="sm"
+                  style={{
+                    backgroundColor: ctaButtonColor,
+                    color: ctaTextColor,
+                  }}
+                  className="text-xs px-4 py-1.5 h-auto hover:opacity-90"
+                  onClick={() => {
+                    if (card.link && onNavigate) {
+                      if (card.link.startsWith("/")) {
+                        onNavigate(
+                          card.link.startsWith("/page/")
+                            ? "content-page"
+                            : card.link === "/contact"
+                              ? "contact"
+                              : "catalogue",
+                          card.link.replace("/page/", ""),
+                        );
+                      } else {
+                        window.open(card.link, "_blank");
+                      }
+                    } else if (onNavigate) {
+                      onNavigate("contact");
                     }
-                  } else if (onNavigate) {
-                    onNavigate("contact");
-                  }
-                }}
-              >
-                {card.cta}
-              </Button>
+                  }}
+                >
+                  {card.cta}
+                </Button>
+              )}
             </motion.div>
           ))}
         </div>
@@ -833,11 +839,70 @@ function CapabilitiesBlock({
   const label = (data.label as string) || "";
   const heading = (data.heading as string) || "";
   const items = (data.items as string[]) || [];
+  const image = (data.image as string) || "";
+  const videoUrl = (data.videoUrl as string) || "";
   const imageCaption = (data.imageCaption as string) || "";
   const ctaText = (data.ctaText as string) || "";
   const ctaLink = (data.ctaLink as string) || "";
 
   const iconList = [Building2, Verified, Layers, Package, ShieldCheck, Clock];
+
+  const renderMedia = () => {
+    if (videoUrl) {
+      return (
+        <div
+          className="absolute inset-0 bg-cover bg-center cursor-pointer group"
+          style={image ? { backgroundImage: `url(${image})` } : undefined}
+          onClick={() => window.open(videoUrl, "_blank")}
+        >
+          <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40 transition-colors">
+            <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <Play className="h-7 w-7 text-primary ml-0.5" />
+            </div>
+          </div>
+          {imageCaption && (
+            <div className="absolute bottom-3 left-3 right-3">
+              <p className="text-xs text-white bg-black/50 backdrop-blur rounded-lg px-3 py-2">
+                {imageCaption}
+              </p>
+            </div>
+          )}
+        </div>
+      );
+    }
+    if (image) {
+      return (
+        <>
+          <img
+            src={image}
+            alt={imageCaption || "Capabilities"}
+            className="w-full h-full object-cover"
+          />
+          {imageCaption && (
+            <div className="absolute bottom-3 left-3 right-3">
+              <p className="text-xs text-muted-foreground bg-background/80 backdrop-blur rounded-lg px-3 py-2">
+                {imageCaption}
+              </p>
+            </div>
+          )}
+        </>
+      );
+    }
+    return (
+      <>
+        <div className="absolute inset-0 bg-gradient-to-br from-brand/20 to-brand/5 flex items-center justify-center">
+          <Building2 className="h-12 w-12 text-brand/40" />
+        </div>
+        {imageCaption && (
+          <div className="absolute bottom-3 left-3 right-3">
+            <p className="text-xs text-muted-foreground bg-background/80 backdrop-blur rounded-lg px-3 py-2">
+              {imageCaption}
+            </p>
+          </div>
+        )}
+      </>
+    );
+  };
 
   return (
     <section className="bg-muted/30 border-y">
@@ -903,16 +968,7 @@ function CapabilitiesBlock({
               )}
             </div>
             <div className="lg:col-span-2 relative aspect-[4/3] rounded-xl overflow-hidden bg-muted">
-              <div className="absolute inset-0 bg-gradient-to-br from-brand/20 to-brand/5 flex items-center justify-center">
-                <Building2 className="h-12 w-12 text-brand/40" />
-              </div>
-              {imageCaption && (
-                <div className="absolute bottom-3 left-3 right-3">
-                  <p className="text-xs text-muted-foreground bg-background/80 backdrop-blur rounded-lg px-3 py-2">
-                    {imageCaption}
-                  </p>
-                </div>
-              )}
+              {renderMedia()}
             </div>
           </div>
         </motion.div>
@@ -935,9 +991,12 @@ function ProductCategoriesBlock({
     (data.categories as Array<{ name: string; variants: string }>) || [];
   const ctaText = (data.ctaText as string) || "";
   const ctaLink = (data.ctaLink as string) || "";
+  const ctaButtonColor = (data.ctaButtonColor as string) || "#2639ED";
+  const ctaTextColor = (data.ctaTextColor as string) || "#FFFFFF";
+  const showButton = data.showButton !== false;
 
   return (
-    <section className="container mx-auto px-4 py-16">
+    <section className="container mx-auto px-4 py-16 text-center">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -959,7 +1018,7 @@ function ProductCategoriesBlock({
             {description}
           </p>
         )}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {categories.map((cat, i) => (
             <motion.div
               key={cat.name}
@@ -978,10 +1037,11 @@ function ProductCategoriesBlock({
             </motion.div>
           ))}
         </div>
-        {ctaText && (
+        {ctaText && showButton && (
           <div className="text-center mt-10">
             <Button
-              variant="outline"
+              style={{ backgroundColor: ctaButtonColor, color: ctaTextColor }}
+              className="hover:opacity-90"
               onClick={() => {
                 if (ctaLink && onNavigate) {
                   onNavigate(
@@ -1187,14 +1247,12 @@ function LeadCaptureBlock({ data }: { data: Record<string, unknown> }) {
           className="max-w-2xl mx-auto"
         >
           {heading && (
-            <h2 className="text-2xl md:text-3xl font-bold text-center text-brand-foreground mb-2">
+            <h2 className="text-2xl md:text-3xl font-bold text-center text-white mb-2">
               {heading}
             </h2>
           )}
           {description && (
-            <p className="text-sm text-brand-foreground/70 text-center mb-8">
-              {description}
-            </p>
+            <p className="text-sm text-white text-center mb-8">{description}</p>
           )}
 
           <form
@@ -1320,7 +1378,13 @@ function LeadershipBlock({
   const label = (data.label as string) || "";
   const heading = (data.heading as string) || "";
   const members =
-    (data.members as Array<{ name: string; role: string; bio: string; image?: string; photo?: string }>) || [];
+    (data.members as Array<{
+      name: string;
+      role: string;
+      bio: string;
+      image?: string;
+      photo?: string;
+    }>) || [];
   const ctaText = (data.ctaText as string) || "";
 
   return (
@@ -1408,7 +1472,9 @@ function PartnerLogosBlock({ data }: { data: Record<string, unknown> }) {
   const heading = (data.heading as string) || "";
   const testimonials =
     (data.testimonials as Array<{ quote: string; author: string }>) || [];
-  const logos = (data.logos as Array<string | { url: string; alt?: string }> | string[]) || [];
+  const logos =
+    (data.logos as Array<string | { url: string; alt?: string }> | string[]) ||
+    [];
   const logoCount = (data.logoCount as number) || 0;
 
   const renderLogos = () => {
@@ -1416,10 +1482,16 @@ function PartnerLogosBlock({ data }: { data: Record<string, unknown> }) {
       return (
         <div className="flex flex-wrap justify-center gap-8 items-center border-t pt-8">
           {logos.map((logo, i) => {
-            const logoUrl = typeof logo === 'string' ? logo : logo.url;
-            const logoAlt = typeof logo === 'string' ? `Partner ${i + 1}` : (logo.alt || `Partner ${i + 1}`);
+            const logoUrl = typeof logo === "string" ? logo : logo.url;
+            const logoAlt =
+              typeof logo === "string"
+                ? `Partner ${i + 1}`
+                : logo.alt || `Partner ${i + 1}`;
             return (
-              <div key={i} className="h-10 w-24 flex items-center justify-center">
+              <div
+                key={i}
+                className="h-10 w-24 flex items-center justify-center"
+              >
                 {logoUrl ? (
                   <img
                     src={logoUrl}
@@ -1492,8 +1564,11 @@ function PartnerLogosBlock({ data }: { data: Record<string, unknown> }) {
           {logos.length > 0 && (
             <div className="flex flex-wrap justify-center gap-12 items-center border-t pt-12">
               {logos.filter(Boolean).map((logo, i) => {
-                const logoUrl = typeof logo === 'string' ? logo : logo.url;
-                const logoAlt = typeof logo === 'string' ? 'Partner Logo' : (logo.alt || 'Partner Logo');
+                const logoUrl = typeof logo === "string" ? logo : logo.url;
+                const logoAlt =
+                  typeof logo === "string"
+                    ? "Partner Logo"
+                    : logo.alt || "Partner Logo";
                 return (
                   <motion.img
                     key={i}
@@ -1525,9 +1600,16 @@ function StickyCtaBlock({
   const { settings } = useAppStore();
   const text = (data.text as string) || "";
   const buttons =
-    (data.buttons as Array<{ text: string; type: string; action: string; link?: string }>) ||
-    [];
+    (data.buttons as Array<{
+      text: string;
+      type: string;
+      action: string;
+      link?: string;
+    }>) || [];
   const whatsappNumber = settings?.whatsapp_number || "";
+  const visible = data.visible !== false;
+
+  if (!visible) return null;
 
   return (
     <div className="sticky bottom-0 z-30 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -1616,7 +1698,7 @@ const BLOCK_ICONS: Record<
   "blog-grid": Newspaper,
   "pricing-table": CreditCard,
   "hero-split": Columns,
-  "timeline": GitBranch,
+  timeline: GitBranch,
   "metrics-bar": BarChart3,
   "process-flow": GitMerge,
   "packaging-grid": Package,
@@ -1723,14 +1805,11 @@ function BlogGridBlock({
                       {post.excerpt}
                     </p>
                   )}
-                  <button
-                    onClick={() =>
-                      onNavigate?.("blog-post", { postId: post.id })
-                    }
-                    className="text-sm text-primary hover:text-primary/80 font-medium mt-2 inline-flex items-center gap-1"
-                  >
-                    Read more <ArrowRight className="h-3 w-3" />
-                  </button>
+                  <span className="text-xs text-muted-foreground mt-2 inline-flex items-center gap-1">
+                    {post.publishedAt
+                      ? new Date(post.publishedAt).toLocaleDateString()
+                      : ""}
+                  </span>
                 </div>
               </div>
             ))}
@@ -1757,14 +1836,13 @@ function BlogGridBlock({
                         {post.excerpt}
                       </p>
                     )}
-                    <button
-                      onClick={() =>
-                        onNavigate?.("blog-post", { postId: post.id })
-                      }
-                      className="text-sm text-primary hover:text-primary/80 font-medium mt-3 inline-flex items-center gap-1"
-                    >
-                      Read more <ArrowRight className="h-3 w-3" />
-                    </button>
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t">
+                      {post.publishedAt && (
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(post.publishedAt).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -1775,16 +1853,16 @@ function BlogGridBlock({
             {displayPosts.map((post) => (
               <div
                 key={post.id}
-                className="rounded-xl border bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col"
+                className="rounded-xl border bg-card flex flex-col"
               >
                 {post.coverImage ? (
                   <img
                     src={post.coverImage}
                     alt={post.title}
-                    className="h-48 w-full object-cover"
+                    className="h-48 w-full object-cover rounded-t-xl"
                   />
                 ) : (
-                  <div className="h-48 w-full bg-muted flex items-center justify-center">
+                  <div className="h-48 w-full bg-muted flex items-center justify-center rounded-t-xl">
                     <Newspaper className="h-10 w-10 text-muted-foreground/50" />
                   </div>
                 )}
@@ -1803,14 +1881,6 @@ function BlogGridBlock({
                         {new Date(post.publishedAt).toLocaleDateString()}
                       </span>
                     )}
-                    <button
-                      onClick={() =>
-                        onNavigate?.("blog-post", { postId: post.id })
-                      }
-                      className="text-sm text-primary hover:text-primary/80 font-medium inline-flex items-center gap-1"
-                    >
-                      Read more <ArrowRight className="h-3 w-3" />
-                    </button>
                   </div>
                 </div>
               </div>
@@ -1932,25 +2002,42 @@ function HeroSplitBlock({
   const title = (data.title as string) || "";
   const subtitle = (data.subtitle as string) || "";
   const description = (data.description as string) || "";
-  const buttons = (data.buttons as Array<{ text: string; link: string; variant: string }>) || [];
+  const buttons =
+    (data.buttons as Array<{ text: string; link: string; variant: string }>) ||
+    [];
   const badges = (data.badges as string[]) || [];
+  const ctaButtonColor = (data.ctaButtonColor as string) || "#2639ED";
+  const ctaTextColor = (data.ctaTextColor as string) || "#FFFFFF";
 
   return (
-    <section className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white py-24 px-4">
+    <section className="relative bg-gradient-to-br from-gray-900 via-[#abd0ff] to-gray-900 text-white py-28 px-4 w-full">
       <div className="absolute inset-0 bg-black/40" />
-      <div className="relative container mx-auto max-w-5xl text-center">
+      <div className="relative max-w-5xl mx-auto text-center">
         {badges.length > 0 && (
           <div className="flex gap-2 justify-center mb-6">
             {badges.map((badge) => (
-              <span key={badge} className="inline-flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1 text-xs text-gray-300">
+              <span
+                key={badge}
+                className="inline-flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1 text-xs text-gray-300"
+              >
                 {badge}
               </span>
             ))}
           </div>
         )}
-        {subtitle && <p className="text-xs uppercase tracking-[0.2em] text-gray-400 mb-3">{subtitle}</p>}
-        <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4 whitespace-pre-line">{title}</h1>
-        {description && <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed mb-8">{description}</p>}
+        {subtitle && (
+          <p className="text-xs uppercase tracking-[0.2em] text-gray-400 mb-3">
+            {subtitle}
+          </p>
+        )}
+        <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4 whitespace-pre-line">
+          {title}
+        </h1>
+        {description && (
+          <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed mb-8">
+            {description}
+          </p>
+        )}
         {buttons.length > 0 && (
           <div className="flex gap-4 justify-center">
             {buttons.map((btn) => (
@@ -1958,13 +2045,28 @@ function HeroSplitBlock({
                 key={btn.text}
                 onClick={() => {
                   if (btn.link) {
-                    const page = btn.link === '/contact' ? 'contact' : btn.link === '/catalogue' ? 'catalogue' : 'content-page';
-                    onNavigate?.(page, btn.link.replace('/page/', '').replace('/', ''));
+                    const page =
+                      btn.link === "/contact"
+                        ? "contact"
+                        : btn.link === "/catalogue"
+                          ? "catalogue"
+                          : "content-page";
+                    onNavigate?.(
+                      page,
+                      btn.link.replace("/page/", "").replace("/", ""),
+                    );
                   }
                 }}
                 className={`text-sm font-medium rounded-full px-6 py-2.5 transition-colors ${
-                  btn.variant === 'primary' ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                  btn.variant === "primary"
+                    ? `hover:opacity-90`
+                    : "bg-white/10 text-gray-300 hover:bg-white/20"
                 }`}
+                style={
+                  btn.variant === "primary"
+                    ? { backgroundColor: ctaButtonColor, color: ctaTextColor }
+                    : undefined
+                }
               >
                 {btn.text}
               </button>
@@ -1979,24 +2081,42 @@ function HeroSplitBlock({
 function TimelineBlock({ data }: { data: Record<string, unknown> }) {
   const title = (data.title as string) || "";
   const subtitle = (data.subtitle as string) || "";
-  const items = (data.items as Array<{ year: string; title: string; description: string; current?: boolean }>) || [];
+  const items =
+    (data.items as Array<{
+      year: string;
+      title: string;
+      description: string;
+      current?: boolean;
+    }>) || [];
 
   return (
     <section className="py-16 px-4">
       <div className="container mx-auto max-w-5xl">
-        {subtitle && <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">{subtitle}</p>}
+        {subtitle && (
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
+            {subtitle}
+          </p>
+        )}
         <h2 className="text-2xl font-bold mb-10">{title}</h2>
         <div className="space-y-0">
           {items.map((item, i) => (
             <div key={i} className="flex gap-4 items-start">
               <div className="flex flex-col items-center">
-                <div className={`w-3 h-3 rounded-full flex-shrink-0 mt-1.5 ${item.current ? 'bg-emerald-600' : 'bg-primary'}`} />
+                <div
+                  className={`w-3 h-3 rounded-full flex-shrink-0 mt-1.5 ${item.current ? "bg-emerald-600" : "bg-primary"}`}
+                />
                 {i < items.length - 1 && <div className="w-px h-8 bg-border" />}
               </div>
               <div className="pb-6">
-                <p className={`text-xs font-semibold ${item.current ? 'text-emerald-600' : 'text-primary'}`}>{item.year}</p>
+                <p
+                  className={`text-xs font-semibold ${item.current ? "text-emerald-600" : "text-primary"}`}
+                >
+                  {item.year}
+                </p>
                 <p className="text-sm font-semibold mt-0.5">{item.title}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {item.description}
+                </p>
               </div>
             </div>
           ))}
@@ -2014,9 +2134,14 @@ function MetricsBarBlock({ data }: { data: Record<string, unknown> }) {
       <div className="container mx-auto max-w-5xl">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {stats.map((stat) => (
-            <div key={stat.label} className="bg-background border rounded-lg p-5 text-center">
+            <div
+              key={stat.label}
+              className="bg-background border rounded-lg p-5 text-center"
+            >
               <div className="text-3xl font-bold">{stat.value}</div>
-              <div className="text-xs text-muted-foreground mt-1">{stat.label}</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                {stat.label}
+              </div>
             </div>
           ))}
         </div>
@@ -2028,13 +2153,22 @@ function MetricsBarBlock({ data }: { data: Record<string, unknown> }) {
 function ProcessFlowBlock({ data }: { data: Record<string, unknown> }) {
   const title = (data.title as string) || "";
   const subtitle = (data.subtitle as string) || "";
-  const steps = (data.steps as Array<{ title: string; description: string; icon: string }>) || [];
+  const steps =
+    (data.steps as Array<{
+      title: string;
+      description: string;
+      icon: string;
+    }>) || [];
   const trustItems = (data.trustItems as string[]) || [];
 
   return (
     <section className="py-16 px-4">
       <div className="container mx-auto max-w-5xl">
-        {subtitle && <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">{subtitle}</p>}
+        {subtitle && (
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
+            {subtitle}
+          </p>
+        )}
         <h2 className="text-2xl font-bold mb-2">{title}</h2>
         <div className="flex flex-col md:flex-row items-start gap-2 mt-8">
           {steps.map((step, i) => (
@@ -2044,10 +2178,14 @@ function ProcessFlowBlock({ data }: { data: Record<string, unknown> }) {
                   {i + 1}
                 </div>
                 <p className="text-sm font-semibold mb-1">{step.title}</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">{step.description}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {step.description}
+                </p>
               </div>
               {i < steps.length - 1 && (
-                <div className="hidden md:flex items-start pt-5 px-1 text-muted-foreground">→</div>
+                <div className="hidden md:flex items-start pt-5 px-1 text-muted-foreground">
+                  →
+                </div>
               )}
             </div>
           ))}
@@ -2055,7 +2193,10 @@ function ProcessFlowBlock({ data }: { data: Record<string, unknown> }) {
         {trustItems.length > 0 && (
           <div className="mt-10 bg-muted/50 border rounded-lg p-4 flex flex-wrap gap-6 items-center">
             {trustItems.map((item) => (
-              <span key={item} className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <span
+                key={item}
+                className="text-xs text-muted-foreground flex items-center gap-1.5"
+              >
                 <span className="text-emerald-600">✓</span> {item}
               </span>
             ))}
@@ -2066,26 +2207,53 @@ function ProcessFlowBlock({ data }: { data: Record<string, unknown> }) {
   );
 }
 
-function PackagingGridBlock({ data, onNavigate }: { data: Record<string, unknown>; onNavigate?: (page: string, data?: unknown) => void }) {
+function PackagingGridBlock({
+  data,
+  onNavigate,
+}: {
+  data: Record<string, unknown>;
+  onNavigate?: (page: string, data?: unknown) => void;
+}) {
   const title = (data.title as string) || "";
   const subtitle = (data.subtitle as string) || "";
-  const items = (data.items as Array<{ title: string; description: string; tag: string; highlight: boolean }>) || [];
+  const items =
+    (data.items as Array<{
+      title: string;
+      description: string;
+      tag: string;
+      highlight: boolean;
+    }>) || [];
 
   return (
     <section className="py-12 px-4 bg-muted/40">
       <div className="container mx-auto max-w-5xl">
         <h2 className="text-2xl font-bold mb-2">{title}</h2>
-        {subtitle && <p className="text-sm text-muted-foreground mb-8">{subtitle}</p>}
+        {subtitle && (
+          <p className="text-sm text-muted-foreground mb-8">{subtitle}</p>
+        )}
         <div className="grid md:grid-cols-3 gap-6">
           {items.map((item) => (
-            <div key={item.title} className={`rounded-xl p-5 text-center ${item.highlight ? 'border-2 border-primary bg-background relative' : 'border bg-background'}`}>
-              {item.highlight && <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded whitespace-nowrap">Most requested</span>}
+            <div
+              key={item.title}
+              className={`rounded-xl p-5 text-center ${item.highlight ? "border-2 border-primary bg-background relative" : "border bg-background"}`}
+            >
+              {item.highlight && (
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded whitespace-nowrap">
+                  Most requested
+                </span>
+              )}
               <div className="h-24 bg-muted rounded-lg mb-4 flex items-center justify-center text-xs text-muted-foreground">
                 {item.title} photo
               </div>
               <h3 className="text-sm font-semibold mb-2">{item.title}</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed mb-3">{item.description}</p>
-              <span className={`text-[10px] px-2 py-0.5 rounded ${item.highlight ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'}`}>{item.tag}</span>
+              <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+                {item.description}
+              </p>
+              <span
+                className={`text-[10px] px-2 py-0.5 rounded ${item.highlight ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"}`}
+              >
+                {item.tag}
+              </span>
             </div>
           ))}
         </div>
@@ -2096,7 +2264,8 @@ function PackagingGridBlock({ data, onNavigate }: { data: Record<string, unknown
 
 function CertificationCardsBlock({ data }: { data: Record<string, unknown> }) {
   const title = (data.title as string) || "";
-  const certs = (data.certs as Array<{ name: string; description: string }>) || [];
+  const certs =
+    (data.certs as Array<{ name: string; description: string }>) || [];
   const footerText = (data.footerText as string) || "";
 
   return (
@@ -2105,12 +2274,17 @@ function CertificationCardsBlock({ data }: { data: Record<string, unknown> }) {
         <h2 className="text-2xl font-bold mb-8">{title}</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {certs.map((cert) => (
-            <div key={cert.name} className="bg-background border rounded-xl p-5 text-center">
+            <div
+              key={cert.name}
+              className="bg-background border rounded-xl p-5 text-center"
+            >
               <div className="w-12 h-12 bg-muted rounded-lg mx-auto mb-3 flex items-center justify-center text-xs font-bold text-muted-foreground">
                 {cert.name.substring(0, 4)}
               </div>
               <p className="text-sm font-semibold mb-1">{cert.name}</p>
-              <p className="text-xs text-muted-foreground">{cert.description}</p>
+              <p className="text-xs text-muted-foreground">
+                {cert.description}
+              </p>
             </div>
           ))}
         </div>
@@ -2124,9 +2298,22 @@ function CertificationCardsBlock({ data }: { data: Record<string, unknown> }) {
   );
 }
 
-function AddressCardsBlock({ data, onNavigate }: { data: Record<string, unknown>; onNavigate?: (page: string, data?: unknown) => void }) {
+function AddressCardsBlock({
+  data,
+  onNavigate,
+}: {
+  data: Record<string, unknown>;
+  onNavigate?: (page: string, data?: unknown) => void;
+}) {
   const title = (data.title as string) || "";
-  const cards = (data.cards as Array<{ type: string; title: string; address?: string; description?: string; badge?: string }>) || [];
+  const cards =
+    (data.cards as Array<{
+      type: string;
+      title: string;
+      address?: string;
+      description?: string;
+      badge?: string;
+    }>) || [];
 
   return (
     <section className="py-12 px-4 bg-muted/40">
@@ -2134,15 +2321,33 @@ function AddressCardsBlock({ data, onNavigate }: { data: Record<string, unknown>
         <h2 className="text-lg font-bold mb-8">{title}</h2>
         <div className="grid md:grid-cols-3 gap-6">
           {cards.map((card) => (
-            <div key={card.title} className={`bg-background border rounded-xl p-5 ${card.type === 'factory' ? 'border-t-4 border-t-primary' : card.type === 'visit' ? 'bg-emerald-50 border-emerald-200 border-t-4 border-t-emerald-600' : 'border-t-4 border-t-muted'}`}>
+            <div
+              key={card.title}
+              className={`bg-background border rounded-xl p-5 ${card.type === "factory" ? "border-t-4 border-t-primary" : card.type === "visit" ? "bg-emerald-50 border-emerald-200 border-t-4 border-t-emerald-600" : "border-t-4 border-t-muted"}`}
+            >
               <div className="flex items-center gap-2 mb-4">
                 <p className="text-sm font-semibold">{card.title}</p>
-                {card.badge && <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded ml-auto">{card.badge}</span>}
+                {card.badge && (
+                  <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded ml-auto">
+                    {card.badge}
+                  </span>
+                )}
               </div>
-              {card.address && <p className="text-xs text-muted-foreground leading-relaxed mb-3 whitespace-pre-line">{card.address}</p>}
-              {card.description && <p className="text-xs text-muted-foreground leading-relaxed mb-4">{card.description}</p>}
-              {card.type === 'visit' && (
-                <button onClick={() => onNavigate?.('manufacturing')} className="w-full bg-emerald-600 text-white text-xs font-medium rounded py-2.5 hover:bg-emerald-700 transition-colors">
+              {card.address && (
+                <p className="text-xs text-muted-foreground leading-relaxed mb-3 whitespace-pre-line">
+                  {card.address}
+                </p>
+              )}
+              {card.description && (
+                <p className="text-xs text-muted-foreground leading-relaxed mb-4">
+                  {card.description}
+                </p>
+              )}
+              {card.type === "visit" && (
+                <button
+                  onClick={() => onNavigate?.("manufacturing")}
+                  className="w-full bg-emerald-600 text-white text-xs font-medium rounded py-2.5 hover:bg-emerald-700 transition-colors"
+                >
                   Schedule a factory visit →
                 </button>
               )}
@@ -2154,9 +2359,21 @@ function AddressCardsBlock({ data, onNavigate }: { data: Record<string, unknown>
   );
 }
 
-function QuickConnectBlock({ data, onNavigate }: { data: Record<string, unknown>; onNavigate?: (page: string, data?: unknown) => void }) {
+function QuickConnectBlock({
+  data,
+  onNavigate,
+}: {
+  data: Record<string, unknown>;
+  onNavigate?: (page: string, data?: unknown) => void;
+}) {
   const title = (data.title as string) || "";
-  const channels = (data.channels as Array<{ type: string; title: string; description: string; value: string }>) || [];
+  const channels =
+    (data.channels as Array<{
+      type: string;
+      title: string;
+      description: string;
+      value: string;
+    }>) || [];
 
   return (
     <section className="py-12 px-4">
@@ -2164,18 +2381,38 @@ function QuickConnectBlock({ data, onNavigate }: { data: Record<string, unknown>
         <h2 className="text-lg font-bold mb-8">{title}</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {channels.map((ch) => (
-            <div key={ch.title} className={`rounded-xl p-5 text-center border ${ch.type === 'whatsapp' ? 'bg-emerald-50 border-emerald-200' : 'bg-background'}`}>
+            <div
+              key={ch.title}
+              className={`rounded-xl p-5 text-center border ${ch.type === "whatsapp" ? "bg-emerald-50 border-emerald-200" : "bg-background"}`}
+            >
               <p className="text-sm font-semibold mb-1">{ch.title}</p>
-              <p className="text-xs text-muted-foreground leading-relaxed mb-3">{ch.description}</p>
-              <p className={`text-sm font-medium mb-3 ${ch.type === 'whatsapp' ? 'text-emerald-600' : ch.type === 'phone' ? 'text-primary' : 'text-amber-600'}`}>{ch.value}</p>
+              <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+                {ch.description}
+              </p>
+              <p
+                className={`text-sm font-medium mb-3 ${ch.type === "whatsapp" ? "text-emerald-600" : ch.type === "phone" ? "text-primary" : "text-amber-600"}`}
+              >
+                {ch.value}
+              </p>
               <button
                 onClick={() => {
-                  if (ch.type === 'catalogue') onNavigate?.('catalogue');
-                  else if (ch.type === 'whatsapp' || ch.type === 'phone' || ch.type === 'email') onNavigate?.('contact');
+                  if (ch.type === "catalogue") onNavigate?.("catalogue");
+                  else if (
+                    ch.type === "whatsapp" ||
+                    ch.type === "phone" ||
+                    ch.type === "email"
+                  )
+                    onNavigate?.("contact");
                 }}
                 className="w-full text-xs font-medium rounded py-2.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
               >
-                {ch.type === 'whatsapp' ? 'Open WhatsApp →' : ch.type === 'phone' ? 'Tap to call' : ch.type === 'email' ? 'Copy email' : 'Get catalogue'}
+                {ch.type === "whatsapp"
+                  ? "Open WhatsApp →"
+                  : ch.type === "phone"
+                    ? "Tap to call"
+                    : ch.type === "email"
+                      ? "Copy email"
+                      : "Get catalogue"}
               </button>
             </div>
           ))}
@@ -2187,7 +2424,12 @@ function QuickConnectBlock({ data, onNavigate }: { data: Record<string, unknown>
 
 function CrmFlowBlock({ data }: { data: Record<string, unknown> }) {
   const title = (data.title as string) || "";
-  const steps = (data.steps as Array<{ num: number; title: string; description: string }>) || [];
+  const steps =
+    (data.steps as Array<{
+      num: number;
+      title: string;
+      description: string;
+    }>) || [];
 
   return (
     <section className="py-12 px-4 bg-gray-900 text-white">
@@ -2195,10 +2437,17 @@ function CrmFlowBlock({ data }: { data: Record<string, unknown> }) {
         <h2 className="text-lg font-bold text-center mb-8">{title}</h2>
         <div className="grid grid-cols-5 gap-0">
           {steps.map((step, i) => (
-            <div key={step.num} className={`text-center px-3 ${i < steps.length - 1 ? 'border-r border-white/10' : ''}`}>
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center mx-auto mb-3 text-xs font-bold">{step.num}</div>
+            <div
+              key={step.num}
+              className={`text-center px-3 ${i < steps.length - 1 ? "border-r border-white/10" : ""}`}
+            >
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center mx-auto mb-3 text-xs font-bold">
+                {step.num}
+              </div>
               <p className="text-xs font-semibold mb-1">{step.title}</p>
-              <p className="text-[10px] text-gray-400 leading-relaxed">{step.description}</p>
+              <p className="text-[10px] text-gray-400 leading-relaxed">
+                {step.description}
+              </p>
             </div>
           ))}
         </div>
@@ -2237,8 +2486,11 @@ function SliderBlock({
 
   if (items.length === 0) return null;
 
+  const ctaButtonColor = (data.ctaButtonColor as string) || "#2639ED";
+  const ctaTextColor = (data.ctaTextColor as string) || "#FFFFFF";
+
   return (
-    <div className="relative h-[300px] sm:h-[450px] w-full overflow-hidden rounded-xl">
+    <div className="relative h-[300px] sm:h-[450px] w-full overflow-hidden">
       {items.map((item, i) => (
         <div
           key={i}
@@ -2262,7 +2514,8 @@ function SliderBlock({
             </p>
             {item.link && (
               <Button
-                className="mt-8 bg-primary hover:bg-primary/80"
+                style={{ backgroundColor: ctaButtonColor, color: ctaTextColor }}
+                className="hover:opacity-90"
                 onClick={() => onNavigate && onNavigate("catalogue")}
               >
                 View Collection

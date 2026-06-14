@@ -18,7 +18,7 @@ export function CmsPage({ slug, onNavigate, fallbackBlocks }: CmsPageProps) {
   useEffect(() => {
     const fetchPage = async () => {
       try {
-        const res = await fetch(`/api/content-pages?slug=${encodeURIComponent(slug)}`);
+        const res = await fetch(`/api/content-pages?slug=${encodeURIComponent(slug)}`, { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           const pages = data.contentPages || [];
@@ -62,7 +62,7 @@ export function CmsPage({ slug, onNavigate, fallbackBlocks }: CmsPageProps) {
           const created = seedData.results?.find((r: { slug: string; status: string }) => r.slug === slug && r.status === 'created');
           if (created) {
             // Re-fetch the created page
-            const refetch = await fetch(`/api/content-pages?slug=${encodeURIComponent(slug)}`);
+            const refetch = await fetch(`/api/content-pages?slug=${encodeURIComponent(slug)}`, { cache: 'no-store' });
             if (refetch.ok) {
               const refetchData = await refetch.json();
               const pages = refetchData.contentPages || [];

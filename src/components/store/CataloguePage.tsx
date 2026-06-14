@@ -2,10 +2,8 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Image from 'next/image';
-import { Search, ShoppingCart, X, Info, Package, Eye, GitCompareArrows, Download, ArrowRight, Send, Check } from 'lucide-react';
+import { Search, ShoppingCart, X, Package, Eye, GitCompareArrows, Send, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
@@ -18,9 +16,12 @@ import {
 } from '@/components/ui/select';
 import { EnquiryModal } from './EnquiryModal';
 import { QuickViewModal } from './QuickViewModal';
+import { SharedContactForm } from './SharedContactForm';
 import { useAppStore } from '@/lib/store';
 import { calculateTieredPrice, formatPrice as libFormatPrice } from '@/lib/pricing';
 import { getFirstImage } from '@/lib/utils';
+import { useContentPage, getBlockData } from '@/lib/use-page-content';
+import { BLOCK_DEFAULTS } from '@/lib/page-blocks';
 
 interface Category {
   id: string;
@@ -48,29 +49,6 @@ interface Product {
 interface CataloguePageProps {
   onNavigate: (page: string, data?: unknown) => void;
 }
-
-const defaultCategoryInfo: Record<string, { tags: string[]; desc: string }> = {
-  khakhra: { tags: ['12+ variants', 'Private label'], desc: 'Thin, crispy, roasted flatbreads available in a wide range of flavours and spice levels. One of our flagship lines — highest daily output capacity. Ideal for B2B, retail brands and private label.' },
-  bhakhri: { tags: ['8+ varieties'], desc: 'Traditional recipes with modern automation. Consistent thickness and crunch across batches. Available in multiple grain compositions.' },
-  makhana: { tags: ['6+ flavours', 'PL ready'], desc: 'Specialised roasting and flavouring line for fox nuts. Light, crispy finish with even coating across all flavour variants.' },
-  extruder: { tags: ['10+ shapes'], desc: 'High-speed extrusion for puffed and shaped snacks. Custom shapes and textures achievable for private label clients.' },
-  digestive: { tags: ['5+ varieties'], desc: 'Baked digestive biscuits and health-focused snacks. Formulations customisable for target nutrition profiles.' },
-};
-
-const packagingOptions = [
-  { title: 'Purva Bites branded', desc: 'Ready-branded packs for distributors, modern trade and institutional buyers', tag: 'Distributor friendly', highlight: false },
-  { title: 'Your brand / private label', desc: 'Send your artwork — we print, pack and ship under your brand identity. No minimums disclosed publicly.', tag: 'Private label', highlight: true },
-  { title: 'Bulk / institutional', desc: '5kg, 10kg, 25kg formats for canteens, hotels, airlines and govt procurement', tag: 'Bulk format', highlight: false },
-];
-
-const categoryTabs = [
-  { id: 'all', label: 'All products' },
-  { id: 'khakhra', label: 'Khakhra' },
-  { id: 'bhakhri', label: 'Bhakhri' },
-  { id: 'makhana', label: 'Makhana' },
-  { id: 'extruder', label: 'Extruder' },
-  { id: 'digestive', label: 'Digestive' },
-];
 
 export function CataloguePage({ onNavigate }: CataloguePageProps) {
   const { auth, settings, addToCompare, isInCompare, removeFromCompare } = useAppStore();
@@ -101,6 +79,14 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
   const [visibleCount, setVisibleCount] = useState(12);
   const [loadingMore, setLoadingMore] = useState(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // CMS content data
+  const { blocks: cmsBlocks } = useContentPage('catalogue-page-content');
+  const cmsData = getBlockData(cmsBlocks, 'catalogue-page-content');
+  const pageData = (cmsData || BLOCK_DEFAULTS['catalogue-page-content'].defaultData) as Record<string, unknown>;
+  const defaultCategoryInfo = (pageData.categoryInfo || {}) as Record<string, { tags: string[]; desc: string }>;
+  const packagingOptions = (pageData.packagingOptions || []) as Array<{ title: string; desc: string; tag: string; highlight: boolean }>;
+  const categoryTabs = (pageData.categoryTabs || []) as Array<{ id: string; label: string }>;
 
   // Derived values
   const visibleProducts = useMemo(
@@ -287,31 +273,8 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
     return getCategoryInfo(cat);
   }, [selectedCategory, categories]);
 
-  const matchedCategoryTab = useMemo(() => {
-    if (!selectedCategory) return null;
-    const cat = categories.find(c => c.id === selectedCategory);
-    if (!cat) return null;
-    const slug = cat.slug || cat.name.toLowerCase().replace(/\s+/g, '-');
-    return categoryTabs.find(t => t.id === slug) || null;
-  }, [selectedCategory, categories]);
-
   return (
     <div className="flex flex-col">
-      {/* B2B Notice Banner */}
-      <section className="bg-muted/40 py-3 px-4">
-        <div className="container mx-auto max-w-6xl flex items-center justify-between">
-          <p className="text-xs text-muted-foreground">
-            <button onClick={() => onNavigate('home')} className="hover:text-foreground transition-colors">Home</button>
-            <span className="mx-1.5">›</span>
-            <span>Catalogue</span>
-          </p>
-          <div className="flex items-center gap-2 bg-background border rounded px-3 py-1.5">
-            <Info className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">We do not sell retail. All orders are B2B, bulk & trade only.</span>
-          </div>
-        </div>
-      </section>
-
       {/* Search and Sort Bar */}
       <section className="border-b py-4 px-4">
         <div className="container mx-auto max-w-6xl">
@@ -363,18 +326,19 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
                 <button
                   key={cat.id}
                   onClick={() => {
-                    setVisibleCount(12);
                     if (cat.id === 'all') {
                       setSelectedCategory(null);
+                      setVisibleCount(12);
                     } else {
-                      const matchCat = categories.find(c => (c.slug || c.name.toLowerCase().replace(/\s+/g, '-')) === cat.id);
-                      setSelectedCategory(matchCat?.id || null);
+                      onNavigate('category', cat.id);
                     }
                   }}
                   className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                    (cat.id === 'all' && !selectedCategory) || matchedCategoryTab?.id === cat.id
+                    cat.id === 'all' && !selectedCategory
                       ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-background border-border text-muted-foreground hover:bg-muted'
+                      : cat.id !== 'all'
+                        ? 'bg-background border-border text-muted-foreground hover:bg-muted'
+                        : 'bg-background border-border text-muted-foreground hover:bg-muted'
                   }`}
                 >
                   {cat.label}
@@ -399,15 +363,10 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
               Category photo
             </div>
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h2 className="text-xl font-bold">{activeCategoryInfo.name}</h2>
-                {activeCategoryInfo.tags.map((tag) => (
-                  <span key={tag} className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded">{tag}</span>
-                ))}
-              </div>
+              <h2 className="text-xl font-bold mb-1">{activeCategoryInfo.name}</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">{activeCategoryInfo.desc}</p>
             </div>
-            <button onClick={() => onNavigate('contact')} className="text-sm border rounded-full px-4 py-2 whitespace-nowrap hover:bg-muted transition-colors">
+            <button onClick={() => onNavigate('contact')} className="text-sm bg-primary text-primary-foreground rounded-full px-4 py-2 whitespace-nowrap hover:bg-primary/90 transition-colors">
               Enquire for this category →
             </button>
           </div>
@@ -464,7 +423,7 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
                     <div key={product.id} className="border rounded-xl overflow-hidden bg-background group transition-shadow hover:shadow-lg">
                       <div
                         className="relative h-32 bg-muted flex items-center justify-center overflow-hidden cursor-pointer"
-                        onClick={() => onNavigate('product', product.id)}
+                        onClick={() => onNavigate('category', product.Category?.slug || 'all')}
                       >
                         {image ? (
                           <Image
@@ -502,27 +461,17 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
                         </Button>
                       </div>
                       <div className="p-3">
-                        <div className="flex gap-1.5 mb-2 flex-wrap">
-                          {tags.map((tag) => (
-                            <span key={tag} className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
                         <h3
                           className="text-sm font-semibold mb-1 cursor-pointer hover:text-primary transition-colors line-clamp-1"
-                          onClick={() => onNavigate('product', product.id)}
+                          onClick={() => onNavigate('category', product.Category?.slug || 'all')}
                         >
                           {product.name}
                         </h3>
                         {product.shortDescription && (
-                          <p className="text-xs text-muted-foreground mb-1 line-clamp-2">
+                          <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
                             {product.shortDescription}
                           </p>
                         )}
-                        <p className="text-[10px] text-muted-foreground mb-3">
-                          {product.minOrderQty > 1 ? `Min. order: ${product.minOrderQty} units` : 'Min. order: B2B / trade only'}
-                        </p>
                         <Button
                           size="sm"
                           className="w-full bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
@@ -587,82 +536,17 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
       </section>
 
       {/* Inline Enquiry Form */}
-      <section className="bg-gray-900 text-white py-12 px-4">
+      <section className="bg-primary text-primary-foreground py-12 px-4">
         <div className="container mx-auto max-w-6xl">
           <h2 className="text-xl font-bold text-center mb-2">Interested in bulk or private label?</h2>
-          <p className="text-xs text-gray-400 text-center mb-8">Share your requirement — our team will respond within 24 hours with pricing & sample details</p>
-          <form onSubmit={handleInlineEnquirySubmit} className="max-w-3xl mx-auto">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-              <input
-                placeholder="Your name *"
-                value={enquiryForm.name}
-                onChange={(e) => setEnquiryForm({ ...enquiryForm, name: e.target.value })}
-                className="bg-white/5 border border-white/10 rounded px-3 py-2 text-xs text-white placeholder:text-gray-500"
-              />
-              <input
-                placeholder="Company name"
-                value={enquiryForm.company}
-                onChange={(e) => setEnquiryForm({ ...enquiryForm, company: e.target.value })}
-                className="bg-white/5 border border-white/10 rounded px-3 py-2 text-xs text-white placeholder:text-gray-500"
-              />
-              <input
-                placeholder="Phone number *"
-                value={enquiryForm.phone}
-                onChange={(e) => setEnquiryForm({ ...enquiryForm, phone: e.target.value })}
-                className="bg-white/5 border border-white/10 rounded px-3 py-2 text-xs text-white placeholder:text-gray-500"
-              />
-              <input
-                placeholder="Email address"
-                value={enquiryForm.email}
-                onChange={(e) => setEnquiryForm({ ...enquiryForm, email: e.target.value })}
-                className="bg-white/5 border border-white/10 rounded px-3 py-2 text-xs text-white placeholder:text-gray-500"
-              />
-            </div>
-            <div className="grid grid-cols-3 gap-3 mb-3">
-              <select
-                value={enquiryForm.category}
-                onChange={(e) => setEnquiryForm({ ...enquiryForm, category: e.target.value })}
-                className="bg-white/5 border border-white/10 rounded px-3 py-2 text-xs text-gray-500"
-              >
-                <option value="">Product category</option>
-                {categoryTabs.filter((c) => c.id !== 'all').map((c) => (
-                  <option key={c.id} value={c.label}>{c.label}</option>
-                ))}
-              </select>
-              <select
-                value={enquiryForm.orderType}
-                onChange={(e) => setEnquiryForm({ ...enquiryForm, orderType: e.target.value })}
-                className="bg-white/5 border border-white/10 rounded px-3 py-2 text-xs text-gray-500"
-              >
-                <option value="">Order type (bulk / PL / branded)</option>
-                <option value="Bulk">Bulk</option>
-                <option value="Private label">Private label</option>
-                <option value="Branded">Branded</option>
-              </select>
-              <input
-                placeholder="Approx. qty / month"
-                value={enquiryForm.quantity}
-                onChange={(e) => setEnquiryForm({ ...enquiryForm, quantity: e.target.value })}
-                className="bg-white/5 border border-white/10 rounded px-3 py-2 text-xs text-white placeholder:text-gray-500"
-              />
-            </div>
-            <textarea
-              placeholder="Any specific requirements, flavour preferences or packaging notes (optional)"
-              value={enquiryForm.message}
-              onChange={(e) => setEnquiryForm({ ...enquiryForm, message: e.target.value })}
-              className="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-xs text-white placeholder:text-gray-500 mb-4 h-20 resize-none"
+          <p className="text-xs text-white/70 text-center mb-8">Share your requirement — our team will respond within 24 hours with pricing & sample details</p>
+          <div className="max-w-3xl mx-auto">
+            <SharedContactForm
+              initialEnquiryType="product"
+              variant="inline"
+              categories={categories}
             />
-            <div className="text-center">
-              <Button
-                type="submit"
-                disabled={enquirySubmitting}
-                className="bg-primary text-primary-foreground text-sm font-medium rounded-full px-8 py-2.5 hover:bg-primary/90 transition-colors"
-              >
-                {enquirySubmitting ? 'Submitting...' : 'Submit product enquiry'}
-              </Button>
-              <p className="text-[10px] text-gray-500 mt-2">Goes directly to CRM · no spam · sales team alerted instantly</p>
-            </div>
-          </form>
+          </div>
         </div>
       </section>
 
@@ -670,14 +554,9 @@ export function CataloguePage({ onNavigate }: CataloguePageProps) {
       <section className="bg-muted/40 py-6 px-4">
         <div className="container mx-auto max-w-6xl flex items-center justify-between flex-wrap gap-4">
           <p className="text-sm text-muted-foreground">Want full product specs, flavour lists and pack details?</p>
-          <div className="flex gap-3">
-            <button onClick={() => onNavigate('contact')} className="text-xs bg-primary text-primary-foreground rounded-full px-4 py-2 flex items-center gap-1.5 hover:bg-primary/90 transition-colors">
-              <Download className="h-3 w-3" /> Download full catalogue
-            </button>
-            <button onClick={() => onNavigate('manufacturing')} className="text-xs border rounded-full px-4 py-2 flex items-center gap-1.5 hover:bg-muted transition-colors">
-              View manufacturing capabilities →
-            </button>
-          </div>
+          <button onClick={() => onNavigate('manufacturing')} className="text-xs border rounded-full px-4 py-2 flex items-center gap-1.5 hover:bg-muted transition-colors">
+            View manufacturing capabilities →
+          </button>
         </div>
       </section>
 

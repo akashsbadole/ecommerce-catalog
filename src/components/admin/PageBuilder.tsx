@@ -1428,6 +1428,26 @@ function BlockEditDialog({
                 >
                   <Plus className="mr-2 h-4 w-4" /> Add Item
                 </Button>
+                <Separator />
+                <div className="space-y-2">
+                  <MediaPickerField
+                    label="Image"
+                    value={(localData.image as string) || ""}
+                    onChange={(v) => updateField("image", v)}
+                    placeholder="Select or upload an image"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Video URL</Label>
+                  <Input
+                    value={(localData.videoUrl as string) || ""}
+                    onChange={(e) => updateField("videoUrl", e.target.value)}
+                    placeholder="https://youtube.com/..."
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    If set, a play button overlays the image and opens this URL
+                  </p>
+                </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Image Caption</Label>

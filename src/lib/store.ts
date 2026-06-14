@@ -4,6 +4,7 @@ import { persist } from "zustand/middleware";
 export type Page =
   | { type: "home" }
   | { type: "catalogue" }
+  | { type: "category"; slug: string }
   | { type: "product"; productId: string }
   | { type: "contact" }
   | { type: "about" }
@@ -182,12 +183,26 @@ export const useAppStore = create<AppState>()(
             if (typeof window !== "undefined")
               window.history.pushState({}, "", "/catalogue");
             break;
-          case "product":
-            set({
-              currentPage: { type: "product", productId: data as string },
-            });
+          case "category":
+            set({ currentPage: { type: "category", slug: data as string } });
             if (typeof window !== "undefined")
-              window.history.pushState({}, "", `/product/${data as string}`);
+              window.history.pushState({}, "", `/catalogue/${data as string}`);
+            break;
+          case "product":
+            {
+              const productId = data as string;
+              fetch(`/api/products/${productId}`)
+                .then((r) => r.ok ? r.json() : null)
+                .then((product) => {
+                  const catSlug = product?.category?.slug || product?.Category?.slug;
+                  if (catSlug) {
+                    get().navigate("category", catSlug);
+                  } else {
+                    get().navigate("catalogue");
+                  }
+                })
+                .catch(() => get().navigate("catalogue"));
+            }
             break;
           case "contact":
             set({ currentPage: { type: "contact" } });

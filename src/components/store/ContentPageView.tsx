@@ -33,7 +33,7 @@ export function ContentPageView({ slug, onNavigate }: ContentPageViewProps) {
     const fetchPage = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/content-pages?slug=${encodeURIComponent(slug)}`);
+        const res = await fetch(`/api/content-pages?slug=${encodeURIComponent(slug)}`, { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           const pages = data.contentPages || [];

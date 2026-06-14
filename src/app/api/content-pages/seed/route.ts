@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { createBlock } from '@/lib/page-blocks';
 
@@ -89,6 +90,26 @@ const PAGE_BLOCKS: Record<string, { title: string; metaTitle?: string; metaDescr
       createBlock('sticky-cta'),
     ],
   },
+  'about-page-content': {
+    title: 'About Page Content',
+    metaTitle: `About Us - ${siteName}`,
+    blocks: [createBlock('about-page-content')],
+  },
+  'mfg-page-content': {
+    title: 'Manufacturing Page Content',
+    metaTitle: `Manufacturing - ${siteName}`,
+    blocks: [createBlock('mfg-page-content')],
+  },
+  'contact-page-content': {
+    title: 'Contact Page Content',
+    metaTitle: `Contact Us - ${siteName}`,
+    blocks: [createBlock('contact-page-content')],
+  },
+  'catalogue-page-content': {
+    title: 'Catalogue Page Content',
+    metaTitle: `Catalogue - ${siteName}`,
+    blocks: [createBlock('catalogue-page-content')],
+  },
 };
 
 export async function POST(request: NextRequest) {
@@ -130,6 +151,7 @@ export async function POST(request: NextRequest) {
       results.push({ slug: pageSlug, status: 'created' });
     }
 
+    revalidatePath('/', 'layout');
     return NextResponse.json({ results });
   } catch (error) {
     console.error('Seed pages error:', error);

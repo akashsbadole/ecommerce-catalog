@@ -21,7 +21,7 @@ Transform the storefront from hardcoded sections to a cleaner, B2B-focused layou
    - Remove `<ThemeToggle />` and `<SimpleThemeToggle />` from `StoreHeader`
 
 2. **Homepage layout adjustments**
-   - Remove top navigation bar (if present in homepage wrapper; keep header minimal)
+   - Remove top navigation bar (if present in homepage wrapper; keep header minimal) - add anounce bar
    - Add announcement bar at very top of homepage (`StoreLayout` or `HomePage` hero area)
    - Make hero/banner full-width (remove `max-w-7xl` / container constraints from slider/hero blocks)
 

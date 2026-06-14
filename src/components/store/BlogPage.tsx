@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { Calendar, User, ImageIcon, Search, Tag } from 'lucide-react';
+import { Calendar, User, ImageIcon, Search, Tag, Send } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -188,6 +188,15 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
                 {tag} ({getTagCount(tag)})
               </Badge>
             ))}
+            {selectedTag && (
+              <button
+                onClick={() => onNavigate('contact')}
+                className="inline-flex items-center gap-1.5 text-xs bg-primary text-primary-foreground rounded-full px-3 py-1.5 hover:bg-primary/90 transition-colors"
+              >
+                <Send className="h-3 w-3" />
+                Enquire about {selectedTag}
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -217,8 +226,20 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filteredPosts.map((post) => (
-            <div key={post.id} onClick={() => onNavigate('blog-post', post.id)} className="group cursor-pointer">
-              <Card className="overflow-hidden h-full transition-shadow hover:shadow-lg">
+            <div
+              key={post.id}
+              className="group cursor-pointer"
+              onClick={() => onNavigate('blog-post', post.slug)}
+              role="link"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onNavigate('blog-post', post.slug);
+                }
+              }}
+            >
+              <Card className="overflow-hidden h-full hover:shadow-lg transition-shadow">
                 {/* Cover Image */}
                 <div className="aspect-video bg-muted relative overflow-hidden">
                   {post.coverImage ? (

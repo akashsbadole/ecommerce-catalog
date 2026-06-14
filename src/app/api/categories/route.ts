@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const all = searchParams.get('all');
     const includeDeleted = searchParams.get('includeDeleted');
+    const slug = searchParams.get('slug');
     const where: Record<string, unknown> = {};
 
     // Always exclude soft-deleted unless explicitly requested
@@ -21,13 +22,19 @@ export async function GET(request: NextRequest) {
       where.isActive = true;
     }
 
+    if (slug) {
+      where.slug = slug;
+    }
+
     const categories = await db.category.findMany({
       where: { ...where, ...(storeId ? { storeId } : {}) },
       orderBy: { sortOrder: 'asc' },
       include: all ? { _count: { select: { Product: true } } } : undefined,
     });
 
-    const response = NextResponse.json({ categories });
+    const response = NextResponse.json(
+      slug ? { category: categories[0] || null } : { categories }
+    );
 
     // Cache public category listings for 10 minutes
     if (!includeDeleted) {

@@ -47,6 +47,7 @@ interface Settings {
 const defaultSettings: Settings = {
   site_name: '',
   site_description: '',
+  announcement_text: '',
   site_logo: '',
   currency: 'USD',
   currency_symbol: '$',
@@ -106,7 +107,11 @@ export function AdminSettings() {
         const res = await adminFetch('/api/store/settings');
         if (res.ok) {
           const data = await res.json();
-          setSettings({ ...defaultSettings, ...data.settings });
+          const merged: Settings = { ...defaultSettings };
+          for (const key of Object.keys(data.settings)) {
+            merged[key] = data.settings[key] ?? '';
+          }
+          setSettings(merged);
         }
       } catch {
         toast.error('Failed to load settings');
@@ -242,6 +247,18 @@ export function AdminSettings() {
               onChange={(e) => handleSettingChange('site_description', e.target.value)}
               placeholder="A brief description of your store"
             />
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="announcement_text">Announcement Bar Text</Label>
+            <Input
+              id="announcement_text"
+              value={settings.announcement_text}
+              onChange={(e) => handleSettingChange('announcement_text', e.target.value)}
+              placeholder="Free shipping on orders over $100!"
+            />
+            <p className="text-xs text-muted-foreground">
+              Shown as a scrolling marquee at the top of every page. Leave empty to hide.
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="currency_symbol">Currency Symbol</Label>

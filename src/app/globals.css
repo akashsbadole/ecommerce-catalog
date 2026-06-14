@@ -1,13 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
-  --font-serif: var(--font-playfair);
+  --font-poppins: var(--font-poppins);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -88,61 +85,18 @@
   --brand-bg-section: #F8F9FA;
 }
 
-.dark {
-  --background: #0A0A0A;
-  --foreground: #F0F0F0;
-  --card: #1A1A1A;
-  --card-foreground: #F0F0F0;
-  --popover: #1A1A1A;
-  --popover-foreground: #F0F0F0;
-  --primary: #2639ED;
-  --primary-foreground: #FFFFFF;
-  --secondary: #FF6B6B;
-  --secondary-foreground: #FFFFFF;
-  --muted: #1A1A1A;
-  --muted-foreground: #A0A0A0;
-  --accent: #1A1A1A;
-  --accent-foreground: #F0F0F0;
-  --destructive: #FF6B6B;
-  --border: #2A2A2A;
-  --input: #2A2A2A;
-  --ring: #2639ED;
-  --chart-1: #2639ED;
-  --chart-2: #FF6B6B;
-  --chart-3: #A0A0A0;
-  --chart-4: #1A1A1A;
-  --chart-5: #F0F0F0;
-  --sidebar: #0A0A0A;
-  --sidebar-foreground: #F0F0F0;
-  --sidebar-primary: #2639ED;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #1A1A1A;
-  --sidebar-accent-foreground: #F0F0F0;
-  --sidebar-border: #2A2A2A;
-  --sidebar-ring: #2639ED;
-
-  --brand-primary: #2639ED;
-  --brand-primary-hover: #3B4FF0;
-  --brand-secondary: #FF6B6B;
-  --brand-secondary-hover: #FF8585;
-  --brand-text: #F0F0F0;
-  --brand-text-light: #A0A0A0;
-  --brand-bg: #0A0A0A;
-  --brand-bg-section: #1A1A1A;
-}
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-inter), sans-serif;
+    font-family: var(--font-poppins), sans-serif;
   }
 
   /* Heading typography */
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-playfair), serif;
+    font-family: var(--font-poppins), sans-serif;
     color: var(--brand-text);
     line-height: 1.2;
   }
@@ -178,7 +132,7 @@
   }
 
   p, span, li, td, th {
-    font-family: var(--font-inter), sans-serif;
+    font-family: var(--font-poppins), sans-serif;
     color: var(--brand-text);
   }
 }
