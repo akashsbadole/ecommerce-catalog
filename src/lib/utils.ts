@@ -97,6 +97,29 @@ export function generateRandomPassword(): string {
 }
 
 /**
+ * Robustly parse block JSON data, handling double-stringification or unexpected formats.
+ */
+export function parseBlocks(blocksData: unknown): any[] {
+  if (!blocksData) return [];
+
+  let parsed = blocksData;
+
+  // Keep parsing if it's a string, to handle potential double-stringification
+  while (typeof parsed === 'string' && (parsed.startsWith('[') || parsed.startsWith('"'))) {
+    try {
+      const next = JSON.parse(parsed);
+      // If parsing doesn't change anything or returns something not related to blocks, break
+      if (next === parsed) break;
+      parsed = next;
+    } catch {
+      break;
+    }
+  }
+
+  return Array.isArray(parsed) ? parsed : [];
+}
+
+/**
  * Validate and sanitize a file path to prevent path traversal
  */
 export function sanitizeFilePath(filePath: string, baseDir: string): string | null {

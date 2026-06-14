@@ -272,14 +272,16 @@ function BlockEditDialog({
   const [jsonText, setJsonText] = useState("");
   const [activeTab, setActiveTab] = useState("ui");
 
-  const handleOpen = (blk: PageBlock | null) => {
-    if (blk) {
-      setLocalData({ ...blk.data });
-      setJsonText(JSON.stringify(blk.data, null, 2));
+  // Sync local state when block changes
+  useEffect(() => {
+    if (open && block) {
+      // Deep copy to ensure we don't mutate original data until save
+      const dataCopy = JSON.parse(JSON.stringify(block.data || {}));
+      setLocalData(dataCopy);
+      setJsonText(JSON.stringify(dataCopy, null, 2));
       setJsonError(null);
-      setActiveTab("ui");
     }
-  };
+  }, [block, open]);
 
   const handleSave = () => {
     if (!block) return;
@@ -299,6 +301,9 @@ function BlockEditDialog({
   const updateField = (key: string, value: unknown) => {
     const newData = { ...localData, [key]: value };
     setLocalData(newData);
+    // Don't update jsonText here to avoid cursor jumping in JSON editor if it were ever synced both ways
+    // Actually, jsonText is used by the JSON tab, and localData by UI tab.
+    // We should keep them somewhat in sync if we switch tabs.
     setJsonText(JSON.stringify(newData, null, 2));
   };
 
@@ -321,8 +326,7 @@ function BlockEditDialog({
     <Dialog
       open={open}
       onOpenChange={(isOpen) => {
-        if (isOpen) handleOpen(block);
-        else onClose();
+        if (!isOpen) onClose();
       }}
     >
       <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0">
@@ -2726,6 +2730,7 @@ export function PageBuilder({ blocks, onChange }: PageBuilderProps) {
       const duplicated = {
         ...block,
         id: `block-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        data: JSON.parse(JSON.stringify(block.data)),
       };
       const index = blocks.findIndex((b) => b.id === block.id);
       if (index !== -1) {

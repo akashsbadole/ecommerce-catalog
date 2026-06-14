@@ -73,6 +73,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { adminFetch } from '@/lib/admin-fetch';
 import { PageBuilder } from '@/components/admin/PageBuilder';
 import type { PageBlock } from '@/lib/page-blocks';
+import { parseBlocks } from '@/lib/utils';
 
 interface Author {
   id: string;
@@ -293,17 +294,7 @@ export function AdminBlog() {
   const handleOpenEdit = (post: BlogPost) => {
     setEditingPost(post);
     const tags = parseTags(post.tags);
-    let blocks: PageBlock[] = [];
-    try {
-      let raw: unknown = post.blocks || '[]';
-      if (typeof raw === 'string' && raw.startsWith('"') && raw.endsWith('"')) {
-        try { raw = JSON.parse(raw); } catch { /* ignore */ }
-      }
-      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-      if (Array.isArray(parsed)) blocks = parsed;
-    } catch {
-      blocks = [];
-    }
+    const blocks = parseBlocks(post.blocks);
 
     setForm({
       title: post.title,

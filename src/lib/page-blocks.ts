@@ -817,6 +817,7 @@ export function createBlock(type: BlockType): PageBlock {
   return {
     id: `block-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     type,
-    data: { ...defaults.defaultData },
+    // Deep copy default data to avoid shared reference issues
+    data: JSON.parse(JSON.stringify(defaults.defaultData)),
   };
 }
