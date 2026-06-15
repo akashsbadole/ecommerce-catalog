@@ -124,13 +124,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check slug uniqueness
-    const existingSlug = await db.blogPost.findUnique({ where: { slug: validatedData.slug } });
+    const storeId = getStoreId(request);
+
+    // Check slug uniqueness per store
+    const existingSlug = await db.blogPost.findFirst({
+      where: { slug: validatedData.slug, ...(storeId ? { storeId } : {}) }
+    });
     if (existingSlug) {
       return NextResponse.json({ error: 'Slug already in use' }, { status: 409 });
     }
-
-    const storeId = getStoreId(request);
     const blogPost = await db.blogPost.create({
       data: {
         title: validatedData.title,

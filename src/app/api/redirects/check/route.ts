@@ -10,8 +10,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ found: false }, { status: 200 });
     }
 
-    const redirect = await db.redirect.findUnique({
-      where: { from: path },
+    const host = request.headers.get('host') || '';
+    const storeSlug = host.split('.')[0];
+    const store = await db.store.findFirst({
+      where: {
+        OR: [{ slug: storeSlug }, { domain: host }],
+      },
+    });
+
+    const redirect = await db.redirect.findFirst({
+      where: {
+        from: path,
+        storeId: store?.id || null
+      },
       select: { from: true, to: true, type: true, isActive: true },
     });
 

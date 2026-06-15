@@ -173,7 +173,6 @@ export function AdminPages() {
 
   const handleOpenEdit = (page: ContentPage) => {
     setEditingPage(page);
-    const parsedBlocks = parseBlocks(page.blocks);
     const parsedBlocks = normalizePageBlocks(page.blocks || '[]');
     setForm({
       title: page.title,
@@ -194,7 +193,6 @@ export function AdminPages() {
   const handleOpenBuilder = (page: ContentPage) => {
     setBuilderPageId(page.id);
     setBuilderPageTitle(page.title);
-    setBuilderBlocks(parseBlocks(page.blocks));
     setBuilderBlocks(normalizePageBlocks(page.blocks || '[]'));
     setBuilderMode(true);
   };

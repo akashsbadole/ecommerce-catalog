@@ -183,13 +183,15 @@ export async function POST(request: NextRequest) {
     }
     const validatedData = result.data;
 
-    // Check slug uniqueness
-    const existingSlug = await db.product.findUnique({ where: { slug: validatedData.slug } });
+    const storeId = getStoreId(request);
+
+    // Check slug uniqueness per store
+    const existingSlug = await db.product.findFirst({
+      where: { slug: validatedData.slug, ...(storeId ? { storeId } : {}) }
+    });
     if (existingSlug) {
       return NextResponse.json({ error: 'Slug already in use' }, { status: 409 });
     }
-
-    const storeId = getStoreId(request);
     const product = await db.product.create({
       data: {
         name: validatedData.name,

@@ -307,7 +307,7 @@ model BlogPost {
   id              String    @id @default(cuid())
   storeId         String?   // tenant isolation
   title           String
-  slug            String    @unique
+  slug            String
   excerpt         String?
   content         String    @default("")
   coverImage      String?
@@ -326,6 +326,7 @@ model BlogPost {
   User            User?     @relation(fields: [authorId], references: [id])
   Store           Store?    @relation(fields: [storeId], references: [id])
 
+  @@unique([storeId, slug])
   @@index([deletedAt])
   @@index([storeId])
 }
@@ -334,7 +335,7 @@ model ContentPage {
   id              String   @id @default(cuid())
   storeId         String?  // tenant isolation
   title           String
-  slug            String   @unique
+  slug            String
   content         String   @default("")
   blocks          String   @default("[]")
   heroImage       String?
@@ -348,6 +349,7 @@ model ContentPage {
   updatedAt       DateTime @default(now())
   Store           Store?   @relation(fields: [storeId], references: [id])
 
+  @@unique([storeId, slug])
   @@index([storeId])
 }
 
@@ -426,7 +428,7 @@ model Enquiry {
 model Redirect {
   id        String   @id @default(cuid())
   storeId   String?  // tenant isolation
-  from      String   @unique
+  from      String
   to        String
   type      String   @default("301")
   isActive  Boolean  @default(true)
@@ -434,6 +436,7 @@ model Redirect {
   updatedAt DateTime @default(now())
   Store     Store?   @relation(fields: [storeId], references: [id])
 
+  @@unique([storeId, from])
   @@index([storeId])
 }
 
@@ -441,7 +444,7 @@ model Menu {
   id          String     @id @default(cuid())
   storeId     String?    // tenant isolation
   name        String
-  slug        String     @unique
+  slug        String
   location    String     // primary, footer, mobile, etc.
   description String?
   isActive    Boolean    @default(true)

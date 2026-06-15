@@ -92,8 +92,8 @@ export async function PUT(
 
     // Check slug uniqueness if changing
     if (validatedData.slug && validatedData.slug !== existingMenu.slug) {
-      const existingSlug = await db.menu.findUnique({
-        where: { slug: validatedData.slug },
+      const existingSlug = await db.menu.findFirst({
+        where: { slug: validatedData.slug, ...(storeId ? { storeId } : {}) },
       });
       if (existingSlug) {
         return NextResponse.json({ error: 'Slug already in use' }, { status: 409 });
@@ -134,7 +134,7 @@ export async function PUT(
       }
     }
 
-    const updatedMenu = await db.menu.findUnique({
+    const updatedMenu = await db.menu.findFirst({
       where: { id },
       include: { items: { orderBy: { sortOrder: 'asc' } } },
     });

@@ -295,7 +295,6 @@ export function AdminBlog() {
   const handleOpenEdit = (post: BlogPost) => {
     setEditingPost(post);
     const tags = parseTags(post.tags);
-    const blocks = parseBlocks(post.blocks);
     const blocks = normalizePageBlocks(post.blocks || '[]');
 
     setForm({

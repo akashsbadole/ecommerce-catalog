@@ -1038,6 +1038,50 @@ export function AdminSettings() {
       {/* Import Products */}
       <AdminImport />
 
+      {/* Data Management */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Database className="h-4 w-4" />
+            Data Management
+          </CardTitle>
+          <CardDescription>
+            System maintenance and initial data setup
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label>Seed Default Data</Label>
+              <p className="text-xs text-muted-foreground">
+                Generate default pages (Home, About, etc.) and menus if they are missing.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                if (!confirm('This will create missing default pages and menus. Continue?')) return;
+                try {
+                  const res = await adminFetch('/api/content-pages/seed', { method: 'POST' });
+                  if (res.ok) {
+                    toast.success('Default data seeded successfully');
+                  } else {
+                    const err = await res.json();
+                    toast.error(err.error || 'Seeding failed');
+                  }
+                } catch {
+                  toast.error('Seeding failed');
+                }
+              }}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Seed Data
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Backup & Restore */}
       <AdminBackup />
 

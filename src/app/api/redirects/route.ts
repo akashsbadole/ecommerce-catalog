@@ -36,6 +36,15 @@ export async function POST(request: NextRequest) {
     }
 
     const storeId = getStoreId(request);
+
+    // Check uniqueness per store
+    const existing = await db.redirect.findFirst({
+      where: { from, ...(storeId ? { storeId } : {}) }
+    });
+    if (existing) {
+      return NextResponse.json({ error: 'Redirect already exists for this path' }, { status: 409 });
+    }
+
     const redirect = await db.redirect.create({
       data: {
         from,

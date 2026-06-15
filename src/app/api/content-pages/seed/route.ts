@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
-      const existing = await db.contentPage.findUnique({ where: { slug: pageSlug } });
+      const existing = await db.contentPage.findFirst({ where: { slug: pageSlug } });
 
       if (existing) {
         results.push({ slug: pageSlug, status: 'already exists' });
