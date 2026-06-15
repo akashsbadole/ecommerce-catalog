@@ -9,7 +9,7 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
-    const existing = await db.redirect.findUnique({ where: { id } });
+    const existing = await db.redirect.findFirst({ where: { id } });
     if (!existing) {
       return NextResponse.json(
         { error: 'Redirect not found' },
@@ -44,7 +44,7 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    const existing = await db.redirect.findUnique({ where: { id } });
+    const existing = await db.redirect.findFirst({ where: { id } });
     if (!existing) {
       return NextResponse.json(
         { error: 'Redirect not found' },

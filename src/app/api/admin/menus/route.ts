@@ -87,9 +87,9 @@ export async function POST(request: NextRequest) {
 
     const storeId = getStoreId(request);
 
-    // Check slug uniqueness
-    const existingSlug = await db.menu.findUnique({
-      where: { slug: validatedData.slug },
+    // Check slug uniqueness per store
+    const existingSlug = await db.menu.findFirst({
+      where: { slug: validatedData.slug, ...(storeId ? { storeId } : {}) },
     });
     if (existingSlug) {
       return NextResponse.json({ error: 'Slug already in use' }, { status: 409 });

@@ -14,6 +14,8 @@ import {
   Save,
   X,
   ArrowLeft,
+  Link,
+  ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -35,6 +37,13 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { adminFetch } from '@/lib/admin-fetch';
 
 interface MenuItem {
@@ -63,15 +72,34 @@ interface Menu {
 
 const MENU_LOCATIONS = [
   { value: 'primary', label: 'Primary Menu (Header)' },
-  { value: 'footer', label: 'Footer Menu' },
+  { value: 'footer_1', label: 'Footer Column 1' },
+  { value: 'footer_2', label: 'Footer Column 2' },
+  { value: 'footer_3', label: 'Footer Column 3' },
   { value: 'mobile', label: 'Mobile Menu' },
   { value: 'sidebar', label: 'Sidebar Menu' },
+];
+
+const INTERNAL_PAGES = [
+  { label: 'Home', value: 'home' },
+  { label: 'Catalogue', value: 'catalogue' },
+  { label: 'About Us', value: 'about' },
+  { label: 'Manufacturing', value: 'manufacturing' },
+  { label: 'Contact Us', value: 'contact' },
+  { label: 'Blog', value: 'blog' },
+  { label: 'Account', value: 'account' },
+  { label: 'Cart', value: 'cart' },
+  { label: 'Wishlist', value: 'wishlist' },
+  { label: 'Orders', value: 'orders' },
+  { label: 'Buyer Portal', value: 'portal' },
+  { label: 'Custom Page (Slug)', value: 'content-page' },
+  { label: 'External URL', value: 'url' },
 ];
 
 export function AdminMenus() {
   const [menus, setMenus] = useState<Menu[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [contentPages, setContentPages] = useState<{title: string, slug: string}[]>([]);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
@@ -104,10 +132,21 @@ export function AdminMenus() {
     }
   }, [searchTerm]);
 
+  const fetchContentPages = useCallback(async () => {
+    try {
+      const res = await adminFetch('/api/content-pages?all=true');
+      if (res.ok) {
+        const data = await res.json();
+        setContentPages(data.contentPages || []);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
   useEffect(() => {
     setLoading(true);
     fetchMenus();
-  }, [fetchMenus]);
+    fetchContentPages();
+  }, [fetchMenus, fetchContentPages]);
 
   const handleOpenAdd = () => {
     setEditingMenu(null);
@@ -223,9 +262,9 @@ export function AdminMenus() {
     const newItem: MenuItem = {
       id: `temp-${Date.now()}`,
       parentId: parentId || null,
-      label: 'New Menu Item',
+      label: 'New Link',
       url: null,
-      page: null,
+      page: 'home',
       slug: null,
       sortOrder: (form.items.filter(i => i.parentId === parentId).length) || 0,
       isActive: true,
@@ -265,68 +304,93 @@ export function AdminMenus() {
 
   const renderMenuItemForm = (item: MenuItem, level = 0) => {
     const indent = level * 20;
+    const isUrl = item.page === 'url';
+    const isContentPage = item.page === 'content-page';
 
     return (
       <div key={item.id} style={{ marginLeft: `${indent}px` }} className="space-y-2">
         <div className="flex items-center gap-2 p-3 border rounded-lg bg-muted/30">
           <GripVertical className="h-4 w-4 text-muted-foreground" />
           <div className="flex-1 grid grid-cols-12 gap-2">
-            <div className="col-span-4">
+            <div className="col-span-3">
               <Input
                 placeholder="Label"
                 value={item.label}
                 onChange={(e) => updateMenuItem(item.id!, { label: e.target.value })}
-                className="h-8"
+                className="h-8 text-xs"
               />
             </div>
             <div className="col-span-3">
-              <Input
-                placeholder="URL (optional)"
-                value={item.url || ''}
-                onChange={(e) => updateMenuItem(item.id!, { url: e.target.value || null })}
-                className="h-8"
-              />
+               <Select
+                value={item.page || 'home'}
+                onValueChange={(val) => updateMenuItem(item.id!, { page: val, url: val === 'url' ? item.url : null, slug: val === 'content-page' ? item.slug : null })}
+               >
+                 <SelectTrigger className="h-8 text-xs">
+                   <SelectValue />
+                 </SelectTrigger>
+                 <SelectContent>
+                   {INTERNAL_PAGES.map(p => (
+                     <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                   ))}
+                 </SelectContent>
+               </Select>
             </div>
+
+            <div className="col-span-4">
+              {isUrl ? (
+                <Input
+                  placeholder="https://..."
+                  value={item.url || ''}
+                  onChange={(e) => updateMenuItem(item.id!, { url: e.target.value || null })}
+                  className="h-8 text-xs"
+                />
+              ) : isContentPage ? (
+                <Select
+                  value={item.slug || ''}
+                  onValueChange={(val) => updateMenuItem(item.id!, { slug: val })}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Select page..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {contentPages.map(p => (
+                      <SelectItem key={p.slug} value={p.slug}>{p.title}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="h-8 flex items-center px-3 rounded bg-muted/50 text-[10px] text-muted-foreground italic">
+                  Internal: /{item.page}
+                </div>
+              )}
+            </div>
+
             <div className="col-span-2">
-              <Input
-                placeholder="Page (home, catalogue, etc.)"
-                value={item.page || ''}
-                onChange={(e) => updateMenuItem(item.id!, { page: e.target.value || null })}
-                className="h-8"
-              />
-            </div>
-            <div className="col-span-2">
-              <Input
-                placeholder="Slug (for content pages)"
-                value={item.slug || ''}
-                onChange={(e) => updateMenuItem(item.id!, { slug: e.target.value || null })}
-                className="h-8"
-              />
-            </div>
-            <div className="col-span-1">
               <Input
                 type="number"
                 placeholder="Order"
                 value={item.sortOrder || 0}
                 onChange={(e) => updateMenuItem(item.id!, { sortOrder: parseInt(e.target.value) || 0 })}
-                className="h-8"
+                className="h-8 text-xs"
               />
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <Switch
-              checked={item.isActive || true}
-              onCheckedChange={(checked) => updateMenuItem(item.id!, { isActive: checked })}
-            />
-            <Switch
-              checked={item.openInNewTab || false}
-              onCheckedChange={(checked) => updateMenuItem(item.id!, { openInNewTab: checked })}
-            />
+            <div className="flex flex-col items-center gap-1">
+               <Switch
+                checked={item.isActive !== false}
+                onCheckedChange={(checked) => updateMenuItem(item.id!, { isActive: checked })}
+                className="scale-75"
+              />
+              <span className="text-[8px] text-muted-foreground uppercase">Live</span>
+            </div>
+
             <Button
               variant="ghost"
               size="icon"
               className="h-8 w-8"
               onClick={() => addMenuItem(item.id!)}
+              title="Add sub-item"
             >
               <Plus className="h-4 w-4" />
             </Button>
@@ -468,7 +532,7 @@ export function AdminMenus() {
 
       {formOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+          <Card className="w-full max-w-5xl max-h-[90vh] overflow-y-auto">
             <CardHeader>
               <CardTitle>
                 {editingMenu ? 'Edit Menu' : 'Add Menu'}
@@ -480,7 +544,7 @@ export function AdminMenus() {
             <CardContent className="space-y-6">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="menu-name">Menu Name</Label>
+                  <Label htmlFor="menu-name">Menu Name (Column Title)</Label>
                   <Input
                     id="menu-name"
                     placeholder="Primary Menu"
@@ -540,7 +604,7 @@ export function AdminMenus() {
                   onChange={(e) =>
                     setForm(prev => ({ ...prev, description: e.target.value }))
                   }
-                  rows={3}
+                  rows={2}
                 />
               </div>
 

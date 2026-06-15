@@ -12,7 +12,7 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const contentPage = await db.contentPage.findUnique({
+    const contentPage = await db.contentPage.findFirst({
       where: { id },
     });
 
@@ -56,7 +56,7 @@ export async function PUT(
       }
     }
 
-    const existing = await db.contentPage.findUnique({ where: { id } });
+    const existing = await db.contentPage.findFirst({ where: { id } });
     if (!existing) {
       return NextResponse.json(
         { error: 'Content page not found' },
@@ -119,7 +119,7 @@ export async function DELETE(
 
     const { id } = await params;
 
-    const existing = await db.contentPage.findUnique({ where: { id } });
+    const existing = await db.contentPage.findFirst({ where: { id } });
     if (!existing) {
       return NextResponse.json(
         { error: 'Content page not found' },

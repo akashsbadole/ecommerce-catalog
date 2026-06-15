@@ -1,26 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { normalizeBlocksForStorage } from '@/lib/page-blocks';
+import { getStoreId } from '@/lib/store-db';
 
-async function resolveBlogPost(idOrSlug: string) {
+async function resolveBlogPost(idOrSlug: string, storeId: string | null) {
   return db.blogPost.findFirst({
     where: {
       OR: [
         { id: idOrSlug },
         { slug: idOrSlug },
       ],
+      ...(storeId ? { storeId } : {}),
     },
     include: { User: { select: { id: true, name: true, email: true } } },
   });
 }
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
-    const blogPost = await resolveBlogPost(id);
+    const storeId = getStoreId(request);
+    const blogPost = await resolveBlogPost(id, storeId);
 
     if (!blogPost) {
       return NextResponse.json(
@@ -46,6 +49,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
+    const storeId = getStoreId(request);
     let blocks: string | undefined;
 
     if (body.blocks !== undefined) {
@@ -59,7 +63,7 @@ export async function PUT(
       }
     }
 
-    const existing = await resolveBlogPost(id);
+    const existing = await resolveBlogPost(id, storeId);
     if (!existing) {
       return NextResponse.json(
         { error: 'Blog post not found' },
@@ -70,7 +74,7 @@ export async function PUT(
     // Check slug uniqueness if slug is being updated
     if (body.slug !== undefined && body.slug !== existing.slug) {
       const slugExists = await db.blogPost.findFirst({
-        where: { slug: body.slug, NOT: { id: existing.id } },
+        where: { slug: body.slug, NOT: { id: existing.id }, ...(storeId ? { storeId } : {}) },
       });
       if (slugExists) {
         return NextResponse.json({ error: 'Slug already in use' }, { status: 409 });
@@ -109,19 +113,60 @@ export async function PUT(
         ...(body.ogImage !== undefined && {
           ogImage: body.ogImage || null,
         }),
-        ...(blocks !== undefined && { blocks }),
         ...(body.tags !== undefined && {
           tags: body.tags ? JSON.stringify(body.tags) : null,
         }),
-        ...(body.isPublished !== undefined && { isPublished: body.isPublished }),
+        ...(body.isPublished !== undefined && { isActive: body.isPublished, isPublished: body.isPublished }),
         ...(publishedAt !== undefined && { publishedAt }),
+        ...(blocks !== undefined && { blocks }),
       },
-      include: { User: { select: { id: true, name: true, email: true } } },
     });
 
     return NextResponse.json({ blogPost });
   } catch (error) {
     console.error('Update blog post error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const permanent = searchParams.get('permanent') === 'true';
+    const storeId = getStoreId(request);
+
+    const existing = await resolveBlogPost(id, storeId);
+
+    if (!existing) {
+      return NextResponse.json(
+        { error: 'Blog post not found' },
+        { status: 404 }
+      );
+    }
+
+    if (permanent) {
+      await db.blogPost.delete({ where: { id: existing.id } });
+    } else {
+      await db.blogPost.update({
+        where: { id: existing.id },
+        data: { deletedAt: new Date(), isPublished: false },
+      });
+    }
+
+    return NextResponse.json({
+      message: permanent
+        ? 'Blog post deleted permanently'
+        : 'Blog post moved to trash',
+    });
+  } catch (error) {
+    console.error('Delete blog post error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -136,38 +181,12 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
+    const storeId = getStoreId(request);
 
-    const existing = await resolveBlogPost(id);
-    if (!existing) {
-      return NextResponse.json({ error: 'Blog post not found' }, { status: 404 });
-    }
+    const existing = await db.blogPost.findFirst({
+      where: { id, ...(storeId ? { storeId } : {}) }
+    });
 
-    if (body.restore) {
-      const blogPost = await db.blogPost.update({
-        where: { id: existing.id },
-        data: { deletedAt: null },
-        include: { User: { select: { id: true, name: true, email: true } } },
-      });
-      return NextResponse.json({ blogPost });
-    }
-
-    return NextResponse.json({ error: 'No valid action specified' }, { status: 400 });
-  } catch (error) {
-    console.error('Patch blog post error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
-
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const { searchParams } = new URL(request.url);
-    const permanent = searchParams.get('permanent') === 'true';
-
-    const existing = await resolveBlogPost(id);
     if (!existing) {
       return NextResponse.json(
         { error: 'Blog post not found' },
@@ -175,21 +194,17 @@ export async function DELETE(
       );
     }
 
-    if (permanent) {
-      await db.blogPost.delete({ where: { id: existing.id } });
-      return NextResponse.json({ message: 'Blog post permanently deleted' });
+    if (body.restore) {
+      await db.blogPost.update({
+        where: { id: existing.id },
+        data: { deletedAt: null },
+      });
+      return NextResponse.json({ message: 'Blog post restored' });
     }
 
-    await db.blogPost.update({
-      where: { id: existing.id },
-      data: { deletedAt: new Date() },
-    });
-
-    return NextResponse.json({
-      message: 'Blog post moved to trash',
-    });
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
-    console.error('Delete blog post error:', error);
+    console.error('Restore blog post error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

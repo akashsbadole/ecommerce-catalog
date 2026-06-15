@@ -304,11 +304,6 @@ function BlockEditDialog({
       const dataCopy = JSON.parse(JSON.stringify(block.data || {}));
       setLocalData(dataCopy);
       setJsonText(JSON.stringify(dataCopy, null, 2));
-  const handleOpen = (blk: PageBlock | null) => {
-    if (blk) {
-      const parsedData = normalizeBlockData(blk.data);
-      setLocalData(parsedData);
-      setJsonText(JSON.stringify(parsedData, null, 2));
       setJsonError(null);
     }
   }, [block, open]);

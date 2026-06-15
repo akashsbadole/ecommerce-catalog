@@ -64,15 +64,16 @@ export async function POST(request: NextRequest) {
     }
     const validatedData = result.data;
 
-    // Check slug uniqueness (excluding soft-deleted)
+    const storeId = getStoreId(request);
+
+    // Check slug uniqueness per store (excluding soft-deleted)
     const existingSlug = await db.category.findFirst({
-      where: { slug: validatedData.slug, deletedAt: null },
+      where: { slug: validatedData.slug, deletedAt: null, ...(storeId ? { storeId } : {}) },
     });
     if (existingSlug) {
       return NextResponse.json({ error: 'Slug already in use' }, { status: 409 });
     }
 
-    const storeId = getStoreId(request);
     const category = await db.category.create({
       data: {
         name: validatedData.name,
