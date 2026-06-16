@@ -1,7 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
-const isProtectedRoute = createRouteMatcher(["/api/admin(.*)", "/api/cart(.*)", "/api/wishlist(.*)", "/api/orders(.*)", "/api/account(.*)", "/api/quotes(.*)"]);
+const isProtectedRoute = createRouteMatcher(["/api/admin(.*)"]);
 
 // ─── Store Resolution (Edge-compatible, in-memory cache) ───
 

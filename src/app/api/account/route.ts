@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { resolveUserId } from '@/lib/auth-helpers';
-import { hash } from '@/lib/auth';
+import { hash, compare } from '@/lib/auth';
 
 // GET /api/account - Get current user profile
 export async function GET(request: NextRequest) {
@@ -110,7 +110,9 @@ export async function PUT(request: NextRequest) {
       if (!currentPassword) {
         return NextResponse.json({ error: 'Current password is required' }, { status: 400 });
       }
-      const { compare } = await import('bcryptjs');
+      if (!user.password) {
+        return NextResponse.json({ error: 'No password set on this account' }, { status: 400 });
+      }
       const isValid = await compare(currentPassword, user.password);
       if (!isValid) {
         return NextResponse.json({ error: 'Current password is incorrect' }, { status: 400 });

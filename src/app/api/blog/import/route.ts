@@ -84,23 +84,29 @@ export async function POST(request: NextRequest) {
       const slug = getValue('slug') || title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
 
       try {
-        await db.blogPost.upsert({
-          where: { slug },
-          update: {
-            title,
-            excerpt: getValue('excerpt') || null,
-            content: getValue('content') || '',
-            isPublished: getValue('ispublished')?.toLowerCase() === 'true',
-          },
-          create: {
-            title,
-            slug,
-            excerpt: getValue('excerpt') || null,
-            content: getValue('content') || '',
-            isPublished: getValue('ispublished')?.toLowerCase() === 'true',
-            blocks: JSON.stringify([]),
-          },
-        });
+        const existing = await db.blogPost.findFirst({ where: { slug } });
+        if (existing) {
+          await db.blogPost.update({
+            where: { id: existing.id },
+            data: {
+              title,
+              excerpt: getValue('excerpt') || null,
+              content: getValue('content') || '',
+              isPublished: getValue('ispublished')?.toLowerCase() === 'true',
+            },
+          });
+        } else {
+          await db.blogPost.create({
+            data: {
+              title,
+              slug,
+              excerpt: getValue('excerpt') || null,
+              content: getValue('content') || '',
+              isPublished: getValue('ispublished')?.toLowerCase() === 'true',
+              blocks: JSON.stringify([]),
+            },
+          });
+        }
         imported++;
       } catch (err: any) {
         errors.push(`Row ${i + 1}: ${err.message}`);

@@ -42,6 +42,13 @@
     "skills",
     "download",
     "agent-ctx",
-    "prisma"
+    "prisma",
+    "tests",
+    "src/test-setup.ts",
+    "vitest.config.ts",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*.spec.tsx",
+    "**/*.test.tsx"
   ]
 }

@@ -85,20 +85,26 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        await db.redirect.upsert({
-          where: { from },
-          update: {
-            to,
-            type,
-            isActive: getValue('isactive')?.toLowerCase() !== 'false',
-          },
-          create: {
-            from,
-            to,
-            type,
-            isActive: getValue('isactive')?.toLowerCase() !== 'false',
-          },
-        });
+        const existing = await db.redirect.findFirst({ where: { from } });
+        if (existing) {
+          await db.redirect.update({
+            where: { id: existing.id },
+            data: {
+              to,
+              type,
+              isActive: getValue('isactive')?.toLowerCase() !== 'false',
+            },
+          });
+        } else {
+          await db.redirect.create({
+            data: {
+              from,
+              to,
+              type,
+              isActive: getValue('isactive')?.toLowerCase() !== 'false',
+            },
+          });
+        }
         imported++;
       } catch (err: any) {
         errors.push(`Row ${i + 1}: ${err.message}`);
