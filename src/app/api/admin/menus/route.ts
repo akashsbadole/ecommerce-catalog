@@ -10,7 +10,7 @@ const menuSchema = z.object({
   name: z.string().min(1),
   slug: z.string().min(1).regex(/^[a-z0-9-]+$/),
   location: z.string().min(1),
-  description: z.string().optional(),
+  description: z.string().optional().nullable(),
   isActive: z.boolean().optional(),
   items: z.array(z.object({
     id: z.string().optional(),
@@ -102,20 +102,46 @@ export async function POST(request: NextRequest) {
         ...menuData,
         isActive: validatedData.isActive ?? true,
         ...(storeId ? { storeId } : {}),
-        items: items?.length ? {
-          create: items.map((item, index) => ({
-            ...item,
-            sortOrder: item.sortOrder ?? index,
+      },
+    });
+
+    // Create items sequentially to handle parentId references
+    if (items?.length) {
+      const idMap = new Map<string, string>();
+      const sorted = [...items].sort((a, b) => {
+        if (!a.parentId && !b.parentId) return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+        if (!a.parentId) return -1;
+        if (!b.parentId) return 1;
+        return 0;
+      });
+
+      for (const item of sorted) {
+        const created = await db.menuItem.create({
+          data: {
+            menuId: menu.id,
+            parentId: item.parentId ? idMap.get(item.parentId) ?? null : null,
+            label: item.label,
+            url: item.url ?? null,
+            page: item.page ?? null,
+            slug: item.slug ?? null,
+            sortOrder: item.sortOrder ?? 0,
             isActive: item.isActive ?? true,
             openInNewTab: item.openInNewTab ?? false,
-          })),
-        } : undefined,
-      },
-      include: { items: true },
+          },
+        });
+        if (item.id) {
+          idMap.set(item.id, created.id);
+        }
+      }
+    }
+
+    const menuWithItems = await db.menu.findUnique({
+      where: { id: menu.id },
+      include: { items: { orderBy: { sortOrder: 'asc' } } },
     });
 
     revalidatePath('/', 'layout');
-    return NextResponse.json({ menu }, { status: 201 });
+    return NextResponse.json({ menu: menuWithItems }, { status: 201 });
   } catch (error) {
     console.error('Create menu error:', error);
     return NextResponse.json(

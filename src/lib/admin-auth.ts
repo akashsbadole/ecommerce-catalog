@@ -1,11 +1,10 @@
 /**
  * Admin authentication middleware for API routes.
- * Extracts and verifies Bearer token, returns admin payload or error response.
+ * Uses headers injected by clerkMiddleware.
  */
 
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
-import { verifyToken } from '@/lib/auth-edge';
 
 export interface AdminPayload {
   id: string;
@@ -28,48 +27,42 @@ export type AuthResult =
   | { success: false; response: NextResponse };
 
 /**
- * Verify admin authentication from Bearer token.
- * Returns the admin payload if valid, or a NextResponse error if not.
+ * Verify admin authentication from headers injected by middleware.
  */
 export async function requireAdminAuth(request: NextRequest): Promise<AdminAuthResult> {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
+  const userId = request.headers.get('x-user-id');
+  const role = request.headers.get('x-user-role');
+  const email = request.headers.get('x-user-email') || '';
+
+  if (!userId) {
     return {
       success: false,
       response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
     };
   }
 
-  const token = authHeader.split(' ')[1];
-  const payload = await verifyToken(token);
-
-  if (!payload || !['admin', 'editor'].includes(payload.role)) {
+  if (!['admin', 'editor', 'clerk'].includes(role || '')) {
     return {
       success: false,
       response: NextResponse.json({ error: 'Forbidden' }, { status: 403 }),
     };
   }
 
-  return { success: true, payload: payload as unknown as AdminPayload };
+  return {
+    success: true,
+    payload: { id: userId, email, role: role || 'clerk' }
+  };
 }
 
 /**
- * Verify user authentication from Bearer token (any authenticated user).
- * Returns the user payload if valid, or a NextResponse error if not.
+ * Verify user authentication from headers injected by middleware.
  */
 export async function requireAuth(request: NextRequest): Promise<AuthResult> {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    return {
-      success: false,
-      response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
-    };
-  }
+  const userId = request.headers.get('x-user-id');
+  const role = request.headers.get('x-user-role') || 'customer';
+  const email = request.headers.get('x-user-email') || '';
 
-  const token = authHeader.split(' ')[1];
-  const payload = await verifyToken(token);
-
-  if (!payload) {
+  if (!userId) {
     return {
       success: false,
       response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
@@ -79,9 +72,9 @@ export async function requireAuth(request: NextRequest): Promise<AuthResult> {
   return {
     success: true,
     payload: {
-      userId: payload.userId || (payload as any).id,
-      email: payload.email || '',
-      role: payload.role || 'customer',
+      userId,
+      email,
+      role,
     },
   };
 }

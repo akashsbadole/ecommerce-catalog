@@ -1,64 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth-edge';
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextRequest, NextResponse } from "next/server";
 
-const PUBLIC_API_PATHS = [
-  '/api/auth/login',
-  '/api/auth/me',
-  '/api/redirects/check',
-  '/api/stores', // Allow store listing/creation
-];
-
-// Public GET endpoints (no auth needed)
-const PUBLIC_GET_PREFIXES = [
-  '/api/products',
-  '/api/categories',
-  '/api/banners',
-  '/api/seo',
-  '/api/content-pages',
-  '/api/blog',
-  '/api/health',
-  '/api/stores',
-  '/api/settings/public',
-];
-
-// Public POST endpoints
-const PUBLIC_POST_PATHS = [
-  '/api/enquiries',
-  '/api/contact',
-  '/api/auth/register',
-  '/api/auth/forgot-password',
-  '/api/auth/reset-password',
-  '/api/auth/register',
-  '/api/newsletter/subscribe',
-  '/api/stores', // Allow store creation
-  '/api/content-pages/seed', // Allow page seeding
-];
-
-// User-authenticated GET endpoints (require Bearer token, not admin RBAC)
-const USER_AUTH_GET_PREFIXES = [
-  '/api/cart',
-  '/api/wishlist',
-  '/api/orders',
-  '/api/account',
-  '/api/quotes',
-  '/api/stores',
-];
-
-// User-authenticated mutation endpoints
-const USER_AUTH_MUTATION_PREFIXES = [
-  '/api/cart',
-  '/api/wishlist',
-  '/api/orders',
-  '/api/account',
-  '/api/quotes',
-  '/api/stores',
-  '/api/auth/change-password',
-];
-
-// Platform admin paths (no store context needed)
-const PLATFORM_ADMIN_PREFIXES = [
-  '/api/admin',
-];
+const isProtectedRoute = createRouteMatcher(["/api/admin(.*)"]);
 
 // ─── Store Resolution (Edge-compatible, in-memory cache) ───
 
@@ -72,18 +15,18 @@ const storeCache = new Map<string, CachedStore>();
 const STORE_CACHE_TTL = 5 * 60 * 1000;
 
 const PLATFORM_DOMAINS = [
-  process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || process.env.PLATFORM_DOMAIN || 'localhost',
-  process.env.PLATFORM_DOMAIN || 'localhost',
+  process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || process.env.PLATFORM_DOMAIN || "localhost",
+  process.env.PLATFORM_DOMAIN || "localhost",
 ];
 
 function extractSubdomain(hostname: string): string | null {
-  const host = hostname.split(':')[0];
-  if (!host || host === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(host)) {
+  const host = hostname.split(":")[0];
+  if (!host || host === "localhost" || /^\d+\.\d+\.\d+\.\d+$/.test(host)) {
     return null;
   }
   for (const domain of PLATFORM_DOMAINS) {
     if (host.endsWith(`.${domain}`)) {
-      const sub = host.replace(`.${domain}`, '');
+      const sub = host.replace(`.${domain}`, "");
       return sub || null;
     }
   }
@@ -91,31 +34,28 @@ function extractSubdomain(hostname: string): string | null {
 }
 
 function isCustomDomain(hostname: string): boolean {
-  const host = hostname.split(':')[0];
-  if (!host || host === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(host)) {
+  const host = hostname.split(":")[0];
+  if (!host || host === "localhost" || /^\d+\.\d+\.\d+\.\d+$/.test(host)) {
     return false;
   }
   return !PLATFORM_DOMAINS.some((d) => host.endsWith(`.${d}`));
 }
 
 async function resolveStoreId(hostname: string): Promise<string | null> {
-  const host = hostname.split(':')[0];
+  const host = hostname.split(":")[0];
 
-  // Check cache
   const cached = storeCache.get(host);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.id;
   }
 
   let storeId: string | null = null;
-
-  // Try subdomain
   const subdomain = extractSubdomain(hostname);
   if (subdomain) {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `http://localhost:${3000}`;
       const res = await fetch(`${baseUrl}/api/stores/resolve?slug=${encodeURIComponent(subdomain)}`, {
-        headers: { 'x-internal-request': 'true' },
+        headers: { "x-internal-request": "true" },
         signal: AbortSignal.timeout(2000),
       });
       if (res.ok) {
@@ -125,12 +65,11 @@ async function resolveStoreId(hostname: string): Promise<string | null> {
     } catch { /* ignore */ }
   }
 
-  // Try custom domain
   if (!storeId && isCustomDomain(hostname)) {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `http://localhost:${3000}`;
       const res = await fetch(`${baseUrl}/api/stores/resolve?domain=${encodeURIComponent(host)}`, {
-        headers: { 'x-internal-request': 'true' },
+        headers: { "x-internal-request": "true" },
         signal: AbortSignal.timeout(2000),
       });
       if (res.ok) {
@@ -140,7 +79,6 @@ async function resolveStoreId(hostname: string): Promise<string | null> {
     } catch { /* ignore */ }
   }
 
-  // Cache result
   if (storeId) {
     storeCache.set(host, { id: storeId, slug: subdomain || host, expiresAt: Date.now() + STORE_CACHE_TTL });
   }
@@ -148,57 +86,8 @@ async function resolveStoreId(hostname: string): Promise<string | null> {
   return storeId;
 }
 
-// Role-based permission map
-const ROLE_PERMISSIONS: Record<string, {
-  read: string[];
-  write: string[];
-}> = {
-  admin: {
-    read: ['*'],
-    write: ['*'],
-  },
-  clerk: {
-    read: [
-      '/api/products',
-      '/api/categories',
-      '/api/enquiries',
-      '/api/banners',
-      '/api/blog',
-      '/api/content-pages',
-      '/api/settings',
-      '/api/media',
-      '/api/upload',
-      '/api/redirects',
-      '/api/notifications',
-      '/api/activity-logs',
-      '/api/payment/razorpay',
-      '/api/import/shopify',
-      '/api/import/woocommerce',
-      '/api/admin/backup',
-      '/api/admin/quotes',
-      '/api/companies',
-      '/api/quotes',
-    ],
-    write: [
-      '/api/enquiries',
-      '/api/notifications',
-      '/api/quotes',
-    ],
-  },
-  buyer: {
-    read: [
-      '/api/quotes',
-      '/api/enquiries',
-      '/api/companies', // Allowed to see their own company
-    ],
-    write: [
-      '/api/quotes', // To accept quotes
-      '/api/enquiries',
-    ],
-  },
-};
+// ─── Redirect Check ───
 
-// In-memory redirect cache with TTL (Edge-compatible)
 interface CachedRedirect {
   to: string;
   type: string;
@@ -206,34 +95,20 @@ interface CachedRedirect {
 }
 
 const redirectCache = new Map<string, CachedRedirect>();
-const REDIRECT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-function checkPermission(role: string, method: string, pathname: string): boolean {
-  const permissions = ROLE_PERMISSIONS[role];
-  if (!permissions) return false;
-
-  const isRead = method === 'GET' || method === 'HEAD' || method === 'OPTIONS';
-  const allowedList = isRead ? permissions.read : permissions.write;
-
-  if (allowedList.includes('*')) return true;
-
-  return allowedList.some(prefix => pathname.startsWith(prefix));
-}
+const REDIRECT_CACHE_TTL = 5 * 60 * 1000;
 
 async function checkRedirect(pathname: string, request: NextRequest): Promise<CachedRedirect | null> {
-  // Check cache first
   const cached = redirectCache.get(pathname);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.to ? cached : null;
   }
 
   try {
-    // Fetch redirect check API (runs on Node.js runtime, not Edge)
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `http://localhost:${request.nextUrl.port || 3000}`;
     const checkUrl = `${baseUrl}/api/redirects/check?path=${encodeURIComponent(pathname)}`;
     const res = await fetch(checkUrl, {
-      headers: { 'x-internal-request': 'true' },
-      signal: AbortSignal.timeout(2000), // 2s timeout to avoid hanging
+      headers: { "x-internal-request": "true" },
+      signal: AbortSignal.timeout(2000),
     });
 
     if (res.ok) {
@@ -241,111 +116,77 @@ async function checkRedirect(pathname: string, request: NextRequest): Promise<Ca
       if (data.found && data.to) {
         const result: CachedRedirect = {
           to: data.to,
-          type: data.type || '301',
+          type: data.type || "301",
           expiresAt: Date.now() + REDIRECT_CACHE_TTL,
         };
         redirectCache.set(pathname, result);
         return result;
       }
     }
-  } catch {
-    // Silently fail - don't block the request if redirect check fails
-  }
+  } catch { /* ignore */ }
 
-  // Cache negative result for shorter time
-  redirectCache.set(pathname, {
-    to: '',
-    type: '',
-    expiresAt: Date.now() + 60 * 1000,
-  });
-
+  redirectCache.set(pathname, { to: "", type: "", expiresAt: Date.now() + 60 * 1000 });
   return null;
 }
 
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  const hostname = request.headers.get('host') || '';
+export default clerkMiddleware(async (auth, req) => {
+  const { pathname } = req.nextUrl;
+  const hostname = req.headers.get("host") || "";
 
-  // Security: Prevent header spoofing by stripping x-user headers from incoming requests
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.delete('x-user-id');
-  requestHeaders.delete('x-user-role');
-  requestHeaders.delete('x-user-email');
-
-  // For non-API routes, check redirects first
-  if (!pathname.startsWith('/api/') && !pathname.startsWith('/_next/') && !pathname.startsWith('/_proxy/') && !pathname.includes('.')) {
-    const redirect = await checkRedirect(pathname, request);
+  // 1. Handle Redirects for non-API routes
+  if (!pathname.startsWith("/api/") && !pathname.startsWith("/_next/") && !pathname.startsWith("/_proxy/") && !pathname.includes(".")) {
+    const redirect = await checkRedirect(pathname, req);
     if (redirect && redirect.to) {
-      const status = redirect.type === '302' ? 302 : 301;
-      const url = request.nextUrl.clone();
+      const status = redirect.type === "302" ? 302 : 301;
+      const url = req.nextUrl.clone();
       url.pathname = redirect.to;
       return NextResponse.redirect(url, status);
     }
   }
 
-  // ─── Store Resolution ───
-  // Resolve store from hostname for all routes
+  // 2. Resolve Store
   const storeId = await resolveStoreId(hostname);
 
-  // Only protect /api/ routes from here on
-  if (!pathname.startsWith('/api/')) {
-    // For non-API routes, pass storeId along
-    const requestHeaders = new Headers(request.headers);
-    if (storeId) {
-      requestHeaders.set('x-store-id', storeId);
+  // 3. Handle Protected Routes
+  if (isProtectedRoute(req)) {
+    const session = await auth();
+    if (!session.userId) {
+      return session.redirectToSignIn();
     }
-    return NextResponse.next({ request: { headers: requestHeaders } });
+
+    // RBAC could be added here via publicMetadata if needed
+    // const role = session.sessionClaims?.publicMetadata?.role as string || 'clerk';
+    // ... logic for RBAC ...
   }
 
-  // Allow public auth endpoints
-  if (PUBLIC_API_PATHS.some(p => pathname.startsWith(p))) {
-    return NextResponse.next({ request: { headers: requestHeaders } });
+  // 4. Inject Headers
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.delete("x-user-id");
+  requestHeaders.delete("x-user-role");
+  requestHeaders.delete("x-user-email");
+
+  if (storeId) {
+    requestHeaders.set("x-store-id", storeId);
   }
 
-  // Allow public GET endpoints
-  if (request.method === 'GET' && PUBLIC_GET_PREFIXES.some(p => pathname.startsWith(p))) {
-    return NextResponse.next({ request: { headers: requestHeaders } });
+  // If authenticated, we could potentially inject user info from session
+  const session = await auth();
+  if (session.userId) {
+    requestHeaders.set("x-user-id", session.userId);
+    const role = (session.sessionClaims?.publicMetadata as any)?.role || "clerk";
+    requestHeaders.set("x-user-role", role);
   }
-
-  // Allow public POST endpoints
-  if (request.method === 'POST' && PUBLIC_POST_PATHS.some(p => pathname.startsWith(p))) {
-    return NextResponse.next({ request: { headers: requestHeaders } });
-  }
-
-  // Check authorization
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const token = authHeader.split(' ')[1];
-  const payload = await verifyToken(token);
-  if (!payload) {
-    console.log('Middleware: Invalid token, token length:', token?.length, 'starts with:', token?.substring(0, 20));
-    return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
-  }
-
-  const role = payload.role;
-
-  // Check RBAC permissions
-  if (!checkPermission(role, request.method, pathname)) {
-    return NextResponse.json(
-      { error: 'Forbidden: insufficient permissions' },
-      { status: 403 }
-    );
-  }
-
-  // Add user info to headers for downstream use
-  requestHeaders.set('x-user-id', payload.userId);
-  requestHeaders.set('x-user-role', payload.role);
-  requestHeaders.set('x-user-email', payload.email);
-  if (storeId) requestHeaders.set('x-store-id', storeId);
 
   return NextResponse.next({
     request: { headers: requestHeaders },
   });
-}
+});
 
 export const config = {
-  matcher: '/:path*',
+  matcher: [
+    // Skip Next.js internals and all static files, unless found in search params
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    // Always run for API routes
+    "/(api|trpc)(.*)",
+  ],
 };

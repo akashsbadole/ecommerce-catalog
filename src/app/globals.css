@@ -48,7 +48,7 @@
   --card-foreground: #333333;
   --popover: #FFFFFF;
   --popover-foreground: #333333;
-  --primary: #2639ED;
+  --primary: #2b2c37;
   --primary-foreground: #FFFFFF;
   --secondary: #FF6B6B;
   --secondary-foreground: #FFFFFF;
@@ -59,23 +59,23 @@
   --destructive: #FF6B6B;
   --border: #E5E7EB;
   --input: #E5E7EB;
-  --ring: #2639ED;
-  --chart-1: #2639ED;
+  --ring: #2b2c37;
+  --chart-1: #2b2c37;
   --chart-2: #FF6B6B;
   --chart-3: #666666;
   --chart-4: #F8F9FA;
   --chart-5: #333333;
   --sidebar: #FFFFFF;
   --sidebar-foreground: #333333;
-  --sidebar-primary: #2639ED;
+  --sidebar-primary: #2b2c37;
   --sidebar-primary-foreground: #FFFFFF;
   --sidebar-accent: #F8F9FA;
   --sidebar-accent-foreground: #333333;
   --sidebar-border: #E5E7EB;
-  --sidebar-ring: #2639ED;
+  --sidebar-ring: #2b2c37;
 
   /* Custom brand colors */
-  --brand-primary: #2639ED;
+  --brand-primary: #2b2c37;
   --brand-primary-hover: #1A23C5;
   --brand-secondary: #FF6B6B;
   --brand-secondary-hover: #E55A5A;

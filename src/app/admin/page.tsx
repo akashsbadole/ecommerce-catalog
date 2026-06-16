@@ -1,46 +1,28 @@
-import { cookies } from 'next/headers';
-import { verifyToken } from '@/lib/auth-edge';
-import { db } from '@/lib/db';
-import AdminClient from './AdminClient';
-
-export const dynamic = 'force-dynamic';
-
-interface AdminUser {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-}
-
-async function getServerAuth() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('admin_token')?.value;
-
-  if (!token) return { user: null, token: null };
-
-  const payload = await verifyToken(token);
-  if (!payload) return { user: null, token: null };
-
-  const dbUser = await db.user.findUnique({
-    where: { id: payload.userId },
-    select: { id: true, email: true, name: true, role: true },
-  });
-
-  if (!dbUser) return { user: null, token: null };
-
-  return {
-    user: {
-      id: dbUser.id,
-      email: dbUser.email,
-      name: dbUser.name,
-      role: dbUser.role || payload.role,
-    },
-    token,
-  };
-}
+import { SignIn } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
 export default async function AdminPage() {
-  const { user, token } = await getServerAuth();
+  const { userId } = await auth();
+  if (userId) {
+    redirect("/admin/dashboard");
+  }
 
-  return <AdminClient initialUser={user} initialToken={token} />;
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="w-full max-w-md p-4">
+        <SignIn
+          routing="hash"
+          fallbackRedirectUrl="/admin/dashboard"
+          signUpUrl="/register"
+          appearance={{
+            elements: {
+              formButtonPrimary: 'bg-emerald-600 hover:bg-emerald-700',
+              footerActionLink: 'text-emerald-600 hover:text-emerald-700'
+            }
+          }}
+        />
+      </div>
+    </div>
+  );
 }

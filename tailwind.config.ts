@@ -23,7 +23,7 @@ const config: Config = {
           foreground: "var(--popover-foreground)",
         },
         primary: {
-          DEFAULT: "#2639ED",
+          DEFAULT: "#2b2c37",
           foreground: "#FFFFFF",
         },
         secondary: {
@@ -44,10 +44,10 @@ const config: Config = {
         },
         border: "#E5E7EB",
         input: "#E5E7EB",
-        ring: "#2639ED",
+        ring: "#2b2c37",
         brand: {
-          primary: "#2639ED",
-          "primary-hover": "#1A23C5",
+          primary: "#2b2c37",
+          "primary-hover": "#2b2c50",
           secondary: "#FF6B6B",
           "secondary-hover": "#E55A5A",
           text: "#333333",
@@ -56,7 +56,7 @@ const config: Config = {
           "bg-section": "#F8F9FA",
         },
         chart: {
-          "1": "#2639ED",
+          "1": "#2b2c37",
           "2": "#FF6B6B",
           "3": "#666666",
           "4": "#F8F9FA",
