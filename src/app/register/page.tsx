@@ -1,18 +1,19 @@
-'use client';
-
-import { useRouter } from 'next/navigation';
-import { B2BRegister } from '@/components/admin/B2BRegister';
+import { SignUp } from "@clerk/nextjs";
 
 export default function RegisterPage() {
-  const router = useRouter();
-
-  const handleNavigate = (page: string) => {
-    if (page === 'home') {
-      router.push('/');
-    } else if (page === 'login') {
-      router.push('/admin');
-    }
-  };
-
-  return <B2BRegister onNavigate={handleNavigate} />;
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="w-full max-w-md p-4">
+        <SignUp
+          routing="hash"
+          appearance={{
+            elements: {
+              formButtonPrimary: 'bg-emerald-600 hover:bg-emerald-700',
+              footerActionLink: 'text-emerald-600 hover:text-emerald-700'
+            }
+          }}
+        />
+      </div>
+    </div>
+  );
 }
