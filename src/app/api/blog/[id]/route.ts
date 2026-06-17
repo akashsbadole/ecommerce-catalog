@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { normalizeBlocksForStorage } from '@/lib/page-blocks';
 import { getStoreId } from '@/lib/store-db';
+import { normalizeImageUrl } from '@/lib/utils';
 
 async function resolveBlogPost(idOrSlug: string, storeId: string | null) {
   return db.blogPost.findFirst({
@@ -99,7 +100,7 @@ export async function PUT(
         }),
         ...(body.content !== undefined && { content: body.content }),
         ...(body.coverImage !== undefined && {
-          coverImage: body.coverImage || null,
+          coverImage: normalizeImageUrl(body.coverImage),
         }),
         ...(body.authorId !== undefined && {
           authorId: body.authorId || null,
@@ -111,7 +112,7 @@ export async function PUT(
           metaDescription: body.metaDescription || null,
         }),
         ...(body.ogImage !== undefined && {
-          ogImage: body.ogImage || null,
+          ogImage: normalizeImageUrl(body.ogImage),
         }),
         ...(body.tags !== undefined && {
           tags: body.tags

@@ -160,3 +160,8 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
     timeout = setTimeout(() => func(...args), wait);
   };
 }
+
+export function normalizeImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return url.replace(/^https?:\/\/localhost:\d+/, "");
+}

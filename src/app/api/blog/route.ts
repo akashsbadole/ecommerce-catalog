@@ -4,6 +4,7 @@ import { logActivity } from '@/lib/activity-log';
 import { blogPostSchema } from '@/lib/validations';
 import { getStoreId } from '@/lib/store-db';
 import { normalizeBlocksForStorage } from '@/lib/page-blocks';
+import { normalizeImageUrl } from '@/lib/utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -139,11 +140,11 @@ export async function POST(request: NextRequest) {
         slug: validatedData.slug,
         excerpt: validatedData.excerpt || null,
         content: validatedData.content || '',
-        coverImage: validatedData.coverImage || null,
+        coverImage: normalizeImageUrl(validatedData.coverImage),
         authorId: validatedData.authorId || null,
         metaTitle: validatedData.metaTitle || null,
         metaDescription: validatedData.metaDescription || null,
-        ogImage: validatedData.ogImage || null,
+        ogImage: normalizeImageUrl(validatedData.ogImage),
         blocks,
         tags: validatedData.tags
           ? JSON.stringify(validatedData.tags.split(',').map((t: string) => t.trim()).filter(Boolean))
