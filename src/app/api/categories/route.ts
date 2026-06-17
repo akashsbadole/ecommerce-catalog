@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { logActivity } from '@/lib/activity-log';
 import { categorySchema } from '@/lib/validations';
 import { getStoreId } from '@/lib/store-db';
+import { normalizeImageUrl } from '@/lib/utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
         name: validatedData.name,
         slug: validatedData.slug,
         description: validatedData.description || null,
-        image: validatedData.image || null,
+        image: normalizeImageUrl(validatedData.image),
         sortOrder: validatedData.sortOrder ?? 0,
         isActive: validatedData.isActive ?? true,
         metaTitle: validatedData.metaTitle || null,

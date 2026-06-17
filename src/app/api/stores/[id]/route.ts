@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { verifyToken } from '@/lib/auth-edge';
+import { normalizeImageUrl } from '@/lib/utils';
 
 // GET /api/stores/[id] - Get store details
 export async function GET(
@@ -87,8 +88,8 @@ export async function PUT(
       }
       updateData.domain = body.domain || null;
     }
-    if (body.logo !== undefined) updateData.logo = body.logo;
-    if (body.favicon !== undefined) updateData.favicon = body.favicon;
+    if (body.logo !== undefined) updateData.logo = normalizeImageUrl(body.logo);
+    if (body.favicon !== undefined) updateData.favicon = normalizeImageUrl(body.favicon);
     if (body.description !== undefined) updateData.description = body.description;
     if (body.theme !== undefined) updateData.theme = JSON.stringify(body.theme);
     if (body.settings !== undefined) updateData.settings = JSON.stringify(body.settings);

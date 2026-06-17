@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 export const dynamic = 'force-dynamic';
 import { db } from '@/lib/db';
 import { requireAdminAuth } from '@/lib/admin-auth';
+import { normalizeImageUrl } from '@/lib/utils';
 import { getStoreId } from '@/lib/store-db';
 import { normalizeBlocksForStorage } from '@/lib/page-blocks';
 
@@ -83,7 +84,7 @@ export async function PUT(
         ...(body.slug !== undefined && { slug: body.slug }),
         ...(body.content !== undefined && { content: body.content }),
         ...(body.heroImage !== undefined && {
-          heroImage: body.heroImage || null,
+          heroImage: normalizeImageUrl(body.heroImage),
         }),
         ...(body.metaTitle !== undefined && {
           metaTitle: body.metaTitle || null,
@@ -92,7 +93,7 @@ export async function PUT(
           metaDescription: body.metaDescription || null,
         }),
         ...(body.ogImage !== undefined && {
-          ogImage: body.ogImage || null,
+          ogImage: normalizeImageUrl(body.ogImage),
         }),
         ...(body.isActive !== undefined && { isActive: body.isActive }),
         ...(body.sortOrder !== undefined && { sortOrder: body.sortOrder }),

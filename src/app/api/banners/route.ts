@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getStoreId } from '@/lib/store-db';
+import { normalizeImageUrl } from '@/lib/utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
       data: {
         title,
         subtitle: subtitle || null,
-        image: image || null,
+        image: normalizeImageUrl(image),
         link: link || null,
         linkText: linkText || null,
         sortOrder: sortOrder ?? 0,

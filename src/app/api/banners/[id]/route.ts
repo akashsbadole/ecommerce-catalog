@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { normalizeImageUrl } from '@/lib/utils';
 
 export async function PUT(
   request: NextRequest,
@@ -24,7 +25,7 @@ export async function PUT(
         ...(body.subtitle !== undefined && {
           subtitle: body.subtitle,
         }),
-        ...(body.image !== undefined && { image: body.image }),
+        ...(body.image !== undefined && { image: normalizeImageUrl(body.image) }),
         ...(body.link !== undefined && { link: body.link }),
         ...(body.linkText !== undefined && { linkText: body.linkText }),
         ...(body.sortOrder !== undefined && { sortOrder: body.sortOrder }),

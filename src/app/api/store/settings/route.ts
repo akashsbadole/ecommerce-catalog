@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { db } from '@/lib/db';
 import { getStoreId } from '@/lib/store-db';
 import { requireAdminAuth } from '@/lib/admin-auth';
+import { normalizeImageUrl } from '@/lib/utils';
 
 // GET /api/store/settings - Get store-specific settings
 export async function GET(request: NextRequest) {
@@ -60,8 +61,9 @@ export async function PUT(request: NextRequest) {
     }
 
     // Upsert each setting
-    for (const [key, value] of Object.entries(settings)) {
-      if (typeof value !== 'string') continue;
+    for (const [key, rawValue] of Object.entries(settings)) {
+      if (typeof rawValue !== 'string') continue;
+      const value = /^(site_)?(logo|icon|favicon|image)/i.test(key) ? (normalizeImageUrl(rawValue) ?? '') : rawValue;
 
       if (storeId) {
         await db.siteSetting.upsert({

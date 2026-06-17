@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { normalizeImageUrl } from '@/lib/utils';
 
 export async function GET(
   _request: NextRequest,
@@ -60,7 +61,7 @@ export async function PUT(
         ...(body.description !== undefined && {
           description: body.description,
         }),
-        ...(body.image !== undefined && { image: body.image }),
+        ...(body.image !== undefined && { image: normalizeImageUrl(body.image) }),
         ...(body.sortOrder !== undefined && { sortOrder: body.sortOrder }),
         ...(body.isActive !== undefined && { isActive: body.isActive }),
         ...(body.metaTitle !== undefined && {
