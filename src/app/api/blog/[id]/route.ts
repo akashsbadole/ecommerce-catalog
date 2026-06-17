@@ -114,9 +114,11 @@ export async function PUT(
           ogImage: body.ogImage || null,
         }),
         ...(body.tags !== undefined && {
-          tags: body.tags ? JSON.stringify(body.tags) : null,
+          tags: body.tags
+            ? JSON.stringify(body.tags.split(',').map((t: string) => t.trim()).filter(Boolean))
+            : null,
         }),
-        ...(body.isPublished !== undefined && { isActive: body.isPublished, isPublished: body.isPublished }),
+        ...(body.isPublished !== undefined && { isPublished: body.isPublished }),
         ...(publishedAt !== undefined && { publishedAt }),
         ...(blocks !== undefined && { blocks }),
       },

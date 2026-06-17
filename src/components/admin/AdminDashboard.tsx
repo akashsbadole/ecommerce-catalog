@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Search,
   KeyRound,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +45,7 @@ import { AdminMedia } from "@/components/admin/AdminMedia";
 import { AdminPages } from "@/components/admin/AdminPages";
 import { AdminSearchDialog } from "@/components/admin/AdminSearchDialog";
 import { AdminMenus } from "@/components/admin/AdminMenus";
+import { AdminBlog } from "@/components/admin/AdminBlog";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SimpleThemeToggle } from "@/components/SimpleThemeToggle";
 import { NotificationBell } from "@/components/admin/NotificationBell";
@@ -60,6 +62,7 @@ const sidebarItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "products", label: "Products", icon: Package },
   { id: "categories", label: "Categories", icon: FolderOpen },
+  { id: "blog", label: "Blog", icon: BookOpen },
   { id: "quotes", label: "Quotes", icon: FileText },
   { id: "enquiries", label: "Enquiries", icon: MessageSquare },
   { id: "media", label: "Media", icon: ImageIcon },
@@ -297,6 +300,8 @@ export function AdminDashboard({
         return <AdminMedia />;
       case "pages":
         return <AdminPages />;
+      case "blog":
+        return <AdminBlog />;
       case "menus":
         return <AdminMenus />;
       case "settings":

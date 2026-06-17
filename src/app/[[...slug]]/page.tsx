@@ -8,6 +8,8 @@ import { HomePage } from "@/components/store/HomePage";
 import { CataloguePage } from "@/components/store/CataloguePage";
 import { CategoryPage } from "@/components/store/CategoryPage";
 import { ProductsOverviewPage } from "@/components/store/ProductsOverviewPage";
+import { BlogPage } from "@/components/store/BlogPage";
+import { BlogPostView } from "@/components/store/BlogPostView";
 import { CmsPage } from "@/components/store/CmsPage";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -51,6 +53,9 @@ export default function CatchAllPage() {
         navigate("content-page", "manufacturing");
       } else if (segments[0] === "contact") {
         navigate("content-page", "contact");
+      } else if (segments[0] === "blog") {
+        if (segments[1]) navigate("blog-post", segments[1]);
+        else navigate("blog");
       } else {
         navigate("content-page", segments.join("/"));
       }
@@ -85,6 +90,10 @@ export default function CatchAllPage() {
         return <CmsPage slug={currentPage.slug} onNavigate={navigate} />;
       case "products":
         return <ProductsOverviewPage onNavigate={navigate} />;
+      case "blog":
+        return <BlogPage onNavigate={navigate} />;
+      case "blog-post":
+        return <BlogPostView postId={currentPage.slug} onNavigate={navigate} />;
 
       default:
         return (

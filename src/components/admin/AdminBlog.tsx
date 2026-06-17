@@ -19,6 +19,8 @@ import {
   BookOpen,
   LayoutGrid,
   Download,
+  Upload,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -71,9 +73,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { adminFetch } from '@/lib/admin-fetch';
-import { PageBuilder } from '@/components/admin/PageBuilder';
 import type { PageBlock } from '@/lib/page-blocks';
-import { parseBlocks } from '@/lib/utils';
 import { normalizePageBlocks } from '@/lib/page-blocks';
 
 interface Author {
@@ -174,6 +174,7 @@ export function AdminBlog() {
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [form, setForm] = useState<BlogFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [seoOpen, setSeoOpen] = useState(false);
 
   // Delete dialog state
@@ -323,6 +324,30 @@ export function AdminBlog() {
     }));
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await adminFetch('/api/upload', { method: 'POST', body: formData });
+      if (res.ok) {
+        const data = await res.json();
+        const imgTag = `\n<img src="${data.url}" alt="" />\n`;
+        setForm(prev => ({ ...prev, content: prev.content + imgTag }));
+        toast.success('Image uploaded');
+      } else {
+        toast.error('Failed to upload image');
+      }
+    } catch {
+      toast.error('Failed to upload image');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
   const handleSave = async () => {
     if (!form.title.trim()) {
       toast.error('Post title is required');
@@ -331,23 +356,17 @@ export function AdminBlog() {
 
     setSaving(true);
     try {
-      const tags = form.tags
-        .split(',')
-        .map(t => t.trim())
-        .filter(Boolean);
-
       const payload = {
         title: form.title.trim(),
         slug: form.slug.trim() || generateSlug(form.title),
         excerpt: form.excerpt.trim() || null,
         content: form.content.trim() || '',
-        blocks: form.blocks,
         coverImage: form.coverImage.trim() || null,
         authorId: form.authorId || null,
         metaTitle: form.metaTitle.trim() || null,
         metaDescription: form.metaDescription.trim() || null,
         ogImage: form.ogImage.trim() || null,
-        tags: tags.length > 0 ? tags : null,
+        tags: form.tags || null,
         isPublished: form.isPublished,
       };
 
@@ -769,12 +788,8 @@ export function AdminBlog() {
             </DialogTitle>
           </DialogHeader>
           <Tabs defaultValue="content" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="content">Content</TabsTrigger>
-              <TabsTrigger value="builder">
-                <LayoutGrid className="mr-2 h-4 w-4" />
-                Page Builder
-              </TabsTrigger>
               <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
             <ScrollArea className="max-h-[calc(95vh-180px)] pr-4">
@@ -803,22 +818,48 @@ export function AdminBlog() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Main Content (Legacy)</Label>
-                  <p className="text-xs text-muted-foreground italic mb-2">Note: For new posts, we recommend using the Page Builder tab.</p>
+                  <Label>Content</Label>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageUpload}
+                        disabled={uploading}
+                      />
+                      <Button type="button" variant="outline" size="sm" disabled={uploading} asChild>
+                        <span>
+                          <Upload className="mr-1.5 h-3.5 w-3.5" />
+                          {uploading ? 'Uploading...' : 'Insert Image'}
+                        </span>
+                      </Button>
+                    </label>
+                    <span className="text-xs text-muted-foreground">Uploads image and inserts HTML at cursor</span>
+                  </div>
                   <Textarea
-                    placeholder="Write blog post content here..."
+                    placeholder="Write blog post content with HTML..."
                     value={form.content}
                     onChange={(e) => setForm(prev => ({ ...prev, content: e.target.value }))}
-                    className="min-h-[300px]"
+                    className="min-h-[400px] font-mono text-sm"
                   />
+                  <details className="text-xs text-muted-foreground">
+                    <summary className="cursor-pointer hover:text-foreground transition-colors font-medium">
+                      Supported HTML tags
+                    </summary>
+                    <div className="mt-2 p-3 border rounded-lg bg-muted/30 space-y-1.5">
+                      <p><strong>Headings:</strong> <code>{'<h2>'}</code> <code>{'<h3>'}</code> <code>{'<h4>'}</code></p>
+                      <p><strong>Text:</strong> <code>{'<p>'}</code> <code>{'<strong>'}</code> <code>{'<em>'}</code> <code>{'<u>'}</code> <code>{'<s>'}</code> <code>{'<br>'}</code></p>
+                      <p><strong>Lists:</strong> <code>{'<ul>'}</code> <code>{'<ol>'}</code> <code>{'<li>'}</code></p>
+                      <p><strong>Links:</strong> <code>{'<a href="...">'}</code></p>
+                      <p><strong>Images:</strong> <code>{'<img src="..." alt="..." />'}</code> (use Insert Image button)</p>
+                      <p><strong>Video:</strong> <code>{'<iframe src="..." allowfullscreen>'}</code></p>
+                      <p><strong>Code:</strong> <code>{'<pre><code>'}</code> <code>{'<code>'}</code></p>
+                      <p><strong>Blockquote:</strong> <code>{'<blockquote>'}</code></p>
+                      <p><strong>Tables:</strong> <code>{'<table>'}</code> <code>{'<thead>'}</code> <code>{'<tbody>'}</code> <code>{'<tr>'}</code> <code>{'<th>'}</code> <code>{'<td>'}</code></p>
+                    </div>
+                  </details>
                 </div>
-              </TabsContent>
-
-              <TabsContent value="builder" className="pt-4">
-                <PageBuilder
-                  blocks={form.blocks}
-                  onChange={(blocks) => setForm(prev => ({ ...prev, blocks }))}
-                />
               </TabsContent>
 
               <TabsContent value="settings" className="space-y-4 pt-4">
@@ -857,15 +898,44 @@ export function AdminBlog() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="post-cover">Cover Image URL</Label>
-                  <Input
-                    id="post-cover"
-                    placeholder="https://example.com/cover.jpg"
-                    value={form.coverImage}
-                    onChange={(e) =>
-                      setForm(prev => ({ ...prev, coverImage: e.target.value }))
-                    }
-                  />
+                  <Label>Cover Image</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="post-cover"
+                      placeholder="https://example.com/cover.jpg"
+                      value={form.coverImage}
+                      onChange={(e) =>
+                        setForm(prev => ({ ...prev, coverImage: e.target.value }))
+                      }
+                      className="flex-1"
+                    />
+                    <label className="cursor-pointer shrink-0">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const fd = new FormData();
+                          fd.append('file', file);
+                          const res = await adminFetch('/api/upload', { method: 'POST', body: fd });
+                          if (res.ok) {
+                            const data = await res.json();
+                            setForm(prev => ({ ...prev, coverImage: data.url }));
+                            toast.success('Cover image uploaded');
+                          } else {
+                            toast.error('Upload failed');
+                          }
+                          e.target.value = '';
+                        }}
+                        disabled={uploading}
+                      />
+                      <Button type="button" variant="outline" size="sm" disabled={uploading} asChild>
+                        <span><Upload className="mr-1.5 h-3.5 w-3.5" />Upload</span>
+                      </Button>
+                    </label>
+                  </div>
                   {form.coverImage && (
                     <img
                       src={form.coverImage}

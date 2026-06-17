@@ -145,7 +145,9 @@ export async function POST(request: NextRequest) {
         metaDescription: validatedData.metaDescription || null,
         ogImage: validatedData.ogImage || null,
         blocks,
-        tags: validatedData.tags ? JSON.stringify(validatedData.tags) : null,
+        tags: validatedData.tags
+          ? JSON.stringify(validatedData.tags.split(',').map((t: string) => t.trim()).filter(Boolean))
+          : null,
         isPublished: validatedData.isPublished ?? false,
         publishedAt: validatedData.isPublished ? new Date() : null,
         ...(storeId ? { storeId } : {}),
