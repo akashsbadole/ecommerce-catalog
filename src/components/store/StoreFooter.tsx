@@ -82,10 +82,10 @@ export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
         <div key={item.id} className="space-y-2">
           <button
             onClick={() => {
-              if (item.page) {
-                onNavigate(item.page, item.slug);
-              } else if (item.url) {
+              if (item.url) {
                 window.open(item.url, "_blank");
+              } else if (item.page) {
+                onNavigate(item.page, item.slug);
               }
             }}
             className="text-sm text-muted-foreground transition-colors hover:text-foreground hover:underline text-left"
