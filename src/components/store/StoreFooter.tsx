@@ -246,6 +246,14 @@ export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
 
         <Separator className="my-8" />
 
+        {(settings?.company_gstin || settings?.company_fssai || settings?.company_cin) && (
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1 mb-6 text-xs text-muted-foreground">
+            {settings.company_gstin && <span>GSTIN: {settings.company_gstin}</span>}
+            {settings.company_fssai && <span>FSSAI: {settings.company_fssai}</span>}
+            {settings.company_cin && <span>CIN: {settings.company_cin}</span>}
+          </div>
+        )}
+
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
           <p className="text-xs text-muted-foreground">
             &copy; {new Date().getFullYear()} {siteName}. All rights reserved.

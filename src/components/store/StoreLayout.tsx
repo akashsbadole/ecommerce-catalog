@@ -14,6 +14,7 @@ import { BackToTop } from "./BackToTop";
 import { CookieConsent } from "./CookieConsent";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { GlobalEnquiryModal } from "./GlobalEnquiryModal";
+import { StickyCtaBar } from "./StickyCtaBar";
 
 interface StoreLayoutProps {
   currentPage: string;
@@ -97,7 +98,7 @@ export function StoreLayout({
       ) : null}
       <StoreHeader onNavigate={onNavigate} />
 
-      <main className="flex-1 pb-16 lg:pb-0">
+      <main className="flex-1">
         {settings
           ? isValidElement(children)
             ? cloneElement(

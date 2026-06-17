@@ -23,6 +23,7 @@ import {
   Download,
   Database,
   Truck,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -102,6 +103,9 @@ const defaultSettings: Settings = {
   b2b_discount_silver: "0.05",
   b2b_discount_gold: "0.10",
   b2b_discount_platinum: "0.15",
+  company_gstin: "",
+  company_fssai: "",
+  company_cin: "",
 };
 
 export function AdminSettings() {
@@ -448,6 +452,54 @@ export function AdminSettings() {
         </CardContent>
       </Card>
 
+      {/* Company Details */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <FileText className="h-4 w-4" />
+            Company Details
+          </CardTitle>
+          <CardDescription>
+            Registration numbers displayed in the footer
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-3">
+          <div className="space-y-2">
+            <Label htmlFor="company_gstin">GSTIN</Label>
+            <Input
+              id="company_gstin"
+              value={settings.company_gstin ?? ""}
+              onChange={(e) =>
+                handleSettingChange("company_gstin", e.target.value)
+              }
+              placeholder="27ABCDE1234F1Z5"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="company_fssai">FSSAI</Label>
+            <Input
+              id="company_fssai"
+              value={settings.company_fssai ?? ""}
+              onChange={(e) =>
+                handleSettingChange("company_fssai", e.target.value)
+              }
+              placeholder="12345678901234"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="company_cin">CIN</Label>
+            <Input
+              id="company_cin"
+              value={settings.company_cin ?? ""}
+              onChange={(e) =>
+                handleSettingChange("company_cin", e.target.value)
+              }
+              placeholder="U01234DL2025PTC123456"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Social Media */}
       <Card>
         <CardHeader>
@@ -650,7 +702,7 @@ export function AdminSettings() {
       </Card>
 
       {/* B2B Settings */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Building2 className="h-4 w-4" />
@@ -857,10 +909,10 @@ export function AdminSettings() {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Catalog / Ecommerce Settings */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Store className="h-4 w-4" />
@@ -938,7 +990,7 @@ export function AdminSettings() {
             />
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Email / SMTP Settings */}
       <Card>

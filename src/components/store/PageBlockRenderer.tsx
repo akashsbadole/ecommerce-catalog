@@ -1289,7 +1289,7 @@ function LeadCaptureBlock({ data }: { data: Record<string, unknown> }) {
 
   return (
     <section className="relative overflow-hidden bg-foreground text-background">
-      <div className="absolute inset-0 bg-gradient-to-br from-brand via-brand-muted to-brand/90" />
+      <div className="absolute inset-0 bg-gradient-to-br from-brand-primary via-brand-primary/80 to-brand-primary" />
       <div className="relative z-10 container mx-auto px-4 py-16">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -1349,7 +1349,7 @@ function LeadCaptureBlock({ data }: { data: Record<string, unknown> }) {
                     className={`space-y-1 ${field.type === "textarea" ? "sm:col-span-2 md:col-span-3" : ""}`}
                   >
                     {field.label && (
-                      <label className="text-xs font-medium text-brand-foreground/80 ml-1">
+                      <label className="text-xs font-medium text-background/80 ml-1">
                         {field.label}
                         {field.required && (
                           <span className="text-rose-400 ml-1">*</span>
@@ -1358,7 +1358,7 @@ function LeadCaptureBlock({ data }: { data: Record<string, unknown> }) {
                     )}
                     {field.type === "select" ? (
                       <Select name={field.name} required={field.required}>
-                        <SelectTrigger className="bg-background/10 border-brand-foreground/20 text-brand-foreground">
+                        <SelectTrigger className="bg-background/10 border-background/20 text-background">
                           <SelectValue placeholder={field.placeholder} />
                         </SelectTrigger>
                         <SelectContent>
@@ -1374,7 +1374,7 @@ function LeadCaptureBlock({ data }: { data: Record<string, unknown> }) {
                         name={field.name}
                         placeholder={field.placeholder}
                         required={field.required}
-                        className="bg-background/10 border-brand-foreground/20 text-brand-foreground placeholder:text-brand-foreground/50"
+                        className="bg-background/10 border-background/20 text-background placeholder:text-background/50"
                         rows={4}
                       />
                     ) : (
@@ -1383,7 +1383,7 @@ function LeadCaptureBlock({ data }: { data: Record<string, unknown> }) {
                         type={field.type}
                         placeholder={field.placeholder}
                         required={field.required}
-                        className="bg-background/10 border-brand-foreground/20 text-brand-foreground placeholder:text-brand-foreground/50"
+                        className="bg-background/10 border-background/20 text-background placeholder:text-background/50"
                       />
                     )}
                   </div>
@@ -1395,21 +1395,21 @@ function LeadCaptureBlock({ data }: { data: Record<string, unknown> }) {
                 name="message"
                 placeholder="Brief requirement or message (optional)"
                 rows={3}
-                className="bg-background/10 border-brand-foreground/20 text-brand-foreground placeholder:text-brand-foreground/50"
+                className="bg-background/10 border-background/20 text-background placeholder:text-background/50"
               />
             )}
             <div className="text-center">
               <Button
                 type="submit"
                 size="lg"
-                className="bg-brand-foreground text-brand hover:bg-brand-foreground/90"
+                className="bg-background text-foreground hover:bg-background/90"
               >
                 {submitText}
                 <Send className="ml-2 h-4 w-4" />
               </Button>
             </div>
             {disclaimer && (
-              <p className="text-xs text-brand-foreground/50 text-center mt-3">
+              <p className="text-xs text-background/50 text-center mt-3">
                 {disclaimer}
               </p>
             )}
