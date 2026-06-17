@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   Plus,
   Pencil,
@@ -12,22 +12,22 @@ import {
   Package,
   ShoppingBag,
   Loader2,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+} from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,8 +37,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { adminFetch } from '@/lib/admin-fetch';
+} from "@/components/ui/alert-dialog";
+import { adminFetch } from "@/lib/admin-fetch";
 
 interface StoreItem {
   id: string;
@@ -70,21 +70,21 @@ interface StoreFormData {
 }
 
 const emptyForm: StoreFormData = {
-  name: '',
-  slug: '',
-  domain: '',
-  description: '',
+  name: "",
+  slug: "",
+  domain: "",
+  description: "",
   settings: {
-    currency: 'INR',
-    tax_rate: '0',
+    currency: "INR",
+    tax_rate: "0",
   },
 };
 
 function generateSlug(name: string): string {
   return name
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
     .substring(0, 40);
 }
 
@@ -108,20 +108,20 @@ export function AdminStores() {
 
   const fetchStores = useCallback(async () => {
     try {
-      const res = await adminFetch('/api/stores');
+      const res = await adminFetch("/api/stores");
       if (res.ok) {
         const data = await res.json();
         setStores(data.stores || []);
         // Determine current store from active store in list
         const active = data.stores?.find(
-          (s: StoreItem) => s.isActive && !s.isPaused
+          (s: StoreItem) => s.isActive && !s.isPaused,
         );
         if (active) setCurrentStoreId(active.id);
       } else {
-        toast.error('Failed to load stores');
+        toast.error("Failed to load stores");
       }
     } catch {
-      toast.error('Failed to load stores');
+      toast.error("Failed to load stores");
     } finally {
       setLoading(false);
     }
@@ -145,24 +145,26 @@ export function AdminStores() {
         const full = data.store;
         let parsedSettings: Record<string, string> = {};
         try {
-          parsedSettings = JSON.parse(full.settings || '{}');
-        } catch { /* ignore */ }
+          parsedSettings = JSON.parse(full.settings || "{}");
+        } catch {
+          /* ignore */
+        }
 
         setEditingStore(store);
         setForm({
           name: full.name,
           slug: full.slug,
-          domain: full.domain || '',
-          description: full.description || '',
+          domain: full.domain || "",
+          description: full.description || "",
           settings: {
-            currency: parsedSettings.currency || 'INR',
-            tax_rate: parsedSettings.tax_rate || '0',
+            currency: parsedSettings.currency || "INR",
+            tax_rate: parsedSettings.tax_rate || "0",
           },
         });
         setFormOpen(true);
       }
     } catch {
-      toast.error('Failed to load store details');
+      toast.error("Failed to load store details");
     }
   };
 
@@ -176,7 +178,7 @@ export function AdminStores() {
 
   const handleSave = async () => {
     if (!form.name.trim() || form.name.trim().length < 2) {
-      toast.error('Store name must be at least 2 characters');
+      toast.error("Store name must be at least 2 characters");
       return;
     }
 
@@ -187,32 +189,32 @@ export function AdminStores() {
         domain: form.domain.trim() || null,
         description: form.description.trim() || null,
         settings: {
-          currency: form.settings.currency || 'INR',
-          tax_rate: form.settings.tax_rate || '0',
+          currency: form.settings.currency || "INR",
+          tax_rate: form.settings.tax_rate || "0",
         },
       };
 
       const url = editingStore
         ? `/api/stores/${editingStore.id}`
-        : '/api/stores';
-      const method = editingStore ? 'PUT' : 'POST';
+        : "/api/stores";
+      const method = editingStore ? "PUT" : "POST";
 
       const res = await adminFetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       if (res.ok) {
-        toast.success(editingStore ? 'Store updated' : 'Store created');
+        toast.success(editingStore ? "Store updated" : "Store created");
         setFormOpen(false);
         fetchStores();
       } else {
         const err = await res.json();
-        toast.error(err.error || 'Failed to save store');
+        toast.error(err.error || "Failed to save store");
       }
     } catch {
-      toast.error('Failed to save store');
+      toast.error("Failed to save store");
     } finally {
       setSaving(false);
     }
@@ -223,17 +225,17 @@ export function AdminStores() {
     setSwitchingId(store.id);
     try {
       const res = await adminFetch(`/api/stores/${store.id}/switch`, {
-        method: 'POST',
+        method: "POST",
       });
       if (res.ok) {
         setCurrentStoreId(store.id);
         toast.success(`Switched to ${store.name}`);
       } else {
         const err = await res.json();
-        toast.error(err.error || 'Failed to switch store');
+        toast.error(err.error || "Failed to switch store");
       }
     } catch {
-      toast.error('Failed to switch store');
+      toast.error("Failed to switch store");
     } finally {
       setSwitchingId(null);
     }
@@ -244,10 +246,10 @@ export function AdminStores() {
     setDeleting(true);
     try {
       const res = await adminFetch(`/api/stores/${deleteStore.id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
       if (res.ok) {
-        toast.success('Store deactivated');
+        toast.success("Store deactivated");
         if (currentStoreId === deleteStore.id) {
           setCurrentStoreId(null);
         }
@@ -255,10 +257,10 @@ export function AdminStores() {
         setDeleteStore(null);
       } else {
         const err = await res.json();
-        toast.error(err.error || 'Failed to delete store');
+        toast.error(err.error || "Failed to delete store");
       }
     } catch {
-      toast.error('Failed to delete store');
+      toast.error("Failed to delete store");
     } finally {
       setDeleting(false);
     }
@@ -325,7 +327,10 @@ export function AdminStores() {
                 </div>
               </div>
               <div className="text-right text-sm text-emerald-700 dark:text-emerald-300">
-                <p className="font-mono">{activeStore.slug}.{process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || 'wcommerce.com'}</p>
+                <p className="font-mono">
+                  {activeStore.slug}.
+                  {process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "wcommerce.com"}
+                </p>
                 {activeStore.domain && (
                   <p className="text-xs opacity-75">{activeStore.domain}</p>
                 )}
@@ -361,9 +366,9 @@ export function AdminStores() {
                 key={store.id}
                 className={`transition-all ${
                   isCurrent
-                    ? 'ring-2 ring-emerald-500 border-emerald-300 dark:border-emerald-700'
-                    : 'hover:border-muted-foreground/30'
-                } ${!store.isActive ? 'opacity-60' : ''}`}
+                    ? "ring-2 ring-emerald-500 border-emerald-300 dark:border-emerald-700"
+                    : "hover:border-muted-foreground/30"
+                } ${!store.isActive ? "opacity-60" : ""}`}
               >
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between mb-3">
@@ -389,7 +394,9 @@ export function AdminStores() {
                     <div className="flex items-center gap-1.5">
                       <Globe className="h-3.5 w-3.5 shrink-0" />
                       <span className="font-mono text-xs truncate">
-                        {store.slug}.{process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || 'wcommerce.com'}
+                        {store.slug}.
+                        {process.env.NEXT_PUBLIC_PLATFORM_DOMAIN ||
+                          "wcommerce.com"}
                       </span>
                     </div>
                     {store.domain && (
@@ -424,7 +431,7 @@ export function AdminStores() {
                         ) : (
                           <ArrowRightLeft className="mr-1.5 h-3.5 w-3.5" />
                         )}
-                        {isSwitching ? 'Switching...' : 'Switch'}
+                        {isSwitching ? "Switching..." : "Switch"}
                       </Button>
                     )}
                     <Button
@@ -456,7 +463,7 @@ export function AdminStores() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {editingStore ? 'Edit Store' : 'Create Store'}
+              {editingStore ? "Edit Store" : "Create Store"}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -466,7 +473,7 @@ export function AdminStores() {
               </Label>
               <Input
                 id="store-name"
-                placeholder="My Store"
+                placeholder="Purva Bites"
                 value={form.name}
                 onChange={(e) => handleNameChange(e.target.value)}
               />
@@ -485,8 +492,8 @@ export function AdminStores() {
               />
               <p className="text-xs text-muted-foreground">
                 {editingStore
-                  ? 'Slug cannot be changed after creation'
-                  : `Auto-generated from name. Your store will be at {slug}.${process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || 'wcommerce.com'}`}
+                  ? "Slug cannot be changed after creation"
+                  : `Auto-generated from name. Your store will be at {slug}.${process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "wcommerce.com"}`}
               </p>
             </div>
 
@@ -562,24 +569,27 @@ export function AdminStores() {
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
               {saving
-                ? 'Saving...'
+                ? "Saving..."
                 : editingStore
-                  ? 'Update Store'
-                  : 'Create Store'}
+                  ? "Update Store"
+                  : "Create Store"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteStore} onOpenChange={() => setDeleteStore(null)}>
+      <AlertDialog
+        open={!!deleteStore}
+        onOpenChange={() => setDeleteStore(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Store</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to deactivate &quot;{deleteStore?.name}&quot;?
-              This store will no longer be accessible. This action can be
-              reversed by contacting support.
+              Are you sure you want to deactivate &quot;{deleteStore?.name}
+              &quot;? This store will no longer be accessible. This action can
+              be reversed by contacting support.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -589,7 +599,7 @@ export function AdminStores() {
               disabled={deleting}
               className="bg-rose-600 hover:bg-rose-700"
             >
-              {deleting ? 'Deleting...' : 'Deactivate Store'}
+              {deleting ? "Deleting..." : "Deactivate Store"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

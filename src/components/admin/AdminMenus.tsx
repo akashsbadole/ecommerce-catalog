@@ -10,6 +10,7 @@ import {
   Menu as MenuIcon,
   ChevronDown,
   ChevronRight,
+  ChevronUp,
   GripVertical,
   Save,
   X,
@@ -304,6 +305,33 @@ export function AdminMenus() {
     }));
   };
 
+  const moveMenuItem = (id: string, direction: 'up' | 'down') => {
+    setForm(prev => {
+      const newItems = [...prev.items];
+      const idx = newItems.findIndex(i => i.id === id);
+      if (idx === -1) return prev;
+      const item = newItems[idx];
+      // Find adjacent sibling (same parentId) in current array order
+      const step = direction === 'up' ? -1 : 1;
+      let targetIdx = -1;
+      for (let i = idx + step; i >= 0 && i < newItems.length; i += step) {
+        if (newItems[i].parentId === item.parentId) {
+          targetIdx = i;
+          break;
+        }
+      }
+      if (targetIdx === -1) return prev;
+      // Move item to target position
+      newItems.splice(idx, 1);
+      const insertAt = targetIdx > idx ? targetIdx - 1 : targetIdx;
+      newItems.splice(insertAt, 0, item);
+      // Recalculate sortOrder for siblings of the same parent
+      const siblings = newItems.filter(i => i.parentId === item.parentId);
+      siblings.forEach((sib, i) => { sib.sortOrder = i; });
+      return { ...prev, items: newItems };
+    });
+  };
+
   const renderMenuItemForm = (item: MenuItem, level = 0) => {
     const indent = level * 20;
     const isUrl = item.page === 'url';
@@ -339,7 +367,7 @@ export function AdminMenus() {
                </Select>
             </div>
 
-            <div className="col-span-4">
+            <div className="col-span-6">
               {isUrl ? (
                 <Input
                   placeholder="https://..."
@@ -375,15 +403,6 @@ export function AdminMenus() {
               )}
             </div>
 
-            <div className="col-span-2">
-              <Input
-                type="number"
-                placeholder="Order"
-                value={item.sortOrder || 0}
-                onChange={(e) => updateMenuItem(item.id!, { sortOrder: parseInt(e.target.value) || 0 })}
-                className="h-8 text-xs"
-              />
-            </div>
           </div>
           <div className="flex items-center gap-1">
             <div className="flex flex-col items-center gap-1">
@@ -395,6 +414,24 @@ export function AdminMenus() {
               <span className="text-[8px] text-muted-foreground uppercase">Live</span>
             </div>
 
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => moveMenuItem(item.id!, 'up')}
+              title="Move up"
+            >
+              <ChevronUp className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => moveMenuItem(item.id!, 'down')}
+              title="Move down"
+            >
+              <ChevronDown className="h-4 w-4" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -415,11 +452,17 @@ export function AdminMenus() {
           </div>
         </div>
 
-        {item.children && item.children.length > 0 && (
-          <div className="ml-4 space-y-2 border-l pl-4">
-            {item.children.map(child => renderMenuItemForm(child, level + 1))}
-          </div>
-        )}
+        {(() => {
+          const children = form.items
+            .filter(i => i.parentId === item.id)
+            .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+          if (children.length === 0) return null;
+          return (
+            <div className="ml-4 space-y-2 border-l pl-4">
+              {children.map(child => renderMenuItemForm(child, level + 1))}
+            </div>
+          );
+        })()}
       </div>
     );
   };
@@ -632,9 +675,12 @@ export function AdminMenus() {
               </div>
 
               <div className="space-y-3">
-                {form.items.filter(item => !item.parentId).map(item =>
-                  renderMenuItemForm(item)
-                )}
+                {form.items
+                  .filter(item => !item.parentId)
+                  .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+                  .map(item =>
+                    renderMenuItemForm(item)
+                  )}
 
                 {form.items.filter(item => !item.parentId).length === 0 && (
                   <div className="text-center py-8 text-muted-foreground border rounded-lg">

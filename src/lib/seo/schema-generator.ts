@@ -1,76 +1,91 @@
-
-export function generateProductSchema(product: any, siteUrl: string, brandName?: string, currency: string = 'INR') {
+export function generateProductSchema(
+  product: any,
+  siteUrl: string,
+  brandName?: string,
+  currency: string = "INR",
+) {
   const images = (() => {
     try {
-      const arr = JSON.parse(product.images || '[]');
-      return Array.isArray(arr) ? arr.map(img => img.startsWith('http') ? img : `${siteUrl}${img}`) : [];
+      const arr = JSON.parse(product.images || "[]");
+      return Array.isArray(arr)
+        ? arr.map((img) => (img.startsWith("http") ? img : `${siteUrl}${img}`))
+        : [];
     } catch {
       return [];
     }
   })();
 
   const schema: any = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
+    "@context": "https://schema.org",
+    "@type": "Product",
     name: product.name,
     description: product.shortDescription || product.description,
     sku: product.sku,
     image: images,
     brand: {
-      '@type': 'Brand',
-      name: brandName || 'Store'
+      "@type": "Brand",
+      name: brandName || "Store",
     },
     offers: {
-      '@type': 'Offer',
+      "@type": "Offer",
       url: `${siteUrl}/product/${product.slug}`,
       priceCurrency: currency,
       price: product.price,
-      availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'
-    }
+      availability:
+        product.stock > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+    },
   };
 
   // Add custom schema overrides if present
-  if (product.customSchema && product.customSchema !== '{}') {
+  if (product.customSchema && product.customSchema !== "{}") {
     try {
       const overrides = JSON.parse(product.customSchema);
       return { ...schema, ...overrides };
     } catch (e) {
-      console.error('Failed to parse custom schema', e);
+      console.error("Failed to parse custom schema", e);
     }
   }
 
   return schema;
 }
 
-export function generateArticleSchema(post: any, siteUrl: string, brandName?: string) {
-  const name = brandName || 'My Store';
+export function generateArticleSchema(
+  post: any,
+  siteUrl: string,
+  brandName?: string,
+) {
+  const name = brandName;
   const schema: any = {
-    '@context': 'https://schema.org',
-    '@type': 'BlogPosting',
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
     headline: post.title,
     description: post.excerpt,
-    image: post.coverImage.startsWith('http') ? post.coverImage : `${siteUrl}${post.coverImage}`,
+    image: post.coverImage.startsWith("http")
+      ? post.coverImage
+      : `${siteUrl}${post.coverImage}`,
     author: {
-      '@type': 'Organization',
-      name
+      "@type": "Organization",
+      name,
     },
     publisher: {
-      '@type': 'Organization',
+      "@type": "Organization",
       name,
       logo: {
-        '@type': 'ImageObject',
-        url: `${siteUrl}/logo.png`
-      }
+        "@type": "ImageObject",
+        url: `${siteUrl}/logo.png`,
+      },
     },
-    datePublished: post.publishedAt || post.createdAt
+    datePublished: post.publishedAt || post.createdAt,
   };
 
-  if (post.customSchema && post.customSchema !== '{}') {
+  if (post.customSchema && post.customSchema !== "{}") {
     try {
       const overrides = JSON.parse(post.customSchema);
       return { ...schema, ...overrides };
     } catch (e) {
-      console.warn('Failed to parse blog post custom schema:', e);
+      console.warn("Failed to parse blog post custom schema:", e);
     }
   }
 

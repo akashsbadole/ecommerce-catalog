@@ -19,7 +19,7 @@ export const viewport: Viewport = {
   themeColor: "#FFFFFF",
 };
 
-const siteName = process.env.NEXT_PUBLIC_SITE_NAME || "My Store";
+const siteName = process.env.NEXT_PUBLIC_SITE_NAME || "Purva Bites";
 const siteDesc =
   process.env.NEXT_PUBLIC_SITE_DESCRIPTION ||
   "Premium products and exceptional service.";

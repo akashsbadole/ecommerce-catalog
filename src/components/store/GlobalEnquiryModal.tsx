@@ -150,16 +150,20 @@ export function GlobalEnquiryModal() {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Send className="h-5 w-5 text-primary" />
-            {productName ? "Enquire about this product" : "Send us your requirement"}
+            {productName
+              ? "Enquire about this product"
+              : "Send us your requirement"}
           </DialogTitle>
           {productName && (
             <DialogDescription>
               You&apos;re enquiring about:{" "}
-              <span className="font-semibold text-foreground">{productName}</span>
+              <span className="font-semibold text-foreground">
+                {productName}
+              </span>
             </DialogDescription>
           )}
           {!productName && (
@@ -199,10 +203,14 @@ export function GlobalEnquiryModal() {
                 placeholder="1"
                 value={form.quantity}
                 onChange={(e) => setForm({ ...form, quantity: e.target.value })}
-                className={isRFQ ? "border-amber-400 ring-1 ring-amber-400" : ""}
+                className={
+                  isRFQ ? "border-amber-400 ring-1 ring-amber-400" : ""
+                }
               />
               {isRFQ && (
-                <p className="text-xs text-amber-600">Quantity is required for quote requests</p>
+                <p className="text-xs text-amber-600">
+                  Quantity is required for quote requests
+                </p>
               )}
             </div>
           </div>
@@ -231,7 +239,9 @@ export function GlobalEnquiryModal() {
                 <Input
                   placeholder="Acme Corp"
                   value={form.companyName}
-                  onChange={(e) => setForm({ ...form, companyName: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, companyName: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -268,7 +278,9 @@ export function GlobalEnquiryModal() {
                 <Input
                   placeholder="Product interest (optional)"
                   value={form.productInterest}
-                  onChange={(e) => setForm({ ...form, productInterest: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, productInterest: e.target.value })
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -276,7 +288,9 @@ export function GlobalEnquiryModal() {
                 <Input
                   placeholder="Approximate quantity"
                   value={form.quantity}
-                  onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, quantity: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -285,12 +299,20 @@ export function GlobalEnquiryModal() {
           {/* Collapsible Business Details */}
           <Collapsible open={businessOpen} onOpenChange={setBusinessOpen}>
             <CollapsibleTrigger asChild>
-              <Button type="button" variant="outline" className="w-full justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full justify-between"
+              >
                 <span className="flex items-center gap-2">
                   <Building2 className="h-4 w-4" />
                   Business Details
-                  {(form.companyEmail || form.companyPhone || form.companyAddress) && (
-                    <span className="text-xs text-primary font-normal">(filled)</span>
+                  {(form.companyEmail ||
+                    form.companyPhone ||
+                    form.companyAddress) && (
+                    <span className="text-xs text-primary font-normal">
+                      (filled)
+                    </span>
                   )}
                 </span>
                 <ChevronDown className="h-4 w-4 transition-transform duration-200" />
@@ -306,7 +328,9 @@ export function GlobalEnquiryModal() {
                   <Input
                     placeholder="Acme Corp"
                     value={form.companyName}
-                    onChange={(e) => setForm({ ...form, companyName: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, companyName: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -315,7 +339,9 @@ export function GlobalEnquiryModal() {
                     type="email"
                     placeholder="sales@company.com"
                     value={form.companyEmail}
-                    onChange={(e) => setForm({ ...form, companyEmail: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, companyEmail: e.target.value })
+                    }
                   />
                 </div>
               </div>
@@ -326,7 +352,9 @@ export function GlobalEnquiryModal() {
                     type="tel"
                     placeholder="+1 (555) 000-0000"
                     value={form.companyPhone}
-                    onChange={(e) => setForm({ ...form, companyPhone: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, companyPhone: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -334,7 +362,9 @@ export function GlobalEnquiryModal() {
                   <Input
                     placeholder="123 Business St"
                     value={form.companyAddress}
-                    onChange={(e) => setForm({ ...form, companyAddress: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, companyAddress: e.target.value })
+                    }
                   />
                 </div>
               </div>
@@ -376,7 +406,11 @@ export function GlobalEnquiryModal() {
         </form>
 
         <DialogFooter>
-          <Button variant="outline" onClick={closeEnquiryModal} disabled={submitting}>
+          <Button
+            variant="outline"
+            onClick={closeEnquiryModal}
+            disabled={submitting}
+          >
             Cancel
           </Button>
           <Button

@@ -32,6 +32,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getFirstImage } from "@/lib/utils";
 import { formatPrice as libFormatPrice } from "@/lib/pricing";
+import Link from "next/link";
 
 interface StoreHeaderProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -262,23 +263,25 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto flex h-14 items-center justify-between px-4">
           {/* Logo */}
-          <button
-            onClick={() => onNavigate("home")}
-            className="flex items-center gap-2 transition-opacity hover:opacity-80 shrink-0"
-          >
-            {settings?.site_logo ? (
-              <img
-                src={settings.site_logo}
-                alt={settings.site_name || "Logo"}
-                className="h-8 w-auto object-contain"
-              />
-            ) : (
-              <ShoppingBag className="h-6 w-6 text-primary" />
-            )}
-            <span className="text-lg font-bold tracking-tight hidden sm:inline">
-              {settings?.site_name || "My Store"}
-            </span>
-          </button>
+          <Link href={"/"}>
+            <button
+              onClick={() => onNavigate("home")}
+              className="flex items-center gap-2 transition-opacity hover:opacity-80 shrink-0"
+            >
+              {settings?.site_logo ? (
+                <img
+                  src={settings.site_logo}
+                  alt={settings.site_name || "Logo"}
+                  className="h-8 w-auto object-contain"
+                />
+              ) : (
+                <ShoppingBag className="h-6 w-6 text-primary" />
+              )}
+              <span className="text-lg font-bold tracking-tight hidden sm:inline">
+                {settings?.site_name}
+              </span>
+            </button>
+          </Link>
 
           {/* Desktop Navigation - Center */}
           <nav
@@ -286,65 +289,73 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
             role="navigation"
             aria-label="Main navigation"
           >
-            {menuLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-9 w-20 bg-muted animate-pulse rounded" />
-              ))
-            ) : primaryMenuItems.length > 0 ? (
-              primaryMenuItems.map((item) => {
-                const hasChildren = item.children && item.children.length > 0;
-                return (
-                  <div key={item.id} className="relative group">
+            {menuLoading
+              ? Array.from({ length: 5 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-9 w-20 bg-muted animate-pulse rounded"
+                  />
+                ))
+              : primaryMenuItems.length > 0
+                ? primaryMenuItems.map((item) => {
+                    const hasChildren =
+                      item.children && item.children.length > 0;
+                    return (
+                      <div key={item.id} className="relative group">
+                        <Button
+                          variant="ghost"
+                          className="text-sm font-medium px-3"
+                          onClick={() => {
+                            if (item.url) {
+                              window.open(
+                                item.url,
+                                item.openInNewTab ? "_blank" : "_self",
+                              );
+                            } else if (item.page) {
+                              onNavigate(item.page, item.slug);
+                            }
+                          }}
+                        >
+                          {item.label}
+                          {hasChildren && (
+                            <ChevronDown className="ml-1 h-3 w-3" />
+                          )}
+                        </Button>
+                        {hasChildren && (
+                          <div className="absolute top-full left-0 mt-1 w-48 rounded-md bg-popover border shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                            {item.children?.map((child) => (
+                              <button
+                                key={child.id}
+                                className="w-full text-left px-4 py-2 text-sm hover:bg-muted transition-colors"
+                                onClick={() => {
+                                  if (child.url) {
+                                    window.open(
+                                      child.url,
+                                      child.openInNewTab ? "_blank" : "_self",
+                                    );
+                                  } else if (child.page) {
+                                    onNavigate(child.page, child.slug);
+                                  }
+                                }}
+                              >
+                                {child.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                : allNavLinks.map((link) => (
                     <Button
+                      key={link.slug || link.page}
                       variant="ghost"
                       className="text-sm font-medium px-3"
-                      onClick={() => {
-                        if (item.page) {
-                          onNavigate(item.page, item.slug);
-                        } else if (item.url) {
-                          window.open(item.url, item.openInNewTab ? "_blank" : "_self");
-                        }
-                      }}
+                      onClick={() => onNavigate(link.page, link.slug)}
                     >
-                      {item.label}
-                      {hasChildren && (
-                        <ChevronDown className="ml-1 h-3 w-3" />
-                      )}
+                      {link.label}
                     </Button>
-                    {hasChildren && (
-                      <div className="absolute top-full left-0 mt-1 w-48 rounded-md bg-popover border shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                        {item.children?.map((child) => (
-                          <button
-                            key={child.id}
-                            className="w-full text-left px-4 py-2 text-sm hover:bg-muted transition-colors"
-                            onClick={() => {
-                              if (child.page) {
-                                onNavigate(child.page, child.slug);
-                              } else if (child.url) {
-                                window.open(child.url, child.openInNewTab ? "_blank" : "_self");
-                              }
-                            }}
-                          >
-                            {child.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })
-            ) : (
-              allNavLinks.map((link) => (
-                <Button
-                  key={link.slug || link.page}
-                  variant="ghost"
-                  className="text-sm font-medium px-3"
-                  onClick={() => onNavigate(link.page, link.slug)}
-                >
-                  {link.label}
-                </Button>
-              ))
-            )}
+                  ))}
           </nav>
 
           {/* Right: Search + CTA */}
@@ -363,7 +374,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
             <Button
               size="sm"
               className="hidden md:flex text-sm bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 px-4"
-              onClick={() => onNavigate("catalogue")}
+              onClick={() => onNavigate("products")}
             >
               <FileText className="h-4 w-4" />
               Get Bulk Quote
@@ -392,7 +403,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                     ) : (
                       <ShoppingBag className="h-5 w-5 text-primary" />
                     )}
-                    {settings?.site_name || "My Store"}
+                    {settings?.site_name}
                   </SheetTitle>
                 </SheetHeader>
                 <nav
@@ -400,63 +411,74 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                   role="navigation"
                   aria-label="Mobile navigation"
                 >
-                  {menuLoading ? (
-                    Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="h-9 w-full bg-muted animate-pulse rounded" />
-                    ))
-                  ) : primaryMenuItems.length > 0 ? (
-                    primaryMenuItems.map((item) => {
-                      const hasChildren = item.children && item.children.length > 0;
-                      return (
-                        <div key={item.id}>
-                          <SheetClose asChild>
+                  {menuLoading
+                    ? Array.from({ length: 5 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="h-9 w-full bg-muted animate-pulse rounded"
+                        />
+                      ))
+                    : primaryMenuItems.length > 0
+                      ? primaryMenuItems.map((item) => {
+                          const hasChildren =
+                            item.children && item.children.length > 0;
+                          return (
+                            <div key={item.id}>
+                              <SheetClose asChild>
+                                <Button
+                                  variant="ghost"
+                                  className="justify-start text-sm h-9"
+                                  onClick={() => {
+                                    if (item.url) {
+                                      window.open(
+                                        item.url,
+                                        item.openInNewTab ? "_blank" : "_self",
+                                      );
+                                    } else if (item.page) {
+                                      onNavigate(item.page, item.slug);
+                                    }
+                                  }}
+                                >
+                                  {item.label}
+                                </Button>
+                              </SheetClose>
+                              {hasChildren &&
+                                item.children?.map((child) => (
+                                  <SheetClose asChild key={child.id}>
+                                    <Button
+                                      variant="ghost"
+                                      className="justify-start text-sm h-9 pl-8"
+                                      onClick={() => {
+                                        if (child.url) {
+                                          window.open(
+                                            child.url,
+                                            child.openInNewTab
+                                              ? "_blank"
+                                              : "_self",
+                                          );
+                                        } else if (child.page) {
+                                          onNavigate(child.page, child.slug);
+                                        }
+                                      }}
+                                    >
+                                      {child.label}
+                                    </Button>
+                                  </SheetClose>
+                                ))}
+                            </div>
+                          );
+                        })
+                      : allNavLinks.map((link) => (
+                          <SheetClose asChild key={link.slug || link.page}>
                             <Button
                               variant="ghost"
                               className="justify-start text-sm h-9"
-                              onClick={() => {
-                                if (item.page) {
-                                  onNavigate(item.page, item.slug);
-                                } else if (item.url) {
-                                  window.open(item.url, item.openInNewTab ? "_blank" : "_self");
-                                }
-                              }}
+                              onClick={() => onNavigate(link.page, link.slug)}
                             >
-                              {item.label}
+                              {link.label}
                             </Button>
                           </SheetClose>
-                          {hasChildren && item.children?.map((child) => (
-                            <SheetClose asChild key={child.id}>
-                              <Button
-                                variant="ghost"
-                                className="justify-start text-sm h-9 pl-8"
-                                onClick={() => {
-                                  if (child.page) {
-                                    onNavigate(child.page, child.slug);
-                                  } else if (child.url) {
-                                    window.open(child.url, child.openInNewTab ? "_blank" : "_self");
-                                  }
-                                }}
-                              >
-                                {child.label}
-                              </Button>
-                            </SheetClose>
-                          ))}
-                        </div>
-                      );
-                    })
-                  ) : (
-                    allNavLinks.map((link) => (
-                      <SheetClose asChild key={link.slug || link.page}>
-                        <Button
-                          variant="ghost"
-                          className="justify-start text-sm h-9"
-                          onClick={() => onNavigate(link.page, link.slug)}
-                        >
-                          {link.label}
-                        </Button>
-                      </SheetClose>
-                    ))
-                  )}
+                        ))}
 
                   <Separator className="my-2" />
 
@@ -464,7 +486,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                   <SheetClose asChild>
                     <Button
                       className="justify-start text-sm h-9 bg-primary text-primary-foreground"
-                      onClick={() => onNavigate("catalogue")}
+                      onClick={() => onNavigate("products")}
                     >
                       <FileText className="mr-2 h-4 w-4" />
                       Get Bulk Quote

@@ -39,7 +39,7 @@ export function StoreLayout({
   useEffect(() => {
     if (!settings) return;
 
-    const siteName = settings.site_name || "My Store";
+    const siteName = settings.site_name || "Purva Bites";
     const siteDesc =
       settings.site_description || "Premium Products & B2B Wholesale Supplier";
     const contactEmail = settings.contact_email || "";

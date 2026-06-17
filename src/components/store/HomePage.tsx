@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { PageBlockRenderer } from './PageBlockRenderer';
-import type { PageBlock } from '@/lib/page-blocks';
-import { normalizePageBlocks } from '@/lib/page-blocks';
+import { useState, useEffect, useCallback } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PageBlockRenderer } from "./PageBlockRenderer";
+import type { PageBlock } from "@/lib/page-blocks";
+import { normalizePageBlocks } from "@/lib/page-blocks";
 
 interface HomePageProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -12,7 +12,11 @@ interface HomePageProps {
   data?: Record<string, unknown>;
 }
 
-export function HomePage({ onNavigate, settings, data: externalData }: HomePageProps) {
+export function HomePage({
+  onNavigate,
+  settings,
+  data: externalData,
+}: HomePageProps) {
   const [blocks, setBlocks] = useState<PageBlock[] | null>(null);
   const [cmsLoading, setCmsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +31,7 @@ export function HomePage({ onNavigate, settings, data: externalData }: HomePageP
 
     const fetchHomepage = async () => {
       try {
-        const res = await fetch('/api/content-pages?slug=homepage');
+        const res = await fetch("/api/content-pages?slug=homepage");
         if (res.ok) {
           const data = await res.json();
           const pages = data.contentPages || [];
@@ -46,7 +50,6 @@ export function HomePage({ onNavigate, settings, data: externalData }: HomePageP
             return;
           }
         }
-
       } catch {
         // Fall back to empty state
       } finally {
@@ -58,62 +61,73 @@ export function HomePage({ onNavigate, settings, data: externalData }: HomePageP
 
   // SEO
   useEffect(() => {
-    const siteName = settings?.site_name || 'My Store';
+    const siteName = settings?.site_name;
     document.title = `${siteName} - Premium Products & B2B Wholesale Supplier`;
-    let metaEl = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
+    let metaEl = document.querySelector(
+      'meta[name="description"]',
+    ) as HTMLMetaElement | null;
     if (!metaEl) {
-      metaEl = document.createElement('meta');
-      metaEl.setAttribute('name', 'description');
+      metaEl = document.createElement("meta");
+      metaEl.setAttribute("name", "description");
       document.head.appendChild(metaEl);
     }
-    metaEl.setAttribute('content', `${siteName} is a premier manufacturer and dealer of high-quality products, premium dry fruits, and healthy snacks.`);
+    metaEl.setAttribute(
+      "content",
+      `${siteName} is a premier manufacturer and dealer of high-quality products, premium dry fruits, and healthy snacks.`,
+    );
 
     const websiteJsonLd = {
-      '@context': 'https://schema.org',
-      '@type': 'WebSite',
+      "@context": "https://schema.org",
+      "@type": "WebSite",
       name: siteName,
-      url: typeof window !== 'undefined' ? window.location.origin : '',
-      description: 'Premium Products & B2B Wholesale Supplier',
+      url: typeof window !== "undefined" ? window.location.origin : "",
+      description: "Premium Products & B2B Wholesale Supplier",
       potentialAction: {
-        '@type': 'SearchAction',
+        "@type": "SearchAction",
         target: {
-          '@type': 'EntryPoint',
-          urlTemplate: typeof window !== 'undefined' ? `${window.location.origin}/catalogue?search={search_term_string}` : '',
+          "@type": "EntryPoint",
+          urlTemplate:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/catalogue?search={search_term_string}`
+              : "",
         },
-        'query-input': 'required name=search_term_string',
+        "query-input": "required name=search_term_string",
       },
     };
 
     const orgJsonLd = {
-      '@context': 'https://schema.org',
-      '@type': 'Organization',
+      "@context": "https://schema.org",
+      "@type": "Organization",
       name: siteName,
-      description: 'Premium Products & B2B Wholesale Supplier',
-      url: typeof window !== 'undefined' ? window.location.origin : '',
-      logo: typeof window !== 'undefined' ? `${window.location.origin}/logo.png` : '',
+      description: "Premium Products & B2B Wholesale Supplier",
+      url: typeof window !== "undefined" ? window.location.origin : "",
+      logo:
+        typeof window !== "undefined"
+          ? `${window.location.origin}/logo.png`
+          : "",
       contactPoint: {
-        '@type': 'ContactPoint',
-        contactType: 'sales',
-        availableLanguage: ['English', 'Hindi'],
+        "@type": "ContactPoint",
+        contactType: "sales",
+        availableLanguage: ["English", "Hindi"],
       },
     };
 
     const injectScript = (id: string, data: Record<string, unknown>) => {
       const existing = document.getElementById(id);
       if (existing) existing.remove();
-      const script = document.createElement('script');
-      script.type = 'application/ld+json';
+      const script = document.createElement("script");
+      script.type = "application/ld+json";
       script.textContent = JSON.stringify(data);
       script.id = id;
       document.head.appendChild(script);
     };
 
-    injectScript('homepage-website-jsonld', websiteJsonLd);
-    injectScript('homepage-org-jsonld', orgJsonLd);
+    injectScript("homepage-website-jsonld", websiteJsonLd);
+    injectScript("homepage-org-jsonld", orgJsonLd);
 
     return () => {
-      const el1 = document.getElementById('homepage-website-jsonld');
-      const el2 = document.getElementById('homepage-org-jsonld');
+      const el1 = document.getElementById("homepage-website-jsonld");
+      const el2 = document.getElementById("homepage-org-jsonld");
       if (el1) el1.remove();
       if (el2) el2.remove();
     };
@@ -140,7 +154,9 @@ export function HomePage({ onNavigate, settings, data: externalData }: HomePageP
   if (error || (!externalData && (!blocks || blocks.length === 0))) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <p className="text-muted-foreground">Unable to load homepage content.</p>
+        <p className="text-muted-foreground">
+          Unable to load homepage content.
+        </p>
         <p className="mt-2 text-sm text-muted-foreground/70">
           Please ensure the homepage content page exists in the admin panel.
         </p>
@@ -157,7 +173,8 @@ export function HomePage({ onNavigate, settings, data: externalData }: HomePageP
             {(externalData.hero as any)?.title || "Welcome to Our Company"}
           </h1>
           <p className="text-xl text-muted-foreground mb-6">
-            {(externalData.hero as any)?.subtitle || "Your trusted partner for quality products"}
+            {(externalData.hero as any)?.subtitle ||
+              "Your trusted partner for quality products"}
           </p>
           <div className="space-y-8">
             <pre className="text-left text-sm bg-muted p-4 rounded-lg overflow-auto max-h-96">

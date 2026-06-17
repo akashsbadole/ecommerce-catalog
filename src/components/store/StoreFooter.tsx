@@ -38,7 +38,7 @@ export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
   const companyPhone = settings?.site_phone || settings?.contact_phone || "";
   const companyAddress =
     settings?.site_address || settings?.contact_address || "";
-  const siteName = settings?.site_name || "My Store";
+  const siteName = settings?.site_name || "Purva Bites";
 
   const [footerMenus, setFooterMenus] = useState<FooterMenuData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,15 +55,17 @@ export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
         const locations = ["footer_1", "footer_2", "footer_3"];
         const results = await Promise.all(
           locations.map(async (loc) => {
-            const res = await fetch(`/api/menus?location=${loc}`, { cache: 'no-store' });
+            const res = await fetch(`/api/menus?location=${loc}`, {
+              cache: "no-store",
+            });
             if (res.ok) {
               return await res.json();
             }
             return { menu: null, items: [] };
-          })
+          }),
         );
         // Filter out empty columns
-        setFooterMenus(results.filter(r => r.items && r.items.length > 0));
+        setFooterMenus(results.filter((r) => r.items && r.items.length > 0));
       } catch (error) {
         console.error("Failed to fetch footer menus:", error);
       } finally {
@@ -158,16 +160,16 @@ export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
 
           {/* Dynamic Footer Columns */}
           {loading ? (
-             Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} className="space-y-4">
-                   <div className="h-4 w-24 bg-muted animate-pulse rounded" />
-                   <div className="space-y-2">
-                      <div className="h-3 w-32 bg-muted animate-pulse rounded" />
-                      <div className="h-3 w-28 bg-muted animate-pulse rounded" />
-                      <div className="h-3 w-30 bg-muted animate-pulse rounded" />
-                   </div>
+            Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="space-y-4">
+                <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+                <div className="space-y-2">
+                  <div className="h-3 w-32 bg-muted animate-pulse rounded" />
+                  <div className="h-3 w-28 bg-muted animate-pulse rounded" />
+                  <div className="h-3 w-30 bg-muted animate-pulse rounded" />
                 </div>
-             ))
+              </div>
+            ))
           ) : footerMenus.length > 0 ? (
             footerMenus.map((menuData, idx) => (
               <div key={idx} className="space-y-4">
@@ -180,14 +182,26 @@ export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
               </div>
             ))
           ) : (
-             /* Minimal Fallback if no menus at all */
-             <div className="space-y-4">
-                <h3 className="text-sm font-semibold uppercase tracking-wider">Quick Links</h3>
-                <div className="flex flex-col gap-2">
-                   <button onClick={() => onNavigate('home')} className="text-sm text-muted-foreground hover:text-foreground text-left">Home</button>
-                   <button onClick={() => onNavigate('catalogue')} className="text-sm text-muted-foreground hover:text-foreground text-left">Catalogue</button>
-                </div>
-             </div>
+            /* Minimal Fallback if no menus at all */
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold uppercase tracking-wider">
+                Quick Links
+              </h3>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => onNavigate("home")}
+                  className="text-sm text-muted-foreground hover:text-foreground text-left"
+                >
+                  Home
+                </button>
+                <button
+                  onClick={() => onNavigate("catalogue")}
+                  className="text-sm text-muted-foreground hover:text-foreground text-left"
+                >
+                  Catalogue
+                </button>
+              </div>
+            </div>
           )}
 
           {/* Contact Info */}
@@ -234,8 +248,7 @@ export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
 
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
           <p className="text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()}{" "}
-            {siteName}. All rights reserved.
+            &copy; {new Date().getFullYear()} {siteName}. All rights reserved.
           </p>
           <p className="text-xs text-muted-foreground">
             Crafted with care for quality shopping.

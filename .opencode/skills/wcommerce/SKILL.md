@@ -66,6 +66,7 @@ prisma/
 ### SPA Routing Pattern
 
 The storefront uses client-side routing via Zustand (`src/lib/store.ts`):
+
 - `src/app/page.tsx` is the single entry point
 - Store state holds `currentPage` and renders the matching component
 - Pages: home, catalogue, product, blog, cart, checkout, orders, account, contact, quick-order, compare
@@ -75,6 +76,7 @@ Admin and Portal use standard Next.js file-based routing.
 ### Multi-Tenancy
 
 Stores resolved in middleware:
+
 1. Subdomain: `{slug}.wcommerce.com`
 2. Custom domain: `shop.example.com`
 3. Header: `x-store-id`
@@ -102,35 +104,40 @@ Use `scopedWhere()` from `src/lib/store-db.ts` for all store-scoped queries. 5-m
 ### Key Patterns
 
 **Store-scoped queries**:
+
 ```typescript
-import { scopedWhere, getStoreId } from '@/lib/store-db';
+import { scopedWhere, getStoreId } from "@/lib/store-db";
 const storeId = getStoreId(request);
 const where = scopedWhere(storeId, { isActive: true });
 ```
 
 **Admin auth middleware**:
+
 ```typescript
-import { requireAdminAuth } from '@/lib/admin-auth';
+import { requireAdminAuth } from "@/lib/admin-auth";
 const auth = await requireAdminAuth(request);
 if (!auth.success) return auth.response;
 ```
 
 **User auth from Bearer token**:
+
 ```typescript
-import { resolveUserId } from '@/lib/auth-helpers';
+import { resolveUserId } from "@/lib/auth-helpers";
 const userId = await resolveUserId(request);
 ```
 
 **Zustand navigation** (store frontend):
+
 ```typescript
-import { useAppStore } from '@/lib/store';
+import { useAppStore } from "@/lib/store";
 const { navigate } = useAppStore();
-navigate('product', productSlug);
+navigate("product", productSlug);
 ```
 
 **Page blocks** (CMS):
+
 ```typescript
-import { BLOCK_TYPES, getDefaultData } from '@/lib/page-blocks';
+import { BLOCK_TYPES, getDefaultData } from "@/lib/page-blocks";
 // 26 block types: hero, features, cta, testimonials, faq, pricing-table, etc.
 ```
 
@@ -150,7 +157,7 @@ import { BLOCK_TYPES, getDefaultData } from '@/lib/page-blocks';
 2. Export named functions: `GET`, `POST`, `PUT`, `DELETE`
 3. Use `requireAdminAuth(request)` or `resolveUserId(request)` for auth
 4. Use `db` from `@/lib/db` for Prisma queries
-5. Return `NextResponse.json(...)` 
+5. Return `NextResponse.json(...)`
 
 ### Add a new admin tab
 
@@ -173,6 +180,7 @@ npx tsc --noEmit       # Check remaining errors
 ```
 
 Common issues:
+
 - `Property 'X' does not exist on type` -> Field missing from Prisma model
 - `Property 'X' does not exist in type 'YInclude'` -> Relation missing or model name wrong
 - `Object literal may only specify known properties` -> Field doesn't exist in the input type
@@ -191,7 +199,7 @@ JWT_SECRET="<openssl rand -hex 32>"
 
 ```
 NEXT_PUBLIC_SITE_URL="http://localhost:3000"
-NEXT_PUBLIC_SITE_NAME="My Store"
+NEXT_PUBLIC_SITE_NAME="Purva Bites"
 NEXT_PUBLIC_PLATFORM_DOMAIN="wcommerce.com"
 JWT_EXPIRES_IN="7d"
 ```

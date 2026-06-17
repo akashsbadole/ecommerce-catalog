@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     // Handle trashed filtering
     if (trashed === 'true') {
       where.deletedAt = { not: null };
-    } else if (all !== 'true' || trashed === 'false') {
+    } else {
       where.deletedAt = null;
     }
 

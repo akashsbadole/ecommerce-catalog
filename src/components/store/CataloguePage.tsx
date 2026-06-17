@@ -1,25 +1,28 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import Image from 'next/image';
-import { Search, ShoppingCart, X, Eye, Check } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from 'sonner';
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import Image from "next/image";
+import { Search, ShoppingCart, X, Eye, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { QuickViewModal } from './QuickViewModal';
-import { useAppStore } from '@/lib/store';
-import { calculateTieredPrice, formatPrice as libFormatPrice } from '@/lib/pricing';
-import { getFirstImage } from '@/lib/utils';
-import { useContentPage, getPageContentData } from '@/lib/use-page-content';
-import { BLOCK_DEFAULTS } from '@/lib/page-blocks';
+} from "@/components/ui/select";
+import { QuickViewModal } from "./QuickViewModal";
+import { useAppStore } from "@/lib/store";
+import {
+  calculateTieredPrice,
+  formatPrice as libFormatPrice,
+} from "@/lib/pricing";
+import { getFirstImage } from "@/lib/utils";
+import { useContentPage, getPageContentData } from "@/lib/use-page-content";
+import { BLOCK_DEFAULTS } from "@/lib/page-blocks";
 
 interface Category {
   id: string;
@@ -50,28 +53,38 @@ interface CataloguePageProps {
   data?: Record<string, unknown>;
 }
 
-export function CataloguePage({ onNavigate, data: externalData }: CataloguePageProps) {
+export function CataloguePage({
+  onNavigate,
+  data: externalData,
+}: CataloguePageProps) {
   const { auth, settings } = useAppStore();
   const { blocks } = useContentPage("catalogue-page-content");
-  const rawData = getPageContentData(blocks, "catalogue-page-content", BLOCK_DEFAULTS["catalogue-page-content"].defaultData);
+  const rawData = getPageContentData(
+    blocks,
+    "catalogue-page-content",
+    BLOCK_DEFAULTS["catalogue-page-content"].defaultData,
+  );
   const cmsData = externalData ?? rawData;
   const cmsPageTitle = (cmsData.pageTitle as string) || "Product Catalogue";
   const cmsPageDescription = (cmsData.pageDescription as string) || "";
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedCategoryData, setSelectedCategoryData] = useState<Category | null>(null);
-  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
-  const [sortBy, setSortBy] = useState('featured');
+  const [selectedCategoryData, setSelectedCategoryData] =
+    useState<Category | null>(null);
+  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(
+    null,
+  );
+  const [sortBy, setSortBy] = useState("featured");
   const [visibleCount, setVisibleCount] = useState(12);
   const [loadingMore, setLoadingMore] = useState(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const visibleProducts = useMemo(
     () => products.slice(0, visibleCount),
-    [products, visibleCount]
+    [products, visibleCount],
   );
   const hasMore = visibleCount < products.length;
 
@@ -79,9 +92,9 @@ export function CataloguePage({ onNavigate, data: externalData }: CataloguePageP
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (searchQuery) params.set('search', searchQuery);
-      if (selectedCategory) params.set('categoryId', selectedCategory);
-      if (sortBy && sortBy !== 'featured') params.set('sort', sortBy);
+      if (searchQuery) params.set("search", searchQuery);
+      if (selectedCategory) params.set("categoryId", selectedCategory);
+      if (sortBy && sortBy !== "featured") params.set("sort", sortBy);
 
       const res = await fetch(`/api/products?${params.toString()}`);
       if (res.ok) {
@@ -89,7 +102,7 @@ export function CataloguePage({ onNavigate, data: externalData }: CataloguePageP
         setProducts(data.products || []);
       }
     } catch (error) {
-      console.error('Failed to fetch products:', error);
+      console.error("Failed to fetch products:", error);
     } finally {
       setLoading(false);
     }
@@ -99,22 +112,24 @@ export function CataloguePage({ onNavigate, data: externalData }: CataloguePageP
     let cancelled = false;
     async function loadCategories() {
       try {
-        const res = await fetch('/api/categories');
+        const res = await fetch("/api/categories");
         if (res.ok && !cancelled) {
           const data = await res.json();
           setCategories(data.categories || []);
         }
       } catch (error) {
-        console.error('Failed to fetch categories:', error);
+        console.error("Failed to fetch categories:", error);
       }
     }
     loadCategories();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
     if (selectedCategory) {
-      const cat = categories.find(c => c.id === selectedCategory);
+      const cat = categories.find((c) => c.id === selectedCategory);
       setSelectedCategoryData(cat || null);
     } else {
       setSelectedCategoryData(null);
@@ -129,15 +144,22 @@ export function CataloguePage({ onNavigate, data: externalData }: CataloguePageP
   }, [fetchProducts]);
 
   useEffect(() => {
-    const siteName = settings?.site_name || 'My Store';
+    const siteName = settings?.site_name;
     document.title = `${selectedCategoryData?.name || cmsPageTitle} | ${siteName}`;
-    let metaEl = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
+    let metaEl = document.querySelector(
+      'meta[name="description"]',
+    ) as HTMLMetaElement | null;
     if (!metaEl) {
-      metaEl = document.createElement('meta');
-      metaEl.setAttribute('name', 'description');
+      metaEl = document.createElement("meta");
+      metaEl.setAttribute("name", "description");
       document.head.appendChild(metaEl);
     }
-    metaEl.setAttribute('content', cmsPageDescription || selectedCategoryData?.description || `Browse our complete catalogue of premium products.`);
+    metaEl.setAttribute(
+      "content",
+      cmsPageDescription ||
+        selectedCategoryData?.description ||
+        `Browse our complete catalogue of premium products.`,
+    );
   }, [settings, selectedCategoryData, cmsPageTitle, cmsPageDescription]);
 
   useEffect(() => {
@@ -152,19 +174,20 @@ export function CataloguePage({ onNavigate, data: externalData }: CataloguePageP
           }, 300);
         }
       },
-      { rootMargin: '200px' }
+      { rootMargin: "200px" },
     );
     observer.observe(sentinelRef.current);
     return () => observer.disconnect();
   }, [hasMore, loading, products.length]);
 
   const userTier = auth.user?.tier;
-  const formatPrice = (price: number) => libFormatPrice(price, settings?.currency || 'USD');
+  const formatPrice = (price: number) =>
+    libFormatPrice(price, settings?.currency || "USD");
 
   const handleCategorySelect = (categoryId: string | null) => {
     setSelectedCategory(categoryId);
     setVisibleCount(12);
-    setSearchQuery('');
+    setSearchQuery("");
   };
 
   const handleEnquiryClick = (product: Product) => {
@@ -194,10 +217,11 @@ export function CataloguePage({ onNavigate, data: externalData }: CataloguePageP
             <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
               <button
                 onClick={() => handleCategorySelect(null)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors whitespace-nowrap shrink-0 ${!selectedCategory
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-background border-border text-muted-foreground hover:bg-muted'
-                  }`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors whitespace-nowrap shrink-0 ${
+                  !selectedCategory
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-background border-border text-muted-foreground hover:bg-muted"
+                }`}
               >
                 All Products
               </button>
@@ -205,10 +229,11 @@ export function CataloguePage({ onNavigate, data: externalData }: CataloguePageP
                 <button
                   key={cat.id}
                   onClick={() => handleCategorySelect(cat.id)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors whitespace-nowrap shrink-0 ${selectedCategory === cat.id
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-background border-border text-muted-foreground hover:bg-muted'
-                    }`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors whitespace-nowrap shrink-0 ${
+                    selectedCategory === cat.id
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background border-border text-muted-foreground hover:bg-muted"
+                  }`}
                 >
                   {cat.name}
                 </button>
@@ -227,12 +252,18 @@ export function CataloguePage({ onNavigate, data: externalData }: CataloguePageP
               <Input
                 placeholder="Search products by name..."
                 value={searchQuery}
-                onChange={(e) => { setSearchQuery(e.target.value); setVisibleCount(12); }}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setVisibleCount(12);
+                }}
                 className="pl-10 pr-10"
               />
               {searchQuery && (
                 <button
-                  onClick={() => { setSearchQuery(''); setVisibleCount(12); }}
+                  onClick={() => {
+                    setSearchQuery("");
+                    setVisibleCount(12);
+                  }}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   <X className="h-4 w-4" />
@@ -241,7 +272,13 @@ export function CataloguePage({ onNavigate, data: externalData }: CataloguePageP
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">Sort:</span>
-              <Select value={sortBy} onValueChange={(val) => { setSortBy(val); setVisibleCount(12); }}>
+              <Select
+                value={sortBy}
+                onValueChange={(val) => {
+                  setSortBy(val);
+                  setVisibleCount(12);
+                }}
+              >
                 <SelectTrigger className="w-[150px] h-8 text-sm">
                   <SelectValue placeholder="Featured" />
                 </SelectTrigger>
@@ -281,16 +318,28 @@ export function CataloguePage({ onNavigate, data: externalData }: CataloguePageP
               <ShoppingCart className="mx-auto h-12 w-12 text-muted-foreground" />
               <h3 className="mt-4 text-lg font-semibold">No products found</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                Try adjusting your search or filter to find what you&apos;re looking for.
+                Try adjusting your search or filter to find what you&apos;re
+                looking for.
               </p>
               <div className="flex gap-2 justify-center mt-4">
                 {searchQuery && (
-                  <Button variant="outline" onClick={() => { setSearchQuery(''); setVisibleCount(12); }}>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setVisibleCount(12);
+                    }}
+                  >
                     Clear Search
                   </Button>
                 )}
                 {selectedCategory && (
-                  <Button variant="outline" onClick={() => { handleCategorySelect(null); }}>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      handleCategorySelect(null);
+                    }}
+                  >
                     Clear Filter
                   </Button>
                 )}
@@ -300,17 +349,26 @@ export function CataloguePage({ onNavigate, data: externalData }: CataloguePageP
             <>
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm text-muted-foreground">
-                  Showing {Math.min(visibleCount, products.length)} of {products.length} products
+                  Showing {Math.min(visibleCount, products.length)} of{" "}
+                  {products.length} products
                 </p>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {visibleProducts.map((product) => {
                   const image = getFirstImage(product.images);
                   return (
-                    <div key={product.id} className="border rounded-xl overflow-hidden bg-background group transition-shadow hover:shadow-lg">
+                    <div
+                      key={product.id}
+                      className="border rounded-xl overflow-hidden bg-background group transition-shadow hover:shadow-lg"
+                    >
                       <div
                         className="relative h-32 bg-muted flex items-center justify-center overflow-hidden cursor-pointer"
-                        onClick={() => onNavigate('category', product.Category?.slug || 'all')}
+                        onClick={() =>
+                          onNavigate(
+                            "category",
+                            product.Category?.slug || "all",
+                          )
+                        }
                       >
                         {image ? (
                           <Image
@@ -320,22 +378,31 @@ export function CataloguePage({ onNavigate, data: externalData }: CataloguePageP
                             className="object-cover transition-transform duration-300 group-hover:scale-105"
                           />
                         ) : (
-                          <span className="text-xs text-muted-foreground">No image</span>
+                          <span className="text-xs text-muted-foreground">
+                            No image
+                          </span>
                         )}
                         <Button
                           variant="secondary"
                           size="icon"
                           className="absolute bottom-2 right-2 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md bg-white/90 hover:bg-white"
-                          onClick={(e) => { e.stopPropagation(); setQuickViewProduct(product); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setQuickViewProduct(product);
+                          }}
                         >
                           <Eye className="h-3.5 w-3.5" />
                         </Button>
-
                       </div>
                       <div className="p-3">
                         <h3
                           className="text-sm font-semibold mb-1 cursor-pointer hover:text-primary transition-colors line-clamp-1"
-                          onClick={() => onNavigate('category', product.Category?.slug || 'all')}
+                          onClick={() =>
+                            onNavigate(
+                              "category",
+                              product.Category?.slug || "all",
+                            )
+                          }
                         >
                           {product.name}
                         </h3>
@@ -364,14 +431,16 @@ export function CataloguePage({ onNavigate, data: externalData }: CataloguePageP
                     onClick={() => {
                       setLoadingMore(true);
                       setTimeout(() => {
-                        setVisibleCount((prev) => Math.min(prev + 12, products.length));
+                        setVisibleCount((prev) =>
+                          Math.min(prev + 12, products.length),
+                        );
                         setLoadingMore(false);
                       }, 300);
                     }}
                     disabled={loadingMore}
                     className="rounded-full px-6"
                   >
-                    {loadingMore ? 'Loading...' : 'Load more products ↓'}
+                    {loadingMore ? "Loading..." : "Load more products ↓"}
                   </Button>
                 </div>
               )}
@@ -389,7 +458,9 @@ export function CataloguePage({ onNavigate, data: externalData }: CataloguePageP
         <QuickViewModal
           product={quickViewProduct}
           open={!!quickViewProduct}
-          onOpenChange={(open) => { if (!open) setQuickViewProduct(null); }}
+          onOpenChange={(open) => {
+            if (!open) setQuickViewProduct(null);
+          }}
           onNavigate={onNavigate}
         />
       )}

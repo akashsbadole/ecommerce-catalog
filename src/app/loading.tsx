@@ -1,4 +1,4 @@
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag } from "lucide-react";
 
 export default function Loading() {
   return (
@@ -13,7 +13,7 @@ export default function Loading() {
         {/* Site Name */}
         <div className="text-center">
           <h1 className="text-xl font-bold tracking-tight">
-            Style<span className="text-emerald-600">Store</span>
+            Purva<span className="text-emerald-600">Bites</span>
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">Loading...</p>
         </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Package, Send, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
+import { getFirstImage } from "@/lib/utils";
 
 interface CategoryPageProps {
   slug: string;
@@ -95,18 +96,16 @@ export function CategoryPage({ slug, onNavigate }: CategoryPageProps) {
         <div className="container mx-auto max-w-6xl px-4 pb-16">
           <div className="grid md:grid-cols-3 gap-6">
             {products.map((product) => {
-              const images = product.images
-                ? product.images.split(",").filter(Boolean)
-                : [];
+              const image = getFirstImage(product.images);
               return (
                 <div
                   key={product.id}
                   className="border rounded-xl overflow-hidden bg-background transition-shadow hover:shadow-md"
                 >
                   <div className="relative h-56 bg-muted overflow-hidden">
-                    {images[0] ? (
+                    {image ? (
                       <img
-                        src={images[0]}
+                        src={image}
                         alt={product.name}
                         className="w-full h-full object-cover"
                       />

@@ -5,37 +5,38 @@
  * Run with: npx tsx scripts/migrate-to-multitenant.ts
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🔄 Starting multi-tenancy migration...\n');
+  console.log("🔄 Starting multi-tenancy migration...\n");
 
   // 1. Create default store
-  console.log('1. Creating default store...');
+  console.log("1. Creating default store...");
   const defaultStore = await prisma.store.upsert({
-    where: { slug: 'default' },
+    where: { slug: "default" },
     update: {},
     create: {
-      name: 'Default Store',
-      slug: 'default',
-      ownerUserId: (await prisma.user.findFirst({ where: { role: 'admin' } }))?.id || '',
+      name: "Default Store",
+      slug: "default",
+      ownerUserId:
+        (await prisma.user.findFirst({ where: { role: "admin" } }))?.id || "",
       settings: JSON.stringify({
-        currency: process.env.STORE_CURRENCY || 'USD',
-        tax_rate: '0',
-        site_name: process.env.NEXT_PUBLIC_SITE_NAME || 'My Store',
+        currency: process.env.STORE_CURRENCY || "USD",
+        tax_rate: "0",
+        site_name: process.env.NEXT_PUBLIC_SITE_NAME,
       }),
       theme: JSON.stringify({
-        primaryColor: '#10b981',
-        accentColor: '#3b82f6',
+        primaryColor: "#10b981",
+        accentColor: "#3b82f6",
       }),
     },
   });
   console.log(`   ✅ Default store created: ${defaultStore.id}\n`);
 
   // 2. Migrate products
-  console.log('2. Migrating products...');
+  console.log("2. Migrating products...");
   const products = await prisma.product.updateMany({
     where: { storeId: null },
     data: { storeId: defaultStore.id },
@@ -43,7 +44,7 @@ async function main() {
   console.log(`   ✅ ${products.count} products migrated\n`);
 
   // 3. Migrate categories
-  console.log('3. Migrating categories...');
+  console.log("3. Migrating categories...");
   const categories = await prisma.category.updateMany({
     where: { storeId: null },
     data: { storeId: defaultStore.id },
@@ -51,7 +52,7 @@ async function main() {
   console.log(`   ✅ ${categories.count} categories migrated\n`);
 
   // 4. Migrate orders
-  console.log('4. Migrating orders...');
+  console.log("4. Migrating orders...");
   const orders = await prisma.order.updateMany({
     where: { storeId: null },
     data: { storeId: defaultStore.id },
@@ -59,7 +60,7 @@ async function main() {
   console.log(`   ✅ ${orders.count} orders migrated\n`);
 
   // 5. Migrate coupons
-  console.log('5. Migrating coupons...');
+  console.log("5. Migrating coupons...");
   const coupons = await prisma.coupon.updateMany({
     where: { storeId: null },
     data: { storeId: defaultStore.id },
@@ -67,7 +68,7 @@ async function main() {
   console.log(`   ✅ ${coupons.count} coupons migrated\n`);
 
   // 6. Migrate blog posts
-  console.log('6. Migrating blog posts...');
+  console.log("6. Migrating blog posts...");
   const blogPosts = await prisma.blogPost.updateMany({
     where: { storeId: null },
     data: { storeId: defaultStore.id },
@@ -75,7 +76,7 @@ async function main() {
   console.log(`   ✅ ${blogPosts.count} blog posts migrated\n`);
 
   // 7. Migrate banners
-  console.log('7. Migrating banners...');
+  console.log("7. Migrating banners...");
   const banners = await prisma.banner.updateMany({
     where: { storeId: null },
     data: { storeId: defaultStore.id },
@@ -83,7 +84,7 @@ async function main() {
   console.log(`   ✅ ${banners.count} banners migrated\n`);
 
   // 8. Migrate content pages
-  console.log('8. Migrating content pages...');
+  console.log("8. Migrating content pages...");
   const pages = await prisma.contentPage.updateMany({
     where: { storeId: null },
     data: { storeId: defaultStore.id },
@@ -91,7 +92,7 @@ async function main() {
   console.log(`   ✅ ${pages.count} content pages migrated\n`);
 
   // 9. Migrate enquiries
-  console.log('9. Migrating enquiries...');
+  console.log("9. Migrating enquiries...");
   const enquiries = await prisma.enquiry.updateMany({
     where: { storeId: null },
     data: { storeId: defaultStore.id },
@@ -99,7 +100,7 @@ async function main() {
   console.log(`   ✅ ${enquiries.count} enquiries migrated\n`);
 
   // 10. Migrate media
-  console.log('10. Migrating media...');
+  console.log("10. Migrating media...");
   const media = await prisma.media.updateMany({
     where: { storeId: null },
     data: { storeId: defaultStore.id },
@@ -107,7 +108,7 @@ async function main() {
   console.log(`   ✅ ${media.count} media files migrated\n`);
 
   // 11. Migrate redirects
-  console.log('11. Migrating redirects...');
+  console.log("11. Migrating redirects...");
   const redirects = await prisma.redirect.updateMany({
     where: { storeId: null },
     data: { storeId: defaultStore.id },
@@ -115,7 +116,7 @@ async function main() {
   console.log(`   ✅ ${redirects.count} redirects migrated\n`);
 
   // 12. Migrate site settings (keep as global, but also copy to store)
-  console.log('12. Migrating site settings...');
+  console.log("12. Migrating site settings...");
   const globalSettings = await prisma.siteSetting.findMany({
     where: { storeId: null },
   });
@@ -131,11 +132,13 @@ async function main() {
       },
     });
   }
-  console.log(`   ✅ ${globalSettings.length} settings copied to default store\n`);
+  console.log(
+    `   ✅ ${globalSettings.length} settings copied to default store\n`,
+  );
 
   // 13. Set admin user's current store
-  console.log('13. Setting admin user current store...');
-  const admin = await prisma.user.findFirst({ where: { role: 'admin' } });
+  console.log("13. Setting admin user current store...");
+  const admin = await prisma.user.findFirst({ where: { role: "admin" } });
   if (admin) {
     await prisma.user.update({
       where: { id: admin.id },
@@ -144,16 +147,17 @@ async function main() {
     console.log(`   ✅ Admin user (${admin.email}) linked to default store\n`);
   }
 
-  console.log('🎉 Migration complete!');
+  console.log("🎉 Migration complete!");
   console.log(`\nDefault store ID: ${defaultStore.id}`);
   console.log(`Default store slug: ${defaultStore.slug}`);
-  const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || 'wcommerce.com';
+  const platformDomain =
+    process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "wcommerce.com";
   console.log(`\nAccess your store at: ${defaultStore.slug}.${platformDomain}`);
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Migration failed:', e);
+    console.error("❌ Migration failed:", e);
     process.exit(1);
   })
   .finally(async () => {

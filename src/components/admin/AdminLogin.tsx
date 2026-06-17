@@ -1,27 +1,45 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { ShoppingBag, ArrowLeft, Eye, EyeOff, Loader2, KeyRound, ArrowRight, Building2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState } from "react";
+import {
+  ShoppingBag,
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  Loader2,
+  KeyRound,
+  ArrowRight,
+  Building2,
+} from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface AdminLoginProps {
-  onLogin: (user: { id: string; email: string; name: string; role: string }, token?: string) => void;
+  onLogin: (
+    user: { id: string; email: string; name: string; role: string },
+    token?: string,
+  ) => void;
   onNavigate: (page: string) => void;
 }
 
 export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // Forgot password state
   const [showForgot, setShowForgot] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
 
@@ -29,17 +47,17 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
     e.preventDefault();
 
     if (!email || !password) {
-      toast.error('Please enter your email and password');
+      toast.error("Please enter your email and password");
       return;
     }
 
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
-        credentials: 'include',
+        credentials: "include",
       });
 
       if (res.ok) {
@@ -48,17 +66,17 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
           id: data.user?.id || data.User?.id || data.id,
           email: data.user?.email || data.User?.email || data.email,
           name: data.user?.name || data.User?.name || data.name,
-          role: data.user?.role || data.User?.role || data.role || 'viewer',
+          role: data.user?.role || data.User?.role || data.role || "viewer",
         };
         const token = data.token || null;
         onLogin(user, token || undefined);
-        toast.success('Welcome back!');
+        toast.success("Welcome back!");
       } else {
         const data = await res.json();
-        toast.error(data.error || 'Login failed');
+        toast.error(data.error || "Login failed");
       }
     } catch {
-      toast.error('Failed to connect to server');
+      toast.error("Failed to connect to server");
     } finally {
       setLoading(false);
     }
@@ -68,21 +86,23 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
     e.preventDefault();
 
     if (!forgotEmail) {
-      toast.error('Please enter your email address');
+      toast.error("Please enter your email address");
       return;
     }
 
     setForgotLoading(true);
     try {
-      const res = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail }),
       });
 
       if (res.ok) {
         setForgotSent(true);
-        toast.success('If an account exists with that email, you will receive reset instructions.');
+        toast.success(
+          "If an account exists with that email, you will receive reset instructions.",
+        );
       } else {
         // Still show success to avoid revealing email existence
         setForgotSent(true);
@@ -102,7 +122,7 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
         <Button
           variant="ghost"
           className="mb-6"
-          onClick={() => onNavigate('home')}
+          onClick={() => onNavigate("home")}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Store
@@ -139,7 +159,7 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
                   <div className="relative">
                     <Input
                       id="admin-password"
-                      type={showPassword ? 'text' : 'password'}
+                      type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -150,7 +170,9 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                     >
                       {showPassword ? (
                         <EyeOff className="h-4 w-4" />
@@ -171,7 +193,7 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
                       Signing in...
                     </>
                   ) : (
-                    'Sign In'
+                    "Sign In"
                   )}
                 </Button>
               </form>
@@ -181,7 +203,7 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
                 <Button
                   variant="outline"
                   className="w-full border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                  onClick={() => (window.location.href = '/register')}
+                  onClick={() => (window.location.href = "/register")}
                 >
                   <Building2 className="mr-2 h-4 w-4" />
                   Register as B2B Partner
@@ -206,7 +228,8 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
               </div>
               <CardTitle className="text-2xl">Check Your Email</CardTitle>
               <CardDescription>
-                If an account exists with that email, you will receive reset instructions.
+                If an account exists with that email, you will receive reset
+                instructions.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -217,7 +240,7 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
                 onClick={() => {
                   setShowForgot(false);
                   setForgotSent(false);
-                  setForgotEmail('');
+                  setForgotEmail("");
                 }}
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -275,7 +298,7 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
                   type="button"
                   onClick={() => {
                     setShowForgot(false);
-                    setForgotEmail('');
+                    setForgotEmail("");
                   }}
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
@@ -288,7 +311,7 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
         )}
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          My Store CMS &mdash; Admin Panel
+          Purva Bites CMS &mdash; Admin Panel
         </p>
       </div>
     </div>

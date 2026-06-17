@@ -1,13 +1,29 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { ShoppingBag, ArrowLeft, Loader2, Building2, User, Mail, Lock, CheckCircle2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
+import { useState } from "react";
+import {
+  ShoppingBag,
+  ArrowLeft,
+  Loader2,
+  Building2,
+  User,
+  Mail,
+  Lock,
+  CheckCircle2,
+} from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 
 interface B2BRegisterProps {
   onNavigate: (page: string) => void;
@@ -17,45 +33,45 @@ export function B2BRegister({ onNavigate }: B2BRegisterProps) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [form, setForm] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    companyName: '',
-    taxId: '',
-    address: '',
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    companyName: "",
+    taxId: "",
+    address: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (form.password !== form.confirmPassword) {
-      toast.error('Passwords do not match');
+      toast.error("Passwords do not match");
       return;
     }
 
     if (form.password.length < 8) {
-      toast.error('Password must be at least 8 characters');
+      toast.error("Password must be at least 8 characters");
       return;
     }
 
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
 
       if (res.ok) {
         setSuccess(true);
-        toast.success('Registration successful! Please wait for verification.');
+        toast.success("Registration successful! Please wait for verification.");
       } else {
         const data = await res.json();
-        toast.error(data.error || 'Registration failed');
+        toast.error(data.error || "Registration failed");
       }
     } catch {
-      toast.error('Failed to connect to server');
+      toast.error("Failed to connect to server");
     } finally {
       setLoading(false);
     }
@@ -71,17 +87,18 @@ export function B2BRegister({ onNavigate }: B2BRegisterProps) {
             </div>
             <CardTitle className="text-2xl">Registration Pending</CardTitle>
             <CardDescription>
-              Thank you for registering your business with StyleStore.
+              Thank you for registering your business with PurvaBites.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Your account has been created and is now pending verification by our team.
-              We will review your business details and notify you via email once your account is active.
+              Your account has been created and is now pending verification by
+              our team. We will review your business details and notify you via
+              email once your account is active.
             </p>
           </CardContent>
           <CardFooter>
-            <Button className="w-full" onClick={() => onNavigate('home')}>
+            <Button className="w-full" onClick={() => onNavigate("home")}>
               Return to Store
             </Button>
           </CardFooter>
@@ -96,7 +113,7 @@ export function B2BRegister({ onNavigate }: B2BRegisterProps) {
         <Button
           variant="ghost"
           className="mb-6"
-          onClick={() => onNavigate('home')}
+          onClick={() => onNavigate("home")}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Store
@@ -128,7 +145,9 @@ export function B2BRegister({ onNavigate }: B2BRegisterProps) {
                       name="name"
                       placeholder="John Doe"
                       value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      onChange={(e) =>
+                        setForm({ ...form, name: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -140,7 +159,9 @@ export function B2BRegister({ onNavigate }: B2BRegisterProps) {
                       type="email"
                       placeholder="john@company.com"
                       value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      onChange={(e) =>
+                        setForm({ ...form, email: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -154,7 +175,9 @@ export function B2BRegister({ onNavigate }: B2BRegisterProps) {
                       type="password"
                       placeholder="Min. 8 characters"
                       value={form.password}
-                      onChange={(e) => setForm({ ...form, password: e.target.value })}
+                      onChange={(e) =>
+                        setForm({ ...form, password: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -166,7 +189,9 @@ export function B2BRegister({ onNavigate }: B2BRegisterProps) {
                       type="password"
                       placeholder="Repeat password"
                       value={form.confirmPassword}
-                      onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                      onChange={(e) =>
+                        setForm({ ...form, confirmPassword: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -189,18 +214,24 @@ export function B2BRegister({ onNavigate }: B2BRegisterProps) {
                       name="companyName"
                       placeholder="Acme Corporation"
                       value={form.companyName}
-                      onChange={(e) => setForm({ ...form, companyName: e.target.value })}
+                      onChange={(e) =>
+                        setForm({ ...form, companyName: e.target.value })
+                      }
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="reg-tax">Tax ID / Business Registration</Label>
+                    <Label htmlFor="reg-tax">
+                      Tax ID / Business Registration
+                    </Label>
                     <Input
                       id="reg-tax"
                       name="taxId"
                       placeholder="VAT/TIN/EIN"
                       value={form.taxId}
-                      onChange={(e) => setForm({ ...form, taxId: e.target.value })}
+                      onChange={(e) =>
+                        setForm({ ...form, taxId: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -212,7 +243,9 @@ export function B2BRegister({ onNavigate }: B2BRegisterProps) {
                     name="address"
                     placeholder="123 Business Avenue, Suite 100"
                     value={form.address}
-                    onChange={(e) => setForm({ ...form, address: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, address: e.target.value })
+                    }
                     required
                   />
                 </div>
@@ -229,22 +262,22 @@ export function B2BRegister({ onNavigate }: B2BRegisterProps) {
                     Registering...
                   </>
                 ) : (
-                  'Create Partner Account'
+                  "Create Partner Account"
                 )}
               </Button>
             </form>
           </CardContent>
           <CardFooter className="justify-center border-t bg-muted/20 py-4">
             <p className="text-xs text-center text-muted-foreground">
-              By registering, you agree to our Terms of Service and Privacy Policy.
-              All B2B accounts are subject to verification.
+              By registering, you agree to our Terms of Service and Privacy
+              Policy. All B2B accounts are subject to verification.
             </p>
           </CardFooter>
         </Card>
 
         <div className="mt-6 text-center">
           <button
-            onClick={() => (window.location.href = '/admin')}
+            onClick={() => (window.location.href = "/admin")}
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             Already have an account? Sign In
