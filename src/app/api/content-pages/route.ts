@@ -6,6 +6,7 @@ import { contentPageSchema } from '@/lib/validations';
 import { getStoreId } from '@/lib/store-db';
 import { requireAdminAuth } from '@/lib/admin-auth';
 import { normalizeBlocksForStorage } from '@/lib/page-blocks';
+import { PLATFORM_PAGE_SLUGS } from '@/lib/platform-pages';
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,8 +30,13 @@ export async function GET(request: NextRequest) {
       where.slug = slug;
     }
 
+    const skipStoreFilter = PLATFORM_PAGE_SLUGS.has(slug || '');
+
     const contentPages = await db.contentPage.findMany({
-      where: { ...where, ...(storeId ? { storeId } : {}) },
+      where: {
+        ...where,
+        ...(storeId && !skipStoreFilter ? { storeId } : {}),
+      },
       orderBy: { sortOrder: 'asc' },
     });
 

@@ -14,7 +14,7 @@ import {
   Settings,
   ShieldCheck,
 } from "lucide-react";
-import { SharedContactForm } from "./SharedContactForm";
+import { useAppStore } from '@/lib/store';
 import { useContentPage, getBlockData } from "@/lib/use-page-content";
 import { BLOCK_DEFAULTS } from "@/lib/page-blocks";
 
@@ -437,14 +437,13 @@ export function ManufacturingPage({ onNavigate, data: externalData }: Manufactur
               {ctaData.subtitle as string}
             </p>
           )}
-          <div className="max-w-2xl mx-auto">
-            <SharedContactForm
-              initialEnquiryType="contact"
-              variant="inline"
-              categories={categories}
-              bgColor={(ctaData.formBgColor as string) || '#2639ED'}
-              textColor={(ctaData.formTextColor as string) || '#FFFFFF'}
-            />
+          <div className="text-center">
+            <button
+              onClick={() => useAppStore.getState().openEnquiryModal()}
+              className="inline-flex items-center gap-2 bg-white text-primary font-medium px-8 py-3 rounded-md hover:bg-white/90 transition-colors"
+            >
+              Send Enquiry
+            </button>
           </div>
         </div>
       </section>

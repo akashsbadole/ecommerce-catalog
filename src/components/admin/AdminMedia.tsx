@@ -386,7 +386,7 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept=".png,.jpg,.jpeg,.webp"
             multiple
             className="hidden"
             onChange={handleUpload}

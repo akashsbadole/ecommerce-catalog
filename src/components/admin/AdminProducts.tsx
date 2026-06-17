@@ -196,7 +196,7 @@ export function AdminProducts() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [currency, setCurrency] = useState('USD');
+  const [currency, setCurrency] = useState('INR');
 
   // Dialog state
   const [formOpen, setFormOpen] = useState(false);

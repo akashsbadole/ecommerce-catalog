@@ -46,28 +46,7 @@ export function CmsPage({ slug, onNavigate, fallbackBlocks }: CmsPageProps) {
             // unless we really want to seed it.
           }
         }
-        // Page not found — try to seed it
-        const seedRes = await fetch('/api/content-pages/seed', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ slug }),
-        });
-        if (seedRes.ok) {
-          const seedData = await seedRes.json();
-          const created = seedData.results?.find((r: { slug: string; status: string }) => r.slug === slug && r.status === 'created');
-          if (created) {
-            // Re-fetch the created page
-            const refetch = await fetch(`/api/content-pages?slug=${encodeURIComponent(slug)}`, { cache: 'no-store' });
-            if (refetch.ok) {
-              const refetchData = await refetch.json();
-              const pages = refetchData.contentPages || [];
-              if (pages.length > 0 && pages[0].blocks) {
-                const parsed = normalizePageBlocks(pages[0].blocks);
-                setBlocks(parsed);
-              }
-            }
-          }
-        }
+
       } catch {
         // Use fallback blocks if provided
         if (fallbackBlocks) {

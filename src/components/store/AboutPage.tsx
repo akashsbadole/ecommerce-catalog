@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useContentPage, getBlockData } from "@/lib/use-page-content";
 import { BLOCK_DEFAULTS } from "@/lib/page-blocks";
-import { SharedContactForm } from "./SharedContactForm";
+import { useAppStore } from '@/lib/store';
 
 interface AboutPageProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -463,12 +463,12 @@ export function AboutPage({ onNavigate, data: externalData }: AboutPageProps) {
                   {item.desc}
                 </p>
                 {item.useForm ? (
-                  <SharedContactForm
-                    initialEnquiryType="contact"
-                    variant="compact"
-                    bgColor="#FFFFFF"
-                    textColor="#2639ED"
-                  />
+                  <button
+                    onClick={() => useAppStore.getState().openEnquiryModal()}
+                    className="w-full text-xs font-medium bg-white text-primary rounded-md py-2.5 hover:bg-white/90 transition-colors"
+                  >
+                    {item.cta || 'Send Enquiry'}
+                  </button>
                 ) : (
                   <button
                     onClick={() => onNavigate(item.page)}

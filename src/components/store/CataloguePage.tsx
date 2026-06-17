@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Image from 'next/image';
-import { Search, ShoppingCart, X, Package, Eye, GitCompareArrows, Send, Check } from 'lucide-react';
+import { Search, ShoppingCart, X, Eye, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,11 +15,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { QuickViewModal } from './QuickViewModal';
-import { SharedContactForm } from './SharedContactForm';
 import { useAppStore } from '@/lib/store';
 import { calculateTieredPrice, formatPrice as libFormatPrice } from '@/lib/pricing';
 import { getFirstImage } from '@/lib/utils';
-import { useContentPage, getBlockData } from '@/lib/use-page-content';
+import { useContentPage, getPageContentData } from '@/lib/use-page-content';
 import { BLOCK_DEFAULTS } from '@/lib/page-blocks';
 
 interface Category {
@@ -27,6 +26,7 @@ interface Category {
   name: string;
   slug: string;
   description: string | null;
+  image: string | null;
 }
 
 interface Product {
@@ -51,45 +51,24 @@ interface CataloguePageProps {
 }
 
 export function CataloguePage({ onNavigate, data: externalData }: CataloguePageProps) {
-  const { auth, settings, addToCompare, isInCompare, removeFromCompare } = useAppStore();
+  const { auth, settings } = useAppStore();
+  const { blocks } = useContentPage("catalogue-page-content");
+  const rawData = getPageContentData(blocks, "catalogue-page-content", BLOCK_DEFAULTS["catalogue-page-content"].defaultData);
+  const cmsData = externalData ?? rawData;
+  const cmsPageTitle = (cmsData.pageTitle as string) || "Product Catalogue";
+  const cmsPageDescription = (cmsData.pageDescription as string) || "";
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategoryData, setSelectedCategoryData] = useState<Category | null>(null);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [sortBy, setSortBy] = useState('featured');
-
-  // Inline enquiry form state
-  const [enquiryForm, setEnquiryForm] = useState({
-    name: '',
-    company: '',
-    phone: '',
-    email: '',
-    category: '',
-    orderType: '',
-    quantity: '',
-    message: '',
-  });
-  const [enquirySubmitting, setEnquirySubmitting] = useState(false);
-  const [enquiryProductName, setEnquiryProductName] = useState<string | null>(null);
-  const enquiryFormRef = useRef<HTMLDivElement>(null);
-
-  // Infinite scroll state
   const [visibleCount, setVisibleCount] = useState(12);
   const [loadingMore, setLoadingMore] = useState(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  // CMS content data
-  const { blocks: cmsBlocks } = useContentPage('catalogue-page-content');
-  const cmsData = getBlockData(cmsBlocks, 'catalogue-page-content');
-  const pageData =
-    externalData ?? cmsData ?? BLOCK_DEFAULTS['catalogue-page-content'].defaultData;
-  const defaultCategoryInfo = (pageData.categoryInfo || {}) as Record<string, { tags: string[]; desc: string }>;
-  const packagingOptions = (pageData.packagingOptions || []) as Array<{ title: string; desc: string; tag: string; highlight: boolean }>;
-  const categoryTabs = (pageData.categoryTabs || []) as Array<{ id: string; label: string }>;
-
-  // Derived values
   const visibleProducts = useMemo(
     () => products.slice(0, visibleCount),
     [products, visibleCount]
@@ -134,26 +113,33 @@ export function CataloguePage({ onNavigate, data: externalData }: CataloguePageP
   }, []);
 
   useEffect(() => {
+    if (selectedCategory) {
+      const cat = categories.find(c => c.id === selectedCategory);
+      setSelectedCategoryData(cat || null);
+    } else {
+      setSelectedCategoryData(null);
+    }
+  }, [selectedCategory, categories]);
+
+  useEffect(() => {
     const timer = setTimeout(() => {
       fetchProducts();
     }, 300);
     return () => clearTimeout(timer);
   }, [fetchProducts]);
 
-  // SEO
   useEffect(() => {
     const siteName = settings?.site_name || 'My Store';
-    document.title = `Product Catalogue | ${siteName}`;
+    document.title = `${selectedCategoryData?.name || cmsPageTitle} | ${siteName}`;
     let metaEl = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
     if (!metaEl) {
       metaEl = document.createElement('meta');
       metaEl.setAttribute('name', 'description');
       document.head.appendChild(metaEl);
     }
-    metaEl.setAttribute('content', `Browse our complete catalogue of premium products. Wholesale and bulk pricing available for B2B orders.`);
-  }, [settings]);
+    metaEl.setAttribute('content', cmsPageDescription || selectedCategoryData?.description || `Browse our complete catalogue of premium products.`);
+  }, [settings, selectedCategoryData, cmsPageTitle, cmsPageDescription]);
 
-  // Infinite scroll via IntersectionObserver
   useEffect(() => {
     if (!sentinelRef.current || !hasMore) return;
     const observer = new IntersectionObserver(
@@ -173,111 +159,65 @@ export function CataloguePage({ onNavigate, data: externalData }: CataloguePageP
   }, [hasMore, loading, products.length]);
 
   const userTier = auth.user?.tier;
+  const formatPrice = (price: number) => libFormatPrice(price, settings?.currency || 'USD');
 
-  const formatPrice = (price: number) => {
-    return libFormatPrice(price, settings?.currency || 'USD');
-  };
-
-  const getEffectivePrice = (basePrice: number) => {
-    const isTieredEnabled = settings?.b2b_enable_tiered_pricing === 'true';
-    if (!isTieredEnabled) return basePrice;
-    return calculateTieredPrice(basePrice, userTier, settings || undefined);
+  const handleCategorySelect = (categoryId: string | null) => {
+    setSelectedCategory(categoryId);
+    setVisibleCount(12);
+    setSearchQuery('');
   };
 
   const handleEnquiryClick = (product: Product) => {
-    setEnquiryProductName(product.name);
-    setTimeout(() => {
-      enquiryFormRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
+    useAppStore.getState().openEnquiryModal(product.name, product.id);
   };
-
-  const handleQuickView = (product: Product, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setQuickViewProduct(product);
-  };
-
-  const handleCompareToggle = (product: Product, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isInCompare(product.id)) {
-      removeFromCompare(product.id);
-    } else {
-      addToCompare({
-        id: product.id,
-        name: product.name,
-        slug: product.slug,
-        price: product.price,
-        comparePrice: product.comparePrice,
-        images: product.images,
-        stock: 0,
-        sku: null,
-        description: null,
-        shortDescription: product.shortDescription,
-        minOrderQty: product.minOrderQty,
-        Category: product.Category,
-      });
-    }
-  };
-
-  const handleInlineEnquirySubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!enquiryForm.name || !enquiryForm.phone) {
-      toast.error('Please fill in your name and phone number');
-      return;
-    }
-    setEnquirySubmitting(true);
-    try {
-      const res = await fetch('/api/enquiries', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: enquiryForm.name,
-          email: enquiryForm.email || null,
-          phone: enquiryForm.phone,
-          subject: `Bulk/Private Label Enquiry${enquiryForm.category ? ` - ${enquiryForm.category}` : ''}`,
-          message: [
-            enquiryForm.company ? `Company: ${enquiryForm.company}` : '',
-            enquiryForm.category ? `Product category: ${enquiryForm.category}` : '',
-            enquiryForm.orderType ? `Order type: ${enquiryForm.orderType}` : '',
-            enquiryForm.quantity ? `Approx. qty/month: ${enquiryForm.quantity}` : '',
-            enquiryForm.message,
-          ].filter(Boolean).join('\n'),
-          type: 'product',
-        }),
-      });
-      if (res.ok) {
-        toast.success('Enquiry submitted! Our team will respond within 24 hours.', { icon: <Check className="h-4 w-4 text-primary" /> });
-        setEnquiryForm({ name: '', company: '', phone: '', email: '', category: '', orderType: '', quantity: '', message: '' });
-      } else {
-        const data = await res.json();
-        toast.error(data.error || 'Failed to submit enquiry');
-      }
-    } catch {
-      toast.error('Failed to submit enquiry. Please try again.');
-    } finally {
-      setEnquirySubmitting(false);
-    }
-  };
-
-  // Build category info from API categories + defaults
-  const getCategoryInfo = (cat: Category) => {
-    const slug = cat.slug || cat.name.toLowerCase().replace(/\s+/g, '-');
-    const defaults = defaultCategoryInfo[slug];
-    return {
-      name: cat.name,
-      tags: defaults?.tags || ['Available'],
-      desc: cat.description || defaults?.desc || `Explore our range of ${cat.name} products.`,
-    };
-  };
-
-  const activeCategoryInfo = useMemo(() => {
-    if (!selectedCategory) return null;
-    const cat = categories.find(c => c.id === selectedCategory);
-    if (!cat) return null;
-    return getCategoryInfo(cat);
-  }, [selectedCategory, categories]);
 
   return (
     <div className="flex flex-col">
+      {/* Page Header */}
+      <section className="bg-muted/30 border-b py-10 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <h1 className="text-3xl font-bold tracking-tight">
+            {selectedCategoryData?.name || cmsPageTitle}
+          </h1>
+          {(cmsPageDescription || selectedCategoryData?.description) && (
+            <p className="mt-2 text-muted-foreground max-w-3xl leading-relaxed">
+              {selectedCategoryData?.description || cmsPageDescription}
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* Category Tabs */}
+      {categories.length > 0 && (
+        <section className="py-4 px-4 border-b bg-background sticky top-0 z-10">
+          <div className="container mx-auto max-w-6xl">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              <button
+                onClick={() => handleCategorySelect(null)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors whitespace-nowrap shrink-0 ${!selectedCategory
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-background border-border text-muted-foreground hover:bg-muted'
+                  }`}
+              >
+                All Products
+              </button>
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategorySelect(cat.id)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors whitespace-nowrap shrink-0 ${selectedCategory === cat.id
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-background border-border text-muted-foreground hover:bg-muted'
+                    }`}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Search and Sort Bar */}
       <section className="border-b py-4 px-4">
         <div className="container mx-auto max-w-6xl">
@@ -285,7 +225,7 @@ export function CataloguePage({ onNavigate, data: externalData }: CataloguePageP
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search products by name or SKU..."
+                placeholder="Search products by name..."
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setVisibleCount(12); }}
                 className="pl-10 pr-10"
@@ -294,7 +234,6 @@ export function CataloguePage({ onNavigate, data: externalData }: CataloguePageP
                 <button
                   onClick={() => { setSearchQuery(''); setVisibleCount(12); }}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  aria-label="Clear search"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -319,62 +258,6 @@ export function CataloguePage({ onNavigate, data: externalData }: CataloguePageP
           </div>
         </div>
       </section>
-
-      {/* Category Tabs */}
-      <section className="py-5 px-4 border-b">
-        <div className="container mx-auto max-w-6xl">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex gap-2 flex-wrap">
-              {categoryTabs.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    if (cat.id === 'all') {
-                      setSelectedCategory(null);
-                      setVisibleCount(12);
-                    } else {
-                      onNavigate('category', cat.id);
-                    }
-                  }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                    cat.id === 'all' && !selectedCategory
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : cat.id !== 'all'
-                        ? 'bg-background border-border text-muted-foreground hover:bg-muted'
-                        : 'bg-background border-border text-muted-foreground hover:bg-muted'
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-            {!loading && (
-              <p className="text-xs text-muted-foreground">
-                Showing {Math.min(visibleCount, products.length)} of {products.length} products
-                {activeCategoryInfo ? ` in ${activeCategoryInfo.name}` : ''}
-              </p>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Category Hero Strip */}
-      {activeCategoryInfo && (
-        <section className="bg-muted/40 py-6 px-4">
-          <div className="container mx-auto max-w-6xl flex flex-col md:flex-row gap-6 items-center">
-            <div className="w-full md:w-32 h-24 bg-muted rounded-lg flex items-center justify-center text-xs text-muted-foreground flex-shrink-0">
-              Category photo
-            </div>
-            <div className="flex-1">
-              <h2 className="text-xl font-bold mb-1">{activeCategoryInfo.name}</h2>
-              <p className="text-sm text-muted-foreground leading-relaxed">{activeCategoryInfo.desc}</p>
-            </div>
-            <button onClick={() => onNavigate('contact')} className="text-sm bg-primary text-primary-foreground rounded-full px-4 py-2 whitespace-nowrap hover:bg-primary/90 transition-colors">
-              Enquire for this category →
-            </button>
-          </div>
-        </section>
-      )}
 
       {/* Product Grid */}
       <section className="py-10 px-4">
@@ -407,7 +290,7 @@ export function CataloguePage({ onNavigate, data: externalData }: CataloguePageP
                   </Button>
                 )}
                 {selectedCategory && (
-                  <Button variant="outline" onClick={() => { setSelectedCategory(null); setVisibleCount(12); }}>
+                  <Button variant="outline" onClick={() => { handleCategorySelect(null); }}>
                     Clear Filter
                   </Button>
                 )}
@@ -415,10 +298,14 @@ export function CataloguePage({ onNavigate, data: externalData }: CataloguePageP
             </div>
           ) : (
             <>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-muted-foreground">
+                  Showing {Math.min(visibleCount, products.length)} of {products.length} products
+                </p>
+              </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {visibleProducts.map((product) => {
                   const image = getFirstImage(product.images);
-
                   return (
                     <div key={product.id} className="border rounded-xl overflow-hidden bg-background group transition-shadow hover:shadow-lg">
                       <div
@@ -433,59 +320,43 @@ export function CataloguePage({ onNavigate, data: externalData }: CataloguePageP
                             className="object-cover transition-transform duration-300 group-hover:scale-105"
                           />
                         ) : (
-                          <span className="text-xs text-muted-foreground">Product photo</span>
+                          <span className="text-xs text-muted-foreground">No image</span>
                         )}
-                        {/* Quick View Button */}
                         <Button
                           variant="secondary"
                           size="icon"
-                          className="absolute bottom-2 right-2 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md bg-white/90 hover:bg-white"
-                          onClick={(e) => handleQuickView(product, e)}
-                          aria-label={`Quick view ${product.name}`}
+                          className="absolute bottom-2 right-2 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md bg-white/90 hover:bg-white"
+                          onClick={(e) => { e.stopPropagation(); setQuickViewProduct(product); }}
                         >
                           <Eye className="h-3.5 w-3.5" />
                         </Button>
-                        {/* Compare Button */}
-                        <Button
-                          variant="secondary"
-                          size="icon"
-                          className={`absolute bottom-2 right-12 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md ${
-                            isInCompare(product.id)
-                              ? 'bg-primary text-white hover:bg-primary/80'
-                              : 'bg-white/90 hover:bg-white'
-                          }`}
-                          onClick={(e) => handleCompareToggle(product, e)}
-                          aria-label={isInCompare(product.id) ? `Remove ${product.name} from compare` : `Add ${product.name} to compare`}
+
+                      </div>
+                      <div className="p-3">
+                        <h3
+                          className="text-sm font-semibold mb-1 cursor-pointer hover:text-primary transition-colors line-clamp-1"
+                          onClick={() => onNavigate('category', product.Category?.slug || 'all')}
                         >
-                          <GitCompareArrows className="h-3.5 w-3.5" />
+                          {product.name}
+                        </h3>
+                        {product.shortDescription && (
+                          <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                            {product.shortDescription}
+                          </p>
+                        )}
+                        <Button
+                          size="sm"
+                          className="w-full text-xs font-medium"
+                          onClick={() => handleEnquiryClick(product)}
+                        >
+                          Enquire
                         </Button>
                       </div>
-              <div className="p-3">
-                <h3
-                  className="text-sm font-semibold mb-1 cursor-pointer hover:text-primary transition-colors line-clamp-1"
-                  onClick={() => onNavigate('category', product.Category?.slug || 'all')}
-                >
-                  {product.name}
-                </h3>
-                {product.shortDescription && (
-                  <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
-                    {product.shortDescription}
-                  </p>
-                )}
-                <Button
-                  size="sm"
-                  className="w-full bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
-                  onClick={() => handleEnquiryClick(product)}
-                >
-                  Enquire
-                </Button>
-              </div>
                     </div>
                   );
                 })}
               </div>
 
-              {/* Infinite Scroll / Load More */}
               {hasMore && (
                 <div ref={sentinelRef} className="text-center mt-8">
                   <Button
@@ -514,59 +385,11 @@ export function CataloguePage({ onNavigate, data: externalData }: CataloguePageP
         </div>
       </section>
 
-      {/* Packaging Showcase */}
-      <section className="bg-muted/40 py-12 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <h2 className="text-xl font-bold mb-2">Packaging built for bulk & trade</h2>
-          <p className="text-sm text-muted-foreground mb-8">Available in three formats — choose what works for your business</p>
-          <div className="grid md:grid-cols-3 gap-6">
-            {packagingOptions.map((item) => (
-              <div key={item.title} className={`rounded-xl p-5 text-center ${item.highlight ? 'border-2 border-primary bg-background relative' : 'border bg-background'}`}>
-                {item.highlight && <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded whitespace-nowrap">Most requested</span>}
-                <div className="h-24 bg-muted rounded-lg mb-4 flex items-center justify-center text-xs text-muted-foreground">
-                  {item.title} pack photo
-                </div>
-                <h3 className="text-sm font-semibold mb-2">{item.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed mb-3">{item.desc}</p>
-                <span className={`text-[10px] px-2 py-0.5 rounded ${item.highlight ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'}`}>{item.tag}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Inline Enquiry Form replaces modal */}
-      <section
-        id="catalogue-contact-form"
-        ref={enquiryFormRef}
-        className="bg-muted/40 py-12 px-4 border-t"
-      >
-        <div className="container mx-auto max-w-3xl">
-          <div className="bg-background border rounded-xl p-6 shadow-sm">
-            <h3 className="text-lg font-bold mb-1">
-              {enquiryProductName
-                ? `Enquire about ${enquiryProductName}`
-                : 'Send us your bulk enquiry'}
-            </h3>
-            <p className="text-xs text-muted-foreground mb-5">Fill in your details and we'll respond within 24 hours</p>
-            <SharedContactForm
-              initialEnquiryType="product"
-              productContext={enquiryProductName || undefined}
-              variant="inline"
-              categories={categories}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Quick View Modal */}
       {quickViewProduct && (
         <QuickViewModal
           product={quickViewProduct}
           open={!!quickViewProduct}
-          onOpenChange={(open) => {
-            if (!open) setQuickViewProduct(null);
-          }}
+          onOpenChange={(open) => { if (!open) setQuickViewProduct(null); }}
           onNavigate={onNavigate}
         />
       )}

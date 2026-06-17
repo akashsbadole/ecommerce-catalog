@@ -63,6 +63,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { adminFetch } from '@/lib/admin-fetch';
 
 interface Category {
@@ -91,6 +104,7 @@ interface CategoryFormData {
   metaDescription: string;
   customSchema: string;
   parentId: string;
+  productIds: string[];
 }
 
 const emptyForm: CategoryFormData = {
@@ -104,6 +118,7 @@ const emptyForm: CategoryFormData = {
   metaDescription: '',
   customSchema: '',
   parentId: '',
+  productIds: [],
 };
 
 function generateSlug(name: string): string {
@@ -134,6 +149,10 @@ export function AdminCategories() {
   const [bulkAction, setBulkAction] = useState<string | null>(null);
   const [bulkLoading, setBulkLoading] = useState(false);
 
+  // Product picker state
+  const [allProducts, setAllProducts] = useState<{ id: string; name: string }[]>([]);
+  const [productPickerOpen, setProductPickerOpen] = useState(false);
+
   // CSV import/export state
   const [importing, setImporting] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -158,12 +177,24 @@ export function AdminCategories() {
 
   const handleOpenAdd = () => {
     setEditingCategory(null);
-    setForm(emptyForm);
+    setForm({ ...emptyForm, productIds: [] });
     setSeoOpen(false);
     setFormOpen(true);
   };
 
-  const handleOpenEdit = (cat: Category) => {
+  // Fetch all products when form opens
+  useEffect(() => {
+    if (formOpen) {
+      fetch('/api/products?limit=1000')
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data?.products) setAllProducts(data.products.map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })));
+        })
+        .catch(() => {});
+    }
+  }, [formOpen]);
+
+  const handleOpenEdit = async (cat: Category) => {
     setEditingCategory(cat);
     setForm({
       name: cat.name,
@@ -176,9 +207,23 @@ export function AdminCategories() {
       metaDescription: cat.metaDescription || '',
       customSchema: cat.customSchema || '',
       parentId: cat.parentId || '',
+      productIds: [],
     });
     setSeoOpen(!!(cat.metaTitle || cat.metaDescription));
     setFormOpen(true);
+
+    // Fetch products assigned to this category
+    try {
+      const res = await adminFetch(`/api/categories/${cat.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.products) {
+          setForm(prev => ({ ...prev, productIds: data.products.map((p: { id: string }) => p.id) }));
+        }
+      }
+    } catch {
+      // silently fail
+    }
   };
 
   const handleNameChange = (name: string) => {
@@ -197,7 +242,7 @@ export function AdminCategories() {
 
     setSaving(true);
     try {
-      const payload = {
+      const payload: Record<string, unknown> = {
         name: form.name.trim(),
         slug: form.slug.trim() || generateSlug(form.name),
         description: form.description.trim() || null,
@@ -208,6 +253,7 @@ export function AdminCategories() {
         metaDescription: form.metaDescription.trim() || null,
         customSchema: form.customSchema.trim() || null,
         parentId: form.parentId || null,
+        productIds: form.productIds,
       };
 
       const url = editingCategory
@@ -674,6 +720,80 @@ export function AdminCategories() {
               >
                 Active
               </Label>
+            </div>
+
+            {/* Products Picker */}
+            <div className="space-y-2">
+              <Label>Products in this Category</Label>
+              <Popover open={productPickerOpen} onOpenChange={setProductPickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left font-normal h-auto min-h-10"
+                  >
+                    {form.productIds.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {form.productIds.slice(0, 5).map(id => {
+                          const p = allProducts.find(ap => ap.id === id);
+                          return p ? (
+                            <Badge key={id} variant="secondary" className="text-xs">
+                              {p.name}
+                              <button
+                                className="ml-1 hover:text-rose-500"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setForm(prev => ({ ...prev, productIds: prev.productIds.filter(pid => pid !== id) }));
+                                }}
+                              >
+                                ×
+                              </button>
+                            </Badge>
+                          ) : null;
+                        })}
+                        {form.productIds.length > 5 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{form.productIds.length - 5} more
+                          </Badge>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">Select products...</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search products..." />
+                    <CommandList>
+                      <CommandEmpty>No products found.</CommandEmpty>
+                      <CommandGroup className="max-h-48 overflow-y-auto">
+                        {allProducts.map(p => {
+                          const selected = form.productIds.includes(p.id);
+                          return (
+                            <CommandItem
+                              key={p.id}
+                              onSelect={() => {
+                                setForm(prev => ({
+                                  ...prev,
+                                  productIds: selected
+                                    ? prev.productIds.filter(id => id !== p.id)
+                                    : [...prev.productIds, p.id],
+                                }));
+                              }}
+                            >
+                              <Checkbox checked={selected} className="mr-2" />
+                              {p.name}
+                            </CommandItem>
+                          );
+                        })}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              {allProducts.length === 0 && (
+                <p className="text-xs text-muted-foreground">No products available. Create products first.</p>
+              )}
             </div>
 
             <Separator />

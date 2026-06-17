@@ -7,11 +7,9 @@ import { checkRateLimit } from '@/lib/rate-limit';
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_TYPES = [
-  'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
-  'application/pdf',
-  'text/csv',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'application/vnd.ms-excel',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
 ];
 const MAX_FILES_PER_REQUEST = 20;
 

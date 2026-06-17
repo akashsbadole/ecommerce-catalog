@@ -9,11 +9,18 @@ export async function GET(
     const { id } = await params;
     const category = await db.category.findFirst({
       where: { id, deletedAt: null },
+      include: {
+        Product: {
+          where: { deletedAt: null },
+          select: { id: true, name: true },
+          orderBy: { name: 'asc' },
+        },
+      },
     });
     if (!category) {
       return NextResponse.json({ error: 'Category not found' }, { status: 404 });
     }
-    return NextResponse.json({ category });
+    return NextResponse.json({ category, products: category.Product });
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
@@ -71,7 +78,34 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json({ category });
+    // Handle product assignments if productIds provided
+    if (body.productIds !== undefined && Array.isArray(body.productIds)) {
+      // Unassign products no longer in this category
+      await db.product.updateMany({
+        where: { categoryId: id, id: { notIn: body.productIds }, deletedAt: null },
+        data: { categoryId: null },
+      });
+      // Assign selected products to this category
+      if (body.productIds.length > 0) {
+        await db.product.updateMany({
+          where: { id: { in: body.productIds }, deletedAt: null },
+          data: { categoryId: id },
+        });
+      }
+    }
+
+    const updated = await db.category.findFirst({
+      where: { id },
+      include: {
+        Product: {
+          where: { deletedAt: null },
+          select: { id: true, name: true },
+          orderBy: { name: 'asc' },
+        },
+      },
+    });
+
+    return NextResponse.json({ category: updated, products: updated?.Product || [] });
   } catch (error) {
     console.error('Update category error:', error);
     return NextResponse.json(

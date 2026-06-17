@@ -116,7 +116,6 @@ model Product {
   Store             Store?           @relation(fields: [storeId], references: [id])
   ProductVariant    ProductVariant[]
   ProductTier       ProductTier[]
-  CartItem          CartItem[]
   WishlistItem      WishlistItem[]
   OrderItem         OrderItem[]
 
@@ -230,33 +229,6 @@ model OrderItem {
   Product     Product  @relation(fields: [productId], references: [id])
 
   @@index([orderId])
-}
-
-// ─── Cart & Wishlist ───────────────────────────────────────────
-
-model Cart {
-  id        String     @id @default(cuid())
-  userId    String
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  User      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items     CartItem[]
-
-  @@unique([userId])
-}
-
-model CartItem {
-  id        String   @id @default(cuid())
-  cartId    String
-  productId String
-  variantId String?
-  quantity  Int      @default(1)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  Cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  Product   Product  @relation(fields: [productId], references: [id])
-
-  @@unique([cartId, productId, variantId])
 }
 
 model Wishlist {
@@ -520,7 +492,6 @@ model User {
   Store                   Store?               @relation("CurrentUserStore", fields: [currentStoreId], references: [id])
   OwnedStores             Store[]              @relation("StoreOwner")
   Order                   Order[]
-  Cart                    Cart?
   Wishlist                Wishlist?
 }
 

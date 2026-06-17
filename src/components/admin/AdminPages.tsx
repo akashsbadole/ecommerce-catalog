@@ -392,9 +392,9 @@ export function AdminPages() {
                 <TableRow>
                   <TableHead>Title</TableHead>
                   <TableHead className="hidden sm:table-cell">Slug</TableHead>
-                  <TableHead className="hidden lg:table-cell">Sort</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="hidden lg:table-cell">Sort</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

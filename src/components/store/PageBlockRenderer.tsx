@@ -116,10 +116,11 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import type { PageBlock } from "@/lib/page-blocks";
+import { HomePage } from "./HomePage";
 import { AboutPage } from "./AboutPage";
 import { ManufacturingPage } from "./ManufacturingPage";
 import { ContactPage } from "./ContactPage";
-import { CataloguePage } from "./CataloguePage";
+import { ProductsPage } from "./ProductsPage";
 
 // Allowed HTML tags and attributes for sanitized content
 const SANITIZE_OPTIONS = {
@@ -667,9 +668,8 @@ function FaqBlock({ data }: { data: Record<string, unknown> }) {
             >
               <span>{item.question}</span>
               <ChevronDown
-                className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 ${
-                  openIndex === i ? "rotate-180" : ""
-                }`}
+                className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 ${openIndex === i ? "rotate-180" : ""
+                  }`}
               />
             </button>
             {openIndex === i && (
@@ -1991,11 +1991,10 @@ function PricingTableBlock({
           {tiers.map((tier, i) => (
             <div
               key={i}
-              className={`rounded-xl border bg-card p-6 flex flex-col relative ${
-                tier.highlighted
-                  ? "border-primary/50 shadow-lg ring-1 ring-primary/50 scale-105 md:scale-110 z-10"
-                  : "shadow-sm"
-              }`}
+              className={`rounded-xl border bg-card p-6 flex flex-col relative ${tier.highlighted
+                ? "border-primary/50 shadow-lg ring-1 ring-primary/50 scale-105 md:scale-110 z-10"
+                : "shadow-sm"
+                }`}
             >
               {tier.highlighted && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-xs font-semibold px-4 py-1 rounded-full">
@@ -2028,11 +2027,10 @@ function PricingTableBlock({
                     );
                   else onNavigate?.("contact");
                 }}
-                className={`mt-6 w-full rounded-md px-4 py-2.5 text-sm font-medium transition-colors ${
-                  tier.highlighted
-                    ? "bg-primary text-white hover:bg-primary/80"
-                    : "bg-muted text-foreground hover:bg-accent"
-                }`}
+                className={`mt-6 w-full rounded-md px-4 py-2.5 text-sm font-medium transition-colors ${tier.highlighted
+                  ? "bg-primary text-white hover:bg-primary/80"
+                  : "bg-muted text-foreground hover:bg-accent"
+                  }`}
               >
                 {tier.ctaText || "Get started"}
               </button>
@@ -2109,11 +2107,10 @@ function HeroSplitBlock({
                     );
                   }
                 }}
-                className={`text-sm font-medium rounded-full px-6 py-2.5 transition-colors ${
-                  btn.variant === "primary"
-                    ? `hover:opacity-90`
-                    : "bg-white/10 text-gray-300 hover:bg-white/20"
-                }`}
+                className={`text-sm font-medium rounded-full px-6 py-2.5 transition-colors ${btn.variant === "primary"
+                  ? `hover:opacity-90`
+                  : "bg-white/10 text-gray-300 hover:bg-white/20"
+                  }`}
                 style={
                   btn.variant === "primary"
                     ? { backgroundColor: ctaButtonColor, color: ctaTextColor }
@@ -2546,9 +2543,8 @@ function SliderBlock({
       {items.map((item, i) => (
         <div
           key={i}
-          className={`absolute inset-0 transition-opacity duration-1000 ${
-            i === activeIndex ? "opacity-100" : "opacity-0"
-          }`}
+          className={`absolute inset-0 transition-opacity duration-1000 ${i === activeIndex ? "opacity-100" : "opacity-0"
+            }`}
         >
           {item.image ? (
             <img
@@ -2706,31 +2702,25 @@ export function PageBlockRenderer({
 
   const blockElement = (() => {
     switch (type) {
+      // Essential reusable blocks
       case "hero":
         return <HeroBlock data={data} onNavigate={onNavigate} />;
+      case "text":
+        return <TextBlock data={data} />;
+      case "image-gallery":
+        return <ImageGalleryBlock data={data} />;
       case "features":
         return <FeaturesBlock data={data} />;
       case "cta":
         return <CtaBlock data={data} onNavigate={onNavigate} />;
       case "testimonials":
         return <TestimonialsBlock data={data} />;
-      case "image-gallery":
-        return <ImageGalleryBlock data={data} />;
-      case "text":
-        return <TextBlock data={data} />;
       case "spacer":
         return <SpacerBlock data={data} />;
       case "divider":
         return <DividerBlock data={data} />;
       case "products":
-      case "product-carousel":
         return <ProductsBlock data={data} onNavigate={onNavigate} />;
-      case "faq":
-        return <FaqBlock data={data} />;
-      case "slider":
-        return <SliderBlock data={data} onNavigate={onNavigate} />;
-      case "about":
-        return <AboutBlock data={data} onNavigate={onNavigate} />;
       case "trust-bar":
         return <TrustBarBlock data={data} />;
       case "audience-cards":
@@ -2751,45 +2741,21 @@ export function PageBlockRenderer({
         return <PartnerLogosBlock data={data} />;
       case "sticky-cta":
         return <StickyCtaBlock data={data} onNavigate={onNavigate} />;
-      case "blog-grid":
-        return <BlogGridBlock data={data} onNavigate={onNavigate} />;
-      case "pricing-table":
-        return <PricingTableBlock data={data} onNavigate={onNavigate} />;
-      case "hero-split":
-        return <HeroSplitBlock data={data} onNavigate={onNavigate} />;
-      case "timeline":
-        return <TimelineBlock data={data} />;
-      case "metrics-bar":
-        return <MetricsBarBlock data={data} />;
-      case "process-flow":
-        return <ProcessFlowBlock data={data} />;
-      case "packaging-grid":
-        return <PackagingGridBlock data={data} onNavigate={onNavigate} />;
-      case "certification-cards":
-        return <CertificationCardsBlock data={data} />;
-      case "address-cards":
-        return <AddressCardsBlock data={data} onNavigate={onNavigate} />;
-      case "quick-connect":
-        return <QuickConnectBlock data={data} onNavigate={onNavigate} />;
-      case "crm-flow":
-        return <CrmFlowBlock data={data} />;
+      case "faq":
+        return <FaqBlock data={data} />;
+
+      // Page content blocks (fully customizable)
+      case "homepage-content":
+        return <HomePage data={data} onNavigate={onNavigate || (() => { })} />;
       case "about-page-content":
-        return <AboutPage data={data} onNavigate={onNavigate || (() => {})} />;
-      case "mfg-page-content":
-        return (
-          <ManufacturingPage
-            data={data}
-            onNavigate={onNavigate || (() => {})}
-          />
-        );
+        return <AboutPage data={data} onNavigate={onNavigate || (() => { })} />;
+      case "manufacturing-content":
+        return <ManufacturingPage data={data} onNavigate={onNavigate || (() => { })} />;
       case "contact-page-content":
-        return (
-          <ContactPage data={data} onNavigate={onNavigate || (() => {})} />
-        );
-      case "catalogue-page-content":
-        return (
-          <CataloguePage data={data} onNavigate={onNavigate || (() => {})} />
-        );
+        return <ContactPage data={data} onNavigate={onNavigate || (() => { })} />;
+      case "products-page-content":
+        return <ProductsPage data={data} onNavigate={onNavigate || (() => { })} />;
+
       default:
         return null;
     }

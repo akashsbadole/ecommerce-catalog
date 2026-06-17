@@ -12,8 +12,8 @@ import { StoreHeader } from "./StoreHeader";
 import { StoreFooter } from "./StoreFooter";
 import { BackToTop } from "./BackToTop";
 import { CookieConsent } from "./CookieConsent";
-import { CompareBar } from "./CompareBar";
 import { MobileBottomNav } from "./MobileBottomNav";
+import { GlobalEnquiryModal } from "./GlobalEnquiryModal";
 
 interface StoreLayoutProps {
   currentPage: string;
@@ -116,11 +116,9 @@ export function StoreLayout({
         <BackToTop />
       </div>
 
-      <div className="md:mb-16 lg:mb-0">
-        <CompareBar />
-      </div>
-
       <CookieConsent />
+
+      <GlobalEnquiryModal />
     </div>
   );
 }

@@ -32,42 +32,6 @@ export function useContentPage(slug: string) {
         }[] = data.contentPages ?? [];
         const page = pages[0];
         if (!page) {
-          // Not found — attempt to seed the page
-          try {
-            const seedRes = await fetch("/api/content-pages/seed", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ slug }),
-            });
-            if (seedRes.ok) {
-              const seedData = await seedRes.json();
-              const found = seedData.results?.find(
-                (r: { slug: string; status: string }) =>
-                  r.slug === slug && r.status === "created",
-              );
-              if (found) {
-                // Re-fetch after seeding
-                const refetch = await fetch(
-                  `/api/content-pages?slug=${encodeURIComponent(slug)}`,
-                  { cache: "no-store" },
-                );
-                if (refetch.ok) {
-                  const refetchData = await refetch.json();
-                  const refetchedPage = (refetchData.contentPages ?? [])[0];
-                  if (refetchedPage) {
-                    const parsed = normalizePageBlocks(refetchedPage.blocks);
-                    if (!cancelled) {
-                      setBlocks(parsed.length > 0 ? parsed : null);
-                      setLoading(false);
-                      return;
-                    }
-                  }
-                }
-              }
-            }
-          } catch {
-            // seeding failed, fall through to null
-          }
           if (!cancelled) {
             setBlocks(null);
             setLoading(false);

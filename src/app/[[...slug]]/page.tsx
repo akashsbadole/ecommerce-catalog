@@ -7,32 +7,14 @@ import { StoreLayout } from "@/components/store/StoreLayout";
 import { HomePage } from "@/components/store/HomePage";
 import { CataloguePage } from "@/components/store/CataloguePage";
 import { CategoryPage } from "@/components/store/CategoryPage";
+import { ProductsOverviewPage } from "@/components/store/ProductsOverviewPage";
 import { CmsPage } from "@/components/store/CmsPage";
-import { ContentPageView } from "@/components/store/ContentPageView";
-import { BlogPage } from "@/components/store/BlogPage";
-import { BlogPostView } from "@/components/store/BlogPostView";
-import { CartPage } from "@/components/store/CartPage";
-import { WishlistPage } from "@/components/store/WishlistPage";
-import { OrdersPage } from "@/components/store/OrdersPage";
-import { OrderDetailPage } from "@/components/store/OrderDetailPage";
-import { AccountPage } from "@/components/store/AccountPage";
-import { CheckoutPage } from "@/components/store/CheckoutPage";
-import { QuickOrderPage } from "@/components/store/QuickOrderPage";
-import { ComparePage } from "@/components/store/ComparePage";
-import { AboutPage } from "@/components/store/AboutPage";
-import { ManufacturingPage } from "@/components/store/ManufacturingPage";
-import { ContactPage } from "@/components/store/ContactPage";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import BuyerPortalPage from "@/app/portal/page";
 
-const CMS_PAGES = ["catalogue"];
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export default function CatchAllPage() {
   const currentPage = useAppStore((s) => s.currentPage);
   const navigate = useAppStore((s) => s.navigate);
-  const auth = useAppStore((s) => s.auth);
-  const fetchCart = useAppStore((s) => s.fetchCart);
-  const fetchWishlist = useAppStore((s) => s.fetchWishlist);
 
   const pathname = usePathname();
   const params = useParams();
@@ -40,7 +22,13 @@ export default function CatchAllPage() {
 
   const fullPath = useMemo(() => {
     const slugParam = params.slug;
-    const slugPath = (Array.isArray(slugParam) ? slugParam : slugParam ? [slugParam] : []).join("/") || "";
+    const slugPath =
+      (Array.isArray(slugParam)
+        ? slugParam
+        : slugParam
+          ? [slugParam]
+          : []
+      ).join("/") || "";
     return slugPath ? `/${slugPath}` : "/";
   }, [params.slug]);
 
@@ -53,44 +41,16 @@ export default function CatchAllPage() {
         else navigate("catalogue");
       } else if (segments[0] === "product") {
         if (segments[1]) {
-          fetch(`/api/products/${segments[1]}`)
-            .then((r) => r.ok ? r.json() : null)
-            .then((product) => {
-              const catSlug = product?.category?.slug || product?.Category?.slug;
-              navigate(catSlug ? "category" : "catalogue", catSlug || undefined);
-            })
-            .catch(() => navigate("catalogue"));
+          navigate("category", segments[1]);
+        } else {
+          navigate("products");
         }
       } else if (segments[0] === "about") {
-        navigate("about");
+        navigate("content-page", "about-us");
       } else if (segments[0] === "manufacturing") {
-        navigate("manufacturing");
-      } else if (segments[0] === "products") {
-        navigate("products");
+        navigate("content-page", "manufacturing");
       } else if (segments[0] === "contact") {
-        navigate("contact");
-      } else if (segments[0] === "blog") {
-        if (segments[1]) navigate("blog-post", segments[1]);
-        else navigate("blog");
-      } else if (segments[0] === "portal") {
-        navigate("portal");
-      } else if (segments[0] === "compare") {
-        navigate("compare");
-      } else if (segments[0] === "cart") {
-        navigate("cart");
-      } else if (segments[0] === "wishlist") {
-        navigate("wishlist");
-      } else if (segments[0] === "orders") {
-        if (segments[1]) navigate("order-detail", segments[1]);
-        else navigate("orders");
-      } else if (segments[0] === "account") {
-        navigate("account");
-      } else if (segments[0] === "checkout") {
-        navigate("checkout");
-      } else if (segments[0] === "quick-order") {
-        navigate("quick-order");
-      } else if (CMS_PAGES.includes(segments[0])) {
-        navigate("content-page", segments[0]);
+        navigate("content-page", "contact");
       } else {
         navigate("content-page", segments.join("/"));
       }
@@ -113,13 +73,6 @@ export default function CatchAllPage() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, [fullPath, navigate]);
 
-  useEffect(() => {
-    if (auth.token) {
-      fetchCart();
-      fetchWishlist();
-    }
-  }, [auth.token, fetchCart, fetchWishlist]);
-
   const renderPage = () => {
     switch (currentPage.type) {
       case "home":
@@ -130,36 +83,9 @@ export default function CatchAllPage() {
         return <CategoryPage slug={currentPage.slug} onNavigate={navigate} />;
       case "content-page":
         return <CmsPage slug={currentPage.slug} onNavigate={navigate} />;
-      case "about":
-        return <AboutPage onNavigate={navigate} />;
-      case "manufacturing":
-        return <ManufacturingPage onNavigate={navigate} />;
-      case "contact":
-        return <ContactPage onNavigate={navigate} />;
-      case "blog":
-        return <BlogPage onNavigate={navigate} />;
-      case "blog-post":
-        return <BlogPostView postId={currentPage.postId} onNavigate={navigate} />;
-      case "portal":
-        return <BuyerPortalPage />;
-      case "cart":
-        return <CartPage onNavigate={navigate} />;
-      case "wishlist":
-        return <WishlistPage onNavigate={navigate} />;
-      case "orders":
-        return <OrdersPage onNavigate={navigate} />;
-      case "order-detail":
-        return (
-          <OrderDetailPage orderId={currentPage.orderId} onNavigate={navigate} />
-        );
-      case "account":
-        return <AccountPage onNavigate={navigate} />;
-      case "checkout":
-        return <CheckoutPage onNavigate={navigate} />;
-      case "compare":
-        return <ComparePage onNavigate={navigate} />;
-      case "quick-order":
-        return <QuickOrderPage onNavigate={navigate} />;
+      case "products":
+        return <ProductsOverviewPage onNavigate={navigate} />;
+
       default:
         return (
           <div className="flex flex-col items-center justify-center py-20 text-center">

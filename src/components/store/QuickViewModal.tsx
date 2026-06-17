@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import Image from 'next/image';
-import { Eye, ShoppingCart, Send } from 'lucide-react';
+import { Eye, Send, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -14,7 +13,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
-import { EnquiryModal } from './EnquiryModal';
+import { useAppStore } from '@/lib/store';
 import { getFirstImage } from '@/lib/utils';
 import { formatPrice } from '@/lib/pricing';
 
@@ -28,7 +27,7 @@ interface Product {
   wholesalePrice: number | null;
   minOrderQty: number;
   images: string;
-  Category: { id: string; name: string } | null;
+  Category: { id: string; name: string; slug?: string } | null;
   isFeatured: boolean;
 }
 
@@ -45,8 +44,6 @@ export function QuickViewModal({
   onOpenChange,
   onNavigate,
 }: QuickViewModalProps) {
-  const [enquiryOpen, setEnquiryOpen] = useState(false);
-
   const image = getFirstImage(product.images);
   const hasDiscount = product.comparePrice && product.comparePrice > product.price;
   const discountPercent = hasDiscount
@@ -55,11 +52,7 @@ export function QuickViewModal({
 
   const handleViewDetails = () => {
     onOpenChange(false);
-    onNavigate('product', product.id);
-  };
-
-  const handleEnquire = () => {
-    setEnquiryOpen(true);
+    onNavigate('category', product.Category?.slug || '');
   };
 
   return (
@@ -151,7 +144,10 @@ export function QuickViewModal({
             <Button
               variant="outline"
               className="w-full"
-              onClick={handleEnquire}
+              onClick={() => {
+                onOpenChange(false);
+                useAppStore.getState().openEnquiryModal(product.name, product.id);
+              }}
             >
               <Send className="mr-2 h-4 w-4" />
               Enquire
@@ -159,14 +155,6 @@ export function QuickViewModal({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Enquiry Modal */}
-      <EnquiryModal
-        productName={product.name}
-        productId={product.id}
-        open={enquiryOpen}
-        onOpenChange={setEnquiryOpen}
-      />
     </>
   );
 }

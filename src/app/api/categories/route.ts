@@ -90,6 +90,15 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Assign products if provided
+    const productIds: string[] = body.productIds || [];
+    if (productIds.length > 0) {
+      await db.product.updateMany({
+        where: { id: { in: productIds }, deletedAt: null },
+        data: { categoryId: category.id },
+      });
+    }
+
     // Log category creation
     const userId = request.headers.get('x-user-id') || undefined;
     const userName = request.headers.get('x-user-email') || undefined;

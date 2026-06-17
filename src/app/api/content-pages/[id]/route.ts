@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 export const dynamic = 'force-dynamic';
 import { db } from '@/lib/db';
 import { requireAdminAuth } from '@/lib/admin-auth';
+import { getStoreId } from '@/lib/store-db';
 import { normalizeBlocksForStorage } from '@/lib/page-blocks';
 
 export async function GET(
@@ -43,6 +44,7 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
+    const storeId = getStoreId(request);
     let blocks: string | undefined;
 
     if (body.blocks !== undefined) {
@@ -56,7 +58,7 @@ export async function PUT(
       }
     }
 
-    const existing = await db.contentPage.findFirst({ where: { id } });
+    const existing = await db.contentPage.findFirst({ where: { id, ...(storeId ? { storeId } : {}) } });
     if (!existing) {
       return NextResponse.json(
         { error: 'Content page not found' },
@@ -95,6 +97,7 @@ export async function PUT(
         ...(body.isActive !== undefined && { isActive: body.isActive }),
         ...(body.sortOrder !== undefined && { sortOrder: body.sortOrder }),
         ...(blocks !== undefined && { blocks }),
+        ...(storeId ? { storeId } : { storeId: null }),
       },
     });
 

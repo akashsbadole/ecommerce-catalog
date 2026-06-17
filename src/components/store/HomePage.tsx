@@ -3,22 +3,28 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageBlockRenderer } from './PageBlockRenderer';
-import { RecentlyViewedProducts } from './RecentlyViewedProducts';
 import type { PageBlock } from '@/lib/page-blocks';
 import { normalizePageBlocks } from '@/lib/page-blocks';
 
 interface HomePageProps {
   onNavigate: (page: string, data?: unknown) => void;
   settings?: Record<string, string> | null;
+  data?: Record<string, unknown>;
 }
 
-export function HomePage({ onNavigate, settings }: HomePageProps) {
+export function HomePage({ onNavigate, settings, data: externalData }: HomePageProps) {
   const [blocks, setBlocks] = useState<PageBlock[] | null>(null);
   const [cmsLoading, setCmsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch CMS homepage content
   useEffect(() => {
+    if (externalData) {
+      // If external data is provided (from PageBlockRenderer), use it directly
+      setCmsLoading(false);
+      return;
+    }
+
     const fetchHomepage = async () => {
       try {
         const res = await fetch('/api/content-pages?slug=homepage');
@@ -40,17 +46,7 @@ export function HomePage({ onNavigate, settings }: HomePageProps) {
             return;
           }
         }
-        // No homepage found — create with default blocks
-        const seedRes = await fetch('/api/content-pages/seed', { method: 'POST' });
-        if (seedRes.ok) {
-            const seedData = await seedRes.json();
-            if (seedData.contentPage?.blocks) {
-              const parsed = normalizePageBlocks(seedData.contentPage.blocks);
-              if (parsed.length > 0) {
-                setBlocks(parsed);
-              }
-            }
-        }
+
       } catch {
         // Fall back to empty state
       } finally {
@@ -58,7 +54,7 @@ export function HomePage({ onNavigate, settings }: HomePageProps) {
       }
     };
     fetchHomepage();
-  }, []);
+  }, [externalData]);
 
   // SEO
   useEffect(() => {
@@ -141,7 +137,7 @@ export function HomePage({ onNavigate, settings }: HomePageProps) {
   }
 
   // Error state
-  if (error || !blocks || blocks.length === 0) {
+  if (error || (!externalData && (!blocks || blocks.length === 0))) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <p className="text-muted-foreground">Unable to load homepage content.</p>
@@ -152,13 +148,31 @@ export function HomePage({ onNavigate, settings }: HomePageProps) {
     );
   }
 
+  // If external data is provided, render it directly
+  if (externalData) {
+    return (
+      <div className="flex flex-col">
+        <div className="p-8 text-center">
+          <h1 className="text-4xl font-bold mb-4">
+            {(externalData.hero as any)?.title || "Welcome to Our Company"}
+          </h1>
+          <p className="text-xl text-muted-foreground mb-6">
+            {(externalData.hero as any)?.subtitle || "Your trusted partner for quality products"}
+          </p>
+          <div className="space-y-8">
+            <pre className="text-left text-sm bg-muted p-4 rounded-lg overflow-auto max-h-96">
+              {JSON.stringify(externalData, null, 2)}
+            </pre>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Render CMS blocks
   return (
     <div className="flex flex-col">
-      <PageBlockRenderer blocks={blocks} onNavigate={onNavigate} />
-      <div className="container mx-auto px-4 py-12">
-        <RecentlyViewedProducts onNavigate={onNavigate} />
-      </div>
+      <PageBlockRenderer blocks={blocks ?? undefined} onNavigate={onNavigate} />
     </div>
   );
 }

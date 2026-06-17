@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { SharedContactForm } from "./SharedContactForm";
+import { useAppStore } from '@/lib/store';
 
 interface BlogPost {
   id: string;
@@ -227,11 +227,13 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
               <p className="text-xs text-muted-foreground mb-5">
                 Fill in your details and we'll respond within 24 hours
               </p>
-              <SharedContactForm
-                initialEnquiryType="product"
-                productContext={selectedTag}
-                variant="inline"
-              />
+              <button
+                onClick={() => useAppStore.getState().openEnquiryModal()}
+                className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-medium px-6 py-2.5 rounded-md text-sm hover:bg-primary/90 transition-colors"
+              >
+                <Send className="h-4 w-4" />
+                Send Enquiry
+              </button>
             </div>
           )}
         </div>

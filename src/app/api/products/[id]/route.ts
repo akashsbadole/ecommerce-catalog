@@ -154,7 +154,7 @@ export async function DELETE(
     const { searchParams } = new URL(request.url);
     const permanent = searchParams.get('permanent') === 'true';
 
-    const existing = await resolveProduct(id);
+    const existing = await resolveProduct(id, true);
     if (!existing) {
       return NextResponse.json(
         { error: 'Product not found' },
@@ -165,6 +165,11 @@ export async function DELETE(
     if (permanent) {
       await db.product.delete({ where: { id: existing.id } });
       return NextResponse.json({ message: 'Product permanently deleted' });
+    }
+
+    // If already soft-deleted, skip update
+    if (existing.deletedAt) {
+      return NextResponse.json({ message: 'Product already in trash' });
     }
 
     await db.product.update({

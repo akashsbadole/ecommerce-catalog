@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   Menu,
@@ -9,11 +8,6 @@ import {
   ShoppingBag,
   FileText,
   Search,
-  User,
-  LogOut,
-  Heart,
-  ShoppingCart,
-  Package,
   ChevronDown,
   Clock,
   Trash2,
@@ -34,12 +28,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getFirstImage } from "@/lib/utils";
@@ -75,18 +63,10 @@ interface MenuItem {
   children?: MenuItem[];
 }
 
-const mainNavLinks: NavItem[] = [
-  { label: "Home", page: "home" },
-  { label: "About Us", page: "about" },
-  { label: "Manufacturing", page: "manufacturing" },
-  // { label: "Products", page: "products" },
-  { label: "Catalogue", page: "catalogue" },
-  { label: "Contact Us", page: "contact" },
-];
+const mainNavLinks: NavItem[] = [];
 
 export function StoreHeader({ onNavigate }: StoreHeaderProps) {
-  const { auth, logout, settings, cart, wishlist } = useAppStore();
-  const router = useRouter();
+  const { settings } = useAppStore();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -121,7 +101,6 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
           }
         }
       } catch {
-        // Use fallback to mainNavLinks if menu fetch fails
         setPrimaryMenuItems([]);
       } finally {
         setMenuLoading(false);
@@ -279,89 +258,6 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
 
   return (
     <>
-      {/* === TOP BAR === */}
-      <div className="hidden ">
-        <div className="container mx-auto flex h-9 items-center justify-between px-4">
-          {/* Left: contact info or welcome */}
-          <div className="flex items-center gap-4 text-muted-foreground">
-            {auth.user ? (
-              <span>
-                Welcome,{" "}
-                <span className="font-medium text-foreground">
-                  {auth.user.name || auth.user.email}
-                </span>
-              </span>
-            ) : (
-              <span>Welcome to {settings?.site_name || "Our Store"}</span>
-            )}
-          </div>
-          {/* Right: utility links */}
-          <div className="flex items-center gap-1 ml-auto">
-            {auth.user ? (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 text-xs gap-1.5"
-                  onClick={() => onNavigate("account")}
-                >
-                  <User className="h-3 w-3" />
-                  <span className="hidden sm:inline">My Account</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 text-xs gap-1.5"
-                  onClick={() => onNavigate("orders")}
-                >
-                  <Package className="h-3 w-3" />
-                  <span className="hidden sm:inline">Orders</span>
-                </Button>
-              </>
-            ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2 text-xs gap-1.5"
-                onClick={() => router.push("/admin")}
-              >
-                <User className="h-3 w-3" />
-                <span className="hidden sm:inline">Login</span>
-              </Button>
-            )}
-            <Separator orientation="vertical" className="mx-0.5 h-4" />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative h-7 w-7"
-              onClick={() => onNavigate("wishlist")}
-              aria-label="Wishlist"
-            >
-              <Heart className="h-3.5 w-3.5" />
-              {wishlist.itemCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 h-3.5 min-w-[14px] rounded-full bg-rose-500 text-[9px] font-bold text-white flex items-center justify-center px-0.5">
-                  {wishlist.itemCount > 99 ? "99+" : wishlist.itemCount}
-                </span>
-              )}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative h-7 w-7"
-              onClick={() => onNavigate("cart")}
-              aria-label="Shopping cart"
-            >
-              <ShoppingCart className="h-3.5 w-3.5" />
-              {cart.itemCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 h-3.5 min-w-[14px] rounded-full bg-primary text-[9px] font-bold text-white flex items-center justify-center px-0.5">
-                  {cart.itemCount > 99 ? "99+" : cart.itemCount}
-                </span>
-              )}
-            </Button>
-          </div>
-        </div>
-      </div>
-
       {/* === MAIN NAVIGATION BAR === */}
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto flex h-14 items-center justify-between px-4">
@@ -391,12 +287,10 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
             aria-label="Main navigation"
           >
             {menuLoading ? (
-              // Loading skeleton
               Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="h-9 w-20 bg-muted animate-pulse rounded" />
               ))
             ) : primaryMenuItems.length > 0 ? (
-              // Render menu items from API
               primaryMenuItems.map((item) => {
                 const hasChildren = item.children && item.children.length > 0;
                 return (
@@ -440,7 +334,6 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                 );
               })
             ) : (
-              // Fallback to mainNavLinks
               allNavLinks.map((link) => (
                 <Button
                   key={link.slug || link.page}
@@ -456,22 +349,6 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
 
           {/* Right: Search + CTA */}
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            {/* Wishlist - Mobile Only (as it's removed from top bar) */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative h-9 w-9 md:hidden"
-              onClick={() => onNavigate("wishlist")}
-              aria-label="Wishlist"
-            >
-              <Heart className="h-4.5 w-4.5" />
-              {wishlist.itemCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 h-3.5 min-w-[14px] rounded-full bg-rose-500 text-[9px] font-bold text-white flex items-center justify-center px-0.5">
-                  {wishlist.itemCount > 99 ? "99+" : wishlist.itemCount}
-                </span>
-              )}
-            </Button>
-
             {/* Search Button */}
             <Button
               variant="ghost"
@@ -523,14 +400,11 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                   role="navigation"
                   aria-label="Mobile navigation"
                 >
-                  {/* Main Nav Links */}
                   {menuLoading ? (
-                    // Loading skeleton
                     Array.from({ length: 5 }).map((_, i) => (
                       <div key={i} className="h-9 w-full bg-muted animate-pulse rounded" />
                     ))
                   ) : primaryMenuItems.length > 0 ? (
-                    // Render menu items from API
                     primaryMenuItems.map((item) => {
                       const hasChildren = item.children && item.children.length > 0;
                       return (
@@ -571,7 +445,6 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                       );
                     })
                   ) : (
-                    // Fallback to mainNavLinks
                     allNavLinks.map((link) => (
                       <SheetClose asChild key={link.slug || link.page}>
                         <Button
@@ -584,73 +457,6 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                       </SheetClose>
                     ))
                   )}
-
-                  <Separator className="my-2" />
-
-                  {/* Account Links */}
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-1">
-                    Account
-                  </p>
-                  {auth.user ? (
-                    <>
-                      <SheetClose asChild>
-                        <Button
-                          variant="ghost"
-                          className="justify-start text-sm h-9"
-                          onClick={() => onNavigate("account")}
-                        >
-                          <User className="mr-2 h-4 w-4" />
-                          My Account
-                        </Button>
-                      </SheetClose>
-                      <SheetClose asChild>
-                        <Button
-                          variant="ghost"
-                          className="justify-start text-sm h-9"
-                          onClick={() => onNavigate("orders")}
-                        >
-                          <Package className="mr-2 h-4 w-4" />
-                          Orders
-                        </Button>
-                      </SheetClose>
-                    </>
-                  ) : (
-                    <SheetClose asChild>
-                      <Button
-                        variant="outline"
-                        className="justify-start text-sm h-9"
-                        onClick={() => router.push("/admin")}
-                      >
-                        <User className="mr-2 h-4 w-4" />
-                        Login / Partner Access
-                      </Button>
-                    </SheetClose>
-                  )}
-
-                  <Separator className="my-2" />
-
-                  {/* Cart & Wishlist */}
-                  <SheetClose asChild>
-                    <Button
-                      variant="ghost"
-                      className="justify-start text-sm h-9"
-                      onClick={() => onNavigate("wishlist")}
-                    >
-                      <Heart className="mr-2 h-4 w-4" />
-                      Wishlist{" "}
-                      {wishlist.itemCount > 0 && `(${wishlist.itemCount})`}
-                    </Button>
-                  </SheetClose>
-                  <SheetClose asChild>
-                    <Button
-                      variant="ghost"
-                      className="justify-start text-sm h-9"
-                      onClick={() => onNavigate("cart")}
-                    >
-                      <ShoppingCart className="mr-2 h-4 w-4" />
-                      Cart {cart.itemCount > 0 && `(${cart.itemCount})`}
-                    </Button>
-                  </SheetClose>
 
                   <Separator className="my-2" />
 
@@ -676,23 +482,6 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                       Search Products
                     </Button>
                   </SheetClose>
-
-                  {/* Logout */}
-                  {auth.user && (
-                    <>
-                      <Separator className="my-2" />
-                      <SheetClose asChild>
-                        <Button
-                          variant="ghost"
-                          className="justify-start text-sm h-9 text-rose-500"
-                          onClick={() => logout()}
-                        >
-                          <LogOut className="mr-2 h-4 w-4" />
-                          Logout
-                        </Button>
-                      </SheetClose>
-                    </>
-                  )}
                 </nav>
               </SheetContent>
             </Sheet>

@@ -75,7 +75,7 @@ const emptyForm: StoreFormData = {
   domain: '',
   description: '',
   settings: {
-    currency: 'USD',
+    currency: 'INR',
     tax_rate: '0',
   },
 };
@@ -155,7 +155,7 @@ export function AdminStores() {
           domain: full.domain || '',
           description: full.description || '',
           settings: {
-            currency: parsedSettings.currency || 'USD',
+            currency: parsedSettings.currency || 'INR',
             tax_rate: parsedSettings.tax_rate || '0',
           },
         });
@@ -187,7 +187,7 @@ export function AdminStores() {
         domain: form.domain.trim() || null,
         description: form.description.trim() || null,
         settings: {
-          currency: form.settings.currency || 'USD',
+          currency: form.settings.currency || 'INR',
           tax_rate: form.settings.tax_rate || '0',
         },
       };

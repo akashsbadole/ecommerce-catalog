@@ -1,5 +1,5 @@
 
-export function generateProductSchema(product: any, siteUrl: string, brandName?: string, currency: string = 'USD') {
+export function generateProductSchema(product: any, siteUrl: string, brandName?: string, currency: string = 'INR') {
   const images = (() => {
     try {
       const arr = JSON.parse(product.images || '[]');

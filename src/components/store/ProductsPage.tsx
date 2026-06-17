@@ -5,6 +5,7 @@ import { Info, Download, ArrowRight } from "lucide-react";
 
 interface ProductsPageProps {
   onNavigate: (page: string, data?: unknown) => void;
+  data?: Record<string, unknown>;
 }
 
 const categories = [
@@ -103,8 +104,30 @@ const products = [
   },
 ];
 
-export function ProductsPage({ onNavigate }: ProductsPageProps) {
+export function ProductsPage({ onNavigate, data: externalData }: ProductsPageProps) {
   const [activeCategory, setActiveCategory] = useState("all");
+
+  // If external data is provided (from PageBlockRenderer), show preview
+  if (externalData) {
+    return (
+      <div className="flex flex-col">
+        <div className="p-8 text-center">
+          <h1 className="text-4xl font-bold mb-4">
+            {(externalData.hero as any)?.title || "Our Product Catalog"}
+          </h1>
+          <p className="text-xl text-muted-foreground mb-6">
+            {(externalData.hero as any)?.subtitle || "Discover our complete range of quality products"}
+          </p>
+          <div className="space-y-8">
+            <pre className="text-left text-sm bg-muted p-4 rounded-lg overflow-auto max-h-96">
+              {JSON.stringify(externalData, null, 2)}
+            </pre>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const filtered =
     activeCategory === "all"
       ? products
@@ -165,11 +188,10 @@ export function ProductsPage({ onNavigate }: ProductsPageProps) {
                 <button
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                    activeCategory === cat.id
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-background border-border text-muted-foreground hover:bg-muted"
-                  }`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${activeCategory === cat.id
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-background border-border text-muted-foreground hover:bg-muted"
+                    }`}
                 >
                   {cat.label}
                 </button>

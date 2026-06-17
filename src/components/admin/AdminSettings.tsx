@@ -15,7 +15,6 @@ import {
   Building2,
   Info,
   Store,
-  ShoppingCart,
   Heart,
   Tag,
   Upload,
@@ -49,8 +48,8 @@ const defaultSettings: Settings = {
   site_description: '',
   announcement_text: '',
   site_logo: '',
-  currency: 'USD',
-  currency_symbol: '$',
+  currency: 'INR',
+  currency_symbol: '₹',
   site_email: '',
   site_phone: '',
   site_address: '',
@@ -80,7 +79,6 @@ const defaultSettings: Settings = {
   order_approval_threshold: '0',
   catalog_mode: 'ecommerce',
   catalog_show_prices: 'true',
-  catalog_enable_cart: 'true',
   catalog_enable_wishlist: 'true',
   shipping_method: 'free',
   shipping_rate: '0',
@@ -781,26 +779,7 @@ export function AdminSettings() {
               }
             />
           </div>
-          <div className="flex items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <Label htmlFor="catalog_enable_cart" className="cursor-pointer">
-                <div className="flex items-center gap-1.5">
-                  <ShoppingCart className="h-3.5 w-3.5" />
-                  Enable Cart
-                </div>
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                Allow customers to add products to cart and checkout
-              </p>
-            </div>
-            <Switch
-              id="catalog_enable_cart"
-              checked={settings.catalog_enable_cart === 'true'}
-              onCheckedChange={(checked) =>
-                handleSettingChange('catalog_enable_cart', String(checked))
-              }
-            />
-          </div>
+
           <div className="flex items-center justify-between rounded-lg border p-4">
             <div className="space-y-0.5">
               <Label htmlFor="catalog_enable_wishlist" className="cursor-pointer">
@@ -1050,35 +1029,7 @@ export function AdminSettings() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <Label>Seed Default Data</Label>
-              <p className="text-xs text-muted-foreground">
-                Generate default pages (Home, About, etc.) and menus if they are missing.
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                if (!confirm('This will create missing default pages and menus. Continue?')) return;
-                try {
-                  const res = await adminFetch('/api/content-pages/seed', { method: 'POST' });
-                  if (res.ok) {
-                    toast.success('Default data seeded successfully');
-                  } else {
-                    const err = await res.json();
-                    toast.error(err.error || 'Seeding failed');
-                  }
-                } catch {
-                  toast.error('Seeding failed');
-                }
-              }}
-            >
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Seed Data
-            </Button>
-          </div>
+
         </CardContent>
       </Card>
 

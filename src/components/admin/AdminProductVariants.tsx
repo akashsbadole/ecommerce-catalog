@@ -112,7 +112,7 @@ function getStockBadge(stock: number, threshold: number) {
 export function AdminProductVariants({ productId, lowStockThreshold = 10, onVariantsChange }: AdminProductVariantsProps) {
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currency, setCurrency] = useState('USD');
+  const [currency, setCurrency] = useState('INR');
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);

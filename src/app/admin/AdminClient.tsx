@@ -30,29 +30,37 @@ export default function AdminClient({ initialUser, initialToken }: AdminClientPr
     setHydrated(true);
   }, []);
 
+  // Hydrate Zustand store from server-side auth (cookie-based)
   useEffect(() => {
-    // If we have initial auth from server, use it
     if (initialUser && initialToken) {
-      // Set up store with server auth state
       const storedToken = localStorage.getItem('admin_token');
       if (!storedToken) {
         localStorage.setItem('admin_token', initialToken);
       }
-
-      // Check if already authenticated in store
       if (!isAdmin) {
         setAdminLogin(initialUser, initialToken);
       }
     }
   }, [initialUser, initialToken, isAdmin, setAdminLogin]);
 
+  // Force logout when server says not authenticated but Zustand has stale state
+  useEffect(() => {
+    if (hydrated && !initialUser && !initialToken && isAdmin) {
+      setAdminLogout();
+      localStorage.removeItem('admin_token');
+    }
+  }, [hydrated, initialUser, initialToken, isAdmin, setAdminLogout]);
+
   const handleAdminLogin = (user: AdminUser, token = '') => {
     setAdminLogin(user, token);
+    localStorage.setItem('admin_token', token);
     document.cookie = `admin_token=${token}; path=/; max-age=604800; SameSite=Lax`;
   };
 
   const handleAdminLogout = () => {
     setAdminLogout();
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('app-storage');
 
     // Clear cookie
     document.cookie = 'admin_token=; path=/; max-age=0';

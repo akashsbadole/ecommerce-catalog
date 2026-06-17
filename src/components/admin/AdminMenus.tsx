@@ -82,12 +82,14 @@ const MENU_LOCATIONS = [
 const INTERNAL_PAGES = [
   { label: 'Home', value: 'home' },
   { label: 'Catalogue', value: 'catalogue' },
+  { label: 'All Products', value: 'products' },
+  { label: 'Product Category', value: 'category' },
   { label: 'About Us', value: 'about' },
   { label: 'Manufacturing', value: 'manufacturing' },
   { label: 'Contact Us', value: 'contact' },
   { label: 'Blog', value: 'blog' },
   { label: 'Account', value: 'account' },
-  { label: 'Cart', value: 'cart' },
+
   { label: 'Wishlist', value: 'wishlist' },
   { label: 'Orders', value: 'orders' },
   { label: 'Buyer Portal', value: 'portal' },
@@ -306,6 +308,7 @@ export function AdminMenus() {
     const indent = level * 20;
     const isUrl = item.page === 'url';
     const isContentPage = item.page === 'content-page';
+    const isCategory = item.page === 'category';
 
     return (
       <div key={item.id} style={{ marginLeft: `${indent}px` }} className="space-y-2">
@@ -323,7 +326,7 @@ export function AdminMenus() {
             <div className="col-span-3">
                <Select
                 value={item.page || 'home'}
-                onValueChange={(val) => updateMenuItem(item.id!, { page: val, url: val === 'url' ? item.url : null, slug: val === 'content-page' ? item.slug : null })}
+                onValueChange={(val) => updateMenuItem(item.id!, { page: val, url: val === 'url' ? item.url : null, slug: val === 'content-page' || val === 'category' ? item.slug : null })}
                >
                  <SelectTrigger className="h-8 text-xs">
                    <SelectValue />
@@ -342,6 +345,13 @@ export function AdminMenus() {
                   placeholder="https://..."
                   value={item.url || ''}
                   onChange={(e) => updateMenuItem(item.id!, { url: e.target.value || null })}
+                  className="h-8 text-xs"
+                />
+              ) : isCategory ? (
+                <Input
+                  placeholder="Category slug (e.g. biscuits)"
+                  value={item.slug || ''}
+                  onChange={(e) => updateMenuItem(item.id!, { slug: e.target.value || null })}
                   className="h-8 text-xs"
                 />
               ) : isContentPage ? (

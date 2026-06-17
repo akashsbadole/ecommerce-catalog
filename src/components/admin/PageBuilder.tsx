@@ -38,27 +38,18 @@ import {
   ChevronDown,
   ChevronUp,
   X,
-  GalleryHorizontal,
-  Layers,
-  User,
-  TrendingUp,
-  Users,
-  Factory,
-  Video,
-  Award,
-  FormInput,
-  UserCircle,
-  Building,
-  ArrowDownToLine,
-  Newspaper,
-  CreditCard,
-  Eye,
-  Smartphone,
-  Tablet,
-  Monitor,
   Copy,
   FileCode,
   Settings2,
+  Home,
+  User,
+  Factory,
+  Phone,
+  FormInput,
+  Monitor,
+  Tablet,
+  Smartphone,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -113,38 +104,33 @@ const BLOCK_ICONS: Record<
   string,
   React.ComponentType<{ className?: string }>
 > = {
+  // Essential reusable blocks
   hero: Image,
+  text: Type,
+  "image-gallery": Images,
   features: LayoutGrid,
   cta: MousePointerClick,
   testimonials: Quote,
-  "image-gallery": Images,
-  text: Type,
   spacer: MoveVertical,
   divider: Minus,
   products: Package,
-  faq: HelpCircle,
-  slider: GalleryHorizontal,
-  "product-carousel": Layers,
-  about: User,
-  "trust-bar": TrendingUp,
-  "audience-cards": Users,
-  capabilities: Factory,
-  "product-categories": LayoutGrid,
-  "factory-reel": Video,
-  certifications: Award,
   "lead-capture": FormInput,
-  leadership: UserCircle,
-  "partner-logos": Building,
-  "sticky-cta": ArrowDownToLine,
-  "blog-grid": Newspaper,
-  "pricing-table": CreditCard,
+  faq: HelpCircle,
+
+  // Page content blocks (fully customizable)
+  "homepage-content": Home,
+  "about-page-content": User,
+  "manufacturing-content": Factory,
+  "contact-page-content": Phone,
+  "products-page-content": Package,
 };
 
 const PAGE_CONTENT_BLOCK_TYPES = new Set<BlockType>([
+  "homepage-content",
   "about-page-content",
-  "mfg-page-content",
+  "manufacturing-content",
   "contact-page-content",
-  "catalogue-page-content",
+  "products-page-content",
 ]);
 
 function getTopLevelKeys(data: Record<string, unknown>): string[] {
@@ -300,10 +286,10 @@ function BlockEditDialog({
   // Sync local state when block changes
   useEffect(() => {
     if (open && block) {
-      // Deep copy to ensure we don't mutate original data until save
-      const dataCopy = JSON.parse(JSON.stringify(block.data || {}));
-      setLocalData(dataCopy);
-      setJsonText(JSON.stringify(dataCopy, null, 2));
+      // Ensure block data is properly normalized before setting localData
+      const normalizedData = normalizeBlockData(block.data || {});
+      setLocalData(normalizedData);
+      setJsonText(JSON.stringify(normalizedData, null, 2));
       setJsonError(null);
     }
   }, [block, open]);
@@ -313,8 +299,8 @@ function BlockEditDialog({
     if (activeTab === "json") {
       try {
         const parsed = parseJsonPayload(jsonText);
-        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-          setJsonError('Block data must be a JSON object');
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+          setJsonError("Block data must be a JSON object");
           return;
         }
         onSave({ ...block, data: parsed as Record<string, unknown> });
@@ -340,11 +326,11 @@ function BlockEditDialog({
     setJsonText(val);
     try {
       const parsed = parseJsonPayload(val);
-      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
         setLocalData(parsed as Record<string, unknown>);
         setJsonError(null);
       } else {
-        setJsonError('Block data must be a JSON object');
+        setJsonError("Block data must be a JSON object");
       }
     } catch (e) {
       setJsonError((e as Error).message);
@@ -396,1571 +382,1643 @@ function BlockEditDialog({
                     This block stores nested CMS fields. Use the JSON Editor tab
                     to update fields such as: {formatTopLevelKeys(localData)}.
                   </p>
+                  {topLevelKeys.length > 0 && (
+                    <p className="mt-2 text-xs text-amber-700">
+                      Top-level fields ({topLevelKeys.length}): {topLevelKeys.slice(0, 6).join(", ")}
+                      {topLevelKeys.length > 6 && ` and ${topLevelKeys.length - 6} more`}
+                    </p>
+                  )}
                 </div>
               )}
               <div className="grid gap-4 py-4">
                 {/* Common fields based on block type */}
                 {block.type === "hero" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Title</Label>
-                  <Input
-                    value={(localData.title as string) || ""}
-                    onChange={(e) => updateField("title", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Subtitle</Label>
-                  <Input
-                    value={(localData.subtitle as string) || ""}
-                    onChange={(e) => updateField("subtitle", e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Button Text</Label>
-                    <Input
-                      value={(localData.buttonText as string) || ""}
-                      onChange={(e) =>
-                        updateField("buttonText", e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Button Link</Label>
-                    <Input
-                      value={(localData.buttonLink as string) || ""}
-                      onChange={(e) =>
-                        updateField("buttonLink", e.target.value)
-                      }
-                    />
-                  </div>
-                </div>
-                <MediaPickerField
-                  label="Background Image"
-                  value={(localData.backgroundImage as string) || ""}
-                  onChange={(v) => updateField("backgroundImage", v)}
-                  placeholder="Image URL"
-                />
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Height</Label>
-                    <select
-                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
-                      value={(localData.height as string) || "medium"}
-                      onChange={(e) => updateField("height", e.target.value)}
-                    >
-                      <option value="small">Small</option>
-                      <option value="medium">Medium</option>
-                      <option value="large">Large</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Alignment</Label>
-                    <select
-                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
-                      value={(localData.alignment as string) || "center"}
-                      onChange={(e) => updateField("alignment", e.target.value)}
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                    </select>
-                  </div>
-                </div>
-              </>
-            )}
-
-            {block.type === "features" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Title</Label>
-                  <Input
-                    value={(localData.title as string) || ""}
-                    onChange={(e) => updateField("title", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Columns</Label>
-                  <select
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
-                    value={(localData.columns as number) || 3}
-                    onChange={(e) =>
-                      updateField("columns", Number(e.target.value))
-                    }
-                  >
-                    <option value={2}>2</option>
-                    <option value={3}>3</option>
-                    <option value={4}>4</option>
-                  </select>
-                </div>
-                <Separator />
-                <Label className="text-base font-semibold">Features</Label>
-                {(
-                  (localData.features as Array<{
-                    title: string;
-                    description: string;
-                    icon: string;
-                  }>) || []
-                ).map((f, i) => (
-                  <Card key={i} className="p-4 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">
-                        Feature {i + 1}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-rose-600"
-                        onClick={() => {
-                          const feats = [
-                            ...((localData.features as Array<unknown>) || []),
-                          ];
-                          feats.splice(i, 1);
-                          updateField("features", feats);
-                        }}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <Input
-                      placeholder="Title"
-                      value={f.title}
-                      onChange={(e) => {
-                        const feats = [
-                          ...((localData.features as Array<
-                            Record<string, string>
-                          >) || []),
-                        ];
-                        feats[i] = { ...feats[i], title: e.target.value };
-                        updateField("features", feats);
-                      }}
-                    />
-                    <Input
-                      placeholder="Description"
-                      value={f.description}
-                      onChange={(e) => {
-                        const feats = [
-                          ...((localData.features as Array<
-                            Record<string, string>
-                          >) || []),
-                        ];
-                        feats[i] = { ...feats[i], description: e.target.value };
-                        updateField("features", feats);
-                      }}
-                    />
-                    <Input
-                      placeholder="Icon name (e.g. Star, Heart)"
-                      value={f.icon}
-                      onChange={(e) => {
-                        const feats = [
-                          ...((localData.features as Array<
-                            Record<string, string>
-                          >) || []),
-                        ];
-                        feats[i] = { ...feats[i], icon: e.target.value };
-                        updateField("features", feats);
-                      }}
-                    />
-                  </Card>
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const feats = [
-                      ...((localData.features as Array<
-                        Record<string, string>
-                      >) || []),
-                      { title: "New Feature", description: "", icon: "Star" },
-                    ];
-                    updateField("features", feats);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Feature
-                </Button>
-              </>
-            )}
-
-            {block.type === "cta" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Title</Label>
-                  <Input
-                    value={(localData.title as string) || ""}
-                    onChange={(e) => updateField("title", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Input
-                    value={(localData.description as string) || ""}
-                    onChange={(e) => updateField("description", e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Button Text</Label>
-                    <Input
-                      value={(localData.buttonText as string) || ""}
-                      onChange={(e) =>
-                        updateField("buttonText", e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Button Link</Label>
-                    <Input
-                      value={(localData.buttonLink as string) || ""}
-                      onChange={(e) =>
-                        updateField("buttonLink", e.target.value)
-                      }
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Background Color</Label>
-                  <select
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
-                    value={(localData.backgroundColor as string) || "emerald"}
-                    onChange={(e) =>
-                      updateField("backgroundColor", e.target.value)
-                    }
-                  >
-                    <option value="emerald">Emerald</option>
-                    <option value="rose">Rose</option>
-                    <option value="amber">Amber</option>
-                    <option value="slate">Slate</option>
-                  </select>
-                </div>
-              </>
-            )}
-
-            {block.type === "testimonials" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Title</Label>
-                  <Input
-                    value={(localData.title as string) || ""}
-                    onChange={(e) => updateField("title", e.target.value)}
-                  />
-                </div>
-                <Separator />
-                <Label className="text-base font-semibold">Testimonials</Label>
-                {(
-                  (localData.testimonials as Array<Record<string, string>>) ||
-                  []
-                ).map((t, i) => (
-                  <Card key={i} className="p-4 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">
-                        Testimonial {i + 1}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-rose-600"
-                        onClick={() => {
-                          const items = [
-                            ...((localData.testimonials as Array<unknown>) ||
-                              []),
-                          ];
-                          items.splice(i, 1);
-                          updateField("testimonials", items);
-                        }}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
+                  <>
+                    <div className="space-y-2">
+                      <Label>Title</Label>
                       <Input
-                        placeholder="Name"
-                        value={t.name}
-                        onChange={(e) => {
-                          const items = [
-                            ...((localData.testimonials as Array<
-                              Record<string, string>
-                            >) || []),
-                          ];
-                          items[i] = { ...items[i], name: e.target.value };
-                          updateField("testimonials", items);
-                        }}
-                      />
-                      <Input
-                        placeholder="Role"
-                        value={t.role}
-                        onChange={(e) => {
-                          const items = [
-                            ...((localData.testimonials as Array<
-                              Record<string, string>
-                            >) || []),
-                          ];
-                          items[i] = { ...items[i], role: e.target.value };
-                          updateField("testimonials", items);
-                        }}
+                        value={(localData.title as string) || ""}
+                        onChange={(e) => updateField("title", e.target.value)}
                       />
                     </div>
-                    <Textarea
-                      placeholder="Quote"
-                      rows={2}
-                      value={t.quote}
-                      onChange={(e) => {
-                        const items = [
-                          ...((localData.testimonials as Array<
-                            Record<string, string>
-                          >) || []),
-                        ];
-                        items[i] = { ...items[i], quote: e.target.value };
-                        updateField("testimonials", items);
-                      }}
-                    />
+                    <div className="space-y-2">
+                      <Label>Subtitle</Label>
+                      <Input
+                        value={(localData.subtitle as string) || ""}
+                        onChange={(e) =>
+                          updateField("subtitle", e.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Button Text</Label>
+                        <Input
+                          value={(localData.buttonText as string) || ""}
+                          onChange={(e) =>
+                            updateField("buttonText", e.target.value)
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Button Link</Label>
+                        <Input
+                          value={(localData.buttonLink as string) || ""}
+                          onChange={(e) =>
+                            updateField("buttonLink", e.target.value)
+                          }
+                        />
+                      </div>
+                    </div>
                     <MediaPickerField
-                      label="Avatar (optional)"
-                      value={t.avatar}
-                      onChange={(v) => {
+                      label="Background Image"
+                      value={(localData.backgroundImage as string) || ""}
+                      onChange={(v) => updateField("backgroundImage", v)}
+                      placeholder="Image URL"
+                    />
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Height</Label>
+                        <select
+                          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
+                          value={(localData.height as string) || "medium"}
+                          onChange={(e) =>
+                            updateField("height", e.target.value)
+                          }
+                        >
+                          <option value="small">Small</option>
+                          <option value="medium">Medium</option>
+                          <option value="large">Large</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Alignment</Label>
+                        <select
+                          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
+                          value={(localData.alignment as string) || "center"}
+                          onChange={(e) =>
+                            updateField("alignment", e.target.value)
+                          }
+                        >
+                          <option value="left">Left</option>
+                          <option value="center">Center</option>
+                          <option value="right">Right</option>
+                        </select>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {block.type === "features" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Title</Label>
+                      <Input
+                        value={(localData.title as string) || ""}
+                        onChange={(e) => updateField("title", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Columns</Label>
+                      <select
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
+                        value={(localData.columns as number) || 3}
+                        onChange={(e) =>
+                          updateField("columns", Number(e.target.value))
+                        }
+                      >
+                        <option value={2}>2</option>
+                        <option value={3}>3</option>
+                        <option value={4}>4</option>
+                      </select>
+                    </div>
+                    <Separator />
+                    <Label className="text-base font-semibold">Features</Label>
+                    {(Array.isArray(localData.features) ? localData.features : Object.values(localData.features || {})).map((f: any, i: number) => (
+                      <Card key={i} className="p-4 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">
+                            Feature {i + 1}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-rose-600"
+                            onClick={() => {
+                              const feats = [
+                                ...(Array.isArray(localData.features) ? localData.features : Object.values(localData.features || {})),
+                              ];
+                              feats.splice(i, 1);
+                              updateField("features", feats);
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <Input
+                          placeholder="Title"
+                          value={f.title}
+                          onChange={(e) => {
+                            const feats = [
+                              ...(Array.isArray(localData.features) ? localData.features as Array<Record<string, string>> : Object.values(localData.features || {})),
+                            ];
+                            feats[i] = { ...feats[i], title: e.target.value };
+                            updateField("features", feats);
+                          }}
+                        />
+                        <Input
+                          placeholder="Description"
+                          value={f.description}
+                          onChange={(e) => {
+                            const feats = [
+                              ...(Array.isArray(localData.features) ? localData.features as Array<Record<string, string>> : Object.values(localData.features || {})),
+                            ];
+                            feats[i] = {
+                              ...feats[i],
+                              description: e.target.value,
+                            };
+                            updateField("features", feats);
+                          }}
+                        />
+                        <Input
+                          placeholder="Icon name (e.g. Star, Heart)"
+                          value={f.icon}
+                          onChange={(e) => {
+                            const feats = [
+                              ...(Array.isArray(localData.features) ? localData.features as Array<Record<string, string>> : Object.values(localData.features || {})),
+                            ];
+                            feats[i] = { ...feats[i], icon: e.target.value };
+                            updateField("features", feats);
+                          }}
+                        />
+                      </Card>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const feats = [
+                          ...(Array.isArray(localData.features) ? localData.features as Array<Record<string, string>> : Object.values(localData.features || {})),
+                          {
+                            title: "New Feature",
+                            description: "",
+                            icon: "Star",
+                          },
+                        ];
+                        updateField("features", feats);
+                      }}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Feature
+                    </Button>
+                  </>
+                )}
+
+                {block.type === "cta" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Title</Label>
+                      <Input
+                        value={(localData.title as string) || ""}
+                        onChange={(e) => updateField("title", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Description</Label>
+                      <Input
+                        value={(localData.description as string) || ""}
+                        onChange={(e) =>
+                          updateField("description", e.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Button Text</Label>
+                        <Input
+                          value={(localData.buttonText as string) || ""}
+                          onChange={(e) =>
+                            updateField("buttonText", e.target.value)
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Button Link</Label>
+                        <Input
+                          value={(localData.buttonLink as string) || ""}
+                          onChange={(e) =>
+                            updateField("buttonLink", e.target.value)
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Background Color</Label>
+                      <select
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
+                        value={
+                          (localData.backgroundColor as string) || "emerald"
+                        }
+                        onChange={(e) =>
+                          updateField("backgroundColor", e.target.value)
+                        }
+                      >
+                        <option value="emerald">Emerald</option>
+                        <option value="rose">Rose</option>
+                        <option value="amber">Amber</option>
+                        <option value="slate">Slate</option>
+                      </select>
+                    </div>
+                  </>
+                )}
+
+                {block.type === "testimonials" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Title</Label>
+                      <Input
+                        value={(localData.title as string) || ""}
+                        onChange={(e) => updateField("title", e.target.value)}
+                      />
+                    </div>
+                    <Separator />
+                    <Label className="text-base font-semibold">
+                      Testimonials
+                    </Label>
+                    {(
+                      (localData.testimonials as Array<
+                        Record<string, string>
+                      >) || []
+                    ).map((t, i) => (
+                      <Card key={i} className="p-4 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">
+                            Testimonial {i + 1}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-rose-600"
+                            onClick={() => {
+                              const items = [
+                                ...((localData.testimonials as Array<unknown>) ||
+                                  []),
+                              ];
+                              items.splice(i, 1);
+                              updateField("testimonials", items);
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <Input
+                            placeholder="Name"
+                            value={t.name}
+                            onChange={(e) => {
+                              const items = [
+                                ...((localData.testimonials as Array<
+                                  Record<string, string>
+                                >) || []),
+                              ];
+                              items[i] = { ...items[i], name: e.target.value };
+                              updateField("testimonials", items);
+                            }}
+                          />
+                          <Input
+                            placeholder="Role"
+                            value={t.role}
+                            onChange={(e) => {
+                              const items = [
+                                ...((localData.testimonials as Array<
+                                  Record<string, string>
+                                >) || []),
+                              ];
+                              items[i] = { ...items[i], role: e.target.value };
+                              updateField("testimonials", items);
+                            }}
+                          />
+                        </div>
+                        <Textarea
+                          placeholder="Quote"
+                          rows={2}
+                          value={t.quote}
+                          onChange={(e) => {
+                            const items = [
+                              ...((localData.testimonials as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            items[i] = { ...items[i], quote: e.target.value };
+                            updateField("testimonials", items);
+                          }}
+                        />
+                        <MediaPickerField
+                          label="Avatar (optional)"
+                          value={t.avatar}
+                          onChange={(v) => {
+                            const items = [
+                              ...((localData.testimonials as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            items[i] = { ...items[i], avatar: v };
+                            updateField("testimonials", items);
+                          }}
+                          placeholder="Avatar URL"
+                        />
+                      </Card>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
                         const items = [
                           ...((localData.testimonials as Array<
                             Record<string, string>
                           >) || []),
+                          {
+                            name: "Name",
+                            role: "Role",
+                            quote: "Quote",
+                            avatar: "",
+                          },
                         ];
-                        items[i] = { ...items[i], avatar: v };
                         updateField("testimonials", items);
                       }}
-                      placeholder="Avatar URL"
-                    />
-                  </Card>
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const items = [
-                      ...((localData.testimonials as Array<
-                        Record<string, string>
-                      >) || []),
-                      {
-                        name: "Name",
-                        role: "Role",
-                        quote: "Quote",
-                        avatar: "",
-                      },
-                    ];
-                    updateField("testimonials", items);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Testimonial
-                </Button>
-              </>
-            )}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Testimonial
+                    </Button>
+                  </>
+                )}
 
-            {block.type === "image-gallery" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Title</Label>
-                  <Input
-                    value={(localData.title as string) || ""}
-                    onChange={(e) => updateField("title", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Columns</Label>
-                  <select
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
-                    value={(localData.columns as number) || 3}
-                    onChange={(e) =>
-                      updateField("columns", Number(e.target.value))
-                    }
-                  >
-                    <option value={2}>2</option>
-                    <option value={3}>3</option>
-                    <option value={4}>4</option>
-                  </select>
-                </div>
-                <Separator />
-                <Label className="text-base font-semibold">Images</Label>
-                {((localData.images as string[]) || []).map((img, i) => (
-                  <div key={i} className="flex gap-2">
-                    <div className="flex-1">
-                      <MediaPickerField
-                        value={img}
-                        onChange={(v) => {
-                          const imgs = [
-                            ...((localData.images as string[]) || []),
-                          ];
-                          imgs[i] = v;
-                          updateField("images", imgs);
-                        }}
-                        placeholder="Image URL"
+                {block.type === "image-gallery" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Title</Label>
+                      <Input
+                        value={(localData.title as string) || ""}
+                        onChange={(e) => updateField("title", e.target.value)}
                       />
                     </div>
+                    <div className="space-y-2">
+                      <Label>Columns</Label>
+                      <select
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
+                        value={(localData.columns as number) || 3}
+                        onChange={(e) =>
+                          updateField("columns", Number(e.target.value))
+                        }
+                      >
+                        <option value={2}>2</option>
+                        <option value={3}>3</option>
+                        <option value={4}>4</option>
+                      </select>
+                    </div>
+                    <Separator />
+                    <Label className="text-base font-semibold">Images</Label>
+                    {((localData.images as string[]) || []).map((img, i) => (
+                      <div key={i} className="flex gap-2">
+                        <div className="flex-1">
+                          <MediaPickerField
+                            value={img}
+                            onChange={(v) => {
+                              const imgs = [
+                                ...((localData.images as string[]) || []),
+                              ];
+                              imgs[i] = v;
+                              updateField("images", imgs);
+                            }}
+                            placeholder="Image URL"
+                          />
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 shrink-0 text-rose-600 mt-6"
+                          onClick={() => {
+                            const imgs = [
+                              ...((localData.images as string[]) || []),
+                            ];
+                            imgs.splice(i, 1);
+                            updateField("images", imgs);
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
                     <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-9 w-9 shrink-0 text-rose-600 mt-6"
+                      variant="outline"
+                      size="sm"
                       onClick={() => {
                         const imgs = [
                           ...((localData.images as string[]) || []),
+                          "",
                         ];
-                        imgs.splice(i, 1);
                         updateField("images", imgs);
                       }}
                     >
-                      <X className="h-4 w-4" />
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Image
                     </Button>
-                  </div>
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const imgs = [
-                      ...((localData.images as string[]) || []),
-                      "",
-                    ];
-                    updateField("images", imgs);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Image
-                </Button>
-              </>
-            )}
+                  </>
+                )}
 
-            {block.type === "text" && (
-              <div className="space-y-2">
-                <Label>HTML Content</Label>
-                <Textarea
-                  rows={12}
-                  value={(localData.content as string) || ""}
-                  onChange={(e) => updateField("content", e.target.value)}
-                  placeholder="Enter HTML content..."
-                />
-                <p className="text-xs text-muted-foreground">
-                  Supports HTML tags: &lt;p&gt;, &lt;h1&gt;-&lt;h6&gt;,
-                  &lt;strong&gt;, &lt;em&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;a&gt;,
-                  etc.
-                </p>
-              </div>
-            )}
-
-            {block.type === "spacer" && (
-              <div className="space-y-2">
-                <Label>Height (px)</Label>
-                <Input
-                  type="number"
-                  min={8}
-                  max={512}
-                  value={(localData.height as number) || 64}
-                  onChange={(e) =>
-                    updateField("height", Number(e.target.value))
-                  }
-                />
-              </div>
-            )}
-
-            {block.type === "divider" && (
-              <div className="space-y-2">
-                <Label>Style</Label>
-                <select
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
-                  value={(localData.style as string) || "solid"}
-                  onChange={(e) => updateField("style", e.target.value)}
-                >
-                  <option value="solid">Solid</option>
-                  <option value="dashed">Dashed</option>
-                  <option value="dotted">Dotted</option>
-                </select>
-              </div>
-            )}
-
-            {block.type === "products" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Title</Label>
-                  <Input
-                    value={(localData.title as string) || ""}
-                    onChange={(e) => updateField("title", e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
+                {block.type === "text" && (
                   <div className="space-y-2">
-                    <Label>Max Products</Label>
+                    <Label>HTML Content</Label>
+                    <Textarea
+                      rows={12}
+                      value={(localData.content as string) || ""}
+                      onChange={(e) => updateField("content", e.target.value)}
+                      placeholder="Enter HTML content..."
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Supports HTML tags: &lt;p&gt;, &lt;h1&gt;-&lt;h6&gt;,
+                      &lt;strong&gt;, &lt;em&gt;, &lt;ul&gt;, &lt;li&gt;,
+                      &lt;a&gt;, etc.
+                    </p>
+                  </div>
+                )}
+
+                {block.type === "spacer" && (
+                  <div className="space-y-2">
+                    <Label>Height (px)</Label>
                     <Input
                       type="number"
-                      min={1}
-                      max={20}
-                      value={(localData.maxProducts as number) || 6}
+                      min={8}
+                      max={512}
+                      value={(localData.height as number) || 64}
                       onChange={(e) =>
-                        updateField("maxProducts", Number(e.target.value))
+                        updateField("height", Number(e.target.value))
                       }
                     />
                   </div>
+                )}
+
+                {block.type === "divider" && (
                   <div className="space-y-2">
-                    <Label>Layout</Label>
+                    <Label>Style</Label>
                     <select
                       className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
-                      value={(localData.layout as string) || "grid"}
-                      onChange={(e) => updateField("layout", e.target.value)}
+                      value={(localData.style as string) || "solid"}
+                      onChange={(e) => updateField("style", e.target.value)}
                     >
-                      <option value="grid">Grid</option>
-                      <option value="list">List</option>
+                      <option value="solid">Solid</option>
+                      <option value="dashed">Dashed</option>
+                      <option value="dotted">Dotted</option>
                     </select>
                   </div>
-                </div>
-              </>
-            )}
-
-            {block.type === "faq" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Title</Label>
-                  <Input
-                    value={(localData.title as string) || ""}
-                    onChange={(e) => updateField("title", e.target.value)}
-                  />
-                </div>
-                <Separator />
-                <Label className="text-base font-semibold">FAQ Items</Label>
-                {((localData.items as Array<Record<string, string>>) || []).map(
-                  (item, i) => (
-                    <Card key={i} className="p-4 space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">
-                          Item {i + 1}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-rose-600"
-                          onClick={() => {
-                            const items = [
-                              ...((localData.items as Array<unknown>) || []),
-                            ];
-                            items.splice(i, 1);
-                            updateField("items", items);
-                          }}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                      <Input
-                        placeholder="Question"
-                        value={item.question}
-                        onChange={(e) => {
-                          const items = [
-                            ...((localData.items as Array<
-                              Record<string, string>
-                            >) || []),
-                          ];
-                          items[i] = { ...items[i], question: e.target.value };
-                          updateField("items", items);
-                        }}
-                      />
-                      <Textarea
-                        placeholder="Answer"
-                        rows={2}
-                        value={item.answer}
-                        onChange={(e) => {
-                          const items = [
-                            ...((localData.items as Array<
-                              Record<string, string>
-                            >) || []),
-                          ];
-                          items[i] = { ...items[i], answer: e.target.value };
-                          updateField("items", items);
-                        }}
-                      />
-                    </Card>
-                  ),
                 )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const items = [
-                      ...((localData.items as Array<Record<string, string>>) ||
-                        []),
-                      { question: "", answer: "" },
-                    ];
-                    updateField("items", items);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Question
-                </Button>
-              </>
-            )}
 
-            {block.type === "slider" && (
-              <>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="slider-autoplay"
-                      checked={!!localData.autoplay}
-                      onCheckedChange={(val) => updateField("autoplay", !!val)}
-                    />
-                    <Label htmlFor="slider-autoplay">Autoplay</Label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Label>Interval (ms)</Label>
-                    <Input
-                      type="number"
-                      className="w-24 h-8"
-                      value={(localData.interval as number) || 5000}
-                      onChange={(e) =>
-                        updateField("interval", Number(e.target.value))
-                      }
-                    />
-                  </div>
-                </div>
-                <Separator />
-                <Label className="text-base font-semibold">Slides</Label>
-                {((localData.items as Array<Record<string, string>>) || []).map(
-                  (slide, i) => (
-                    <Card key={i} className="p-4 space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">
-                          Slide {i + 1}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-rose-600"
-                          onClick={() => {
-                            const slides = [
-                              ...((localData.items as Array<unknown>) || []),
-                            ];
-                            slides.splice(i, 1);
-                            updateField("items", slides);
-                          }}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                      <MediaPickerField
-                        label="Image"
-                        value={slide.image}
-                        onChange={(v) => {
-                          const slides = [
-                            ...((localData.items as Array<
-                              Record<string, string>
-                            >) || []),
-                          ];
-                          slides[i] = { ...slides[i], image: v };
-                          updateField("items", slides);
-                        }}
-                        placeholder="Image URL"
-                      />
+                {block.type === "products" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Title</Label>
                       <Input
-                        placeholder="Title"
-                        value={slide.title}
-                        onChange={(e) => {
-                          const slides = [
-                            ...((localData.items as Array<
-                              Record<string, string>
-                            >) || []),
-                          ];
-                          slides[i] = { ...slides[i], title: e.target.value };
-                          updateField("items", slides);
-                        }}
-                      />
-                      <Input
-                        placeholder="Subtitle"
-                        value={slide.subtitle}
-                        onChange={(e) => {
-                          const slides = [
-                            ...((localData.items as Array<
-                              Record<string, string>
-                            >) || []),
-                          ];
-                          slides[i] = {
-                            ...slides[i],
-                            subtitle: e.target.value,
-                          };
-                          updateField("items", slides);
-                        }}
-                      />
-                      <Input
-                        placeholder="Link (optional)"
-                        value={slide.link}
-                        onChange={(e) => {
-                          const slides = [
-                            ...((localData.items as Array<
-                              Record<string, string>
-                            >) || []),
-                          ];
-                          slides[i] = { ...slides[i], link: e.target.value };
-                          updateField("items", slides);
-                        }}
-                      />
-                    </Card>
-                  ),
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const slides = [
-                      ...((localData.items as Array<Record<string, string>>) ||
-                        []),
-                      { image: "", title: "Slide", subtitle: "", link: "" },
-                    ];
-                    updateField("items", slides);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Slide
-                </Button>
-              </>
-            )}
-
-            {block.type === "product-carousel" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Title</Label>
-                  <Input
-                    value={(localData.title as string) || ""}
-                    onChange={(e) => updateField("title", e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Max Products</Label>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={20}
-                      value={(localData.maxProducts as number) || 10}
-                      onChange={(e) =>
-                        updateField("maxProducts", Number(e.target.value))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Category ID (optional)</Label>
-                    <Input
-                      value={(localData.categoryId as string) || ""}
-                      onChange={(e) =>
-                        updateField("categoryId", e.target.value)
-                      }
-                      placeholder="Leave empty for featured"
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-
-            {block.type === "about" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Title</Label>
-                  <Input
-                    value={(localData.title as string) || ""}
-                    onChange={(e) => updateField("title", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Content (HTML)</Label>
-                  <Textarea
-                    rows={6}
-                    value={(localData.content as string) || ""}
-                    onChange={(e) => updateField("content", e.target.value)}
-                  />
-                </div>
-                <MediaPickerField
-                  label="Image"
-                  value={(localData.image as string) || ""}
-                  onChange={(v) => updateField("image", v)}
-                  placeholder="Image URL"
-                />
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Image Position</Label>
-                    <select
-                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
-                      value={(localData.imagePosition as string) || "left"}
-                      onChange={(e) =>
-                        updateField("imagePosition", e.target.value)
-                      }
-                    >
-                      <option value="left">Left</option>
-                      <option value="right">Right</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Button Text</Label>
-                    <Input
-                      value={(localData.buttonText as string) || ""}
-                      onChange={(e) =>
-                        updateField("buttonText", e.target.value)
-                      }
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-
-            {block.type === "trust-bar" && (
-              <>
-                <Label className="text-base font-semibold">Statistics</Label>
-                {(
-                  (localData.stats as Array<{
-                    value: number;
-                    suffix: string;
-                    label: string;
-                  }>) || []
-                ).map((stat, i) => (
-                  <Card key={i} className="p-4 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Stat {i + 1}</span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-rose-600"
-                        onClick={() => {
-                          const arr = [
-                            ...((localData.stats as Array<unknown>) || []),
-                          ];
-                          arr.splice(i, 1);
-                          updateField("stats", arr);
-                        }}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      <Input
-                        placeholder="Value (number)"
-                        type="number"
-                        value={stat.value}
-                        onChange={(e) => {
-                          const arr = [
-                            ...((localData.stats as Array<
-                              Record<string, unknown>
-                            >) || []),
-                          ];
-                          arr[i] = { ...arr[i], value: Number(e.target.value) };
-                          updateField("stats", arr);
-                        }}
-                      />
-                      <Input
-                        placeholder="Suffix (e.g. +)"
-                        value={stat.suffix}
-                        onChange={(e) => {
-                          const arr = [
-                            ...((localData.stats as Array<
-                              Record<string, unknown>
-                            >) || []),
-                          ];
-                          arr[i] = { ...arr[i], suffix: e.target.value };
-                          updateField("stats", arr);
-                        }}
-                      />
-                      <Input
-                        placeholder="Label"
-                        value={stat.label}
-                        onChange={(e) => {
-                          const arr = [
-                            ...((localData.stats as Array<
-                              Record<string, unknown>
-                            >) || []),
-                          ];
-                          arr[i] = { ...arr[i], label: e.target.value };
-                          updateField("stats", arr);
-                        }}
+                        value={(localData.title as string) || ""}
+                        onChange={(e) => updateField("title", e.target.value)}
                       />
                     </div>
-                  </Card>
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const arr = [
-                      ...((localData.stats as Array<unknown>) || []),
-                      { value: 100, suffix: "+", label: "New stat" },
-                    ];
-                    updateField("stats", arr);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Add Stat
-                </Button>
-              </>
-            )}
-
-            {block.type === "audience-cards" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Section Label</Label>
-                  <Input
-                    value={(localData.label as string) || ""}
-                    onChange={(e) => updateField("label", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Heading</Label>
-                  <Input
-                    value={(localData.heading as string) || ""}
-                    onChange={(e) => updateField("heading", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Input
-                    value={(localData.description as string) || ""}
-                    onChange={(e) => updateField("description", e.target.value)}
-                  />
-                </div>
-                <Separator />
-                <Label className="text-base font-semibold">Cards</Label>
-                {(
-                  (localData.cards as Array<{
-                    title: string;
-                    description: string;
-                    cta: string;
-                    link?: string;
-                  }>) || []
-                ).map((card, i) => (
-                  <Card key={i} className="p-4 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Card {i + 1}</span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-rose-600"
-                        onClick={() => {
-                          const arr = [
-                            ...((localData.cards as Array<unknown>) || []),
-                          ];
-                          arr.splice(i, 1);
-                          updateField("cards", arr);
-                        }}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <Input
-                      placeholder="Title"
-                      value={card.title}
-                      onChange={(e) => {
-                        const arr = [
-                          ...((localData.cards as Array<
-                            Record<string, string>
-                          >) || []),
-                        ];
-                        arr[i] = { ...arr[i], title: e.target.value };
-                        updateField("cards", arr);
-                      }}
-                    />
-                    <Input
-                      placeholder="Description"
-                      value={card.description}
-                      onChange={(e) => {
-                        const arr = [
-                          ...((localData.cards as Array<
-                            Record<string, string>
-                          >) || []),
-                        ];
-                        arr[i] = { ...arr[i], description: e.target.value };
-                        updateField("cards", arr);
-                      }}
-                    />
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <Input
-                        placeholder="CTA text"
-                        value={card.cta}
-                        onChange={(e) => {
-                          const arr = [
-                            ...((localData.cards as Array<
-                              Record<string, string>
-                            >) || []),
-                          ];
-                          arr[i] = { ...arr[i], cta: e.target.value };
-                          updateField("cards", arr);
-                        }}
-                      />
-                      <Input
-                        placeholder="CTA link"
-                        value={card.link}
-                        onChange={(e) => {
-                          const arr = [
-                            ...((localData.cards as Array<
-                              Record<string, string>
-                            >) || []),
-                          ];
-                          arr[i] = { ...arr[i], link: e.target.value };
-                          updateField("cards", arr);
-                        }}
-                      />
-                    </div>
-                  </Card>
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const arr = [
-                      ...((localData.cards as Array<unknown>) || []),
-                      {
-                        title: "New",
-                        description: "",
-                        cta: "Enquire",
-                        link: "/contact",
-                      },
-                    ];
-                    updateField("cards", arr);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Add Card
-                </Button>
-              </>
-            )}
-
-            {block.type === "capabilities" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Section Label</Label>
-                  <Input
-                    value={(localData.label as string) || ""}
-                    onChange={(e) => updateField("label", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Heading</Label>
-                  <Input
-                    value={(localData.heading as string) || ""}
-                    onChange={(e) => updateField("heading", e.target.value)}
-                  />
-                </div>
-                <Separator />
-                <Label className="text-base font-semibold">
-                  Capability Items
-                </Label>
-                {((localData.items as string[]) || []).map((item, i) => (
-                  <div key={i} className="flex gap-2">
-                    <Input
-                      value={item}
-                      onChange={(e) => {
-                        const arr = [...((localData.items as string[]) || [])];
-                        arr[i] = e.target.value;
-                        updateField("items", arr);
-                      }}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-9 w-9 shrink-0 text-rose-600"
-                      onClick={() => {
-                        const arr = [...((localData.items as string[]) || [])];
-                        arr.splice(i, 1);
-                        updateField("items", arr);
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const arr = [
-                      ...((localData.items as string[]) || []),
-                      "New capability",
-                    ];
-                    updateField("items", arr);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Add Item
-                </Button>
-                <Separator />
-                <div className="space-y-2">
-                  <MediaPickerField
-                    label="Image"
-                    value={(localData.image as string) || ""}
-                    onChange={(v) => updateField("image", v)}
-                    placeholder="Select or upload an image"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Video URL</Label>
-                  <Input
-                    value={(localData.videoUrl as string) || ""}
-                    onChange={(e) => updateField("videoUrl", e.target.value)}
-                    placeholder="https://youtube.com/..."
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    If set, a play button overlays the image and opens this URL
-                  </p>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Image Caption</Label>
-                    <Input
-                      value={(localData.imageCaption as string) || ""}
-                      onChange={(e) =>
-                        updateField("imageCaption", e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>CTA Text</Label>
-                    <Input
-                      value={(localData.ctaText as string) || ""}
-                      onChange={(e) => updateField("ctaText", e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>CTA Link</Label>
-                  <Input
-                    value={(localData.ctaLink as string) || ""}
-                    onChange={(e) => updateField("ctaLink", e.target.value)}
-                  />
-                </div>
-              </>
-            )}
-
-            {block.type === "product-categories" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Section Label</Label>
-                  <Input
-                    value={(localData.label as string) || ""}
-                    onChange={(e) => updateField("label", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Heading</Label>
-                  <Input
-                    value={(localData.heading as string) || ""}
-                    onChange={(e) => updateField("heading", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Input
-                    value={(localData.description as string) || ""}
-                    onChange={(e) => updateField("description", e.target.value)}
-                  />
-                </div>
-                <Separator />
-                <Label className="text-base font-semibold">Categories</Label>
-                {(
-                  (localData.categories as Array<{
-                    name: string;
-                    variants: string;
-                  }>) || []
-                ).map((cat, i) => (
-                  <Card key={i} className="p-4 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">
-                        Category {i + 1}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-rose-600"
-                        onClick={() => {
-                          const arr = [
-                            ...((localData.categories as Array<unknown>) || []),
-                          ];
-                          arr.splice(i, 1);
-                          updateField("categories", arr);
-                        }}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <Input
-                      placeholder="Name"
-                      value={cat.name}
-                      onChange={(e) => {
-                        const arr = [
-                          ...((localData.categories as Array<
-                            Record<string, string>
-                          >) || []),
-                        ];
-                        arr[i] = { ...arr[i], name: e.target.value };
-                        updateField("categories", arr);
-                      }}
-                    />
-                    <Input
-                      placeholder="Variants (e.g. 12+ variants)"
-                      value={cat.variants}
-                      onChange={(e) => {
-                        const arr = [
-                          ...((localData.categories as Array<
-                            Record<string, string>
-                          >) || []),
-                        ];
-                        arr[i] = { ...arr[i], variants: e.target.value };
-                        updateField("categories", arr);
-                      }}
-                    />
-                  </Card>
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const arr = [
-                      ...((localData.categories as Array<unknown>) || []),
-                      { name: "New", variants: "0 variants" },
-                    ];
-                    updateField("categories", arr);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Add Category
-                </Button>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>CTA Text</Label>
-                    <Input
-                      value={(localData.ctaText as string) || ""}
-                      onChange={(e) => updateField("ctaText", e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>CTA Link</Label>
-                    <Input
-                      value={(localData.ctaLink as string) || ""}
-                      onChange={(e) => updateField("ctaLink", e.target.value)}
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-
-            {block.type === "factory-reel" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Section Label</Label>
-                  <Input
-                    value={(localData.label as string) || ""}
-                    onChange={(e) => updateField("label", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Heading</Label>
-                  <Input
-                    value={(localData.heading as string) || ""}
-                    onChange={(e) => updateField("heading", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Input
-                    value={(localData.description as string) || ""}
-                    onChange={(e) => updateField("description", e.target.value)}
-                  />
-                </div>
-                <MediaPickerField
-                  label="Video Thumbnail"
-                  value={(localData.thumbnailUrl as string) || ""}
-                  onChange={(v) => updateField("thumbnailUrl", v)}
-                  placeholder="Thumbnail URL"
-                />
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Video URL</Label>
-                    <Input
-                      value={(localData.videoUrl as string) || ""}
-                      onChange={(e) => updateField("videoUrl", e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>CTA Text</Label>
-                    <Input
-                      value={(localData.ctaText as string) || ""}
-                      onChange={(e) => updateField("ctaText", e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>CTA Link</Label>
-                    <Input
-                      value={(localData.ctaLink as string) || ""}
-                      onChange={(e) => updateField("ctaLink", e.target.value)}
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-
-            {block.type === "certifications" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Section Label</Label>
-                  <Input
-                    value={(localData.label as string) || ""}
-                    onChange={(e) => updateField("label", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Heading</Label>
-                  <Input
-                    value={(localData.heading as string) || ""}
-                    onChange={(e) => updateField("heading", e.target.value)}
-                  />
-                </div>
-                <Separator />
-                <Label className="text-base font-semibold">
-                  Certification Names
-                </Label>
-                {((localData.items as string[]) || []).map((cert, i) => (
-                  <div key={i} className="flex gap-2">
-                    <Input
-                      value={cert}
-                      onChange={(e) => {
-                        const arr = [...((localData.items as string[]) || [])];
-                        arr[i] = e.target.value;
-                        updateField("items", arr);
-                      }}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-9 w-9 shrink-0 text-rose-600"
-                      onClick={() => {
-                        const arr = [...((localData.items as string[]) || [])];
-                        arr.splice(i, 1);
-                        updateField("items", arr);
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const arr = [
-                      ...((localData.items as string[]) || []),
-                      "New cert",
-                    ];
-                    updateField("items", arr);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Add Certification
-                </Button>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>CTA Text</Label>
-                    <Input
-                      value={(localData.ctaText as string) || ""}
-                      onChange={(e) => updateField("ctaText", e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>CTA Link</Label>
-                    <Input
-                      value={(localData.ctaLink as string) || ""}
-                      onChange={(e) => updateField("ctaLink", e.target.value)}
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-
-            {block.type === "lead-capture" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Section Label (small text above heading)</Label>
-                  <Input
-                    value={(localData.label as string) || ""}
-                    onChange={(e) => updateField("label", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Heading</Label>
-                  <Input
-                    value={(localData.heading as string) || ""}
-                    onChange={(e) => updateField("heading", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Input
-                    value={(localData.description as string) || ""}
-                    onChange={(e) => updateField("description", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Success Message</Label>
-                  <Input
-                    value={(localData.successMessage as string) || ""}
-                    onChange={(e) =>
-                      updateField("successMessage", e.target.value)
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>API Endpoint</Label>
-                  <Input
-                    value={(localData.apiEndpoint as string) || ""}
-                    onChange={(e) => updateField("apiEndpoint", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Submit Button Text</Label>
-                  <Input
-                    value={(localData.submitText as string) || ""}
-                    onChange={(e) => updateField("submitText", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Disclaimer</Label>
-                  <Input
-                    value={(localData.disclaimer as string) || ""}
-                    onChange={(e) => updateField("disclaimer", e.target.value)}
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="lead-message-field"
-                    checked={!!localData.messageField}
-                    onCheckedChange={(val) =>
-                      updateField("messageField", !!val)
-                    }
-                  />
-                  <Label htmlFor="lead-message-field">Show Message Field</Label>
-                </div>
-                <Separator />
-                <Label className="text-base font-semibold">Form Fields</Label>
-                {(
-                  (localData.fields as Array<{
-                    name: string;
-                    label: string;
-                    type: string;
-                    required: boolean;
-                    placeholder: string;
-                    options?: string[];
-                  }>) || []
-                ).map((field, i) => (
-                  <Card key={i} className="p-4 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">
-                        Field {i + 1}: {field.name}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-rose-600"
-                        onClick={() => {
-                          const fields = [
-                            ...((localData.fields as Array<unknown>) || []),
-                          ];
-                          fields.splice(i, 1);
-                          updateField("fields", fields);
-                        }}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="space-y-1">
-                        <Label className="text-[10px] uppercase">Name</Label>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Max Products</Label>
                         <Input
-                          placeholder="name"
-                          value={field.name}
-                          onChange={(e) => {
-                            const fields = [
-                              ...((localData.fields as Array<
-                                Record<string, unknown>
-                              >) || []),
-                            ];
-                            fields[i] = { ...fields[i], name: e.target.value };
-                            updateField("fields", fields);
-                          }}
+                          type="number"
+                          min={1}
+                          max={20}
+                          value={(localData.maxProducts as number) || 6}
+                          onChange={(e) =>
+                            updateField("maxProducts", Number(e.target.value))
+                          }
                         />
                       </div>
-                      <div className="space-y-1">
-                        <Label className="text-[10px] uppercase">Label</Label>
-                        <Input
-                          placeholder="Label"
-                          value={field.label}
-                          onChange={(e) => {
-                            const fields = [
-                              ...((localData.fields as Array<
-                                Record<string, unknown>
-                              >) || []),
-                            ];
-                            fields[i] = { ...fields[i], label: e.target.value };
-                            updateField("fields", fields);
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="space-y-1">
-                        <Label className="text-[10px] uppercase">Type</Label>
+                      <div className="space-y-2">
+                        <Label>Layout</Label>
                         <select
                           className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
-                          value={field.type}
-                          onChange={(e) => {
-                            const fields = [
-                              ...((localData.fields as Array<
-                                Record<string, unknown>
-                              >) || []),
-                            ];
-                            fields[i] = { ...fields[i], type: e.target.value };
-                            updateField("fields", fields);
-                          }}
+                          value={(localData.layout as string) || "grid"}
+                          onChange={(e) =>
+                            updateField("layout", e.target.value)
+                          }
                         >
-                          <option value="text">Text</option>
-                          <option value="email">Email</option>
-                          <option value="tel">Phone</option>
-                          <option value="select">Select</option>
-                          <option value="textarea">Textarea</option>
+                          <option value="grid">Grid</option>
+                          <option value="list">List</option>
                         </select>
                       </div>
-                      <div className="flex items-center gap-2 pt-6">
-                        <Checkbox
-                          id={`field-req-${i}`}
-                          checked={field.required}
-                          onCheckedChange={(val) => {
-                            const fields = [
-                              ...((localData.fields as Array<
-                                Record<string, unknown>
+                    </div>
+                  </>
+                )}
+
+                {block.type === "faq" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Title</Label>
+                      <Input
+                        value={(localData.title as string) || ""}
+                        onChange={(e) => updateField("title", e.target.value)}
+                      />
+                    </div>
+                    <Separator />
+                    <Label className="text-base font-semibold">FAQ Items</Label>
+                    {(
+                      (localData.items as Array<Record<string, string>>) || []
+                    ).map((item, i) => (
+                      <Card key={i} className="p-4 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">
+                            Item {i + 1}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-rose-600"
+                            onClick={() => {
+                              const items = [
+                                ...((localData.items as Array<unknown>) || []),
+                              ];
+                              items.splice(i, 1);
+                              updateField("items", items);
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <Input
+                          placeholder="Question"
+                          value={item.question}
+                          onChange={(e) => {
+                            const items = [
+                              ...((localData.items as Array<
+                                Record<string, string>
                               >) || []),
                             ];
-                            fields[i] = { ...fields[i], required: !!val };
-                            updateField("fields", fields);
+                            items[i] = {
+                              ...items[i],
+                              question: e.target.value,
+                            };
+                            updateField("items", items);
                           }}
                         />
-                        <Label htmlFor={`field-req-${i}`}>Required</Label>
+                        <Textarea
+                          placeholder="Answer"
+                          rows={2}
+                          value={item.answer}
+                          onChange={(e) => {
+                            const items = [
+                              ...((localData.items as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            items[i] = { ...items[i], answer: e.target.value };
+                            updateField("items", items);
+                          }}
+                        />
+                      </Card>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const items = [
+                          ...((localData.items as Array<
+                            Record<string, string>
+                          >) || []),
+                          { question: "", answer: "" },
+                        ];
+                        updateField("items", items);
+                      }}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Question
+                    </Button>
+                  </>
+                )}
+
+                {block.type === "slider" && (
+                  <>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="slider-autoplay"
+                          checked={!!localData.autoplay}
+                          onCheckedChange={(val) =>
+                            updateField("autoplay", !!val)
+                          }
+                        />
+                        <Label htmlFor="slider-autoplay">Autoplay</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Label>Interval (ms)</Label>
+                        <Input
+                          type="number"
+                          className="w-24 h-8"
+                          value={(localData.interval as number) || 5000}
+                          onChange={(e) =>
+                            updateField("interval", Number(e.target.value))
+                          }
+                        />
                       </div>
                     </div>
-                    <Input
-                      placeholder="Placeholder"
-                      value={field.placeholder}
-                      onChange={(e) => {
-                        const fields = [
-                          ...((localData.fields as Array<
-                            Record<string, unknown>
+                    <Separator />
+                    <Label className="text-base font-semibold">Slides</Label>
+                    {(
+                      (localData.items as Array<Record<string, string>>) || []
+                    ).map((slide, i) => (
+                      <Card key={i} className="p-4 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">
+                            Slide {i + 1}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-rose-600"
+                            onClick={() => {
+                              const slides = [
+                                ...((localData.items as Array<unknown>) || []),
+                              ];
+                              slides.splice(i, 1);
+                              updateField("items", slides);
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <MediaPickerField
+                          label="Image"
+                          value={slide.image}
+                          onChange={(v) => {
+                            const slides = [
+                              ...((localData.items as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            slides[i] = { ...slides[i], image: v };
+                            updateField("items", slides);
+                          }}
+                          placeholder="Image URL"
+                        />
+                        <Input
+                          placeholder="Title"
+                          value={slide.title}
+                          onChange={(e) => {
+                            const slides = [
+                              ...((localData.items as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            slides[i] = { ...slides[i], title: e.target.value };
+                            updateField("items", slides);
+                          }}
+                        />
+                        <Input
+                          placeholder="Subtitle"
+                          value={slide.subtitle}
+                          onChange={(e) => {
+                            const slides = [
+                              ...((localData.items as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            slides[i] = {
+                              ...slides[i],
+                              subtitle: e.target.value,
+                            };
+                            updateField("items", slides);
+                          }}
+                        />
+                        <Input
+                          placeholder="Link (optional)"
+                          value={slide.link}
+                          onChange={(e) => {
+                            const slides = [
+                              ...((localData.items as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            slides[i] = { ...slides[i], link: e.target.value };
+                            updateField("items", slides);
+                          }}
+                        />
+                      </Card>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const slides = [
+                          ...((localData.items as Array<
+                            Record<string, string>
                           >) || []),
+                          { image: "", title: "Slide", subtitle: "", link: "" },
                         ];
-                        fields[i] = {
-                          ...fields[i],
-                          placeholder: e.target.value,
-                        };
-                        updateField("fields", fields);
+                        updateField("items", slides);
                       }}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Slide
+                    </Button>
+                  </>
+                )}
+
+                {block.type === "product-carousel" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Title</Label>
+                      <Input
+                        value={(localData.title as string) || ""}
+                        onChange={(e) => updateField("title", e.target.value)}
+                      />
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Max Products</Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={20}
+                          value={(localData.maxProducts as number) || 10}
+                          onChange={(e) =>
+                            updateField("maxProducts", Number(e.target.value))
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Category ID (optional)</Label>
+                        <Input
+                          value={(localData.categoryId as string) || ""}
+                          onChange={(e) =>
+                            updateField("categoryId", e.target.value)
+                          }
+                          placeholder="Leave empty for featured"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {block.type === "about" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Title</Label>
+                      <Input
+                        value={(localData.title as string) || ""}
+                        onChange={(e) => updateField("title", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Content (HTML)</Label>
+                      <Textarea
+                        rows={6}
+                        value={(localData.content as string) || ""}
+                        onChange={(e) => updateField("content", e.target.value)}
+                      />
+                    </div>
+                    <MediaPickerField
+                      label="Image"
+                      value={(localData.image as string) || ""}
+                      onChange={(v) => updateField("image", v)}
+                      placeholder="Image URL"
                     />
-                    {field.type === "select" && (
-                      <div className="space-y-1">
-                        <Label className="text-[10px] uppercase">
-                          Options (one per line)
-                        </Label>
-                        <Textarea
-                          placeholder="Option 1&#10;Option 2"
-                          value={(field.options || []).join("\n")}
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Image Position</Label>
+                        <select
+                          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
+                          value={(localData.imagePosition as string) || "left"}
+                          onChange={(e) =>
+                            updateField("imagePosition", e.target.value)
+                          }
+                        >
+                          <option value="left">Left</option>
+                          <option value="right">Right</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Button Text</Label>
+                        <Input
+                          value={(localData.buttonText as string) || ""}
+                          onChange={(e) =>
+                            updateField("buttonText", e.target.value)
+                          }
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {block.type === "trust-bar" && (
+                  <>
+                    <Label className="text-base font-semibold">
+                      Statistics
+                    </Label>
+                    {(
+                      (localData.stats as Array<{
+                        value: number;
+                        suffix: string;
+                        label: string;
+                      }>) || []
+                    ).map((stat, i) => (
+                      <Card key={i} className="p-4 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">
+                            Stat {i + 1}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-rose-600"
+                            onClick={() => {
+                              const arr = [
+                                ...((localData.stats as Array<unknown>) || []),
+                              ];
+                              arr.splice(i, 1);
+                              updateField("stats", arr);
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-3">
+                          <Input
+                            placeholder="Value (number)"
+                            type="number"
+                            value={stat.value}
+                            onChange={(e) => {
+                              const arr = [
+                                ...((localData.stats as Array<
+                                  Record<string, unknown>
+                                >) || []),
+                              ];
+                              arr[i] = {
+                                ...arr[i],
+                                value: Number(e.target.value),
+                              };
+                              updateField("stats", arr);
+                            }}
+                          />
+                          <Input
+                            placeholder="Suffix (e.g. +)"
+                            value={stat.suffix}
+                            onChange={(e) => {
+                              const arr = [
+                                ...((localData.stats as Array<
+                                  Record<string, unknown>
+                                >) || []),
+                              ];
+                              arr[i] = { ...arr[i], suffix: e.target.value };
+                              updateField("stats", arr);
+                            }}
+                          />
+                          <Input
+                            placeholder="Label"
+                            value={stat.label}
+                            onChange={(e) => {
+                              const arr = [
+                                ...((localData.stats as Array<
+                                  Record<string, unknown>
+                                >) || []),
+                              ];
+                              arr[i] = { ...arr[i], label: e.target.value };
+                              updateField("stats", arr);
+                            }}
+                          />
+                        </div>
+                      </Card>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const arr = [
+                          ...((localData.stats as Array<unknown>) || []),
+                          { value: 100, suffix: "+", label: "New stat" },
+                        ];
+                        updateField("stats", arr);
+                      }}
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Add Stat
+                    </Button>
+                  </>
+                )}
+
+                {block.type === "audience-cards" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Section Label</Label>
+                      <Input
+                        value={(localData.label as string) || ""}
+                        onChange={(e) => updateField("label", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Heading</Label>
+                      <Input
+                        value={(localData.heading as string) || ""}
+                        onChange={(e) => updateField("heading", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Description</Label>
+                      <Input
+                        value={(localData.description as string) || ""}
+                        onChange={(e) =>
+                          updateField("description", e.target.value)
+                        }
+                      />
+                    </div>
+                    <Separator />
+                    <Label className="text-base font-semibold">Cards</Label>
+                    {(
+                      (localData.cards as Array<{
+                        title: string;
+                        description: string;
+                        cta: string;
+                        link?: string;
+                      }>) || []
+                    ).map((card, i) => (
+                      <Card key={i} className="p-4 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">
+                            Card {i + 1}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-rose-600"
+                            onClick={() => {
+                              const arr = [
+                                ...((localData.cards as Array<unknown>) || []),
+                              ];
+                              arr.splice(i, 1);
+                              updateField("cards", arr);
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <Input
+                          placeholder="Title"
+                          value={card.title}
+                          onChange={(e) => {
+                            const arr = [
+                              ...((localData.cards as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            arr[i] = { ...arr[i], title: e.target.value };
+                            updateField("cards", arr);
+                          }}
+                        />
+                        <Input
+                          placeholder="Description"
+                          value={card.description}
+                          onChange={(e) => {
+                            const arr = [
+                              ...((localData.cards as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            arr[i] = { ...arr[i], description: e.target.value };
+                            updateField("cards", arr);
+                          }}
+                        />
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <Input
+                            placeholder="CTA text"
+                            value={card.cta}
+                            onChange={(e) => {
+                              const arr = [
+                                ...((localData.cards as Array<
+                                  Record<string, string>
+                                >) || []),
+                              ];
+                              arr[i] = { ...arr[i], cta: e.target.value };
+                              updateField("cards", arr);
+                            }}
+                          />
+                          <Input
+                            placeholder="CTA link"
+                            value={card.link}
+                            onChange={(e) => {
+                              const arr = [
+                                ...((localData.cards as Array<
+                                  Record<string, string>
+                                >) || []),
+                              ];
+                              arr[i] = { ...arr[i], link: e.target.value };
+                              updateField("cards", arr);
+                            }}
+                          />
+                        </div>
+                      </Card>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const arr = [
+                          ...((localData.cards as Array<unknown>) || []),
+                          {
+                            title: "New",
+                            description: "",
+                            cta: "Enquire",
+                            link: "/contact",
+                          },
+                        ];
+                        updateField("cards", arr);
+                      }}
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Add Card
+                    </Button>
+                  </>
+                )}
+
+                {block.type === "capabilities" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Section Label</Label>
+                      <Input
+                        value={(localData.label as string) || ""}
+                        onChange={(e) => updateField("label", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Heading</Label>
+                      <Input
+                        value={(localData.heading as string) || ""}
+                        onChange={(e) => updateField("heading", e.target.value)}
+                      />
+                    </div>
+                    <Separator />
+                    <Label className="text-base font-semibold">
+                      Capability Items
+                    </Label>
+                    {((localData.items as string[]) || []).map((item, i) => (
+                      <div key={i} className="flex gap-2">
+                        <Input
+                          value={item}
+                          onChange={(e) => {
+                            const arr = [
+                              ...((localData.items as string[]) || []),
+                            ];
+                            arr[i] = e.target.value;
+                            updateField("items", arr);
+                          }}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 shrink-0 text-rose-600"
+                          onClick={() => {
+                            const arr = [
+                              ...((localData.items as string[]) || []),
+                            ];
+                            arr.splice(i, 1);
+                            updateField("items", arr);
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const arr = [
+                          ...((localData.items as string[]) || []),
+                          "New capability",
+                        ];
+                        updateField("items", arr);
+                      }}
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Add Item
+                    </Button>
+                    <Separator />
+                    <div className="space-y-2">
+                      <MediaPickerField
+                        label="Image"
+                        value={(localData.image as string) || ""}
+                        onChange={(v) => updateField("image", v)}
+                        placeholder="Select or upload an image"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Video URL</Label>
+                      <Input
+                        value={(localData.videoUrl as string) || ""}
+                        onChange={(e) =>
+                          updateField("videoUrl", e.target.value)
+                        }
+                        placeholder="https://youtube.com/..."
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        If set, a play button overlays the image and opens this
+                        URL
+                      </p>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Image Caption</Label>
+                        <Input
+                          value={(localData.imageCaption as string) || ""}
+                          onChange={(e) =>
+                            updateField("imageCaption", e.target.value)
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>CTA Text</Label>
+                        <Input
+                          value={(localData.ctaText as string) || ""}
+                          onChange={(e) =>
+                            updateField("ctaText", e.target.value)
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>CTA Link</Label>
+                      <Input
+                        value={(localData.ctaLink as string) || ""}
+                        onChange={(e) => updateField("ctaLink", e.target.value)}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {block.type === "product-categories" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Section Label</Label>
+                      <Input
+                        value={(localData.label as string) || ""}
+                        onChange={(e) => updateField("label", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Heading</Label>
+                      <Input
+                        value={(localData.heading as string) || ""}
+                        onChange={(e) => updateField("heading", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Description</Label>
+                      <Input
+                        value={(localData.description as string) || ""}
+                        onChange={(e) =>
+                          updateField("description", e.target.value)
+                        }
+                      />
+                    </div>
+                    <Separator />
+                    <Label className="text-base font-semibold">
+                      Categories
+                    </Label>
+                    {(
+                      (localData.categories as Array<{
+                        name: string;
+                        variants: string;
+                      }>) || []
+                    ).map((cat, i) => (
+                      <Card key={i} className="p-4 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">
+                            Category {i + 1}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-rose-600"
+                            onClick={() => {
+                              const arr = [
+                                ...((localData.categories as Array<unknown>) ||
+                                  []),
+                              ];
+                              arr.splice(i, 1);
+                              updateField("categories", arr);
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <Input
+                          placeholder="Name"
+                          value={cat.name}
+                          onChange={(e) => {
+                            const arr = [
+                              ...((localData.categories as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            arr[i] = { ...arr[i], name: e.target.value };
+                            updateField("categories", arr);
+                          }}
+                        />
+                        <Input
+                          placeholder="Variants (e.g. 12+ variants)"
+                          value={cat.variants}
+                          onChange={(e) => {
+                            const arr = [
+                              ...((localData.categories as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            arr[i] = { ...arr[i], variants: e.target.value };
+                            updateField("categories", arr);
+                          }}
+                        />
+                      </Card>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const arr = [
+                          ...((localData.categories as Array<unknown>) || []),
+                          { name: "New", variants: "0 variants" },
+                        ];
+                        updateField("categories", arr);
+                      }}
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Add Category
+                    </Button>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>CTA Text</Label>
+                        <Input
+                          value={(localData.ctaText as string) || ""}
+                          onChange={(e) =>
+                            updateField("ctaText", e.target.value)
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>CTA Link</Label>
+                        <Input
+                          value={(localData.ctaLink as string) || ""}
+                          onChange={(e) =>
+                            updateField("ctaLink", e.target.value)
+                          }
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {block.type === "factory-reel" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Section Label</Label>
+                      <Input
+                        value={(localData.label as string) || ""}
+                        onChange={(e) => updateField("label", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Heading</Label>
+                      <Input
+                        value={(localData.heading as string) || ""}
+                        onChange={(e) => updateField("heading", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Description</Label>
+                      <Input
+                        value={(localData.description as string) || ""}
+                        onChange={(e) =>
+                          updateField("description", e.target.value)
+                        }
+                      />
+                    </div>
+                    <MediaPickerField
+                      label="Video Thumbnail"
+                      value={(localData.thumbnailUrl as string) || ""}
+                      onChange={(v) => updateField("thumbnailUrl", v)}
+                      placeholder="Thumbnail URL"
+                    />
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Video URL</Label>
+                        <Input
+                          value={(localData.videoUrl as string) || ""}
+                          onChange={(e) =>
+                            updateField("videoUrl", e.target.value)
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>CTA Text</Label>
+                        <Input
+                          value={(localData.ctaText as string) || ""}
+                          onChange={(e) =>
+                            updateField("ctaText", e.target.value)
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>CTA Link</Label>
+                        <Input
+                          value={(localData.ctaLink as string) || ""}
+                          onChange={(e) =>
+                            updateField("ctaLink", e.target.value)
+                          }
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {block.type === "certifications" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Section Label</Label>
+                      <Input
+                        value={(localData.label as string) || ""}
+                        onChange={(e) => updateField("label", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Heading</Label>
+                      <Input
+                        value={(localData.heading as string) || ""}
+                        onChange={(e) => updateField("heading", e.target.value)}
+                      />
+                    </div>
+                    <Separator />
+                    <Label className="text-base font-semibold">
+                      Certification Names
+                    </Label>
+                    {((localData.items as string[]) || []).map((cert, i) => (
+                      <div key={i} className="flex gap-2">
+                        <Input
+                          value={cert}
+                          onChange={(e) => {
+                            const arr = [
+                              ...((localData.items as string[]) || []),
+                            ];
+                            arr[i] = e.target.value;
+                            updateField("items", arr);
+                          }}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 shrink-0 text-rose-600"
+                          onClick={() => {
+                            const arr = [
+                              ...((localData.items as string[]) || []),
+                            ];
+                            arr.splice(i, 1);
+                            updateField("items", arr);
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const arr = [
+                          ...((localData.items as string[]) || []),
+                          "New cert",
+                        ];
+                        updateField("items", arr);
+                      }}
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Add Certification
+                    </Button>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>CTA Text</Label>
+                        <Input
+                          value={(localData.ctaText as string) || ""}
+                          onChange={(e) =>
+                            updateField("ctaText", e.target.value)
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>CTA Link</Label>
+                        <Input
+                          value={(localData.ctaLink as string) || ""}
+                          onChange={(e) =>
+                            updateField("ctaLink", e.target.value)
+                          }
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {block.type === "lead-capture" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Section Label (small text above heading)</Label>
+                      <Input
+                        value={(localData.label as string) || ""}
+                        onChange={(e) => updateField("label", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Heading</Label>
+                      <Input
+                        value={(localData.heading as string) || ""}
+                        onChange={(e) => updateField("heading", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Description</Label>
+                      <Input
+                        value={(localData.description as string) || ""}
+                        onChange={(e) =>
+                          updateField("description", e.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Success Message</Label>
+                      <Input
+                        value={(localData.successMessage as string) || ""}
+                        onChange={(e) =>
+                          updateField("successMessage", e.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>API Endpoint</Label>
+                      <Input
+                        value={(localData.apiEndpoint as string) || ""}
+                        onChange={(e) =>
+                          updateField("apiEndpoint", e.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Submit Button Text</Label>
+                      <Input
+                        value={(localData.submitText as string) || ""}
+                        onChange={(e) =>
+                          updateField("submitText", e.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Disclaimer</Label>
+                      <Input
+                        value={(localData.disclaimer as string) || ""}
+                        onChange={(e) =>
+                          updateField("disclaimer", e.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="lead-message-field"
+                        checked={!!localData.messageField}
+                        onCheckedChange={(val) =>
+                          updateField("messageField", !!val)
+                        }
+                      />
+                      <Label htmlFor="lead-message-field">
+                        Show Message Field
+                      </Label>
+                    </div>
+                    <Separator />
+                    <Label className="text-base font-semibold">
+                      Form Fields
+                    </Label>
+                    {(
+                      (localData.fields as Array<{
+                        name: string;
+                        label: string;
+                        type: string;
+                        required: boolean;
+                        placeholder: string;
+                        options?: string[];
+                      }>) || []
+                    ).map((field, i) => (
+                      <Card key={i} className="p-4 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">
+                            Field {i + 1}: {field.name}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-rose-600"
+                            onClick={() => {
+                              const fields = [
+                                ...((localData.fields as Array<unknown>) || []),
+                              ];
+                              fields.splice(i, 1);
+                              updateField("fields", fields);
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div className="space-y-1">
+                            <Label className="text-[10px] uppercase">
+                              Name
+                            </Label>
+                            <Input
+                              placeholder="name"
+                              value={field.name}
+                              onChange={(e) => {
+                                const fields = [
+                                  ...((localData.fields as Array<
+                                    Record<string, unknown>
+                                  >) || []),
+                                ];
+                                fields[i] = {
+                                  ...fields[i],
+                                  name: e.target.value,
+                                };
+                                updateField("fields", fields);
+                              }}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[10px] uppercase">
+                              Label
+                            </Label>
+                            <Input
+                              placeholder="Label"
+                              value={field.label}
+                              onChange={(e) => {
+                                const fields = [
+                                  ...((localData.fields as Array<
+                                    Record<string, unknown>
+                                  >) || []),
+                                ];
+                                fields[i] = {
+                                  ...fields[i],
+                                  label: e.target.value,
+                                };
+                                updateField("fields", fields);
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div className="space-y-1">
+                            <Label className="text-[10px] uppercase">
+                              Type
+                            </Label>
+                            <select
+                              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
+                              value={field.type}
+                              onChange={(e) => {
+                                const fields = [
+                                  ...((localData.fields as Array<
+                                    Record<string, unknown>
+                                  >) || []),
+                                ];
+                                fields[i] = {
+                                  ...fields[i],
+                                  type: e.target.value,
+                                };
+                                updateField("fields", fields);
+                              }}
+                            >
+                              <option value="text">Text</option>
+                              <option value="email">Email</option>
+                              <option value="tel">Phone</option>
+                              <option value="select">Select</option>
+                              <option value="textarea">Textarea</option>
+                            </select>
+                          </div>
+                          <div className="flex items-center gap-2 pt-6">
+                            <Checkbox
+                              id={`field-req-${i}`}
+                              checked={field.required}
+                              onCheckedChange={(val) => {
+                                const fields = [
+                                  ...((localData.fields as Array<
+                                    Record<string, unknown>
+                                  >) || []),
+                                ];
+                                fields[i] = { ...fields[i], required: !!val };
+                                updateField("fields", fields);
+                              }}
+                            />
+                            <Label htmlFor={`field-req-${i}`}>Required</Label>
+                          </div>
+                        </div>
+                        <Input
+                          placeholder="Placeholder"
+                          value={field.placeholder}
                           onChange={(e) => {
                             const fields = [
                               ...((localData.fields as Array<
@@ -1969,658 +2027,709 @@ function BlockEditDialog({
                             ];
                             fields[i] = {
                               ...fields[i],
-                              options: e.target.value
-                                .split("\n")
-                                .filter(Boolean),
+                              placeholder: e.target.value,
                             };
                             updateField("fields", fields);
                           }}
                         />
-                      </div>
-                    )}
-                  </Card>
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const fields = [
-                      ...((localData.fields as Array<Record<string, unknown>>) ||
-                        []),
-                      {
-                        name: "new_field",
-                        label: "New Field",
-                        type: "text",
-                        required: false,
-                        placeholder: "",
-                      },
-                    ];
-                    updateField("fields", fields);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Add Field
-                </Button>
-              </>
-            )}
+                        {field.type === "select" && (
+                          <div className="space-y-1">
+                            <Label className="text-[10px] uppercase">
+                              Options (one per line)
+                            </Label>
+                            <Textarea
+                              placeholder="Option 1&#10;Option 2"
+                              value={(field.options || []).join("\n")}
+                              onChange={(e) => {
+                                const fields = [
+                                  ...((localData.fields as Array<
+                                    Record<string, unknown>
+                                  >) || []),
+                                ];
+                                fields[i] = {
+                                  ...fields[i],
+                                  options: e.target.value
+                                    .split("\n")
+                                    .filter(Boolean),
+                                };
+                                updateField("fields", fields);
+                              }}
+                            />
+                          </div>
+                        )}
+                      </Card>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const fields = [
+                          ...((localData.fields as Array<
+                            Record<string, unknown>
+                          >) || []),
+                          {
+                            name: "new_field",
+                            label: "New Field",
+                            type: "text",
+                            required: false,
+                            placeholder: "",
+                          },
+                        ];
+                        updateField("fields", fields);
+                      }}
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Add Field
+                    </Button>
+                  </>
+                )}
 
-            {block.type === "leadership" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Section Label</Label>
-                  <Input
-                    value={(localData.label as string) || ""}
-                    onChange={(e) => updateField("label", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Heading</Label>
-                  <Input
-                    value={(localData.heading as string) || ""}
-                    onChange={(e) => updateField("heading", e.target.value)}
-                  />
-                </div>
-                <Separator />
-                <Label className="text-base font-semibold">Team Members</Label>
-                {(
-                  (localData.members as Array<{
-                    name: string;
-                    role: string;
-                    bio: string;
-                    image?: string;
-                  }>) || []
-                ).map((member, i) => (
-                  <Card key={i} className="p-4 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">
-                        Member {i + 1}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-rose-600"
-                        onClick={() => {
-                          const arr = [
-                            ...((localData.members as Array<unknown>) || []),
-                          ];
-                          arr.splice(i, 1);
-                          updateField("members", arr);
-                        }}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <MediaPickerField
-                      label="Photo"
-                      value={member.image || ''}
-                      onChange={(v) => {
-                        const arr = [
-                          ...((localData.members as Array<
-                            Record<string, string>
-                          >) || []),
-                        ];
-                        arr[i] = { ...arr[i], image: v };
-                        updateField("members", arr);
-                      }}
-                    />
-                    <Input
-                      placeholder="Name"
-                      value={member.name}
-                      onChange={(e) => {
-                        const arr = [
-                          ...((localData.members as Array<
-                            Record<string, string>
-                          >) || []),
-                        ];
-                        arr[i] = { ...arr[i], name: e.target.value };
-                        updateField("members", arr);
-                      }}
-                    />
-                    <Input
-                      placeholder="Role"
-                      value={member.role}
-                      onChange={(e) => {
-                        const arr = [
-                          ...((localData.members as Array<
-                            Record<string, string>
-                          >) || []),
-                        ];
-                        arr[i] = { ...arr[i], role: e.target.value };
-                        updateField("members", arr);
-                      }}
-                    />
-                    <Textarea
-                      placeholder="Bio"
-                      rows={2}
-                      value={member.bio}
-                      onChange={(e) => {
-                        const arr = [
-                          ...((localData.members as Array<
-                            Record<string, string>
-                          >) || []),
-                        ];
-                        arr[i] = { ...arr[i], bio: e.target.value };
-                        updateField("members", arr);
-                      }}
-                    />
-                  </Card>
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const arr = [
-                      ...((localData.members as Array<unknown>) || []),
-                      { name: "Name", role: "Role", bio: "Bio" },
-                    ];
-                    updateField("members", arr);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Add Member
-                </Button>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>CTA Text</Label>
-                    <Input
-                      value={(localData.ctaText as string) || ""}
-                      onChange={(e) => updateField("ctaText", e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>CTA Link</Label>
-                    <Input
-                      value={(localData.ctaLink as string) || ""}
-                      onChange={(e) => updateField("ctaLink", e.target.value)}
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-
-            {block.type === "partner-logos" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Heading</Label>
-                  <Input
-                    value={(localData.heading as string) || ""}
-                    onChange={(e) => updateField("heading", e.target.value)}
-                  />
-                </div>
-                <Separator />
-                <Label className="text-base font-semibold">Logos</Label>
-                {((localData.logos as string[]) || []).map((logo, i) => (
-                  <div key={i} className="flex gap-2">
-                    <div className="flex-1">
-                      <MediaPickerField
-                        value={logo}
-                        onChange={(v) => {
-                          const arr = [...((localData.logos as string[]) || [])];
-                          arr[i] = v;
-                          updateField("logos", arr);
-                        }}
-                        placeholder="Logo URL"
+                {block.type === "leadership" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Section Label</Label>
+                      <Input
+                        value={(localData.label as string) || ""}
+                        onChange={(e) => updateField("label", e.target.value)}
                       />
                     </div>
+                    <div className="space-y-2">
+                      <Label>Heading</Label>
+                      <Input
+                        value={(localData.heading as string) || ""}
+                        onChange={(e) => updateField("heading", e.target.value)}
+                      />
+                    </div>
+                    <Separator />
+                    <Label className="text-base font-semibold">
+                      Team Members
+                    </Label>
+                    {(
+                      (localData.members as Array<{
+                        name: string;
+                        role: string;
+                        bio: string;
+                        image?: string;
+                      }>) || []
+                    ).map((member, i) => (
+                      <Card key={i} className="p-4 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">
+                            Member {i + 1}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-rose-600"
+                            onClick={() => {
+                              const arr = [
+                                ...((localData.members as Array<unknown>) ||
+                                  []),
+                              ];
+                              arr.splice(i, 1);
+                              updateField("members", arr);
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <MediaPickerField
+                          label="Photo"
+                          value={member.image || ""}
+                          onChange={(v) => {
+                            const arr = [
+                              ...((localData.members as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            arr[i] = { ...arr[i], image: v };
+                            updateField("members", arr);
+                          }}
+                        />
+                        <Input
+                          placeholder="Name"
+                          value={member.name}
+                          onChange={(e) => {
+                            const arr = [
+                              ...((localData.members as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            arr[i] = { ...arr[i], name: e.target.value };
+                            updateField("members", arr);
+                          }}
+                        />
+                        <Input
+                          placeholder="Role"
+                          value={member.role}
+                          onChange={(e) => {
+                            const arr = [
+                              ...((localData.members as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            arr[i] = { ...arr[i], role: e.target.value };
+                            updateField("members", arr);
+                          }}
+                        />
+                        <Textarea
+                          placeholder="Bio"
+                          rows={2}
+                          value={member.bio}
+                          onChange={(e) => {
+                            const arr = [
+                              ...((localData.members as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            arr[i] = { ...arr[i], bio: e.target.value };
+                            updateField("members", arr);
+                          }}
+                        />
+                      </Card>
+                    ))}
                     <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-9 w-9 shrink-0 text-rose-600 mt-6"
+                      variant="outline"
+                      size="sm"
                       onClick={() => {
-                        const arr = [...((localData.logos as string[]) || [])];
-                        arr.splice(i, 1);
+                        const arr = [
+                          ...((localData.members as Array<unknown>) || []),
+                          { name: "Name", role: "Role", bio: "Bio" },
+                        ];
+                        updateField("members", arr);
+                      }}
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Add Member
+                    </Button>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>CTA Text</Label>
+                        <Input
+                          value={(localData.ctaText as string) || ""}
+                          onChange={(e) =>
+                            updateField("ctaText", e.target.value)
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>CTA Link</Label>
+                        <Input
+                          value={(localData.ctaLink as string) || ""}
+                          onChange={(e) =>
+                            updateField("ctaLink", e.target.value)
+                          }
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {block.type === "partner-logos" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Heading</Label>
+                      <Input
+                        value={(localData.heading as string) || ""}
+                        onChange={(e) => updateField("heading", e.target.value)}
+                      />
+                    </div>
+                    <Separator />
+                    <Label className="text-base font-semibold">Logos</Label>
+                    {((localData.logos as string[]) || []).map((logo, i) => (
+                      <div key={i} className="flex gap-2">
+                        <div className="flex-1">
+                          <MediaPickerField
+                            value={logo}
+                            onChange={(v) => {
+                              const arr = [
+                                ...((localData.logos as string[]) || []),
+                              ];
+                              arr[i] = v;
+                              updateField("logos", arr);
+                            }}
+                            placeholder="Logo URL"
+                          />
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 shrink-0 text-rose-600 mt-6"
+                          onClick={() => {
+                            const arr = [
+                              ...((localData.logos as string[]) || []),
+                            ];
+                            arr.splice(i, 1);
+                            updateField("logos", arr);
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const arr = [
+                          ...((localData.logos as string[]) || []),
+                          "",
+                        ];
                         updateField("logos", arr);
                       }}
                     >
-                      <X className="h-4 w-4" />
+                      <Plus className="mr-2 h-4 w-4" /> Add Logo
                     </Button>
-                  </div>
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const arr = [...((localData.logos as string[]) || []), ""];
-                    updateField("logos", arr);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Add Logo
-                </Button>
 
-                <Separator />
-                <Label className="text-base font-semibold">Testimonials</Label>
-                {(
-                  (localData.testimonials as Array<{
-                    quote: string;
-                    author: string;
-                  }>) || []
-                ).map((t, i) => (
-                  <Card key={i} className="p-4 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">
-                        Testimonial {i + 1}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-rose-600"
-                        onClick={() => {
-                          const arr = [
-                            ...((localData.testimonials as Array<unknown>) ||
-                              []),
-                          ];
-                          arr.splice(i, 1);
-                          updateField("testimonials", arr);
-                        }}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <Textarea
-                      placeholder="Quote"
-                      rows={2}
-                      value={t.quote}
-                      onChange={(e) => {
+                    <Separator />
+                    <Label className="text-base font-semibold">
+                      Testimonials
+                    </Label>
+                    {(
+                      (localData.testimonials as Array<{
+                        quote: string;
+                        author: string;
+                      }>) || []
+                    ).map((t, i) => (
+                      <Card key={i} className="p-4 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">
+                            Testimonial {i + 1}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-rose-600"
+                            onClick={() => {
+                              const arr = [
+                                ...((localData.testimonials as Array<unknown>) ||
+                                  []),
+                              ];
+                              arr.splice(i, 1);
+                              updateField("testimonials", arr);
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <Textarea
+                          placeholder="Quote"
+                          rows={2}
+                          value={t.quote}
+                          onChange={(e) => {
+                            const arr = [
+                              ...((localData.testimonials as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            arr[i] = { ...arr[i], quote: e.target.value };
+                            updateField("testimonials", arr);
+                          }}
+                        />
+                        <Input
+                          placeholder="Author"
+                          value={t.author}
+                          onChange={(e) => {
+                            const arr = [
+                              ...((localData.testimonials as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            arr[i] = { ...arr[i], author: e.target.value };
+                            updateField("testimonials", arr);
+                          }}
+                        />
+                      </Card>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
                         const arr = [
-                          ...((localData.testimonials as Array<
-                            Record<string, string>
-                          >) || []),
+                          ...((localData.testimonials as Array<unknown>) || []),
+                          { quote: "", author: "" },
                         ];
-                        arr[i] = { ...arr[i], quote: e.target.value };
                         updateField("testimonials", arr);
                       }}
-                    />
-                    <Input
-                      placeholder="Author"
-                      value={t.author}
-                      onChange={(e) => {
-                        const arr = [
-                          ...((localData.testimonials as Array<
-                            Record<string, string>
-                          >) || []),
-                        ];
-                        arr[i] = { ...arr[i], author: e.target.value };
-                        updateField("testimonials", arr);
-                      }}
-                    />
-                  </Card>
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const arr = [
-                      ...((localData.testimonials as Array<unknown>) || []),
-                      { quote: "", author: "" },
-                    ];
-                    updateField("testimonials", arr);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Add Testimonial
-                </Button>
-              </>
-            )}
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Add Testimonial
+                    </Button>
+                  </>
+                )}
 
-            {block.type === "blog-grid" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Title</Label>
-                  <Input
-                    value={(localData.title as string) || ""}
-                    onChange={(e) => updateField("title", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Max Posts</Label>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={20}
-                    value={(localData.maxPosts as number) || 6}
-                    onChange={(e) =>
-                      updateField("maxPosts", Number(e.target.value))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Layout</Label>
-                  <select
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
-                    value={(localData.layout as string) || "grid"}
-                    onChange={(e) => updateField("layout", e.target.value)}
-                  >
-                    <option value="grid">Grid</option>
-                    <option value="list">List</option>
-                    <option value="carousel">Carousel</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Category Filter (optional)</Label>
-                  <Input
-                    placeholder="Leave empty for all"
-                    value={(localData.categoryId as string) || ""}
-                    onChange={(e) => updateField("categoryId", e.target.value)}
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={(localData.showFeatured as boolean) !== false}
-                    onCheckedChange={(checked) =>
-                      updateField("showFeatured", checked)
-                    }
-                  />
-                  <Label className="cursor-pointer">
-                    Show featured post first
-                  </Label>
-                </div>
-              </>
-            )}
-
-            {block.type === "pricing-table" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Title</Label>
-                  <Input
-                    value={(localData.title as string) || ""}
-                    onChange={(e) => updateField("title", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Input
-                    value={(localData.description as string) || ""}
-                    onChange={(e) => updateField("description", e.target.value)}
-                  />
-                </div>
-                <Separator />
-                <Label className="text-base font-semibold">Pricing Tiers</Label>
-                {(
-                  (localData.tiers as Array<{
-                    name: string;
-                    price: string;
-                    description: string;
-                    features: string[];
-                    ctaText: string;
-                    ctaLink: string;
-                    highlighted: boolean;
-                  }>) || []
-                ).map((tier, i) => (
-                  <Card key={i} className="p-4 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Tier {i + 1}</span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-rose-600"
-                        onClick={() => {
-                          const arr = [
-                            ...((localData.tiers as Array<unknown>) || []),
-                          ];
-                          arr.splice(i, 1);
-                          updateField("tiers", arr);
-                        }}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <Input
-                        placeholder="Plan Name"
-                        value={tier.name}
-                        onChange={(e) => {
-                          const arr = [
-                            ...((localData.tiers as Array<
-                              Record<string, unknown>
-                            >) || []),
-                          ];
-                          arr[i] = { ...arr[i], name: e.target.value };
-                          updateField("tiers", arr);
-                        }}
-                      />
-                      <Input
-                        placeholder="Price (e.g. ₹999)"
-                        value={tier.price}
-                        onChange={(e) => {
-                          const arr = [
-                            ...((localData.tiers as Array<
-                              Record<string, unknown>
-                            >) || []),
-                          ];
-                          arr[i] = { ...arr[i], price: e.target.value };
-                          updateField("tiers", arr);
-                        }}
-                      />
-                    </div>
-                    <Input
-                      placeholder="Short description"
-                      value={tier.description}
-                      onChange={(e) => {
-                        const arr = [
-                          ...((localData.tiers as Array<
-                            Record<string, unknown>
-                          >) || []),
-                        ];
-                        arr[i] = { ...arr[i], description: e.target.value };
-                        updateField("tiers", arr);
-                      }}
-                    />
+                {block.type === "blog-grid" && (
+                  <>
                     <div className="space-y-2">
-                      <Label>Features (one per line)</Label>
-                      <Textarea
-                        rows={3}
-                        placeholder="Feature 1&#10;Feature 2&#10;Feature 3"
-                        value={(tier.features || []).join("\n")}
-                        onChange={(e) => {
-                          const arr = [
-                            ...((localData.tiers as Array<
-                              Record<string, unknown>
-                            >) || []),
-                          ];
-                          arr[i] = {
-                            ...arr[i],
-                            features: e.target.value
-                              .split("\n")
-                              .filter(Boolean),
-                          };
-                          updateField("tiers", arr);
-                        }}
+                      <Label>Title</Label>
+                      <Input
+                        value={(localData.title as string) || ""}
+                        onChange={(e) => updateField("title", e.target.value)}
                       />
                     </div>
-                    <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Max Posts</Label>
                       <Input
-                        placeholder="CTA Text"
-                        value={tier.ctaText}
-                        onChange={(e) => {
-                          const arr = [
-                            ...((localData.tiers as Array<
-                              Record<string, unknown>
-                            >) || []),
-                          ];
-                          arr[i] = { ...arr[i], ctaText: e.target.value };
-                          updateField("tiers", arr);
-                        }}
+                        type="number"
+                        min={1}
+                        max={20}
+                        value={(localData.maxPosts as number) || 6}
+                        onChange={(e) =>
+                          updateField("maxPosts", Number(e.target.value))
+                        }
                       />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Layout</Label>
+                      <select
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
+                        value={(localData.layout as string) || "grid"}
+                        onChange={(e) => updateField("layout", e.target.value)}
+                      >
+                        <option value="grid">Grid</option>
+                        <option value="list">List</option>
+                        <option value="carousel">Carousel</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Category Filter (optional)</Label>
                       <Input
-                        placeholder="CTA Link"
-                        value={tier.ctaLink}
-                        onChange={(e) => {
-                          const arr = [
-                            ...((localData.tiers as Array<
-                              Record<string, unknown>
-                            >) || []),
-                          ];
-                          arr[i] = { ...arr[i], ctaLink: e.target.value };
-                          updateField("tiers", arr);
-                        }}
+                        placeholder="Leave empty for all"
+                        value={(localData.categoryId as string) || ""}
+                        onChange={(e) =>
+                          updateField("categoryId", e.target.value)
+                        }
                       />
                     </div>
                     <div className="flex items-center gap-2">
                       <Checkbox
-                        checked={tier.highlighted || false}
-                        onCheckedChange={(checked) => {
-                          const arr = [
-                            ...((localData.tiers as Array<
-                              Record<string, unknown>
-                            >) || []),
-                          ];
-                          arr[i] = { ...arr[i], highlighted: checked };
-                          updateField("tiers", arr);
-                        }}
+                        checked={(localData.showFeatured as boolean) !== false}
+                        onCheckedChange={(checked) =>
+                          updateField("showFeatured", checked)
+                        }
                       />
                       <Label className="cursor-pointer">
-                        Highlight this tier (featured)
+                        Show featured post first
                       </Label>
                     </div>
-                  </Card>
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const arr = [
-                      ...((localData.tiers as Array<unknown>) || []),
-                      {
-                        name: "New Plan",
-                        price: "₹___",
-                        description: "",
-                        features: ["Feature"],
-                        ctaText: "Get started",
-                        ctaLink: "/contact",
-                        highlighted: false,
-                      },
-                    ];
-                    updateField("tiers", arr);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Add Tier
-                </Button>
-              </>
-            )}
+                  </>
+                )}
 
-            {block.type === "sticky-cta" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Text</Label>
-                  <Input
-                    value={(localData.text as string) || ""}
-                    onChange={(e) => updateField("text", e.target.value)}
-                  />
-                </div>
-                <Separator />
-                <Label className="text-base font-semibold">Buttons</Label>
-                {(
-                  (localData.buttons as Array<{
-                    text: string;
-                    type: string;
-                    action: string;
-                    link?: string;
-                  }>) || []
-                ).map((btn, i) => (
-                  <Card key={i} className="p-4 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">
-                        Button {i + 1}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-rose-600"
-                        onClick={() => {
-                          const arr = [
-                            ...((localData.buttons as Array<unknown>) || []),
-                          ];
-                          arr.splice(i, 1);
-                          updateField("buttons", arr);
-                        }}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
+                {block.type === "pricing-table" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Title</Label>
+                      <Input
+                        value={(localData.title as string) || ""}
+                        onChange={(e) => updateField("title", e.target.value)}
+                      />
                     </div>
-                    <Input
-                      placeholder="Button Text"
-                      value={btn.text}
-                      onChange={(e) => {
+                    <div className="space-y-2">
+                      <Label>Description</Label>
+                      <Input
+                        value={(localData.description as string) || ""}
+                        onChange={(e) =>
+                          updateField("description", e.target.value)
+                        }
+                      />
+                    </div>
+                    <Separator />
+                    <Label className="text-base font-semibold">
+                      Pricing Tiers
+                    </Label>
+                    {(
+                      (localData.tiers as Array<{
+                        name: string;
+                        price: string;
+                        description: string;
+                        features: string[];
+                        ctaText: string;
+                        ctaLink: string;
+                        highlighted: boolean;
+                      }>) || []
+                    ).map((tier, i) => (
+                      <Card key={i} className="p-4 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">
+                            Tier {i + 1}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-rose-600"
+                            onClick={() => {
+                              const arr = [
+                                ...((localData.tiers as Array<unknown>) || []),
+                              ];
+                              arr.splice(i, 1);
+                              updateField("tiers", arr);
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <Input
+                            placeholder="Plan Name"
+                            value={tier.name}
+                            onChange={(e) => {
+                              const arr = [
+                                ...((localData.tiers as Array<
+                                  Record<string, unknown>
+                                >) || []),
+                              ];
+                              arr[i] = { ...arr[i], name: e.target.value };
+                              updateField("tiers", arr);
+                            }}
+                          />
+                          <Input
+                            placeholder="Price (e.g. ₹999)"
+                            value={tier.price}
+                            onChange={(e) => {
+                              const arr = [
+                                ...((localData.tiers as Array<
+                                  Record<string, unknown>
+                                >) || []),
+                              ];
+                              arr[i] = { ...arr[i], price: e.target.value };
+                              updateField("tiers", arr);
+                            }}
+                          />
+                        </div>
+                        <Input
+                          placeholder="Short description"
+                          value={tier.description}
+                          onChange={(e) => {
+                            const arr = [
+                              ...((localData.tiers as Array<
+                                Record<string, unknown>
+                              >) || []),
+                            ];
+                            arr[i] = { ...arr[i], description: e.target.value };
+                            updateField("tiers", arr);
+                          }}
+                        />
+                        <div className="space-y-2">
+                          <Label>Features (one per line)</Label>
+                          <Textarea
+                            rows={3}
+                            placeholder="Feature 1&#10;Feature 2&#10;Feature 3"
+                            value={(tier.features || []).join("\n")}
+                            onChange={(e) => {
+                              const arr = [
+                                ...((localData.tiers as Array<
+                                  Record<string, unknown>
+                                >) || []),
+                              ];
+                              arr[i] = {
+                                ...arr[i],
+                                features: e.target.value
+                                  .split("\n")
+                                  .filter(Boolean),
+                              };
+                              updateField("tiers", arr);
+                            }}
+                          />
+                        </div>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <Input
+                            placeholder="CTA Text"
+                            value={tier.ctaText}
+                            onChange={(e) => {
+                              const arr = [
+                                ...((localData.tiers as Array<
+                                  Record<string, unknown>
+                                >) || []),
+                              ];
+                              arr[i] = { ...arr[i], ctaText: e.target.value };
+                              updateField("tiers", arr);
+                            }}
+                          />
+                          <Input
+                            placeholder="CTA Link"
+                            value={tier.ctaLink}
+                            onChange={(e) => {
+                              const arr = [
+                                ...((localData.tiers as Array<
+                                  Record<string, unknown>
+                                >) || []),
+                              ];
+                              arr[i] = { ...arr[i], ctaLink: e.target.value };
+                              updateField("tiers", arr);
+                            }}
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            checked={tier.highlighted || false}
+                            onCheckedChange={(checked) => {
+                              const arr = [
+                                ...((localData.tiers as Array<
+                                  Record<string, unknown>
+                                >) || []),
+                              ];
+                              arr[i] = { ...arr[i], highlighted: checked };
+                              updateField("tiers", arr);
+                            }}
+                          />
+                          <Label className="cursor-pointer">
+                            Highlight this tier (featured)
+                          </Label>
+                        </div>
+                      </Card>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
                         const arr = [
-                          ...((localData.buttons as Array<
-                            Record<string, string>
-                          >) || []),
+                          ...((localData.tiers as Array<unknown>) || []),
+                          {
+                            name: "New Plan",
+                            price: "₹___",
+                            description: "",
+                            features: ["Feature"],
+                            ctaText: "Get started",
+                            ctaLink: "/contact",
+                            highlighted: false,
+                          },
                         ];
-                        arr[i] = { ...arr[i], text: e.target.value };
-                        updateField("buttons", arr);
+                        updateField("tiers", arr);
                       }}
-                    />
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label>Type</Label>
-                        <select
-                          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
-                          value={btn.type}
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Add Tier
+                    </Button>
+                  </>
+                )}
+
+                {block.type === "sticky-cta" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Text</Label>
+                      <Input
+                        value={(localData.text as string) || ""}
+                        onChange={(e) => updateField("text", e.target.value)}
+                      />
+                    </div>
+                    <Separator />
+                    <Label className="text-base font-semibold">Buttons</Label>
+                    {(
+                      (localData.buttons as Array<{
+                        text: string;
+                        type: string;
+                        action: string;
+                        link?: string;
+                      }>) || []
+                    ).map((btn, i) => (
+                      <Card key={i} className="p-4 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">
+                            Button {i + 1}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-rose-600"
+                            onClick={() => {
+                              const arr = [
+                                ...((localData.buttons as Array<unknown>) ||
+                                  []),
+                              ];
+                              arr.splice(i, 1);
+                              updateField("buttons", arr);
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <Input
+                          placeholder="Button Text"
+                          value={btn.text}
                           onChange={(e) => {
                             const arr = [
                               ...((localData.buttons as Array<
                                 Record<string, string>
                               >) || []),
                             ];
-                            arr[i] = { ...arr[i], type: e.target.value };
+                            arr[i] = { ...arr[i], text: e.target.value };
                             updateField("buttons", arr);
                           }}
-                        >
-                          <option value="primary">Primary</option>
-                          <option value="whatsapp">WhatsApp</option>
-                          <option value="phone">Phone</option>
-                          <option value="ghost">Ghost</option>
-                        </select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Action</Label>
-                        <select
-                          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
-                          value={btn.action}
+                        />
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <div className="space-y-2">
+                            <Label>Type</Label>
+                            <select
+                              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
+                              value={btn.type}
+                              onChange={(e) => {
+                                const arr = [
+                                  ...((localData.buttons as Array<
+                                    Record<string, string>
+                                  >) || []),
+                                ];
+                                arr[i] = { ...arr[i], type: e.target.value };
+                                updateField("buttons", arr);
+                              }}
+                            >
+                              <option value="primary">Primary</option>
+                              <option value="whatsapp">WhatsApp</option>
+                              <option value="phone">Phone</option>
+                              <option value="ghost">Ghost</option>
+                            </select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Action</Label>
+                            <select
+                              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
+                              value={btn.action}
+                              onChange={(e) => {
+                                const arr = [
+                                  ...((localData.buttons as Array<
+                                    Record<string, string>
+                                  >) || []),
+                                ];
+                                arr[i] = { ...arr[i], action: e.target.value };
+                                updateField("buttons", arr);
+                              }}
+                            >
+                              <option value="enquiry">Open Enquiry</option>
+                              <option value="whatsapp">WhatsApp Link</option>
+                              <option value="phone">Phone Call</option>
+                              <option value="link">Custom Link</option>
+                            </select>
+                          </div>
+                        </div>
+                        <Input
+                          placeholder="Link (e.g. /contact or tel: or https://)"
+                          value={btn.link}
                           onChange={(e) => {
                             const arr = [
                               ...((localData.buttons as Array<
                                 Record<string, string>
                               >) || []),
                             ];
-                            arr[i] = { ...arr[i], action: e.target.value };
+                            arr[i] = { ...arr[i], link: e.target.value };
                             updateField("buttons", arr);
                           }}
-                        >
-                          <option value="enquiry">Open Enquiry</option>
-                          <option value="whatsapp">WhatsApp Link</option>
-                          <option value="phone">Phone Call</option>
-                          <option value="link">Custom Link</option>
-                        </select>
-                      </div>
-                    </div>
-                    <Input
-                      placeholder="Link (e.g. /contact or tel: or https://)"
-                      value={btn.link}
-                      onChange={(e) => {
+                        />
+                      </Card>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
                         const arr = [
-                          ...((localData.buttons as Array<
-                            Record<string, string>
-                          >) || []),
+                          ...((localData.buttons as Array<unknown>) || []),
+                          {
+                            text: "Button",
+                            type: "primary",
+                            action: "enquiry",
+                          },
                         ];
-                        arr[i] = { ...arr[i], link: e.target.value };
                         updateField("buttons", arr);
                       }}
-                    />
-                  </Card>
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const arr = [
-                      ...((localData.buttons as Array<unknown>) || []),
-                      { text: "Button", type: "primary", action: "enquiry" },
-                    ];
-                    updateField("buttons", arr);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Add Button
-                </Button>
-              </>
-            )}
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Add Button
+                    </Button>
+                  </>
+                )}
 
                 {/* Common Style Controls */}
                 <Separator className="my-2" />
@@ -2691,7 +2800,11 @@ function BlockEditDialog({
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="json" className="flex-1 min-h-0 m-0">
+          <TabsContent
+            value="json"
+            className="flex-1 min-h-0 m-0"
+            style={{ overflow: "auto" }}
+          >
             <div className="flex flex-col h-[calc(90vh-220px)] p-6 gap-4">
               <div className="rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
                 <p className="font-medium text-foreground">
@@ -2733,7 +2846,11 @@ function BlockEditDialog({
   );
 }
 
-export function PageBuilder({ blocks, onChange, onNavigate }: PageBuilderProps) {
+export function PageBuilder({
+  blocks,
+  onChange,
+  onNavigate,
+}: PageBuilderProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -2852,7 +2969,7 @@ export function PageBuilder({ blocks, onChange, onNavigate }: PageBuilderProps) 
   );
 
   const blockTypes = Object.keys(BLOCK_DEFAULTS) as BlockType[];
-  const previewNavigate = onNavigate ?? (() => {});
+  const previewNavigate = onNavigate ?? (() => { });
 
   return (
     <div className="space-y-4">

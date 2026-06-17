@@ -12,7 +12,7 @@ import {
   Factory,
   Clock,
 } from "lucide-react";
-import { SharedContactForm } from "./SharedContactForm";
+import { useAppStore } from '@/lib/store';
 import { useContentPage, getBlockData } from "@/lib/use-page-content";
 import { BLOCK_DEFAULTS } from "@/lib/page-blocks";
 
@@ -147,19 +147,14 @@ export function ContactPage({
               {formSection.subtitle as string}
             </p>
           )}
-          <SharedContactForm
-            initialEnquiryType={
-              selectedType === "bulk"
-                ? "product"
-                : selectedType === "pl"
-                  ? "product"
-                  : "contact"
-            }
-            variant="full"
-            categories={categories}
-            bgColor="#2639ED"
-            textColor="#FFFFFF"
-          />
+          <div className="flex justify-center">
+            <button
+              onClick={() => useAppStore.getState().openEnquiryModal()}
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-medium px-8 py-3 rounded-md hover:bg-primary/90 transition-colors"
+            >
+              Submit Enquiry
+            </button>
+          </div>
         </div>
       </section>
 

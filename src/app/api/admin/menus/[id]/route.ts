@@ -16,6 +16,7 @@ const menuItemSchema = z.object({
   sortOrder: z.number().optional(),
   isActive: z.boolean().optional(),
   openInNewTab: z.boolean().optional(),
+  children: z.lazy(() => z.array(menuItemSchema).optional()),
 });
 
 const menuUpdateSchema = z.object({
@@ -111,26 +112,60 @@ export async function PUT(
       include: { items: true },
     });
 
-    // Update items if provided
-    if (items) {
-      // Delete existing items
+    if (items?.length) {
+      // Delete existing items, then recreate with correct parentId references
       await db.menuItem.deleteMany({ where: { menuId: id } });
 
-      // Create new items
-      if (items.length > 0) {
-        await db.menuItem.createMany({
-          data: items.map((item, index) => ({
-            menuId: id,
-            parentId: item.parentId || null,
+      const idMap = new Map<string, string>();
+      const flat: Array<{
+        clientId: string;
+        parentClientId: string | null;
+        label: string;
+        url: string | null;
+        page: string | null;
+        slug: string | null;
+        sortOrder: number;
+        isActive: boolean;
+        openInNewTab: boolean;
+      }> = [];
+
+      const collect = (list: typeof items, parentClientId: string | null = null) => {
+        for (const item of list) {
+          const clientId = item.id || crypto.randomUUID();
+          const children = (item as any).children as typeof items | undefined;
+          flat.push({
+            clientId,
+            parentClientId,
             label: item.label,
             url: item.url || null,
             page: item.page || null,
             slug: item.slug || null,
-            sortOrder: item.sortOrder ?? index,
+            sortOrder: item.sortOrder ?? 0,
             isActive: item.isActive ?? true,
             openInNewTab: item.openInNewTab ?? false,
-          })),
+          });
+          if (children?.length) collect(children, clientId);
+        }
+      };
+      collect(items);
+
+      // Create parents first, then children (using sequential creates so parentId is resolvable)
+      const sorted = [...flat].sort((a) => (a.parentClientId ? 1 : -1));
+      for (const f of sorted) {
+        const created = await db.menuItem.create({
+          data: {
+            menuId: id,
+            parentId: f.parentClientId ? idMap.get(f.parentClientId) ?? null : null,
+            label: f.label,
+            url: f.url,
+            page: f.page,
+            slug: f.slug,
+            sortOrder: f.sortOrder,
+            isActive: f.isActive,
+            openInNewTab: f.openInNewTab,
+          },
         });
+        idMap.set(f.clientId, created.id);
       }
     }
 
