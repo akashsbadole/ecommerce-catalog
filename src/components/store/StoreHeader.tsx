@@ -9,6 +9,7 @@ import {
   FileText,
   Search,
   ChevronDown,
+  ChevronRight,
   Clock,
   Trash2,
 } from "lucide-react";
@@ -87,6 +88,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
   const [dynamicNavLinks, setDynamicNavLinks] = useState<NavItem[]>([]);
   const [primaryMenuItems, setPrimaryMenuItems] = useState<MenuItem[]>([]);
   const [menuLoading, setMenuLoading] = useState(true);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -251,6 +253,18 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
     saveSearchToHistory(searchQuery);
     setSearchOpen(false);
     onNavigate("product", productId);
+  };
+
+  const toggleExpanded = (id: string) => {
+    setExpandedItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
   };
 
   const formatPrice = (price: number) => {
@@ -422,49 +436,71 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                       ? primaryMenuItems.map((item) => {
                           const hasChildren =
                             item.children && item.children.length > 0;
+                          const isExpanded = expandedItems.has(item.id);
                           return (
                             <div key={item.id}>
-                              <SheetClose asChild>
+                              {hasChildren ? (
                                 <Button
                                   variant="ghost"
-                                  className="justify-start text-sm h-9"
-                                  onClick={() => {
-                                    if (item.url) {
-                                      window.open(
-                                        item.url,
-                                        item.openInNewTab ? "_blank" : "_self",
-                                      );
-                                    } else if (item.page) {
-                                      onNavigate(item.page, item.slug);
-                                    }
+                                  className="justify-between text-sm h-9 w-full"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    toggleExpanded(item.id);
                                   }}
                                 >
-                                  {item.label}
+                                  <span>{item.label}</span>
+                                  {isExpanded ? (
+                                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                  ) : (
+                                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                  )}
                                 </Button>
-                              </SheetClose>
-                              {hasChildren &&
-                                item.children?.map((child) => (
-                                  <SheetClose asChild key={child.id}>
-                                    <Button
-                                      variant="ghost"
-                                      className="justify-start text-sm h-9 pl-8"
-                                      onClick={() => {
-                                        if (child.url) {
-                                          window.open(
-                                            child.url,
-                                            child.openInNewTab
-                                              ? "_blank"
-                                              : "_self",
-                                          );
-                                        } else if (child.page) {
-                                          onNavigate(child.page, child.slug);
-                                        }
-                                      }}
-                                    >
-                                      {child.label}
-                                    </Button>
-                                  </SheetClose>
-                                ))}
+                              ) : (
+                                <SheetClose asChild>
+                                  <Button
+                                    variant="ghost"
+                                    className="justify-start text-sm h-9 w-full"
+                                    onClick={() => {
+                                      if (item.url) {
+                                        window.open(
+                                          item.url,
+                                          item.openInNewTab ? "_blank" : "_self",
+                                        );
+                                      } else if (item.page) {
+                                        onNavigate(item.page, item.slug);
+                                      }
+                                    }}
+                                  >
+                                    {item.label}
+                                  </Button>
+                                </SheetClose>
+                              )}
+                              {hasChildren && isExpanded && (
+                                <div className="ml-3 border-l pl-2 space-y-0.5">
+                                  {item.children?.map((child) => (
+                                    <SheetClose asChild key={child.id}>
+                                      <Button
+                                        variant="ghost"
+                                        className="justify-start text-sm h-9 w-full pl-3"
+                                        onClick={() => {
+                                          if (child.url) {
+                                            window.open(
+                                              child.url,
+                                              child.openInNewTab
+                                                ? "_blank"
+                                                : "_self",
+                                            );
+                                          } else if (child.page) {
+                                            onNavigate(child.page, child.slug);
+                                          }
+                                        }}
+                                      >
+                                        {child.label}
+                                      </Button>
+                                    </SheetClose>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           );
                         })

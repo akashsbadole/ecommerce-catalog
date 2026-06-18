@@ -668,8 +668,9 @@ function FaqBlock({ data }: { data: Record<string, unknown> }) {
             >
               <span>{item.question}</span>
               <ChevronDown
-                className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 ${openIndex === i ? "rotate-180" : ""
-                  }`}
+                className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 ${
+                  openIndex === i ? "rotate-180" : ""
+                }`}
               />
             </button>
             {openIndex === i && (
@@ -1187,7 +1188,7 @@ function FactoryReelBlock({
               <div className="absolute inset-0 bg-black/20 group hover:bg-black/30 transition-colors" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <button
-                  className="w-16 h-16 rounded-full bg-brand/90 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform shadow-xl text-brand-foreground"
+                  className="w-16 h-16 rounded-full bg-[#2639ed] flex items-center justify-center cursor-pointer hover:scale-110 transition-transform shadow-xl text-brand-foreground"
                   onClick={() => videoUrl && setIsVideoOpen(true)}
                 >
                   <Play className="h-6 w-6 ml-0.5" />
@@ -1694,13 +1695,26 @@ function StickyCtaBlock({
                 } else if (btn.action === "phone") {
                   window.location.href = btn.link || "tel:";
                 } else if (btn.action === "link") {
-                  if (btn.link?.startsWith("/")) {
-                    onNavigate?.(
-                      btn.link.startsWith("/page/")
-                        ? "content-page"
-                        : "catalogue",
-                      btn.link.replace("/page/", ""),
-                    );
+                  if (btn.link?.startsWith("/page/")) {
+                    onNavigate?.("content-page", btn.link.replace("/page/", ""));
+                  } else if (btn.link === "/" || btn.link === "/home") {
+                    onNavigate?.("home");
+                  } else if (btn.link === "/catalogue") {
+                    onNavigate?.("catalogue");
+                  } else if (btn.link === "/contact") {
+                    onNavigate?.("contact");
+                  } else if (btn.link === "/about" || btn.link === "/about-us") {
+                    onNavigate?.("about");
+                  } else if (btn.link === "/manufacturing") {
+                    onNavigate?.("manufacturing");
+                  } else if (btn.link === "/blog") {
+                    onNavigate?.("blog");
+                  } else if (btn.link?.startsWith("/blog/")) {
+                    onNavigate?.("blog-post", btn.link.replace("/blog/", ""));
+                  } else if (btn.link?.startsWith("/product/")) {
+                    onNavigate?.("products");
+                  } else if (btn.link?.startsWith("/")) {
+                    onNavigate?.("content-page", btn.link.replace(/^\//, ""));
                   } else if (btn.link) {
                     window.open(btn.link, "_blank");
                   }
@@ -1991,10 +2005,11 @@ function PricingTableBlock({
           {tiers.map((tier, i) => (
             <div
               key={i}
-              className={`rounded-xl border bg-card p-6 flex flex-col relative ${tier.highlighted
-                ? "border-primary/50 shadow-lg ring-1 ring-primary/50 scale-105 md:scale-110 z-10"
-                : "shadow-sm"
-                }`}
+              className={`rounded-xl border bg-card p-6 flex flex-col relative ${
+                tier.highlighted
+                  ? "border-primary/50 shadow-lg ring-1 ring-primary/50 scale-105 md:scale-110 z-10"
+                  : "shadow-sm"
+              }`}
             >
               {tier.highlighted && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-xs font-semibold px-4 py-1 rounded-full">
@@ -2027,10 +2042,11 @@ function PricingTableBlock({
                     );
                   else onNavigate?.("contact");
                 }}
-                className={`mt-6 w-full rounded-md px-4 py-2.5 text-sm font-medium transition-colors ${tier.highlighted
-                  ? "bg-primary text-white hover:bg-primary/80"
-                  : "bg-muted text-foreground hover:bg-accent"
-                  }`}
+                className={`mt-6 w-full rounded-md px-4 py-2.5 text-sm font-medium transition-colors ${
+                  tier.highlighted
+                    ? "bg-primary text-white hover:bg-primary/80"
+                    : "bg-muted text-foreground hover:bg-accent"
+                }`}
               >
                 {tier.ctaText || "Get started"}
               </button>
@@ -2107,10 +2123,11 @@ function HeroSplitBlock({
                     );
                   }
                 }}
-                className={`text-sm font-medium rounded-full px-6 py-2.5 transition-colors ${btn.variant === "primary"
-                  ? `hover:opacity-90`
-                  : "bg-white/10 text-gray-300 hover:bg-white/20"
-                  }`}
+                className={`text-sm font-medium rounded-full px-6 py-2.5 transition-colors ${
+                  btn.variant === "primary"
+                    ? `hover:opacity-90`
+                    : "bg-white/10 text-gray-300 hover:bg-white/20"
+                }`}
                 style={
                   btn.variant === "primary"
                     ? { backgroundColor: ctaButtonColor, color: ctaTextColor }
@@ -2543,8 +2560,9 @@ function SliderBlock({
       {items.map((item, i) => (
         <div
           key={i}
-          className={`absolute inset-0 transition-opacity duration-1000 ${i === activeIndex ? "opacity-100" : "opacity-0"
-            }`}
+          className={`absolute inset-0 transition-opacity duration-1000 ${
+            i === activeIndex ? "opacity-100" : "opacity-0"
+          }`}
         >
           {item.image ? (
             <img
@@ -2746,15 +2764,24 @@ export function PageBlockRenderer({
 
       // Page content blocks (fully customizable)
       case "homepage-content":
-        return <HomePage data={data} onNavigate={onNavigate || (() => { })} />;
+        return <HomePage data={data} onNavigate={onNavigate || (() => {})} />;
       case "about-page-content":
-        return <AboutPage data={data} onNavigate={onNavigate || (() => { })} />;
+        return <AboutPage data={data} onNavigate={onNavigate || (() => {})} />;
       case "manufacturing-content":
-        return <ManufacturingPage data={data} onNavigate={onNavigate || (() => { })} />;
+        return (
+          <ManufacturingPage
+            data={data}
+            onNavigate={onNavigate || (() => {})}
+          />
+        );
       case "contact-page-content":
-        return <ContactPage data={data} onNavigate={onNavigate || (() => { })} />;
+        return (
+          <ContactPage data={data} onNavigate={onNavigate || (() => {})} />
+        );
       case "products-page-content":
-        return <ProductsPage data={data} onNavigate={onNavigate || (() => { })} />;
+        return (
+          <ProductsPage data={data} onNavigate={onNavigate || (() => {})} />
+        );
 
       default:
         return null;

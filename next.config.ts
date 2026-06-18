@@ -29,7 +29,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  output: process.env.NODE_ENV === "production" ? "standalone" : undefined,
   reactStrictMode: true,
   images: {
     remotePatterns: [
@@ -46,7 +46,7 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: '/(.*)',
+        source: '/:path((?!_next/static).*)',
         headers: securityHeaders,
       },
       {
