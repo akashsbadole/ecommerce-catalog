@@ -71,7 +71,8 @@ export function ProductsOverviewPage({ onNavigate }: ProductsOverviewPageProps) 
             {categories.map((cat) => (
               <div
                 key={cat.id}
-                className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col"
+                className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col cursor-pointer"
+                onClick={() => onNavigate("category", cat.slug)}
               >
                 {/* Image */}
                 {cat.image ? (
@@ -100,7 +101,10 @@ export function ProductsOverviewPage({ onNavigate }: ProductsOverviewPageProps) 
                     </p>
                   )}
                   <button
-                    onClick={() => onNavigate("category", cat.slug)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onNavigate("category", cat.slug);
+                    }}
                     className="self-start inline-flex items-center gap-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors"
                   >
                     Enquire
