@@ -85,7 +85,7 @@ export function AdminBackup() {
               Export Data
             </CardTitle>
             <CardDescription>
-              Download a JSON backup of all products, orders, categories, and settings
+              Download a complete JSON backup of all application data, including multi-tenant records
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -156,10 +156,10 @@ export function AdminBackup() {
             <div className="text-sm">
               <p className="font-medium text-yellow-800">Important Notes</p>
               <ul className="mt-1 text-yellow-700 list-disc list-inside space-y-1">
-                <li>Backups include products, categories, orders, settings, and media</li>
-                <li>User passwords are not included in backups</li>
-                <li>Restoring will upsert existing records by ID</li>
-                <li>It is recommended to create a backup before restoring</li>
+                <li>Backups include all 27 database models (stores, users, products, orders, etc.)</li>
+                <li>Sensitive data like passwords and API keys are included in the backup</li>
+                <li>Restoring will merge data (upsert) by ID, preserving existing records</li>
+                <li>Multi-tenant data for all stores is included in a single backup</li>
               </ul>
             </div>
           </div>
