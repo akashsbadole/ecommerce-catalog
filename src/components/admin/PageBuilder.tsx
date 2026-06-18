@@ -384,8 +384,10 @@ function BlockEditDialog({
                   </p>
                   {topLevelKeys.length > 0 && (
                     <p className="mt-2 text-xs text-amber-700">
-                      Top-level fields ({topLevelKeys.length}): {topLevelKeys.slice(0, 6).join(", ")}
-                      {topLevelKeys.length > 6 && ` and ${topLevelKeys.length - 6} more`}
+                      Top-level fields ({topLevelKeys.length}):{" "}
+                      {topLevelKeys.slice(0, 6).join(", ")}
+                      {topLevelKeys.length > 6 &&
+                        ` and ${topLevelKeys.length - 6} more`}
                     </p>
                   )}
                 </div>
@@ -494,7 +496,10 @@ function BlockEditDialog({
                     </div>
                     <Separator />
                     <Label className="text-base font-semibold">Features</Label>
-                    {(Array.isArray(localData.features) ? localData.features : Object.values(localData.features || {})).map((f: any, i: number) => (
+                    {(Array.isArray(localData.features)
+                      ? localData.features
+                      : Object.values(localData.features || {})
+                    ).map((f: any, i: number) => (
                       <Card key={i} className="p-4 space-y-2">
                         <div className="flex justify-between items-center">
                           <span className="text-sm font-medium">
@@ -506,7 +511,9 @@ function BlockEditDialog({
                             className="h-7 w-7 text-rose-600"
                             onClick={() => {
                               const feats = [
-                                ...(Array.isArray(localData.features) ? localData.features : Object.values(localData.features || {})),
+                                ...(Array.isArray(localData.features)
+                                  ? localData.features
+                                  : Object.values(localData.features || {})),
                               ];
                               feats.splice(i, 1);
                               updateField("features", feats);
@@ -520,7 +527,11 @@ function BlockEditDialog({
                           value={f.title}
                           onChange={(e) => {
                             const feats = [
-                              ...(Array.isArray(localData.features) ? localData.features as Array<Record<string, string>> : Object.values(localData.features || {})),
+                              ...(Array.isArray(localData.features)
+                                ? (localData.features as Array<
+                                    Record<string, string>
+                                  >)
+                                : Object.values(localData.features || {})),
                             ];
                             feats[i] = { ...feats[i], title: e.target.value };
                             updateField("features", feats);
@@ -531,7 +542,11 @@ function BlockEditDialog({
                           value={f.description}
                           onChange={(e) => {
                             const feats = [
-                              ...(Array.isArray(localData.features) ? localData.features as Array<Record<string, string>> : Object.values(localData.features || {})),
+                              ...(Array.isArray(localData.features)
+                                ? (localData.features as Array<
+                                    Record<string, string>
+                                  >)
+                                : Object.values(localData.features || {})),
                             ];
                             feats[i] = {
                               ...feats[i],
@@ -545,7 +560,11 @@ function BlockEditDialog({
                           value={f.icon}
                           onChange={(e) => {
                             const feats = [
-                              ...(Array.isArray(localData.features) ? localData.features as Array<Record<string, string>> : Object.values(localData.features || {})),
+                              ...(Array.isArray(localData.features)
+                                ? (localData.features as Array<
+                                    Record<string, string>
+                                  >)
+                                : Object.values(localData.features || {})),
                             ];
                             feats[i] = { ...feats[i], icon: e.target.value };
                             updateField("features", feats);
@@ -558,7 +577,11 @@ function BlockEditDialog({
                       size="sm"
                       onClick={() => {
                         const feats = [
-                          ...(Array.isArray(localData.features) ? localData.features as Array<Record<string, string>> : Object.values(localData.features || {})),
+                          ...(Array.isArray(localData.features)
+                            ? (localData.features as Array<
+                                Record<string, string>
+                              >)
+                            : Object.values(localData.features || {})),
                           {
                             title: "New Feature",
                             description: "",
@@ -2732,7 +2755,7 @@ function BlockEditDialog({
                 )}
 
                 {/* Common Style Controls */}
-                <Separator className="my-2" />
+                {/* <Separator className="my-2" />
                 <div className="space-y-3">
                   <Label className="text-base font-semibold">
                     Style Settings
@@ -2795,7 +2818,7 @@ function BlockEditDialog({
                       }
                     />
                   </div>
-                </div>
+                </div> */}
               </div>
             </ScrollArea>
           </TabsContent>
@@ -2969,7 +2992,7 @@ export function PageBuilder({
   );
 
   const blockTypes = Object.keys(BLOCK_DEFAULTS) as BlockType[];
-  const previewNavigate = onNavigate ?? (() => { });
+  const previewNavigate = onNavigate ?? (() => {});
 
   return (
     <div className="space-y-4">

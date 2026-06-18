@@ -15,18 +15,36 @@ interface VideoModalProps {
 }
 
 function getEmbedUrl(videoUrl: string): string {
-  const isYouTube = videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be');
-  const isVimeo = videoUrl.includes('vimeo.com');
+  try {
+    const url = new URL(videoUrl);
+    const isYouTube = url.hostname.includes('youtube.com') || url.hostname.includes('youtu.be');
+    const isVimeo = url.hostname.includes('vimeo.com');
 
-  if (isYouTube) {
-    const videoId = videoUrl.split('v=')[1]?.split('&')[0] || videoUrl.split('/').pop();
-    return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+    if (isYouTube) {
+      let videoId = '';
+      if (url.pathname === '/watch') {
+        videoId = url.searchParams.get('v') || '';
+      } else if (url.pathname.startsWith('/embed/')) {
+        videoId = url.pathname.replace('/embed/', '');
+      } else if (url.pathname.startsWith('/shorts/')) {
+        videoId = url.pathname.replace('/shorts/', '');
+      } else {
+        videoId = url.pathname.replace(/^\//, '');
+      }
+      if (!videoId) return videoUrl;
+      return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?autoplay=1&rel=0`;
+    }
+
+    if (isVimeo) {
+      const videoId = url.pathname.replace(/^\//, '');
+      if (!videoId) return videoUrl;
+      return `https://player.vimeo.com/video/${encodeURIComponent(videoId)}?autoplay=1`;
+    }
+
+    return videoUrl;
+  } catch {
+    return videoUrl;
   }
-  if (isVimeo) {
-    const videoId = videoUrl.split('/').pop();
-    return `https://player.vimeo.com/video/${videoId}?autoplay=1`;
-  }
-  return videoUrl;
 }
 
 export function VideoModal({ isOpen, onClose, videoUrl, title }: VideoModalProps) {

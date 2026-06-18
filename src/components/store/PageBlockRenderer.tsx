@@ -242,7 +242,7 @@ function HeroBlock({
           {buttonText && (
             <Button
               size="lg"
-              className="mt-6 bg-white text-primary/80 hover:bg-white/90"
+              className="mt-6 bg-[#2639ed] text-white hover:bg-blue/20"
               onClick={() =>
                 onNavigate &&
                 buttonLink &&
@@ -1188,7 +1188,7 @@ function FactoryReelBlock({
               <div className="absolute inset-0 bg-black/20 group hover:bg-black/30 transition-colors" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <button
-                  className="w-16 h-16 rounded-full bg-[#2639ed] flex items-center justify-center cursor-pointer hover:scale-110 transition-transform shadow-xl text-brand-foreground"
+                  className="w-16 h-16 rounded-full bg-white flex items-center justify-center cursor-pointer hover:scale-110 transition-transform shadow-xl text-brand-foreground"
                   onClick={() => videoUrl && setIsVideoOpen(true)}
                 >
                   <Play className="h-6 w-6 ml-0.5" />
@@ -1696,14 +1696,20 @@ function StickyCtaBlock({
                   window.location.href = btn.link || "tel:";
                 } else if (btn.action === "link") {
                   if (btn.link?.startsWith("/page/")) {
-                    onNavigate?.("content-page", btn.link.replace("/page/", ""));
+                    onNavigate?.(
+                      "content-page",
+                      btn.link.replace("/page/", ""),
+                    );
                   } else if (btn.link === "/" || btn.link === "/home") {
                     onNavigate?.("home");
                   } else if (btn.link === "/catalogue") {
                     onNavigate?.("catalogue");
                   } else if (btn.link === "/contact") {
                     onNavigate?.("contact");
-                  } else if (btn.link === "/about" || btn.link === "/about-us") {
+                  } else if (
+                    btn.link === "/about" ||
+                    btn.link === "/about-us"
+                  ) {
                     onNavigate?.("about");
                   } else if (btn.link === "/manufacturing") {
                     onNavigate?.("manufacturing");
