@@ -30,8 +30,6 @@ model Store {
   CurrentUsers   User[]   @relation("CurrentUserStore")
   Product       Product[]
   Category      Category[]
-  Order         Order[]
-  Coupon        Coupon[]
   Quote         Quote[]
   BlogPost      BlogPost[]
   Banner        Banner[]
@@ -103,6 +101,7 @@ model Product {
   specifications    String?
   metaTitle         String?
   metaDescription   String?
+  ogImage           String?
   customSchema      String?          @default("{}")
   deletedAt         DateTime?
   stock             Int              @default(0)
@@ -116,8 +115,7 @@ model Product {
   Store             Store?           @relation(fields: [storeId], references: [id])
   ProductVariant    ProductVariant[]
   ProductTier       ProductTier[]
-  WishlistItem      WishlistItem[]
-  OrderItem         OrderItem[]
+
 
   @@index([deletedAt])
   @@index([storeId])
@@ -135,6 +133,7 @@ model Category {
   isActive        Boolean   @default(true)
   metaTitle       String?
   metaDescription String?
+  ogImage         String?
   customSchema    String?   @default("{}")
   deletedAt       DateTime?
   createdAt       DateTime  @default(now())
@@ -176,101 +175,6 @@ model ProductVariant {
   Product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
-}
-
-// ─── Orders ────────────────────────────────────────────────────
-
-model Order {
-  id             String      @id @default(cuid())
-  storeId        String?     // tenant isolation
-  userId         String?
-  orderNumber    String      @unique
-  status         String      @default("pending")
-  paymentStatus  String      @default("pending")
-  paymentMethod  String?
-  subtotal       Float
-  shippingCost   Float       @default(0)
-  tax            Float       @default(0)
-  total          Float
-  currency       String      @default("USD")
-  shippingName   String?
-  shippingEmail  String?
-  shippingPhone  String?
-  shippingAddress String?
-  billingName    String?
-  billingEmail   String?
-  billingAddress String?
-  notes          String?
-  trackingNumber String?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-  User           User?       @relation(fields: [userId], references: [id])
-  Store          Store?      @relation(fields: [storeId], references: [id])
-  items          OrderItem[]
-
-  @@index([userId])
-  @@index([status])
-  @@index([orderNumber])
-  @@index([storeId])
-}
-
-model OrderItem {
-  id          String   @id @default(cuid())
-  orderId     String
-  productId   String
-  variantId   String?
-  name        String
-  sku         String?
-  price       Float
-  quantity    Int
-  total       Float
-  images      String   @default("[]")
-  Order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  Product     Product  @relation(fields: [productId], references: [id])
-
-  @@index([orderId])
-}
-
-model Wishlist {
-  id        String         @id @default(cuid())
-  userId    String
-  createdAt DateTime       @default(now())
-  User      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items     WishlistItem[]
-
-  @@unique([userId])
-}
-
-model WishlistItem {
-  id          String    @id @default(cuid())
-  wishlistId  String
-  productId   String
-  createdAt   DateTime  @default(now())
-  Wishlist    Wishlist  @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
-  Product     Product   @relation(fields: [productId], references: [id])
-
-  @@unique([wishlistId, productId])
-}
-
-// ─── Discounts ─────────────────────────────────────────────────
-
-model Coupon {
-  id        String    @id @default(cuid())
-  storeId   String?   // tenant isolation
-  code      String
-  type      String
-  value     Float
-  minOrder  Float     @default(0)
-  maxUses   Int?
-  usedCount Int       @default(0)
-  startsAt  DateTime?
-  expiresAt DateTime?
-  isActive  Boolean   @default(true)
-  createdAt DateTime  @default(now())
-  Store     Store?    @relation(fields: [storeId], references: [id])
-
-  @@unique([code])
-  @@index([storeId])
 }
 
 // ─── Content / CMS ─────────────────────────────────────────────
@@ -491,8 +395,6 @@ model User {
   Quote                   Quote[]
   Store                   Store?               @relation("CurrentUserStore", fields: [currentStoreId], references: [id])
   OwnedStores             Store[]              @relation("StoreOwner")
-  Order                   Order[]
-  Wishlist                Wishlist?
 }
 
 model ActivityLog {

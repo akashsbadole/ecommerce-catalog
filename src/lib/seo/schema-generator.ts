@@ -18,8 +18,8 @@ export function generateProductSchema(
   const schema: any = {
     "@context": "https://schema.org",
     "@type": "Product",
-    name: product.name,
-    description: product.shortDescription || product.description,
+    name: product.metaTitle || product.name,
+    description: product.metaDescription || product.shortDescription || product.description,
     sku: product.sku,
     image: images,
     brand: {
@@ -60,8 +60,8 @@ export function generateArticleSchema(
   const schema: any = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
-    headline: post.title,
-    description: post.excerpt,
+    headline: post.metaTitle || post.title,
+    description: post.metaDescription || post.excerpt,
     image: post.coverImage.startsWith("http")
       ? post.coverImage
       : `${siteUrl}${post.coverImage}`,

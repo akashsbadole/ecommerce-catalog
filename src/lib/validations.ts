@@ -23,6 +23,8 @@ export const productSchema = z.object({
   specifications: z.string().optional().nullable(),
   metaTitle: z.string().max(70).optional().nullable(),
   metaDescription: z.string().max(160).optional().nullable(),
+  ogImage: z.string().optional().nullable(),
+  customSchema: z.string().optional().nullable(),
 });
 
 export const categorySchema = z.object({
@@ -34,6 +36,8 @@ export const categorySchema = z.object({
   isActive: z.boolean().default(true),
   metaTitle: z.string().max(70).optional().nullable(),
   metaDescription: z.string().max(160).optional().nullable(),
+  ogImage: z.string().optional().nullable(),
+  customSchema: z.string().optional().nullable(),
 });
 
 export const enquirySchema = z.object({
@@ -77,6 +81,7 @@ export const contentPageSchema = z.object({
   metaTitle: z.string().max(70).optional().nullable(),
   metaDescription: z.string().max(160).optional().nullable(),
   ogImage: z.string().optional().nullable(),
+  customSchema: z.string().optional().nullable(),
   isActive: z.boolean().default(true),
   sortOrder: z.number().int().default(0),
 });
@@ -94,6 +99,7 @@ export const blogPostSchema = z.object({
   metaTitle: z.string().max(70).optional().nullable(),
   metaDescription: z.string().max(160).optional().nullable(),
   ogImage: z.string().optional().nullable(),
+  customSchema: z.string().optional().nullable(),
   tags: z.string().optional().nullable(),
   isPublished: z.boolean().default(false),
 });

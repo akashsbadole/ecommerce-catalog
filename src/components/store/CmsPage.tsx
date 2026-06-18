@@ -1,10 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageBlockRenderer } from './PageBlockRenderer';
 import type { PageBlock } from '@/lib/page-blocks';
 import { normalizePageBlocks } from '@/lib/page-blocks';
+import { useSeo } from '@/lib/use-seo';
+
+interface PageData {
+  title: string;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  ogImage: string | null;
+}
 
 interface CmsPageProps {
   slug: string;
@@ -14,9 +22,14 @@ interface CmsPageProps {
 
 export function CmsPage({ slug, onNavigate, fallbackBlocks }: CmsPageProps) {
   const [blocks, setBlocks] = useState<PageBlock[] | null>(null);
+  const [pageData, setPageData] = useState<PageData | null>(null);
   const [loading, setLoading] = useState(true);
+  const fetchedRef = useRef(false);
 
   useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+
     const fetchPage = async () => {
       try {
         const res = await fetch(`/api/content-pages?slug=${encodeURIComponent(slug)}`, { cache: 'no-store' });
@@ -25,6 +38,12 @@ export function CmsPage({ slug, onNavigate, fallbackBlocks }: CmsPageProps) {
           const pages = data.contentPages || [];
           if (pages.length > 0) {
             const page = pages[0];
+            setPageData({
+              title: page.title || '',
+              metaTitle: page.metaTitle || null,
+              metaDescription: page.metaDescription || null,
+              ogImage: page.ogImage || null,
+            });
             let parsed: PageBlock[] = [];
             try {
               parsed = normalizePageBlocks(page.blocks);
@@ -37,18 +56,14 @@ export function CmsPage({ slug, onNavigate, fallbackBlocks }: CmsPageProps) {
               setLoading(false);
               return;
             } else if (page.content) {
-              // Handle legacy content-only pages
               setBlocks([{ id: 'legacy-content', type: 'text', data: { content: page.content } }]);
               setLoading(false);
               return;
             }
-            // If page exists but has no blocks/content, we still want to stop loading
-            // unless we really want to seed it.
           }
         }
 
       } catch {
-        // Use fallback blocks if provided
         if (fallbackBlocks) {
           setBlocks(fallbackBlocks);
         }
@@ -59,15 +74,11 @@ export function CmsPage({ slug, onNavigate, fallbackBlocks }: CmsPageProps) {
     fetchPage();
   }, [slug, fallbackBlocks]);
 
-  // Set SEO meta tags
-  useEffect(() => {
-    if (!blocks) return;
-    const titleEl = document.querySelector('meta[property="og:title"]');
-    if (titleEl) {
-      const title = titleEl.getAttribute('content') || '';
-      document.title = title || document.title;
-    }
-  }, [blocks]);
+  useSeo(`cms-${slug}`, {
+    title: pageData?.metaTitle || pageData?.title,
+    description: pageData?.metaDescription,
+    ogImage: pageData?.ogImage,
+  });
 
   if (loading) {
     return (

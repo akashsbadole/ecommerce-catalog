@@ -112,8 +112,8 @@ function parseNativeRow(headers: string[], row: string[]): ProductData | null {
     stock: parseInt(getValue(headers, row, 'stock')) || 0,
     lowStockThreshold: parseInt(getValue(headers, row, 'lowstockthreshold')) || 10,
     specifications: null,
-    metaTitle: null,
-    metaDescription: null,
+    metaTitle: getValue(headers, row, 'metatitle') || null,
+    metaDescription: getValue(headers, row, 'metadescription') || null,
   };
 }
 

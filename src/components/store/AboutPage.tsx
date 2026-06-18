@@ -17,6 +17,7 @@ import {
 import { useContentPage, getBlockData } from "@/lib/use-page-content";
 import { BLOCK_DEFAULTS } from "@/lib/page-blocks";
 import { useAppStore } from '@/lib/store';
+import { useSeo } from "@/lib/use-seo";
 
 interface AboutPageProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -50,8 +51,14 @@ function ResolvedIcon({
 }
 
 export function AboutPage({ onNavigate, data: externalData }: AboutPageProps) {
-  const { blocks } = useContentPage("about-page-content");
+  const { blocks, meta, loading } = useContentPage("about-page-content");
+  useSeo("about", {
+    title: meta?.metaTitle || meta?.title,
+    description: meta?.metaDescription,
+    ogImage: meta?.ogImage,
+  });
   const rawData = getBlockData(blocks, "about-page-content");
+  if (loading && !externalData) return null;
   const data =
     externalData ??
     rawData ??

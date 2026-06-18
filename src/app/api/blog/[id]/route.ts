@@ -114,6 +114,9 @@ export async function PUT(
         ...(body.ogImage !== undefined && {
           ogImage: normalizeImageUrl(body.ogImage),
         }),
+        ...(body.customSchema !== undefined && {
+          customSchema: body.customSchema || null,
+        }),
         ...(body.tags !== undefined && {
           tags: body.tags
             ? JSON.stringify(body.tags.split(',').map((t: string) => t.trim()).filter(Boolean))

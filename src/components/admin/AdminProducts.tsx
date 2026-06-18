@@ -113,6 +113,8 @@ interface Product {
   specifications: string | null;
   metaTitle: string | null;
   metaDescription: string | null;
+  ogImage: string | null;
+  customSchema: string | null;
   whatsappNumber: string | null;
   deletedAt: string | null;
   stock: number;
@@ -140,6 +142,8 @@ interface ProductFormData {
   specifications: string;
   metaTitle: string;
   metaDescription: string;
+  ogImage: string;
+  customSchema: string;
   whatsappNumber: string;
   stock: string;
   lowStockThreshold: string;
@@ -164,6 +168,8 @@ const emptyForm: ProductFormData = {
   specifications: "",
   metaTitle: "",
   metaDescription: "",
+  ogImage: "",
+  customSchema: "",
   whatsappNumber: "",
   stock: "0",
   lowStockThreshold: "10",
@@ -352,6 +358,8 @@ export function AdminProducts() {
       specifications: product.specifications || "",
       metaTitle: product.metaTitle || "",
       metaDescription: product.metaDescription || "",
+      ogImage: product.ogImage || "",
+      customSchema: product.customSchema || "",
       whatsappNumber: product.whatsappNumber || "",
       stock: String(product.stock ?? 0),
       lowStockThreshold: String(product.lowStockThreshold ?? 10),
@@ -414,6 +422,8 @@ export function AdminProducts() {
         specifications: form.specifications.trim() || null,
         metaTitle: form.metaTitle.trim() || null,
         metaDescription: form.metaDescription.trim() || null,
+        ogImage: form.ogImage.trim() || null,
+        customSchema: form.customSchema.trim() || null,
         whatsappNumber: form.whatsappNumber.trim() || null,
         stock: parseInt(form.stock) || 0,
         lowStockThreshold: parseInt(form.lowStockThreshold) || 10,
@@ -1685,6 +1695,36 @@ export function AdminProducts() {
                       />
                       <p className="text-xs text-muted-foreground">
                         Recommended: 150-160 characters for optimal SEO
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="prod-og-image">OG Image URL</Label>
+                      <Input
+                        id="prod-og-image"
+                        placeholder="https://example.com/og-image.jpg"
+                        value={form.ogImage}
+                        onChange={(e) =>
+                          setForm(prev => ({ ...prev, ogImage: e.target.value }))
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Image shown when this product is shared on social media (recommended 1200×630px)
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="prod-custom-schema">Custom JSON-LD Schema (optional)</Label>
+                      <Textarea
+                        id="prod-custom-schema"
+                        placeholder='{"@type": "Product", ...}'
+                        value={form.customSchema}
+                        onChange={(e) =>
+                          setForm(prev => ({ ...prev, customSchema: e.target.value }))
+                        }
+                        rows={3}
+                        className="font-mono text-xs"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Override or extend the default Product schema. Must be valid JSON.
                       </p>
                     </div>
                   </CollapsibleContent>

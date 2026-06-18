@@ -40,6 +40,7 @@ interface Quote {
   quoteNumber: string;
   status: string;
   subtotal: number;
+  totalAmount: number;
   discount: number;
   tax: number;
   total: number;
@@ -110,7 +111,7 @@ export default function BuyerPortalPage() {
         body: JSON.stringify({ status: 'accepted' })
       });
       if (res.ok) {
-        toast.success('Quote accepted! We will contact you for payment.');
+        toast.success('Quote accepted! A sales representative will contact you to confirm.');
         setQuotes(prev => prev.map(q => q.id === id ? { ...q, status: 'accepted' } : q));
         if (selectedQuote?.id === id) setSelectedQuote({ ...selectedQuote, status: 'accepted' });
       }
@@ -244,7 +245,7 @@ export default function BuyerPortalPage() {
                       <div className="flex items-center gap-6">
                         <div className="text-right">
                           <p className="text-xs text-muted-foreground uppercase font-semibold">Total Amount</p>
-                          <p className="text-xl font-bold text-emerald-600">${quote.totalAmount.toLocaleString()}</p>
+                          <p className="text-xl font-bold text-emerald-600">{formatPrice(quote.total, quote.currency)}</p>
                         </div>
                         <div className="flex gap-2">
                            <Button variant="outline" size="sm" onClick={() => setSelectedQuote(quote)}>
@@ -327,15 +328,11 @@ export default function BuyerPortalPage() {
               </div>
             </div>
             <div className="flex items-end">
-              <Button variant="outline" className="w-full" onClick={() => navigate('account')}>
+              <Button variant="outline" className="w-full">
                 <UserIcon className="mr-2 h-4 w-4" />
                 Edit Profile
               </Button>
             </div>
-            <Button variant="outline" className="w-full mt-4">
-              <UserIcon className="mr-2 h-4 w-4" />
-              Edit Profile
-            </Button>
           </CardContent>
         </Card>
       </div>
@@ -350,7 +347,7 @@ export default function BuyerPortalPage() {
             <div className="space-y-6">
               <div className="flex justify-between items-start border-b pb-4">
                 <div>
-                  <h3 className="text-2xl font-bold text-emerald-600">${selectedQuote.totalAmount.toLocaleString()}</h3>
+                  <h3 className="text-2xl font-bold text-emerald-600">{formatPrice(selectedQuote.totalAmount, selectedQuote.currency)}</h3>
                   <p className="text-sm text-muted-foreground">Quote ID: {selectedQuote.id.toUpperCase()}</p>
                 </div>
                 <div className="text-right">
@@ -387,8 +384,8 @@ export default function BuyerPortalPage() {
                             <tr key={idx} className="border-t">
                               <td className="px-4 py-2">{item.name || 'Product'}</td>
                               <td className="px-4 py-2 text-center">{item.quantity}</td>
-                              <td className="px-4 py-2 text-right">${item.unitPrice?.toLocaleString()}</td>
-                              <td className="px-4 py-2 text-right font-medium">${(item.quantity * item.unitPrice).toLocaleString()}</td>
+                              <td className="px-4 py-2 text-right">{formatPrice(item.unitPrice, selectedQuote.currency)}</td>
+                              <td className="px-4 py-2 text-right font-medium">{formatPrice(item.quantity * item.unitPrice, selectedQuote.currency)}</td>
                             </tr>
                           ));
                         } catch {

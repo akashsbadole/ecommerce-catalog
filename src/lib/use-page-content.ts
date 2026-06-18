@@ -4,12 +4,20 @@ import { useState, useEffect } from "react";
 import type { PageBlock } from "./page-blocks";
 import { normalizePageBlocks } from "./page-blocks";
 
+interface ContentPageMeta {
+  title: string;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  ogImage: string | null;
+}
+
 /**
- * Fetches a CMS ContentPage by slug and returns its parsed blocks.
+ * Fetches a CMS ContentPage by slug and returns its parsed blocks + SEO fields.
  * Falls back to null if not found (caller should provide defaults).
  */
 export function useContentPage(slug: string) {
   const [blocks, setBlocks] = useState<PageBlock[] | null>(null);
+  const [meta, setMeta] = useState<ContentPageMeta | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,14 +37,26 @@ export function useContentPage(slug: string) {
           slug: string;
           title: string;
           blocks: string;
+          metaTitle: string | null;
+          metaDescription: string | null;
+          ogImage: string | null;
         }[] = data.contentPages ?? [];
         const page = pages[0];
         if (!page) {
           if (!cancelled) {
             setBlocks(null);
+            setMeta(null);
             setLoading(false);
           }
           return;
+        }
+        if (!cancelled) {
+          setMeta({
+            title: page.title || '',
+            metaTitle: page.metaTitle || null,
+            metaDescription: page.metaDescription || null,
+            ogImage: page.ogImage || null,
+          });
         }
         const parsed = normalizePageBlocks(page.blocks);
         if (!cancelled) {
@@ -46,6 +66,7 @@ export function useContentPage(slug: string) {
       } catch {
         if (!cancelled) {
           setBlocks(null);
+          setMeta(null);
           setLoading(false);
         }
       }
@@ -55,7 +76,7 @@ export function useContentPage(slug: string) {
     };
   }, [slug]);
 
-  return { blocks, loading };
+  return { blocks, meta, loading };
 }
 
 /**

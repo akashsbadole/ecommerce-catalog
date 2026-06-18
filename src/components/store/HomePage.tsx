@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageBlockRenderer } from "./PageBlockRenderer";
 import type { PageBlock } from "@/lib/page-blocks";
 import { normalizePageBlocks } from "@/lib/page-blocks";
+import { useSeo } from "@/lib/use-seo";
 
 interface HomePageProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -20,11 +21,14 @@ export function HomePage({
   const [blocks, setBlocks] = useState<PageBlock[] | null>(null);
   const [cmsLoading, setCmsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [homeMeta, setHomeMeta] = useState<{
+    metaTitle: string | null;
+    metaDescription: string | null;
+    ogImage: string | null;
+  } | null>(null);
 
-  // Fetch CMS homepage content
   useEffect(() => {
     if (externalData) {
-      // If external data is provided (from PageBlockRenderer), use it directly
       setCmsLoading(false);
       return;
     }
@@ -37,7 +41,11 @@ export function HomePage({
           const pages = data.contentPages || [];
           if (pages.length > 0) {
             const page = pages[0];
-            // Homepage exists in DB — use its blocks (even if empty)
+            setHomeMeta({
+              metaTitle: page.metaTitle || null,
+              metaDescription: page.metaDescription || null,
+              ogImage: page.ogImage || null,
+            });
             if (page.blocks) {
               const parsed = normalizePageBlocks(page.blocks);
               if (parsed.length > 0) {
@@ -45,13 +53,11 @@ export function HomePage({
                 return;
               }
             }
-            // Homepage exists but has no blocks yet — show empty state
             setCmsLoading(false);
             return;
           }
         }
       } catch {
-        // Fall back to empty state
       } finally {
         setCmsLoading(false);
       }
@@ -59,79 +65,41 @@ export function HomePage({
     fetchHomepage();
   }, [externalData]);
 
-  // SEO
-  useEffect(() => {
-    const siteName = settings?.site_name;
-    document.title = `${siteName} - Premium Products & B2B Wholesale Supplier`;
-    let metaEl = document.querySelector(
-      'meta[name="description"]',
-    ) as HTMLMetaElement | null;
-    if (!metaEl) {
-      metaEl = document.createElement("meta");
-      metaEl.setAttribute("name", "description");
-      document.head.appendChild(metaEl);
-    }
-    metaEl.setAttribute(
-      "content",
-      `${siteName} is a premier manufacturer and dealer of high-quality products, premium dry fruits, and healthy snacks.`,
-    );
+  const siteOrigin = typeof window !== "undefined" ? window.location.origin : "";
 
-    const websiteJsonLd = {
+  useSeo("home", {
+    title: homeMeta?.metaTitle || (settings?.site_name ? `${settings.site_name}` : undefined),
+    description: homeMeta?.metaDescription,
+    ogImage: homeMeta?.ogImage,
+    jsonLd: {
       "@context": "https://schema.org",
-      "@type": "WebSite",
-      name: siteName,
-      url: typeof window !== "undefined" ? window.location.origin : "",
-      description: "Premium Products & B2B Wholesale Supplier",
-      potentialAction: {
-        "@type": "SearchAction",
-        target: {
-          "@type": "EntryPoint",
-          urlTemplate:
-            typeof window !== "undefined"
-              ? `${window.location.origin}/catalogue?search={search_term_string}`
-              : "",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          name: settings?.site_name,
+          url: siteOrigin,
+          potentialAction: {
+            "@type": "SearchAction",
+            target: {
+              "@type": "EntryPoint",
+              urlTemplate: `${siteOrigin}/catalogue?search={search_term_string}`,
+            },
+            "query-input": "required name=search_term_string",
+          },
         },
-        "query-input": "required name=search_term_string",
-      },
-    };
-
-    const orgJsonLd = {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      name: siteName,
-      description: "Premium Products & B2B Wholesale Supplier",
-      url: typeof window !== "undefined" ? window.location.origin : "",
-      logo:
-        typeof window !== "undefined"
-          ? `${window.location.origin}/logo.png`
-          : "",
-      contactPoint: {
-        "@type": "ContactPoint",
-        contactType: "sales",
-        availableLanguage: ["English", "Hindi"],
-      },
-    };
-
-    const injectScript = (id: string, data: Record<string, unknown>) => {
-      const existing = document.getElementById(id);
-      if (existing) existing.remove();
-      const script = document.createElement("script");
-      script.type = "application/ld+json";
-      script.textContent = JSON.stringify(data);
-      script.id = id;
-      document.head.appendChild(script);
-    };
-
-    injectScript("homepage-website-jsonld", websiteJsonLd);
-    injectScript("homepage-org-jsonld", orgJsonLd);
-
-    return () => {
-      const el1 = document.getElementById("homepage-website-jsonld");
-      const el2 = document.getElementById("homepage-org-jsonld");
-      if (el1) el1.remove();
-      if (el2) el2.remove();
-    };
-  }, []);
+        {
+          "@type": "Organization",
+          name: settings?.site_name,
+          url: siteOrigin,
+          contactPoint: {
+            "@type": "ContactPoint",
+            contactType: "sales",
+            availableLanguage: ["English", "Hindi"],
+          },
+        },
+      ],
+    },
+  });
 
   // Loading state
   if (cmsLoading) {

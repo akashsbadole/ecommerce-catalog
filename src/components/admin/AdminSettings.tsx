@@ -7,22 +7,13 @@ import {
   RefreshCw,
   Globe,
   Phone,
-  MapPin,
   Share2,
   Server,
   Loader2,
   Search,
   Building2,
   Info,
-  Store,
-  Heart,
-  Tag,
   Upload,
-  Image,
-  CreditCard,
-  Download,
-  Database,
-  Truck,
   FileText,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -38,13 +29,6 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { adminFetch } from "@/lib/admin-fetch";
@@ -81,6 +65,8 @@ const defaultSettings: Settings = {
   seo_ga_id: "",
   seo_fb_pixel: "",
   seo_canonical_url: "",
+  header_scripts: "",
+  footer_scripts: "",
   b2b_show_company_fields: "true",
   b2b_require_company: "true",
   b2b_default_moq: "1",
@@ -88,18 +74,7 @@ const defaultSettings: Settings = {
   b2b_enable_tiered_pricing: "false",
   b2b_enable_buyer_portal: "false",
   b2b_verify_new_accounts: "false",
-  tax_rate: "0",
-  order_approval_threshold: "0",
-  catalog_mode: "ecommerce",
-  catalog_show_prices: "true",
-  catalog_enable_wishlist: "true",
-  shipping_method: "free",
-  shipping_rate: "0",
-  shipping_free_above: "0",
-  payment_razorpay_enabled: "false",
-  payment_razorpay_key_id: "",
-  payment_razorpay_key_secret: "",
-  payment_razorpay_mode: "test",
+
   b2b_discount_silver: "0.05",
   b2b_discount_gold: "0.10",
   b2b_discount_platinum: "0.15",
@@ -279,7 +254,7 @@ export function AdminSettings() {
               onChange={(e) =>
                 handleSettingChange("announcement_text", e.target.value)
               }
-              placeholder="Free shipping on orders over $100!"
+              placeholder="Get in touch for bulk pricing on all products!"
             />
             <p className="text-xs text-muted-foreground">
               Shown as a scrolling marquee at the top of every page. Leave empty
@@ -297,42 +272,7 @@ export function AdminSettings() {
               placeholder="$"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="tax_rate">Tax Rate (%)</Label>
-            <Input
-              id="tax_rate"
-              type="number"
-              min="0"
-              max="100"
-              step="0.01"
-              value={settings.tax_rate}
-              onChange={(e) => handleSettingChange("tax_rate", e.target.value)}
-              placeholder="0"
-            />
-            <p className="text-xs text-muted-foreground">
-              Percentage applied to orders at checkout
-            </p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="order_approval_threshold">
-              Order Approval Threshold
-            </Label>
-            <Input
-              id="order_approval_threshold"
-              type="number"
-              min="0"
-              step="0.01"
-              value={settings.order_approval_threshold || "0"}
-              onChange={(e) =>
-                handleSettingChange("order_approval_threshold", e.target.value)
-              }
-              placeholder="0 (disabled)"
-            />
-            <p className="text-xs text-muted-foreground">
-              Orders above this total require admin approval. Set to 0 to
-              disable.
-            </p>
-          </div>
+
           <div className="space-y-2 sm:col-span-2">
             <Label>Site Logo</Label>
             <div className="flex items-start gap-4">
@@ -665,6 +605,35 @@ export function AdminSettings() {
             </p>
           </div>
 
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="header_scripts">Header Scripts</Label>
+            <Textarea
+              id="header_scripts"
+              value={settings.header_scripts}
+              onChange={(e) => handleSettingChange("header_scripts", e.target.value)}
+              placeholder={`<script>\n  console.log("Custom header script");\n</script>`}
+              rows={4}
+              className="font-mono text-xs resize-y"
+            />
+            <p className="text-xs text-muted-foreground">
+              Custom scripts injected into the {"<head>"} of every page (analytics, tracking pixels, etc.)
+            </p>
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="footer_scripts">Footer Scripts</Label>
+            <Textarea
+              id="footer_scripts"
+              value={settings.footer_scripts}
+              onChange={(e) => handleSettingChange("footer_scripts", e.target.value)}
+              placeholder={`<script>\n  console.log("Custom footer script");\n</script>`}
+              rows={4}
+              className="font-mono text-xs resize-y"
+            />
+            <p className="text-xs text-muted-foreground">
+              Custom scripts injected before the closing {"</body>"} tag (chat widgets, etc.)
+            </p>
+          </div>
+
           <div className="sm:col-span-2 rounded-lg border border-dashed border-muted-foreground/30 bg-muted/30 p-4">
             <div className="flex gap-3">
               <Info className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
@@ -702,7 +671,7 @@ export function AdminSettings() {
       </Card>
 
       {/* B2B Settings */}
-      {/* <Card>
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Building2 className="h-4 w-4" />
@@ -909,88 +878,7 @@ export function AdminSettings() {
             </div>
           </div>
         </CardContent>
-      </Card> */}
-
-      {/* Catalog / Ecommerce Settings */}
-      {/* <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Store className="h-4 w-4" />
-            Catalog / Ecommerce
-          </CardTitle>
-          <CardDescription>
-            Choose how your store operates - full ecommerce with cart/checkout,
-            or catalog-only with enquiry forms.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <Label htmlFor="catalog_mode" className="cursor-pointer">
-                Catalog Mode
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                When enabled, prices are hidden and customers submit enquiries
-                instead of purchasing directly
-              </p>
-            </div>
-            <Switch
-              id="catalog_mode"
-              checked={settings.catalog_mode === "catalog"}
-              onCheckedChange={(checked) =>
-                handleSettingChange(
-                  "catalog_mode",
-                  checked ? "catalog" : "ecommerce",
-                )
-              }
-            />
-          </div>
-          <div className="flex items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <Label htmlFor="catalog_show_prices" className="cursor-pointer">
-                <div className="flex items-center gap-1.5">
-                  <Tag className="h-3.5 w-3.5" />
-                  Show Prices
-                </div>
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                Display product prices on the catalogue and product pages
-              </p>
-            </div>
-            <Switch
-              id="catalog_show_prices"
-              checked={settings.catalog_show_prices === "true"}
-              onCheckedChange={(checked) =>
-                handleSettingChange("catalog_show_prices", String(checked))
-              }
-            />
-          </div>
-
-          <div className="flex items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <Label
-                htmlFor="catalog_enable_wishlist"
-                className="cursor-pointer"
-              >
-                <div className="flex items-center gap-1.5">
-                  <Heart className="h-3.5 w-3.5" />
-                  Enable Wishlist
-                </div>
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                Allow customers to save products to their wishlist
-              </p>
-            </div>
-            <Switch
-              id="catalog_enable_wishlist"
-              checked={settings.catalog_enable_wishlist === "true"}
-              onCheckedChange={(checked) =>
-                handleSettingChange("catalog_enable_wishlist", String(checked))
-              }
-            />
-          </div>
-        </CardContent>
-      </Card> */}
+      </Card>
 
       {/* Email / SMTP Settings */}
       <Card>
@@ -1012,7 +900,7 @@ export function AdminSettings() {
                   SMTP not configured
                 </p>
                 <p className="text-amber-700 dark:text-amber-300 mt-1">
-                  Email notifications (order confirmations, password resets)
+                   Email notifications (enquiry notifications, password resets)
                   will not be sent until SMTP is configured.
                 </p>
               </div>
@@ -1100,189 +988,8 @@ export function AdminSettings() {
         </CardContent>
       </Card>
 
-      {/* Shipping */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Truck className="h-5 w-5" />
-            Shipping
-          </CardTitle>
-          <CardDescription>
-            Configure shipping rates for your store
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Shipping Method</Label>
-            <Select
-              value={settings.shipping_method}
-              onValueChange={(v) => handleSettingChange("shipping_method", v)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="free">Free Shipping</SelectItem>
-                <SelectItem value="flat_rate">Flat Rate</SelectItem>
-                <SelectItem value="flat_rate_free_above">
-                  Flat Rate (Free Above Threshold)
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {settings.shipping_method !== "free" && (
-            <>
-              <div className="space-y-2">
-                <Label>Shipping Rate ({settings.currency_symbol || "$"})</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={settings.shipping_rate}
-                  onChange={(e) =>
-                    handleSettingChange("shipping_rate", e.target.value)
-                  }
-                />
-              </div>
-              {settings.shipping_method === "flat_rate_free_above" && (
-                <div className="space-y-2">
-                  <Label>
-                    Free Above Amount ({settings.currency_symbol || "$"})
-                  </Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={settings.shipping_free_above}
-                    onChange={(e) =>
-                      handleSettingChange("shipping_free_above", e.target.value)
-                    }
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Orders above this amount get free shipping
-                  </p>
-                </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Payment Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <CreditCard className="h-4 w-4" />
-            Payment Gateway (Razorpay)
-          </CardTitle>
-          <CardDescription>
-            Configure Razorpay to accept online payments. Get API keys from{" "}
-            <a
-              href="https://dashboard.razorpay.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary underline"
-            >
-              Razorpay Dashboard
-            </a>
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <Label
-                htmlFor="payment_razorpay_enabled"
-                className="cursor-pointer"
-              >
-                Enable Razorpay
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                Accept payments via Razorpay (UPI, Cards, Netbanking, Wallets)
-              </p>
-            </div>
-            <Switch
-              id="payment_razorpay_enabled"
-              checked={settings.payment_razorpay_enabled === "true"}
-              onCheckedChange={(checked) =>
-                handleSettingChange("payment_razorpay_enabled", String(checked))
-              }
-            />
-          </div>
-          <div className="flex items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <Label htmlFor="payment_razorpay_mode" className="cursor-pointer">
-                Test Mode
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                Use test keys for development. Switch to Live for production.
-              </p>
-            </div>
-            <Switch
-              id="payment_razorpay_mode"
-              checked={settings.payment_razorpay_mode === "test"}
-              onCheckedChange={(checked) =>
-                handleSettingChange(
-                  "payment_razorpay_mode",
-                  checked ? "test" : "live",
-                )
-              }
-            />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="payment_razorpay_key_id">
-                {settings.payment_razorpay_mode === "test" ? "Test" : "Live"}{" "}
-                Key ID
-              </Label>
-              <Input
-                id="payment_razorpay_key_id"
-                value={settings.payment_razorpay_key_id}
-                onChange={(e) =>
-                  handleSettingChange("payment_razorpay_key_id", e.target.value)
-                }
-                placeholder="rzp_test_xxxxxxxxxxxxxxxx"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="payment_razorpay_key_secret">
-                {settings.payment_razorpay_mode === "test" ? "Test" : "Live"}{" "}
-                Key Secret
-              </Label>
-              <Input
-                id="payment_razorpay_key_secret"
-                type="password"
-                value={settings.payment_razorpay_key_secret}
-                onChange={(e) =>
-                  handleSettingChange(
-                    "payment_razorpay_key_secret",
-                    e.target.value,
-                  )
-                }
-                placeholder="xxxxxxxxxxxxxxxxxxxxxxxx"
-              />
-            </div>
-          </div>
-          <div className="rounded-lg bg-muted p-3 text-xs text-muted-foreground">
-            <p className="font-medium mb-1">Supported payment methods:</p>
-            <p>UPI, Credit/Debit Cards, Netbanking, Wallets, EMI, PayLater</p>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Import Products */}
       <AdminImport />
-
-      {/* Data Management */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Database className="h-4 w-4" />
-            Data Management
-          </CardTitle>
-          <CardDescription>
-            System maintenance and initial data setup
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4"></CardContent>
-      </Card>
 
       {/* Backup & Restore */}
       <AdminBackup />

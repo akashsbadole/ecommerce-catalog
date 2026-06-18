@@ -95,6 +95,9 @@ export async function PUT(
         ...(body.ogImage !== undefined && {
           ogImage: normalizeImageUrl(body.ogImage),
         }),
+        ...(body.customSchema !== undefined && {
+          customSchema: body.customSchema || null,
+        }),
         ...(body.isActive !== undefined && { isActive: body.isActive }),
         ...(body.sortOrder !== undefined && { sortOrder: body.sortOrder }),
         ...(blocks !== undefined && { blocks }),

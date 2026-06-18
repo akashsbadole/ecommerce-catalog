@@ -94,6 +94,7 @@ interface BlogPost {
   metaTitle: string | null;
   metaDescription: string | null;
   ogImage: string | null;
+  customSchema: string | null;
   tags: string | null;
   isPublished: boolean;
   publishedAt: string | null;
@@ -113,6 +114,7 @@ interface BlogFormData {
   metaTitle: string;
   metaDescription: string;
   ogImage: string;
+  customSchema: string;
   tags: string;
   isPublished: boolean;
 }
@@ -135,6 +137,7 @@ const emptyForm: BlogFormData = {
   metaTitle: '',
   metaDescription: '',
   ogImage: '',
+  customSchema: '',
   tags: '',
   isPublished: false,
 };
@@ -309,6 +312,7 @@ export function AdminBlog() {
       metaTitle: post.metaTitle || '',
       metaDescription: post.metaDescription || '',
       ogImage: post.ogImage || '',
+      customSchema: post.customSchema || '',
       tags: tags.join(', '),
       isPublished: post.isPublished,
     });
@@ -366,6 +370,7 @@ export function AdminBlog() {
         metaTitle: form.metaTitle.trim() || null,
         metaDescription: form.metaDescription.trim() || null,
         ogImage: form.ogImage.trim() || null,
+        customSchema: form.customSchema.trim() || null,
         tags: form.tags || null,
         isPublished: form.isPublished,
       };
@@ -1002,6 +1007,36 @@ export function AdminBlog() {
                       }
                       rows={2}
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="post-og-image">OG Image URL</Label>
+                    <Input
+                      id="post-og-image"
+                      placeholder="https://example.com/og-image.jpg"
+                      value={form.ogImage}
+                      onChange={(e) =>
+                        setForm(prev => ({ ...prev, ogImage: e.target.value }))
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Image shown when this post is shared on social media (recommended 1200×630px)
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="post-custom-schema">Custom JSON-LD Schema (optional)</Label>
+                    <Textarea
+                      id="post-custom-schema"
+                      placeholder='{"@type": "BlogPosting", ...}'
+                      value={form.customSchema}
+                      onChange={(e) =>
+                        setForm(prev => ({ ...prev, customSchema: e.target.value }))
+                      }
+                      rows={3}
+                      className="font-mono text-xs"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Override or extend the default JSON-LD schema. Must be valid JSON.
+                    </p>
                   </div>
                 </div>
               </TabsContent>

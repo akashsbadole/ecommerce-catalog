@@ -96,21 +96,6 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
     return result;
   }, [posts, selectedTag, searchQuery]);
 
-  // Set SEO meta tags
-  useEffect(() => {
-    document.title = "Blog";
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (!metaDesc) {
-      metaDesc = document.createElement("meta");
-      metaDesc.setAttribute("name", "description");
-      document.head.appendChild(metaDesc);
-    }
-    metaDesc.setAttribute(
-      "content",
-      "Read our latest articles, news, and updates.",
-    );
-  }, []);
-
   // Count posts per tag
   const getTagCount = (tag: string) => {
     return posts.filter((post) => parseTags(post.tags).includes(tag)).length;

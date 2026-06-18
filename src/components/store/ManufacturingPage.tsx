@@ -17,6 +17,7 @@ import {
 import { useAppStore } from '@/lib/store';
 import { useContentPage, getBlockData } from "@/lib/use-page-content";
 import { BLOCK_DEFAULTS } from "@/lib/page-blocks";
+import { useSeo } from "@/lib/use-seo";
 
 interface Category {
   id: string;
@@ -55,8 +56,14 @@ function ResolvedIcon({
 }
 
 export function ManufacturingPage({ onNavigate, data: externalData }: ManufacturingPageProps) {
-  const { blocks } = useContentPage("mfg-page-content");
+  const { blocks, meta, loading } = useContentPage("mfg-page-content");
+  useSeo("manufacturing", {
+    title: meta?.metaTitle || meta?.title,
+    description: meta?.metaDescription,
+    ogImage: meta?.ogImage,
+  });
   const rawData = getBlockData(blocks, "mfg-page-content");
+  if (loading && !externalData) return null;
   const data =
     externalData ??
     rawData ??

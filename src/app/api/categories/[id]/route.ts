@@ -70,6 +70,9 @@ export async function PUT(
         ...(body.metaDescription !== undefined && {
           metaDescription: body.metaDescription || null,
         }),
+        ...(body.ogImage !== undefined && {
+          ogImage: body.ogImage || null,
+        }),
         ...(body.customSchema !== undefined && {
           customSchema: body.customSchema || null,
         }),

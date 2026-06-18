@@ -82,6 +82,7 @@ interface ContentPage {
   metaTitle: string | null;
   metaDescription: string | null;
   ogImage: string | null;
+  customSchema: string | null;
   isActive: boolean;
   sortOrder: number;
   createdAt: string;
@@ -96,6 +97,7 @@ interface PageFormData {
   metaTitle: string;
   metaDescription: string;
   ogImage: string;
+  customSchema: string;
   isActive: boolean;
   sortOrder: string;
 }
@@ -109,6 +111,7 @@ const emptyForm: PageFormData = {
   metaTitle: '',
   metaDescription: '',
   ogImage: '',
+  customSchema: '',
   isActive: true,
   sortOrder: '0',
 };
@@ -183,6 +186,7 @@ export function AdminPages() {
       metaTitle: page.metaTitle || '',
       metaDescription: page.metaDescription || '',
       ogImage: page.ogImage || '',
+      customSchema: page.customSchema || '',
       isActive: page.isActive,
       sortOrder: String(page.sortOrder),
     });
@@ -255,6 +259,7 @@ export function AdminPages() {
         metaTitle: form.metaTitle.trim() || null,
         metaDescription: form.metaDescription.trim() || null,
         ogImage: form.ogImage.trim() || null,
+        customSchema: form.customSchema.trim() || null,
         isActive: form.isActive,
         sortOrder: parseInt(form.sortOrder) || 0,
       };
@@ -628,6 +633,22 @@ export function AdminPages() {
                     />
                     <p className="text-xs text-muted-foreground">
                       Image shown when this page is shared on social media (recommended 1200×630px)
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="page-custom-schema">Custom JSON-LD Schema (optional)</Label>
+                    <Textarea
+                      id="page-custom-schema"
+                      placeholder='{"@type": "WebPage", ...}'
+                      value={form.customSchema}
+                      onChange={(e) =>
+                        setForm(prev => ({ ...prev, customSchema: e.target.value }))
+                      }
+                      rows={3}
+                      className="font-mono text-xs"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Override or extend the default schema. Must be valid JSON.
                     </p>
                   </div>
                 </CollapsibleContent>

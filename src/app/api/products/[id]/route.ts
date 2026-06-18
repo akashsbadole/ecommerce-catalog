@@ -126,6 +126,8 @@ export async function PUT(
         }),
         ...(body.metaTitle !== undefined && { metaTitle: body.metaTitle || null }),
         ...(body.metaDescription !== undefined && { metaDescription: body.metaDescription || null }),
+        ...(body.ogImage !== undefined && { ogImage: body.ogImage || null }),
+        ...(body.customSchema !== undefined && { customSchema: body.customSchema || null }),
         ...(body.stock !== undefined && { stock: typeof body.stock === 'number' ? body.stock : parseInt(body.stock) || 0 }),
         ...(body.lowStockThreshold !== undefined && { lowStockThreshold: typeof body.lowStockThreshold === 'number' ? body.lowStockThreshold : parseInt(body.lowStockThreshold) || 10 }),
         ...(body.relatedProductIds !== undefined && {

@@ -216,6 +216,8 @@ export async function POST(request: NextRequest) {
           : null,
         metaTitle: validatedData.metaTitle || null,
         metaDescription: validatedData.metaDescription || null,
+        ogImage: validatedData.ogImage || null,
+        customSchema: body.customSchema || null,
         stock: typeof body.stock === 'number' ? body.stock : (parseInt(body.stock) || 0),
         lowStockThreshold: typeof body.lowStockThreshold === 'number' ? body.lowStockThreshold : (parseInt(body.lowStockThreshold) || 10),
         relatedProductIds: typeof body.relatedProductIds === 'string' ? body.relatedProductIds : '[]',

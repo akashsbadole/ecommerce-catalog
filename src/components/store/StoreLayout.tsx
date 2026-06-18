@@ -15,6 +15,7 @@ import { CookieConsent } from "./CookieConsent";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { GlobalEnquiryModal } from "./GlobalEnquiryModal";
 import { StickyCtaBar } from "./StickyCtaBar";
+import { CustomScripts } from "./CustomScripts";
 
 interface StoreLayoutProps {
   currentPage: string;
@@ -120,6 +121,8 @@ export function StoreLayout({
       <CookieConsent />
 
       <GlobalEnquiryModal />
+
+      <CustomScripts />
     </div>
   );
 }

@@ -88,6 +88,7 @@ interface Category {
   isActive: boolean;
   metaTitle: string | null;
   metaDescription: string | null;
+  ogImage: string | null;
   customSchema?: string | null;
   parentId?: string | null;
   _count?: { Product: number };
@@ -102,6 +103,7 @@ interface CategoryFormData {
   isActive: boolean;
   metaTitle: string;
   metaDescription: string;
+  ogImage: string;
   customSchema: string;
   parentId: string;
   productIds: string[];
@@ -116,6 +118,7 @@ const emptyForm: CategoryFormData = {
   isActive: true,
   metaTitle: "",
   metaDescription: "",
+  ogImage: "",
   customSchema: "",
   parentId: "",
   productIds: [],
@@ -213,6 +216,7 @@ export function AdminCategories() {
       isActive: cat.isActive,
       metaTitle: cat.metaTitle || "",
       metaDescription: cat.metaDescription || "",
+      ogImage: cat.ogImage || "",
       customSchema: cat.customSchema || "",
       parentId: cat.parentId || "",
       productIds: [],
@@ -262,6 +266,7 @@ export function AdminCategories() {
         isActive: form.isActive,
         metaTitle: form.metaTitle.trim() || null,
         metaDescription: form.metaDescription.trim() || null,
+        ogImage: form.ogImage.trim() || null,
         customSchema: form.customSchema.trim() || null,
         parentId: form.parentId || null,
         productIds: form.productIds,
@@ -940,6 +945,23 @@ export function AdminCategories() {
                   />
                   <p className="text-xs text-muted-foreground">
                     Recommended: 150-160 characters for optimal SEO
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cat-og-image">OG Image URL</Label>
+                  <Input
+                    id="cat-og-image"
+                    placeholder="https://example.com/og-image.jpg"
+                    value={form.ogImage}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        ogImage: e.target.value,
+                      }))
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Image shown when this category is shared on social media (recommended 1200×630px)
                   </p>
                 </div>
                 <div className="space-y-2">

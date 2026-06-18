@@ -15,6 +15,7 @@ import {
 import { useAppStore } from '@/lib/store';
 import { useContentPage, getBlockData } from "@/lib/use-page-content";
 import { BLOCK_DEFAULTS } from "@/lib/page-blocks";
+import { useSeo } from "@/lib/use-seo";
 
 interface Category {
   id: string;
@@ -54,8 +55,14 @@ export function ContactPage({
   onNavigate,
   data: externalData,
 }: ContactPageProps) {
-  const { blocks } = useContentPage("contact-page-content");
+  const { blocks, meta, loading } = useContentPage("contact-page-content");
+  useSeo("contact", {
+    title: meta?.metaTitle || meta?.title,
+    description: meta?.metaDescription,
+    ogImage: meta?.ogImage,
+  });
   const rawData = getBlockData(blocks, "contact-page-content");
+  if (loading && !externalData) return null;
   const data =
     externalData ??
     rawData ??

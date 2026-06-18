@@ -95,6 +95,7 @@ export async function POST(request: NextRequest) {
         metaTitle: validatedData.metaTitle || null,
         metaDescription: validatedData.metaDescription || null,
         ogImage: normalizeImageUrl(validatedData.ogImage),
+        customSchema: body.customSchema || null,
         isActive: validatedData.isActive ?? true,
         sortOrder: validatedData.sortOrder ?? 0,
         ...(storeId ? { storeId } : {}),

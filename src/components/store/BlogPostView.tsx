@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { SocialShare } from "./SocialShare";
 import { generateArticleSchema } from "@/lib/seo/schema-generator";
+import { useSeo } from "@/lib/use-seo";
 
 interface BlogPostData {
   id: string;
@@ -140,63 +141,18 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
       .catch(() => {});
   }, [post]);
 
-  useEffect(() => {
-    if (!post) return;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
+  const brandName = process.env.NEXT_PUBLIC_SITE_NAME;
 
-    document.title = post.metaTitle || `${post.title} | Blog`;
-
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (!metaDesc) {
-      metaDesc = document.createElement("meta");
-      metaDesc.setAttribute("name", "description");
-      document.head.appendChild(metaDesc);
-    }
-    metaDesc.setAttribute(
-      "content",
-      post.metaDescription || post.excerpt || post.content.substring(0, 160),
-    );
-
-    const setOgTag = (property: string, content: string) => {
-      let tag = document.querySelector(
-        `meta[property="${property}"]`,
-      ) as HTMLMetaElement;
-      if (!tag) {
-        tag = document.createElement("meta");
-        tag.setAttribute("property", property);
-        document.head.appendChild(tag);
-      }
-      tag.setAttribute("content", content);
-    };
-
-    setOgTag("og:type", "article");
-    setOgTag("og:title", post.metaTitle || post.title);
-    setOgTag("og:description", post.metaDescription || post.excerpt || "");
-    if (post.ogImage) setOgTag("og:image", post.ogImage);
-    else if (post.coverImage) setOgTag("og:image", post.coverImage);
-    if (post.publishedAt)
-      setOgTag(
-        "article:published_time",
-        new Date(post.publishedAt).toISOString(),
-      );
-
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-    const brandName = process.env.NEXT_PUBLIC_SITE_NAME;
-    const jsonLd = generateArticleSchema(post, siteUrl, brandName);
-    const scriptId = "blog-jsonld";
-    const existingScript = document.getElementById(scriptId);
-    if (existingScript) existingScript.remove();
-
-    const script = document.createElement("script");
-    script.type = "application/ld+json";
-    script.id = scriptId;
-    script.textContent = JSON.stringify(jsonLd);
-    document.head.appendChild(script);
-
-    return () => {
-      const el = document.getElementById(scriptId);
-      if (el) el.remove();
-    };
-  }, [post]);
+  useSeo(`blog-post-${post?.slug || ""}`, {
+    title: post?.metaTitle || (post ? `${post.title} | Blog` : undefined),
+    description: post?.metaDescription || post?.excerpt || post?.content?.substring(0, 160),
+    ogImage: post?.ogImage || post?.coverImage,
+    ogType: "article",
+    publishedAt: post?.publishedAt || null,
+    jsonLd: post ? generateArticleSchema(post, siteUrl, brandName) : null,
+    canonical: post ? `${siteUrl}/blog/${post.slug}` : undefined,
+  });
 
   const headings = useMemo(
     () => (post ? extractHeadings(post.content) : []),

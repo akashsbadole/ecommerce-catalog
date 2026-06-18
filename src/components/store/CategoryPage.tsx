@@ -5,6 +5,7 @@ import { Package, Send, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
 import { getFirstImage } from "@/lib/utils";
+import { useSeo } from "@/lib/use-seo";
 
 interface CategoryPageProps {
   slug: string;
@@ -27,6 +28,9 @@ export function CategoryPage({ slug, onNavigate }: CategoryPageProps) {
     name: string;
     description: string | null;
     image: string | null;
+    metaTitle: string | null;
+    metaDescription: string | null;
+    ogImage: string | null;
   } | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,6 +59,12 @@ export function CategoryPage({ slug, onNavigate }: CategoryPageProps) {
     }
     load();
   }, [slug]);
+
+  useSeo(`category-${slug}`, {
+    title: category?.metaTitle || category?.name,
+    description: category?.metaDescription || category?.description,
+    ogImage: category?.ogImage,
+  });
 
   if (loading) {
     return (

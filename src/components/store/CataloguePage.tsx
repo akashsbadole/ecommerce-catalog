@@ -23,6 +23,7 @@ import {
 import { getFirstImage } from "@/lib/utils";
 import { useContentPage, getPageContentData } from "@/lib/use-page-content";
 import { BLOCK_DEFAULTS } from "@/lib/page-blocks";
+import { useSeo } from "@/lib/use-seo";
 
 interface Category {
   id: string;
@@ -58,15 +59,15 @@ export function CataloguePage({
   data: externalData,
 }: CataloguePageProps) {
   const { auth, settings } = useAppStore();
-  const { blocks } = useContentPage("catalogue-page-content");
-  const rawData = getPageContentData(
+  const { blocks, loading: cmsLoading } = useContentPage("catalogue-page-content");
+  const rawData = blocks ? getPageContentData(
     blocks,
     "catalogue-page-content",
     BLOCK_DEFAULTS["catalogue-page-content"].defaultData,
-  );
-  const cmsData = externalData ?? rawData;
-  const cmsPageTitle = (cmsData.pageTitle as string) || "Product Catalogue";
-  const cmsPageDescription = (cmsData.pageDescription as string) || "";
+  ) : null;
+  const cmsData = externalData ?? (cmsLoading ? null : rawData ?? BLOCK_DEFAULTS["catalogue-page-content"].defaultData);
+  const cmsPageTitle = cmsData ? (cmsData.pageTitle as string) || "Product Catalogue" : "";
+  const cmsPageDescription = cmsData ? (cmsData.pageDescription as string) || "" : "";
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -143,24 +144,11 @@ export function CataloguePage({
     return () => clearTimeout(timer);
   }, [fetchProducts]);
 
-  useEffect(() => {
-    const siteName = settings?.site_name;
-    document.title = `${selectedCategoryData?.name || cmsPageTitle} | ${siteName}`;
-    let metaEl = document.querySelector(
-      'meta[name="description"]',
-    ) as HTMLMetaElement | null;
-    if (!metaEl) {
-      metaEl = document.createElement("meta");
-      metaEl.setAttribute("name", "description");
-      document.head.appendChild(metaEl);
-    }
-    metaEl.setAttribute(
-      "content",
-      cmsPageDescription ||
-        selectedCategoryData?.description ||
-        `Browse our complete catalogue of premium products.`,
-    );
-  }, [settings, selectedCategoryData, cmsPageTitle, cmsPageDescription]);
+  useSeo(`catalogue-${selectedCategoryData?.slug || ""}`, {
+    title: selectedCategoryData?.name || cmsPageTitle,
+    description: cmsPageDescription || selectedCategoryData?.description || "Browse our complete catalogue of premium products.",
+    siteName: settings?.site_name,
+  });
 
   useEffect(() => {
     if (!sentinelRef.current || !hasMore) return;

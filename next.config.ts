@@ -21,10 +21,7 @@ const securityHeaders = [
     key: 'Referrer-Policy',
     value: 'origin-when-cross-origin'
   },
-  {
-    key: 'Permissions-Policy',
-    value: 'camera=(), microphone=(), geolocation=()'
-  },
+
   {
     key: 'Content-Security-Policy',
     value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: http: https:; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://vimeo.com; connect-src 'self' https://*.clerk.accounts.dev wss://*.clerk.accounts.dev; object-src 'none'; base-uri 'self'; form-action 'self';"
