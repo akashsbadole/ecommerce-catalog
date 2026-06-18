@@ -14,7 +14,7 @@ import {
   Settings,
   ShieldCheck,
 } from "lucide-react";
-import { useAppStore } from '@/lib/store';
+import { useAppStore } from "@/lib/store";
 import { useContentPage, getBlockData } from "@/lib/use-page-content";
 import { BLOCK_DEFAULTS } from "@/lib/page-blocks";
 import { useSeo } from "@/lib/use-seo";
@@ -55,7 +55,10 @@ function ResolvedIcon({
   return null;
 }
 
-export function ManufacturingPage({ onNavigate, data: externalData }: ManufacturingPageProps) {
+export function ManufacturingPage({
+  onNavigate,
+  data: externalData,
+}: ManufacturingPageProps) {
   const { blocks, meta, loading } = useContentPage("mfg-page-content");
   useSeo("manufacturing", {
     title: meta?.metaTitle || meta?.title,
@@ -65,9 +68,7 @@ export function ManufacturingPage({ onNavigate, data: externalData }: Manufactur
   const rawData = getBlockData(blocks, "mfg-page-content");
   if (loading && !externalData) return null;
   const data =
-    externalData ??
-    rawData ??
-    BLOCK_DEFAULTS["mfg-page-content"].defaultData;
+    externalData ?? rawData ?? BLOCK_DEFAULTS["mfg-page-content"].defaultData;
 
   const [activeLine, setActiveLine] = useState("khakhra");
   const [categories, setCategories] = useState<Category[]>([]);
@@ -280,7 +281,7 @@ export function ManufacturingPage({ onNavigate, data: externalData }: Manufactur
                       onClick={() =>
                         onNavigate(
                           (activeLineData?.ctaLink as string) || "category",
-                          activeLineData?.id || "khakhra"
+                          activeLineData?.id || "khakhra",
                         )
                       }
                       className="text-xs bg-primary text-primary-foreground rounded px-3 py-1.5 hover:bg-primary/90 transition-colors ml-auto"
@@ -391,7 +392,9 @@ export function ManufacturingPage({ onNavigate, data: externalData }: Manufactur
                     className="flex justify-between items-center text-xs py-2.5 border-b last:border-0"
                   >
                     <span className="text-foreground/60">{item.label}</span>
-                    <span className="font-semibold text-foreground">{item.value}</span>
+                    <span className="font-semibold text-foreground">
+                      {item.value}
+                    </span>
                   </div>
                 ))}
                 <button
@@ -409,36 +412,36 @@ export function ManufacturingPage({ onNavigate, data: externalData }: Manufactur
 
       {/* M6: Certifications */}
       {data.showCertifications === true && (
-      <section className="bg-muted/40 py-16 px-4">
-        <div className="container mx-auto max-w-5xl">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
-            Certifications
-          </p>
-          <h2 className="text-2xl font-bold mb-8">
-            Certified. Audited. Trusted.
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            {certifications.map((cert) => (
-              <div
-                key={cert.name}
-                className="bg-background border rounded-xl p-5 text-center"
-              >
-                <div className="w-12 h-12 bg-muted rounded-lg mx-auto mb-3 flex items-center justify-center text-xs font-bold text-muted-foreground">
-                  {cert.name.split(" ")[0]}
+        <section className="bg-muted/40 py-16 px-4">
+          <div className="container mx-auto max-w-5xl">
+            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
+              Certifications
+            </p>
+            <h2 className="text-2xl font-bold mb-8">
+              Certified. Audited. Trusted.
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              {certifications.map((cert) => (
+                <div
+                  key={cert.name}
+                  className="bg-background border rounded-xl p-5 text-center"
+                >
+                  <div className="w-12 h-12 bg-muted rounded-lg mx-auto mb-3 flex items-center justify-center text-xs font-bold text-muted-foreground">
+                    {cert.name.split(" ")[0]}
+                  </div>
+                  <p className="text-sm font-semibold mb-1">{cert.name}</p>
+                  <p className="text-xs text-muted-foreground">{cert.desc}</p>
                 </div>
-                <p className="text-sm font-semibold mb-1">{cert.name}</p>
-                <p className="text-xs text-muted-foreground">{cert.desc}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
       )}
 
       {/* M7: CTA with Shared Contact Form */}
       <section className="bg-primary text-primary-foreground py-16 px-4">
         <div className="container mx-auto max-w-5xl">
-          <h2 className="text-2xl font-bold text-center mb-2">
+          <h2 className="text-2xl font-bold text-white text-center mb-2">
             {(ctaData.title as string) || "Ready to see it for yourself?"}
           </h2>
           {(ctaData.subtitle as string) && (
