@@ -232,7 +232,7 @@ function HeroBlock({
       <div
         className={`relative z-10 w-full ${alignClasses[alignment] || alignClasses.center}`}
       >
-        <div className="mx-auto max-w-4xl px-6">
+        <div className="mx-auto w-full px-6">
           <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
             {title}
           </h1>
@@ -1659,7 +1659,7 @@ function StickyCtaBlock({
       link?: string;
     }>) || [];
   const whatsappNumber = settings?.whatsapp_number || "";
-  const visible = data.visible !== false;
+  const visible = data.visible === true;
 
   if (!visible) return null;
 

@@ -383,8 +383,8 @@ export function ManufacturingPage({ onNavigate, data: externalData }: Manufactur
                     key={item.label}
                     className="flex justify-between items-center text-xs py-2.5 border-b last:border-0"
                   >
-                    <span className="text-muted-foreground">{item.label}</span>
-                    <span className="font-medium">{item.value}</span>
+                    <span className="text-foreground/60">{item.label}</span>
+                    <span className="font-semibold text-foreground">{item.value}</span>
                   </div>
                 ))}
                 <button
@@ -401,6 +401,7 @@ export function ManufacturingPage({ onNavigate, data: externalData }: Manufactur
       </section>
 
       {/* M6: Certifications */}
+      {data.showCertifications === true && (
       <section className="bg-muted/40 py-16 px-4">
         <div className="container mx-auto max-w-5xl">
           <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
@@ -425,6 +426,7 @@ export function ManufacturingPage({ onNavigate, data: externalData }: Manufactur
           </div>
         </div>
       </section>
+      )}
 
       {/* M7: CTA with Shared Contact Form */}
       <section className="bg-primary text-primary-foreground py-16 px-4">

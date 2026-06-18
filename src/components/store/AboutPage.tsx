@@ -275,7 +275,7 @@ export function AboutPage({ onNavigate, data: externalData }: AboutPageProps) {
                   <p className="text-xs text-muted-foreground leading-relaxed mb-4">
                     {director.bio}
                   </p>
-                  {director.socialUrl && (
+                  {director.socialUrl && false && (
                     <div className="flex gap-2">
                       <a
                         href={director.socialUrl}
@@ -462,7 +462,7 @@ export function AboutPage({ onNavigate, data: externalData }: AboutPageProps) {
                 <p className="text-xs text-white/70 mb-5 leading-relaxed">
                   {item.desc}
                 </p>
-                {item.useForm ? (
+                {item.useForm || idx >= 1 ? (
                   <button
                     onClick={() => useAppStore.getState().openEnquiryModal()}
                     className="w-full text-xs font-medium bg-white text-primary rounded-md py-2.5 hover:bg-white/90 transition-colors"

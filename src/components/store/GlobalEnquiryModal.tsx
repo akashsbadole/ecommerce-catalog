@@ -36,6 +36,7 @@ export function GlobalEnquiryModal() {
 
   const [submitting, setSubmitting] = useState(false);
   const [businessOpen, setBusinessOpen] = useState(false);
+  const [countryCode, setCountryCode] = useState("+91");
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -116,7 +117,7 @@ export function GlobalEnquiryModal() {
         body: JSON.stringify({
           name: form.name,
           email: form.email || null,
-          phone: form.phone,
+          phone: `${countryCode} ${form.phone}`,
           companyName: form.companyName || null,
           companyEmail: form.companyEmail || null,
           companyPhone: form.companyPhone || null,
@@ -250,13 +251,36 @@ export function GlobalEnquiryModal() {
                 <Label>
                   Phone <span className="text-rose-500">*</span>
                 </Label>
-                <Input
-                  type="tel"
-                  placeholder="Phone number *"
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  required
-                />
+                <div className="flex gap-2">
+                  <Select value={countryCode} onValueChange={setCountryCode}>
+                    <SelectTrigger className="w-[100px] shrink-0">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="+91">IN +91</SelectItem>
+                      <SelectItem value="+1">US +1</SelectItem>
+                      <SelectItem value="+44">UK +44</SelectItem>
+                      <SelectItem value="+971">UAE +971</SelectItem>
+                      <SelectItem value="+61">AU +61</SelectItem>
+                      <SelectItem value="+92">PK +92</SelectItem>
+                      <SelectItem value="+880">BD +880</SelectItem>
+                      <SelectItem value="+977">NP +977</SelectItem>
+                      <SelectItem value="+65">SG +65</SelectItem>
+                      <SelectItem value="+81">JP +81</SelectItem>
+                      <SelectItem value="+86">CN +86</SelectItem>
+                      <SelectItem value="+49">DE +49</SelectItem>
+                      <SelectItem value="+33">FR +33</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="tel"
+                    placeholder="Phone number *"
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    required
+                    className="flex-1"
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>
