@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
         },
         _count: {
           select: {
-            Order: true,
+            Quote: true,
             Enquiry: true,
           },
         },
