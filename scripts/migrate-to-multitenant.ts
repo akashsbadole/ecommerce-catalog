@@ -51,72 +51,56 @@ async function main() {
   });
   console.log(`   ✅ ${categories.count} categories migrated\n`);
 
-  // 4. Migrate orders
-  console.log("4. Migrating orders...");
-  const orders = await prisma.order.updateMany({
-    where: { storeId: null },
-    data: { storeId: defaultStore.id },
-  });
-  console.log(`   ✅ ${orders.count} orders migrated\n`);
-
-  // 5. Migrate coupons
-  console.log("5. Migrating coupons...");
-  const coupons = await prisma.coupon.updateMany({
-    where: { storeId: null },
-    data: { storeId: defaultStore.id },
-  });
-  console.log(`   ✅ ${coupons.count} coupons migrated\n`);
-
-  // 6. Migrate blog posts
-  console.log("6. Migrating blog posts...");
+  // 4. Migrate blog posts
+  console.log("4. Migrating blog posts...");
   const blogPosts = await prisma.blogPost.updateMany({
     where: { storeId: null },
     data: { storeId: defaultStore.id },
   });
   console.log(`   ✅ ${blogPosts.count} blog posts migrated\n`);
 
-  // 7. Migrate banners
-  console.log("7. Migrating banners...");
+  // 5. Migrate banners
+  console.log("5. Migrating banners...");
   const banners = await prisma.banner.updateMany({
     where: { storeId: null },
     data: { storeId: defaultStore.id },
   });
   console.log(`   ✅ ${banners.count} banners migrated\n`);
 
-  // 8. Migrate content pages
-  console.log("8. Migrating content pages...");
+  // 6. Migrate content pages
+  console.log("6. Migrating content pages...");
   const pages = await prisma.contentPage.updateMany({
     where: { storeId: null },
     data: { storeId: defaultStore.id },
   });
   console.log(`   ✅ ${pages.count} content pages migrated\n`);
 
-  // 9. Migrate enquiries
-  console.log("9. Migrating enquiries...");
+  // 7. Migrate enquiries
+  console.log("7. Migrating enquiries...");
   const enquiries = await prisma.enquiry.updateMany({
     where: { storeId: null },
     data: { storeId: defaultStore.id },
   });
   console.log(`   ✅ ${enquiries.count} enquiries migrated\n`);
 
-  // 10. Migrate media
-  console.log("10. Migrating media...");
+  // 8. Migrate media
+  console.log("8. Migrating media...");
   const media = await prisma.media.updateMany({
     where: { storeId: null },
     data: { storeId: defaultStore.id },
   });
   console.log(`   ✅ ${media.count} media files migrated\n`);
 
-  // 11. Migrate redirects
-  console.log("11. Migrating redirects...");
+  // 9. Migrate redirects
+  console.log("9. Migrating redirects...");
   const redirects = await prisma.redirect.updateMany({
     where: { storeId: null },
     data: { storeId: defaultStore.id },
   });
   console.log(`   ✅ ${redirects.count} redirects migrated\n`);
 
-  // 12. Migrate site settings (keep as global, but also copy to store)
-  console.log("12. Migrating site settings...");
+  // 10. Migrate site settings (keep as global, but also copy to store)
+  console.log("10. Migrating site settings...");
   const globalSettings = await prisma.siteSetting.findMany({
     where: { storeId: null },
   });
@@ -136,8 +120,8 @@ async function main() {
     `   ✅ ${globalSettings.length} settings copied to default store\n`,
   );
 
-  // 13. Set admin user's current store
-  console.log("13. Setting admin user current store...");
+  // 11. Set admin user's current store
+  console.log("11. Setting admin user current store...");
   const admin = await prisma.user.findFirst({ where: { role: "admin" } });
   if (admin) {
     await prisma.user.update({
