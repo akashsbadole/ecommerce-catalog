@@ -10,7 +10,6 @@ import {
   Store,
   Globe,
   Package,
-  ShoppingBag,
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -53,7 +52,6 @@ interface StoreItem {
   settings?: string;
   _count: {
     Product: number;
-    Order: number;
     Category: number;
   };
 }
@@ -410,10 +408,7 @@ export function AdminStores() {
                         <Package className="h-3.5 w-3.5" />
                         {store._count.Product} products
                       </span>
-                      <span className="flex items-center gap-1">
-                        <ShoppingBag className="h-3.5 w-3.5" />
-                        {store._count.Order} orders
-                      </span>
+
                     </div>
                   </div>
 

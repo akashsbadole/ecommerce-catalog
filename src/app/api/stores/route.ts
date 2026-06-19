@@ -38,7 +38,6 @@ export async function GET(request: NextRequest) {
         _count: {
           select: {
             Product: true,
-            Order: true,
             Category: true,
           },
         },

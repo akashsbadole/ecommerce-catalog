@@ -27,9 +27,7 @@ export async function GET(
         _count: {
           select: {
             Product: true,
-            Order: true,
             Category: true,
-            Coupon: true,
           },
         },
       },

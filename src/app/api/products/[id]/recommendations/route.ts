@@ -24,33 +24,7 @@ export async function GET(
     const storeFilter = storeId ? { storeId } : {};
     const excludeIds = [id];
 
-    // Strategy 1: Products frequently bought together
-    let alsoBoughtIds: string[] = [];
-    try {
-      const ordersWithProduct = await db.orderItem.findMany({
-        where: { productId: id },
-        select: { orderId: true },
-      });
-
-      if (ordersWithProduct.length > 0) {
-        const orderIds = ordersWithProduct.map(o => o.orderId);
-        const coOccurring = await db.$queryRawUnsafe(
-          `SELECT "productId", COUNT(*) as cnt
-           FROM "OrderItem"
-           WHERE "orderId" = ANY($1)
-           AND "productId" != $2
-           GROUP BY "productId"
-           ORDER BY cnt DESC
-           LIMIT 10`,
-          orderIds, id
-        );
-        alsoBoughtIds = (coOccurring as any[]).map(r => r.productId);
-      }
-    } catch {
-      // ignore if query fails
-    }
-
-    // Strategy 2: Same category products
+    // Strategy 1: Same category products
     let sameCategoryIds: string[] = [];
     if (product.categoryId) {
       const sameCategory = await db.product.findMany({
@@ -68,7 +42,7 @@ export async function GET(
       sameCategoryIds = sameCategory.map(p => p.id);
     }
 
-    // Strategy 3: Similar price range products (±30%)
+    // Strategy 2: Similar price range products (±30%)
     let similarPriceIds: string[] = [];
     try {
       const priceMin = product.price * 0.7;
@@ -89,10 +63,10 @@ export async function GET(
       // ignore
     }
 
-    // Merge and deduplicate, prioritizing: also-bought > same-category > similar-price
+    // Merge and deduplicate, prioritizing: same-category > similar-price
     const seen = new Set<string>();
     const mergedIds: string[] = [];
-    for (const list of [alsoBoughtIds, sameCategoryIds, similarPriceIds]) {
+    for (const list of [sameCategoryIds, similarPriceIds]) {
       for (const pid of list) {
         if (!seen.has(pid) && !excludeIds.includes(pid)) {
           seen.add(pid);
