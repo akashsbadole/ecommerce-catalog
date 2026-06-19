@@ -17,11 +17,6 @@ export async function GET(request: NextRequest) {
       categories,
       productTiers,
       productVariants,
-      orders,
-      orderItems,
-      wishlists,
-      wishlistItems,
-      coupons,
       blogPosts,
       contentPages,
       banners,
@@ -45,11 +40,6 @@ export async function GET(request: NextRequest) {
       db.category.findMany(),
       db.productTier.findMany(),
       db.productVariant.findMany(),
-      db.order.findMany(),
-      db.orderItem.findMany(),
-      db.wishlist.findMany(),
-      db.wishlistItem.findMany(),
-      db.coupon.findMany(),
       db.blogPost.findMany(),
       db.contentPage.findMany(),
       db.banner.findMany(),
@@ -78,11 +68,6 @@ export async function GET(request: NextRequest) {
         categories,
         productTiers,
         productVariants,
-        orders,
-        orderItems,
-        wishlists,
-        wishlistItems,
-        coupons,
         blogPosts,
         contentPages,
         banners,
@@ -240,52 +225,7 @@ export async function POST(request: NextRequest) {
         results.productVariants = data.productVariants.length;
       }
 
-      // 10. Wishlists
-      if (data.wishlists) {
-        for (const item of data.wishlists) {
-          const { id, ...rest } = item;
-          await tx.wishlist.upsert({ where: { id }, update: rest, create: { id, ...rest } });
-        }
-        results.wishlists = data.wishlists.length;
-      }
-
-      // 11. WishlistItems
-      if (data.wishlistItems) {
-        for (const item of data.wishlistItems) {
-          const { id, ...rest } = item;
-          await tx.wishlistItem.upsert({ where: { id }, update: rest, create: { id, ...rest } });
-        }
-        results.wishlistItems = data.wishlistItems.length;
-      }
-
-      // 12. Orders
-      if (data.orders) {
-        for (const item of data.orders) {
-          const { id, ...rest } = item;
-          await tx.order.upsert({ where: { id }, update: rest, create: { id, ...rest } });
-        }
-        results.orders = data.orders.length;
-      }
-
-      // 13. OrderItems
-      if (data.orderItems) {
-        for (const item of data.orderItems) {
-          const { id, ...rest } = item;
-          await tx.orderItem.upsert({ where: { id }, update: rest, create: { id, ...rest } });
-        }
-        results.orderItems = data.orderItems.length;
-      }
-
-      // 14. Coupons
-      if (data.coupons) {
-        for (const item of data.coupons) {
-          const { id, ...rest } = item;
-          await tx.coupon.upsert({ where: { id }, update: rest, create: { id, ...rest } });
-        }
-        results.coupons = data.coupons.length;
-      }
-
-      // 15. BlogPosts
+      // 10. BlogPosts
       if (data.blogPosts) {
         for (const item of data.blogPosts) {
           const { id, ...rest } = item;
@@ -294,7 +234,7 @@ export async function POST(request: NextRequest) {
         results.blogPosts = data.blogPosts.length;
       }
 
-      // 16. ContentPages
+      // 11. ContentPages
       if (data.contentPages) {
         for (const item of data.contentPages) {
           const { id, ...rest } = item;
@@ -303,7 +243,7 @@ export async function POST(request: NextRequest) {
         results.contentPages = data.contentPages.length;
       }
 
-      // 17. Banners
+      // 12. Banners
       if (data.banners) {
         for (const item of data.banners) {
           const { id, ...rest } = item;
@@ -312,7 +252,7 @@ export async function POST(request: NextRequest) {
         results.banners = data.banners.length;
       }
 
-      // 18. Media
+      // 13. Media
       if (data.media) {
         for (const item of data.media) {
           const { id, ...rest } = item;
@@ -321,7 +261,7 @@ export async function POST(request: NextRequest) {
         results.media = data.media.length;
       }
 
-      // 19. Enquiries
+      // 14. Enquiries
       if (data.enquiries) {
         for (const item of data.enquiries) {
           const { id, ...rest } = item;
@@ -330,7 +270,7 @@ export async function POST(request: NextRequest) {
         results.enquiries = data.enquiries.length;
       }
 
-      // 20. Redirects
+      // 15. Redirects
       if (data.redirects) {
         for (const item of data.redirects) {
           const { id, ...rest } = item;
@@ -339,7 +279,7 @@ export async function POST(request: NextRequest) {
         results.redirects = data.redirects.length;
       }
 
-      // 21. Menus
+      // 16. Menus
       if (data.menus) {
         for (const item of data.menus) {
           const { id, ...rest } = item;
@@ -348,7 +288,7 @@ export async function POST(request: NextRequest) {
         results.menus = data.menus.length;
       }
 
-      // 22. MenuItems (Pass 1: without parentId)
+      // 17. MenuItems (Pass 1: without parentId)
       if (data.menuItems) {
         for (const item of data.menuItems) {
           const { id, parentId, ...rest } = item;
@@ -361,7 +301,7 @@ export async function POST(request: NextRequest) {
         results.menuItems = data.menuItems.length;
       }
 
-      // 23. MenuItems (Pass 2: update parentId)
+      // 18. MenuItems (Pass 2: update parentId)
       if (data.menuItems) {
         for (const item of data.menuItems) {
           if (item.parentId) {
@@ -373,7 +313,7 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // 24. Settings
+      // 19. Settings
       if (data.settings) {
         for (const item of data.settings) {
           const { id, ...rest } = item;
@@ -382,7 +322,7 @@ export async function POST(request: NextRequest) {
         results.settings = data.settings.length;
       }
 
-      // 25. ActivityLogs
+      // 20. ActivityLogs
       if (data.activityLogs) {
         for (const item of data.activityLogs) {
           const { id, ...rest } = item;
@@ -391,7 +331,7 @@ export async function POST(request: NextRequest) {
         results.activityLogs = data.activityLogs.length;
       }
 
-      // 26. Notifications
+      // 21. Notifications
       if (data.notifications) {
         for (const item of data.notifications) {
           const { id, ...rest } = item;
@@ -400,7 +340,7 @@ export async function POST(request: NextRequest) {
         results.notifications = data.notifications.length;
       }
 
-      // 27. Quotes
+      // 22. Quotes
       if (data.quotes) {
         for (const item of data.quotes) {
           const { id, ...rest } = item;
@@ -409,7 +349,7 @@ export async function POST(request: NextRequest) {
         results.quotes = data.quotes.length;
       }
 
-      // 28. NewsletterSubscribers
+      // 23. NewsletterSubscribers
       if (data.newsletterSubscribers) {
         for (const item of data.newsletterSubscribers) {
           const { id, ...rest } = item;
@@ -418,7 +358,7 @@ export async function POST(request: NextRequest) {
         results.newsletterSubscribers = data.newsletterSubscribers.length;
       }
 
-      // 29. PasswordResetTokens
+      // 24. PasswordResetTokens
       if (data.passwordResetTokens) {
         for (const item of data.passwordResetTokens) {
           const { id, ...rest } = item;
@@ -427,7 +367,7 @@ export async function POST(request: NextRequest) {
         results.passwordResetTokens = data.passwordResetTokens.length;
       }
 
-      // 30. EmailVerificationTokens
+      // 25. EmailVerificationTokens
       if (data.emailVerificationTokens) {
         for (const item of data.emailVerificationTokens) {
           const { id, ...rest } = item;
