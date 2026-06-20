@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
-import { put } from '@vercel/blob';
+import { v2 as cloudinary } from 'cloudinary';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { requireAdminAuth } from '@/lib/admin-auth';
 
@@ -16,20 +16,30 @@ const MAX_FILES_PER_REQUEST = 20;
 
 const UPLOAD_RATE_LIMIT = { maxRequests: 30, windowMs: 60 * 60 * 1000, prefix: 'upload' };
 
-function isVercelBlobConfigured(): boolean {
-  return !!(process.env.BLOB_READ_WRITE_TOKEN);
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'dusp09fp8',
+  api_key: process.env.CLOUDINARY_API_KEY || '338314765222881',
+  api_secret: process.env.CLOUDINARY_API_SECRET || '9HwiYZanW7TCedS8nZvv1pd_LUI',
+});
+
+function isCloudinaryConfigured(): boolean {
+  const cfg = cloudinary.config();
+  return !!(cfg.cloud_name && cfg.api_key && cfg.api_secret);
 }
 
-async function uploadToBlob(file: File, folder: string): Promise<{ url: string }> {
+async function uploadToCloudinary(file: File, folder: string): Promise<{ url: string }> {
   const buffer = Buffer.from(await file.arrayBuffer());
-  const ext = path.extname(file.name);
-  const filename = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}${ext}`;
-  const pathname = folder === '/' ? filename : `${folder}/${filename}`;
-  const blob = await put(pathname, buffer, {
-    access: 'public',
-    contentType: file.type,
+  const folderPath = folder === '/' ? 'uploads' : `uploads/${folder.replace(/^\//, '')}`;
+  const base64 = buffer.toString('base64');
+  const dataUri = `data:${file.type};base64,${base64}`;
+
+  const result = await cloudinary.uploader.upload(dataUri, {
+    folder: folderPath,
+    resource_type: 'image',
+    quality: 'auto',
   });
-  return { url: blob.url };
+
+  return { url: result.secure_url };
 }
 
 async function uploadToLocal(file: File, folder: string): Promise<{ url: string }> {
@@ -71,7 +81,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `Too many files (max ${MAX_FILES_PER_REQUEST})` }, { status: 400 });
     }
 
-    const useBlob = isVercelBlobConfigured();
+    const useCloudinary = isCloudinaryConfigured();
     const safeFolder = folder.replace(/\.\./g, '').replace(/^\/+/, '').replace(/\/+$/, '') || '/';
 
     const results: Array<{ filename: string; id?: string; url?: string; size?: number; error?: string }> = [];
@@ -88,8 +98,8 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        const { url } = useBlob
-          ? await uploadToBlob(file, safeFolder)
+        const { url } = useCloudinary
+          ? await uploadToCloudinary(file, safeFolder)
           : await uploadToLocal(file, safeFolder);
 
         const media = await db.media.create({
@@ -105,8 +115,9 @@ export async function POST(request: NextRequest) {
 
         results.push({ filename: file.name, id: media.id, url, size: file.size });
       } catch (error) {
-        console.error('Upload error for file:', file.name, error);
-        results.push({ filename: file.name, error: 'Upload failed' });
+        const msg = String(error instanceof Error ? error.message : error);
+        console.error('Upload error for file:', file.name, msg);
+        results.push({ filename: file.name, error: msg });
       }
     }
 
