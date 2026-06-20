@@ -105,7 +105,7 @@ export function ProductsOverviewPage({ onNavigate }: ProductsOverviewPageProps) 
                       e.stopPropagation();
                       onNavigate("category", cat.slug);
                     }}
-                    className="self-start inline-flex items-center gap-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors"
+                    className="self-start inline-flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium px-4 py-2 rounded-md transition-colors"
                   >
                     Enquire
                   </button>

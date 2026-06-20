@@ -108,6 +108,7 @@ model Product {
   lowStockThreshold Int              @default(10)
   relatedProductIds String           @default("[]")
   documents         String           @default("[]")
+  blocks            String           @default("[]")
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @default(now())
   Enquiry           Enquiry[]
@@ -135,6 +136,32 @@ model Category {
   metaDescription String?
   ogImage         String?
   customSchema    String?   @default("{}")
+
+  // --- Category page fields ---
+  heroTitle        String?
+  heroSubtitle     String?
+  heroDescription  String?
+  contentSplitImage      String?
+  contentSplitHeading    String?
+  contentSplitParagraph  String?
+  contentSplitBullets    String           @default("[]")
+  cardsTitle        String?
+  cardsProductIds   String             @default("[]")
+  cardsMaxCount     Int                @default(8)
+  cardsColumns      Int                @default(4)
+  ctaHeading           String?
+  ctaDescription       String?
+  ctaBulkText          String?
+  ctaBulkLink          String?
+  ctaPrivateLabelText  String?
+  ctaPrivateLabelLink  String?
+  ctaBackgroundColor   String?
+  processTitle      String?
+  processSubtitle   String?
+  processSteps      String             @default("[]")
+  infographicImage    String?
+  infographicCaption  String?
+  infographicAltText  String?
   deletedAt       DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @default(now())

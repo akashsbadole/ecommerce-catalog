@@ -77,6 +77,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { adminFetch } from "@/lib/admin-fetch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AdminCategoryFields,
+  type CategoryFieldValues,
+} from "./AdminCategoryFields";
 
 interface Category {
   id: string;
@@ -143,6 +148,35 @@ export function AdminCategories() {
   const [saving, setSaving] = useState(false);
   const [seoOpen, setSeoOpen] = useState(false);
 
+  const [categoryFields, setCategoryFields] = useState<CategoryFieldValues>({
+    heroTitle: "",
+    heroSubtitle: "",
+    heroDescription: "",
+    contentSplitImage: "",
+    contentSplitHeading: "",
+    contentSplitParagraph: "",
+    contentSplitBullets: "[]",
+    cardsTitle: "",
+    cardsProductIds: "",
+    cardsMaxCount: 8,
+    cardsColumns: 4,
+    ctaHeading: "",
+    ctaDescription: "",
+    ctaBulkText: "",
+    ctaBulkLink: "",
+    ctaPrivateLabelText: "",
+    ctaPrivateLabelLink: "",
+    ctaBackgroundColor: "",
+    processTitle: "",
+    processSubtitle: "",
+    processSteps: "[]",
+    infographicImage: "",
+    infographicCaption: "",
+    infographicAltText: "",
+  });
+  const [savingSections, setSavingSections] = useState(false);
+  const [activeSectionTab, setActiveSectionTab] = useState("details");
+
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteCategory, setDeleteCategory] = useState<Category | null>(null);
@@ -180,10 +214,40 @@ export function AdminCategories() {
     fetchCategories();
   }, [fetchCategories]);
 
+  const resetCategoryFields = () => {
+    setCategoryFields({
+      heroTitle: "",
+      heroSubtitle: "",
+      heroDescription: "",
+      contentSplitImage: "",
+      contentSplitHeading: "",
+      contentSplitParagraph: "",
+      contentSplitBullets: "[]",
+      cardsTitle: "",
+      cardsProductIds: "",
+      cardsMaxCount: 8,
+      cardsColumns: 4,
+      ctaHeading: "",
+      ctaDescription: "",
+      ctaBulkText: "",
+      ctaBulkLink: "",
+      ctaPrivateLabelText: "",
+      ctaPrivateLabelLink: "",
+      ctaBackgroundColor: "",
+      processTitle: "",
+      processSubtitle: "",
+      processSteps: "[]",
+      infographicImage: "",
+      infographicCaption: "",
+      infographicAltText: "",
+    });
+  };
+
   const handleOpenAdd = () => {
     setEditingCategory(null);
     setForm({ ...emptyForm, productIds: [] });
     setSeoOpen(false);
+    resetCategoryFields();
     setFormOpen(true);
   };
 
@@ -222,13 +286,43 @@ export function AdminCategories() {
       productIds: [],
     });
     setSeoOpen(!!(cat.metaTitle || cat.metaDescription));
+    resetCategoryFields();
     setFormOpen(true);
 
-    // Fetch products assigned to this category
+    // Fetch full category details including section fields and products
     try {
       const res = await adminFetch(`/api/categories/${cat.id}`);
       if (res.ok) {
         const data = await res.json();
+        const c = data.category;
+        if (c) {
+          setCategoryFields({
+            heroTitle: c.heroTitle || "",
+            heroSubtitle: c.heroSubtitle || "",
+            heroDescription: c.heroDescription || "",
+            contentSplitImage: c.contentSplitImage || "",
+            contentSplitHeading: c.contentSplitHeading || "",
+            contentSplitParagraph: c.contentSplitParagraph || "",
+            contentSplitBullets: c.contentSplitBullets || "[]",
+            cardsTitle: c.cardsTitle || "",
+            cardsProductIds: c.cardsProductIds || "",
+            cardsMaxCount: c.cardsMaxCount ?? 8,
+            cardsColumns: c.cardsColumns ?? 4,
+            ctaHeading: c.ctaHeading || "",
+            ctaDescription: c.ctaDescription || "",
+            ctaBulkText: c.ctaBulkText || "",
+            ctaBulkLink: c.ctaBulkLink || "",
+            ctaPrivateLabelText: c.ctaPrivateLabelText || "",
+            ctaPrivateLabelLink: c.ctaPrivateLabelLink || "",
+            ctaBackgroundColor: c.ctaBackgroundColor || "",
+            processTitle: c.processTitle || "",
+            processSubtitle: c.processSubtitle || "",
+            processSteps: c.processSteps || "[]",
+            infographicImage: c.infographicImage || "",
+            infographicCaption: c.infographicCaption || "",
+            infographicAltText: c.infographicAltText || "",
+          });
+        }
         if (data.products) {
           setForm((prev) => ({
             ...prev,
@@ -270,6 +364,31 @@ export function AdminCategories() {
         customSchema: form.customSchema.trim() || null,
         parentId: form.parentId || null,
         productIds: form.productIds,
+        // Category page fields
+        heroTitle: categoryFields.heroTitle || null,
+        heroSubtitle: categoryFields.heroSubtitle || null,
+        heroDescription: categoryFields.heroDescription || null,
+        contentSplitImage: categoryFields.contentSplitImage || null,
+        contentSplitHeading: categoryFields.contentSplitHeading || null,
+        contentSplitParagraph: categoryFields.contentSplitParagraph || null,
+        contentSplitBullets: categoryFields.contentSplitBullets || "[]",
+        cardsTitle: categoryFields.cardsTitle || null,
+        cardsProductIds: categoryFields.cardsProductIds || "[]",
+        cardsMaxCount: categoryFields.cardsMaxCount ?? 8,
+        cardsColumns: categoryFields.cardsColumns ?? 4,
+        ctaHeading: categoryFields.ctaHeading || null,
+        ctaDescription: categoryFields.ctaDescription || null,
+        ctaBulkText: categoryFields.ctaBulkText || null,
+        ctaBulkLink: categoryFields.ctaBulkLink || null,
+        ctaPrivateLabelText: categoryFields.ctaPrivateLabelText || null,
+        ctaPrivateLabelLink: categoryFields.ctaPrivateLabelLink || null,
+        ctaBackgroundColor: categoryFields.ctaBackgroundColor || null,
+        processTitle: categoryFields.processTitle || null,
+        processSubtitle: categoryFields.processSubtitle || null,
+        processSteps: categoryFields.processSteps || "[]",
+        infographicImage: categoryFields.infographicImage || null,
+        infographicCaption: categoryFields.infographicCaption || null,
+        infographicAltText: categoryFields.infographicAltText || null,
       };
 
       const url = editingCategory
@@ -660,13 +779,18 @@ export function AdminCategories() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh]">
+        <DialogContent className="max-w-2xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>
               {editingCategory ? "Edit Category" : "Add Category"}
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4 max-h-[calc(90vh-140px)] overflow-y-auto">
+          <Tabs value={activeSectionTab} onValueChange={setActiveSectionTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="sections">Sections</TabsTrigger>
+            </TabsList>
+            <TabsContent value="details" className="grid gap-4 py-4 max-h-[calc(90vh-210px)] overflow-y-auto">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="cat-name">
@@ -805,8 +929,10 @@ export function AdminCategories() {
                               className="text-xs"
                             >
                               {p.name}
-                              <button
-                                className="ml-1 hover:text-rose-500"
+                              <span
+                                role="button"
+                                tabIndex={0}
+                                className="ml-1 hover:text-rose-500 cursor-pointer"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setForm((prev) => ({
@@ -816,9 +942,20 @@ export function AdminCategories() {
                                     ),
                                   }));
                                 }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    e.stopPropagation();
+                                    setForm((prev) => ({
+                                      ...prev,
+                                      productIds: prev.productIds.filter(
+                                        (pid) => pid !== id,
+                                      ),
+                                    }));
+                                  }
+                                }}
                               >
                                 ×
-                              </button>
+                              </span>
                             </Badge>
                           ) : null;
                         })}
@@ -984,7 +1121,23 @@ export function AdminCategories() {
                 </div>
               </CollapsibleContent>
             </Collapsible>
-          </div>
+          </TabsContent>
+          <TabsContent value="sections" className="py-4 max-h-[calc(90vh-210px)] overflow-y-auto">
+            <AdminCategoryFields
+              values={categoryFields}
+              onChange={setCategoryFields}
+              onSave={async () => {
+                setSavingSections(true);
+                try {
+                  await handleSave();
+                } finally {
+                  setSavingSections(false);
+                }
+              }}
+              saving={savingSections}
+            />
+          </TabsContent>
+        </Tabs>
           <DialogFooter>
             <Button variant="outline" onClick={() => setFormOpen(false)}>
               Cancel

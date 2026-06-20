@@ -58,6 +58,7 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MediaPickerField } from "@/components/admin/MediaPickerField";
@@ -2751,6 +2752,352 @@ function BlockEditDialog({
                     >
                       <Plus className="mr-2 h-4 w-4" /> Add Button
                     </Button>
+                  </>
+                )}
+
+                {block.type === "product-hero" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Title</Label>
+                      <Input
+                        value={(localData.title as string) || ""}
+                        onChange={(e) => updateField("title", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Subtitle</Label>
+                      <Input
+                        value={(localData.subtitle as string) || ""}
+                        onChange={(e) => updateField("subtitle", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Description</Label>
+                      <Textarea
+                        value={(localData.description as string) || ""}
+                        onChange={(e) => updateField("description", e.target.value)}
+                        rows={3}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {block.type === "product-content-split" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Image URL</Label>
+                      <Input
+                        value={(localData.image as string) || ""}
+                        onChange={(e) => updateField("image", e.target.value)}
+                        placeholder="https://..."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Heading</Label>
+                      <Input
+                        value={(localData.heading as string) || ""}
+                        onChange={(e) => updateField("heading", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Paragraph</Label>
+                      <Textarea
+                        value={(localData.paragraph as string) || ""}
+                        onChange={(e) => updateField("paragraph", e.target.value)}
+                        rows={3}
+                      />
+                    </div>
+                    <Separator />
+                    <Label className="text-base font-semibold">Bullet Points</Label>
+                    {((localData.bullets as string[]) || []).map((bullet, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <Input
+                          value={bullet}
+                          onChange={(e) => {
+                            const arr = [...((localData.bullets as string[]) || [])];
+                            arr[i] = e.target.value;
+                            updateField("bullets", arr);
+                          }}
+                          placeholder="Bullet point text"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 shrink-0 text-rose-600"
+                          onClick={() => {
+                            const arr = [...((localData.bullets as string[]) || [])];
+                            arr.splice(i, 1);
+                            updateField("bullets", arr);
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const arr = [...((localData.bullets as string[]) || []), ""];
+                        updateField("bullets", arr);
+                      }}
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Add Bullet
+                    </Button>
+                  </>
+                )}
+
+                {block.type === "product-cards" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Section Title</Label>
+                      <Input
+                        value={(localData.title as string) || ""}
+                        onChange={(e) => updateField("title", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Product IDs (comma-separated)</Label>
+                      <Input
+                        value={((localData.productIds as string[]) || []).join(", ")}
+                        onChange={(e) =>
+                          updateField(
+                            "productIds",
+                            e.target.value
+                              .split(",")
+                              .map((s) => s.trim())
+                              .filter(Boolean),
+                          )
+                        }
+                        placeholder="Leave empty to show recent products"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Leave empty to auto-select products. Comma-separated IDs for manual selection.
+                      </p>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Max Cards</Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={20}
+                          value={(localData.maxCards as number) ?? 8}
+                          onChange={(e) => updateField("maxCards", parseInt(e.target.value) || 8)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Columns</Label>
+                        <select
+                          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
+                          value={(localData.columns as number) ?? 4}
+                          onChange={(e) => updateField("columns", parseInt(e.target.value))}
+                        >
+                          <option value={2}>2 Columns</option>
+                          <option value={3}>3 Columns</option>
+                          <option value={4}>4 Columns</option>
+                        </select>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {block.type === "product-cta" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Heading</Label>
+                      <Input
+                        value={(localData.heading as string) || ""}
+                        onChange={(e) => updateField("heading", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Description</Label>
+                      <Textarea
+                        value={(localData.description as string) || ""}
+                        onChange={(e) => updateField("description", e.target.value)}
+                        rows={2}
+                      />
+                    </div>
+                    <Separator />
+                    <Label className="text-base font-semibold">Bulk Order CTA</Label>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={(localData.showBulkCta as boolean) !== false}
+                        onCheckedChange={(checked) => updateField("showBulkCta", checked)}
+                      />
+                      <Label className="cursor-pointer">Show Bulk Order CTA</Label>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Button Text</Label>
+                        <Input
+                          value={(localData.bulkCtaText as string) || "Enquire for Bulk Order →"}
+                          onChange={(e) => updateField("bulkCtaText", e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Button Link</Label>
+                        <Input
+                          value={(localData.bulkCtaLink as string) || "/contact"}
+                          onChange={(e) => updateField("bulkCtaLink", e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <Separator />
+                    <Label className="text-base font-semibold">Private Label CTA</Label>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={(localData.showPrivateLabelCta as boolean) !== false}
+                        onCheckedChange={(checked) => updateField("showPrivateLabelCta", checked)}
+                      />
+                      <Label className="cursor-pointer">Show Private Label CTA</Label>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Button Text</Label>
+                        <Input
+                          value={(localData.privateLabelCtaText as string) || "Start Private Label →"}
+                          onChange={(e) => updateField("privateLabelCtaText", e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Button Link</Label>
+                        <Input
+                          value={(localData.privateLabelCtaLink as string) || "/contact"}
+                          onChange={(e) => updateField("privateLabelCtaLink", e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Background</Label>
+                      <select
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
+                        value={(localData.backgroundColor as string) || "dark"}
+                        onChange={(e) => updateField("backgroundColor", e.target.value)}
+                      >
+                        <option value="dark">Dark</option>
+                        <option value="light">Light</option>
+                      </select>
+                    </div>
+                  </>
+                )}
+
+                {block.type === "product-process" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Title</Label>
+                      <Input
+                        value={(localData.title as string) || ""}
+                        onChange={(e) => updateField("title", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Subtitle</Label>
+                      <Input
+                        value={(localData.subtitle as string) || ""}
+                        onChange={(e) => updateField("subtitle", e.target.value)}
+                      />
+                    </div>
+                    <Separator />
+                    <Label className="text-base font-semibold">Steps</Label>
+                    {(
+                      (localData.steps as Array<{
+                        title: string;
+                        description: string;
+                      }>) || []
+                    ).map((step, i) => (
+                      <Card key={i} className="p-4 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">
+                            Step {i + 1}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-rose-600"
+                            onClick={() => {
+                              const arr = [
+                                ...((localData.steps as Array<unknown>) || []),
+                              ];
+                              arr.splice(i, 1);
+                              updateField("steps", arr);
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <Input
+                          placeholder="Step title"
+                          value={step.title}
+                          onChange={(e) => {
+                            const arr = [
+                              ...((localData.steps as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            arr[i] = { ...arr[i], title: e.target.value };
+                            updateField("steps", arr);
+                          }}
+                        />
+                        <Input
+                          placeholder="Step description"
+                          value={step.description}
+                          onChange={(e) => {
+                            const arr = [
+                              ...((localData.steps as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            arr[i] = {
+                              ...arr[i],
+                              description: e.target.value,
+                            };
+                            updateField("steps", arr);
+                          }}
+                        />
+                      </Card>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const arr = [
+                          ...((localData.steps as Array<unknown>) || []),
+                          { title: "", description: "" },
+                        ];
+                        updateField("steps", arr);
+                      }}
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Add Step
+                    </Button>
+                  </>
+                )}
+
+                {block.type === "product-infographic" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Image URL</Label>
+                      <Input
+                        value={(localData.image as string) || ""}
+                        onChange={(e) => updateField("image", e.target.value)}
+                        placeholder="https://..."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Alt Text</Label>
+                      <Input
+                        value={(localData.altText as string) || "Infographic"}
+                        onChange={(e) => updateField("altText", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Caption (optional)</Label>
+                      <Input
+                        value={(localData.caption as string) || ""}
+                        onChange={(e) => updateField("caption", e.target.value)}
+                      />
+                    </div>
                   </>
                 )}
 

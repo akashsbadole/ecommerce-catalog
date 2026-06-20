@@ -125,7 +125,7 @@ export function ManufacturingPage({
   return (
     <div className="flex flex-col">
       {/* M1: Hero */}
-      <section className="relative bg-gradient-to-br from-gray-900 via-[#abd0ff] to-gray-900 text-white py-28 px-4">
+      <section className="relative bg-gradient-to-br from-green-900 via-[#abd0ff] to-green-900 text-white py-28 px-4">
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative container mx-auto max-w-5xl text-center">
           {(hero.badge as string) && (

@@ -83,8 +83,19 @@ export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
           <button
             onClick={() => {
               if (item.url) {
-                window.open(item.url, "_blank");
-              } else if (item.page) {
+                if (item.url.startsWith("/")) {
+                  const segs = item.url.split("/").filter(Boolean);
+                  if (segs[0] === "product" && segs[1]) onNavigate("category", segs[1]);
+                  else if (segs[0] === "product") onNavigate("products");
+                  else if (segs[0] === "catalogue" && segs[1]) onNavigate("category", segs[1]);
+                  else if (segs[0] === "catalogue") onNavigate("catalogue");
+                  else if (segs[0] === "blog" && segs[1]) onNavigate("blog-post", segs[1]);
+                  else if (segs[0] === "blog") onNavigate("blog");
+                  else onNavigate("content-page", segs.join("/"));
+                } else {
+                  window.open(item.url, "_blank");
+                }
+              } else if (item.page && item.page !== "url") {
                 onNavigate(item.page, item.slug);
               }
             }}

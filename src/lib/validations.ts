@@ -38,6 +38,32 @@ export const categorySchema = z.object({
   metaDescription: z.string().max(160).optional().nullable(),
   ogImage: z.string().optional().nullable(),
   customSchema: z.string().optional().nullable(),
+
+  // Category page fields
+  heroTitle: z.string().optional().nullable(),
+  heroSubtitle: z.string().optional().nullable(),
+  heroDescription: z.string().optional().nullable(),
+  contentSplitImage: z.string().optional().nullable(),
+  contentSplitHeading: z.string().optional().nullable(),
+  contentSplitParagraph: z.string().optional().nullable(),
+  contentSplitBullets: z.string().optional().nullable().default('[]'),
+  cardsTitle: z.string().optional().nullable(),
+  cardsProductIds: z.string().optional().nullable().default('[]'),
+  cardsMaxCount: z.number().int().optional().nullable().default(8),
+  cardsColumns: z.number().int().optional().nullable().default(4),
+  ctaHeading: z.string().optional().nullable(),
+  ctaDescription: z.string().optional().nullable(),
+  ctaBulkText: z.string().optional().nullable(),
+  ctaBulkLink: z.string().optional().nullable(),
+  ctaPrivateLabelText: z.string().optional().nullable(),
+  ctaPrivateLabelLink: z.string().optional().nullable(),
+  ctaBackgroundColor: z.string().optional().nullable(),
+  processTitle: z.string().optional().nullable(),
+  processSubtitle: z.string().optional().nullable(),
+  processSteps: z.string().optional().nullable().default('[]'),
+  infographicImage: z.string().optional().nullable(),
+  infographicCaption: z.string().optional().nullable(),
+  infographicAltText: z.string().optional().nullable(),
 });
 
 export const enquirySchema = z.object({

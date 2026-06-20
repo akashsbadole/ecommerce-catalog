@@ -7,6 +7,7 @@ import { StoreLayout } from "@/components/store/StoreLayout";
 import { HomePage } from "@/components/store/HomePage";
 import { CataloguePage } from "@/components/store/CataloguePage";
 import { CategoryPage } from "@/components/store/CategoryPage";
+import { ProductPage } from "@/components/store/ProductPage";
 import { ProductsOverviewPage } from "@/components/store/ProductsOverviewPage";
 import { BlogPage } from "@/components/store/BlogPage";
 import { BlogPostView } from "@/components/store/BlogPostView";
@@ -38,15 +39,11 @@ export default function CatchAllPage() {
     const routeFromPath = (path: string) => {
       if (path === "/" || path === "") return;
       const segments = path.split("/").filter(Boolean);
-      if (segments[0] === "catalogue") {
+      if (segments[0] === "product" && segments[1]) {
+        navigate("category", segments[1]);
+      } else if (segments[0] === "catalogue") {
         if (segments[1]) navigate("category", segments[1]);
         else navigate("catalogue");
-      } else if (segments[0] === "product") {
-        if (segments[1]) {
-          navigate("category", segments[1]);
-        } else {
-          navigate("products");
-        }
       } else if (segments[0] === "about") {
         navigate("content-page", "about-us");
       } else if (segments[0] === "manufacturing") {
@@ -88,12 +85,20 @@ export default function CatchAllPage() {
         return <CategoryPage slug={currentPage.slug} onNavigate={navigate} />;
       case "content-page":
         return <CmsPage slug={currentPage.slug} onNavigate={navigate} />;
+      case "product-page":
+        return <ProductPage slug={currentPage.slug} onNavigate={navigate} />;
       case "products":
         return <ProductsOverviewPage onNavigate={navigate} />;
       case "blog":
         return <BlogPage onNavigate={navigate} />;
       case "blog-post":
         return <BlogPostView postId={currentPage.slug} onNavigate={navigate} />;
+      case "about":
+        return <CmsPage slug="about-us" onNavigate={navigate} />;
+      case "manufacturing":
+        return <CmsPage slug="manufacturing" onNavigate={navigate} />;
+      case "contact":
+        return <CmsPage slug="contact" onNavigate={navigate} />;
 
       default:
         return (

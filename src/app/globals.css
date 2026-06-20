@@ -48,41 +48,47 @@
   --card-foreground: #333333;
   --popover: #FFFFFF;
   --popover-foreground: #333333;
-  --primary: #2b2c37;
+  --primary: #3d6f08;
   --primary-foreground: #FFFFFF;
-  --secondary: #FF6B6B;
+  --secondary: #8bc34a;
   --secondary-foreground: #FFFFFF;
-  --muted: #F8F9FA;
+  --muted: #f8f6f3;
   --muted-foreground: #666666;
-  --accent: #F8F9FA;
-  --accent-foreground: #333333;
+  --accent: #fa881e;
+  --accent-foreground: #FFFFFF;
   --destructive: #FF6B6B;
-  --border: #E5E7EB;
-  --input: #E5E7EB;
-  --ring: #2b2c37;
-  --chart-1: #2b2c37;
-  --chart-2: #FF6B6B;
-  --chart-3: #666666;
-  --chart-4: #F8F9FA;
+  --border: #dddddd;
+  --input: #dddddd;
+  --ring: #3d6f08;
+  --chart-1: #3d6f08;
+  --chart-2: #8bc34a;
+  --chart-3: #001524;
+  --chart-4: #f8f6f3;
   --chart-5: #333333;
   --sidebar: #FFFFFF;
   --sidebar-foreground: #333333;
-  --sidebar-primary: #2b2c37;
+  --sidebar-primary: #3d6f08;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F8F9FA;
+  --sidebar-accent: #f8f6f3;
   --sidebar-accent-foreground: #333333;
-  --sidebar-border: #E5E7EB;
-  --sidebar-ring: #2b2c37;
+  --sidebar-border: #dddddd;
+  --sidebar-ring: #3d6f08;
 
-  /* Custom brand colors */
-  --brand-primary: #2b2c37;
-  --brand-primary-hover: #1A23C5;
-  --brand-secondary: #FF6B6B;
-  --brand-secondary-hover: #E55A5A;
+  /* NutVatika brand colors (Astra WordPress theme) */
+  --brand-primary: #3d6f08;
+  --brand-primary-hover: #20340b;
+  --brand-secondary: #8bc34a;
+  --brand-secondary-hover: #6a9739;
+  --brand-accent: #fa881e;
+  --brand-accent-hover: #e67600;
   --brand-text: #333333;
+  --brand-text-dark: #111111;
   --brand-text-light: #666666;
   --brand-bg: #FFFFFF;
-  --brand-bg-section: #F8F9FA;
+  --brand-bg-section: #f8f6f3;
+  --brand-border: #dddddd;
+  --brand-dark: #001524;
+  --brand-green-dark: #016129;
 }
 
 @layer base {
@@ -94,41 +100,41 @@
     font-family: var(--font-poppins), sans-serif;
   }
 
-  /* Heading typography */
+  /* Heading typography - NutVatika (Astra theme) */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-poppins), sans-serif;
-    color: var(--brand-text);
-    line-height: 1.2;
+    color: var(--brand-text-dark);
+    font-weight: 700;
   }
 
   h1 {
-    font-size: 3rem;
-    font-weight: 700;
+    font-size: 2.5rem;
+    line-height: 1.4em;
   }
 
   h2 {
-    font-size: 2.25rem;
-    font-weight: 700;
+    font-size: 2rem;
+    line-height: 1.3em;
   }
 
   h3 {
-    font-size: 1.75rem;
-    font-weight: 600;
+    font-size: 1.5rem;
+    line-height: 1.3em;
   }
 
   h4 {
-    font-size: 1.5rem;
-    font-weight: 600;
+    font-size: 1.25rem;
+    line-height: 1.2em;
   }
 
   h5 {
-    font-size: 1.25rem;
-    font-weight: 500;
+    font-size: 1.125rem;
+    line-height: 1.2em;
   }
 
   h6 {
-    font-size: 1.125rem;
-    font-weight: 500;
+    font-size: 1rem;
+    line-height: 1.25em;
   }
 
   p, span, li, td, th {
@@ -150,37 +156,91 @@
     padding-right: 1rem;
   }
 
-  /* Button styles */
+  /* Button styles - matching NutVatika (Astra theme) */
   .btn-primary {
     background-color: var(--brand-primary);
     color: #FFFFFF;
-    border-radius: var(--radius);
-    padding: 0.75rem 1.5rem;
-    font-weight: 500;
+    border-radius: 30px;
+    padding: 10px 20px;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1em;
+    text-transform: uppercase;
     transition: all 0.3s ease;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    border: none;
+    cursor: pointer;
   }
 
   .btn-primary:hover {
     background-color: var(--brand-primary-hover);
+    color: #ffffff;
   }
 
   .btn-secondary {
     background-color: var(--brand-secondary);
     color: #FFFFFF;
-    border-radius: var(--radius);
-    padding: 0.75rem 1.5rem;
-    font-weight: 500;
+    border-radius: 30px;
+    padding: 10px 20px;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1em;
+    text-transform: uppercase;
     transition: all 0.3s ease;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    border: none;
+    cursor: pointer;
   }
 
   .btn-secondary:hover {
     background-color: var(--brand-secondary-hover);
+  }
+
+  .btn-accent {
+    background-color: var(--brand-accent);
+    color: #FFFFFF;
+    border-radius: 30px;
+    padding: 10px 20px;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1em;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-accent:hover {
+    background-color: var(--brand-accent-hover);
+  }
+
+  .btn-outline {
+    border: 2px solid var(--brand-primary);
+    color: var(--brand-primary);
+    background: transparent;
+    border-radius: 30px;
+    padding: 10px 20px;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1em;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .btn-outline:hover {
+    background-color: var(--brand-primary);
+    color: #FFFFFF;
   }
 
   /* Card styles */
@@ -211,8 +271,20 @@
   }
 
   .bg-dark {
-    background-color: #1A1A1A;
+    background-color: var(--brand-dark);
     color: #FFFFFF;
+  }
+
+  .bg-brand-gradient {
+    background: linear-gradient(170deg, #001524 0%, #016129 50%, #0d5318 100%);
+    color: #FFFFFF;
+  }
+
+  .text-brand-gradient {
+    background: linear-gradient(170deg, #0d5318 15%, #29b815 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   .bg-primary {

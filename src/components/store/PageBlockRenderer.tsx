@@ -5,6 +5,7 @@ import DOMPurify from "dompurify";
 import { useAppStore } from "@/lib/store";
 import {
   Image,
+  ImageIcon,
   LayoutGrid,
   MousePointerClick,
   Quote,
@@ -242,7 +243,7 @@ function HeroBlock({
           {buttonText && (
             <Button
               size="lg"
-              className="mt-6 bg-[#2639ed] text-white hover:bg-blue/20"
+              className="mt-6 bg-primary text-primary-foreground hover:bg-primary/90"
               onClick={() =>
                 onNavigate &&
                 buttonLink &&
@@ -758,7 +759,7 @@ function AudienceCardsBlock({
       cta: string;
       link?: string;
     }>) || [];
-  const ctaButtonColor = (data.ctaButtonColor as string) || "#2639ED";
+  const ctaButtonColor = data.ctaButtonColor as string;
   const ctaTextColor = (data.ctaTextColor as string) || "#FFFFFF";
   const showButton = data.showButton !== false;
 
@@ -864,8 +865,8 @@ function CapabilitiesBlock({
           onClick={() => window.open(videoUrl, "_blank")}
         >
           <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40 transition-colors">
-            <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-              <Play className="h-7 w-7 text-primary ml-0.5" />
+            <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <Play className="h-7 w-7 text-white ml-0.5" />
             </div>
           </div>
           {imageCaption && (
@@ -954,7 +955,7 @@ function CapabilitiesBlock({
               {ctaText && (
                 <Button
                   variant="outline"
-                  className="mt-6 text-sm"
+                  className="mt-6 text-sm bg-primary"
                   onClick={() => {
                     if (ctaLink && onNavigate) {
                       onNavigate(
@@ -997,7 +998,7 @@ function ProductCategoriesBlock({
   const description = (data.description as string) || "";
   const ctaText = (data.ctaText as string) || "";
   const ctaLink = (data.ctaLink as string) || "";
-  const ctaButtonColor = (data.ctaButtonColor as string) || "#2639ED";
+  const ctaButtonColor = data.ctaButtonColor as string;
   const ctaTextColor = (data.ctaTextColor as string) || "#FFFFFF";
   const showButton = data.showButton !== false;
 
@@ -1188,7 +1189,7 @@ function FactoryReelBlock({
               <div className="absolute inset-0 bg-black/20 group hover:bg-black/30 transition-colors" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <button
-                  className="w-16 h-16 rounded-full bg-white flex items-center justify-center cursor-pointer hover:scale-110 transition-transform shadow-xl text-brand-foreground"
+                  className="w-16 h-16 rounded-full bg-primay flex items-center justify-center cursor-pointer hover:scale-110 transition-transform shadow-xl text-brand-foreground bg-primary"
                   onClick={() => videoUrl && setIsVideoOpen(true)}
                 >
                   <Play className="h-6 w-6 ml-0.5" />
@@ -1198,7 +1199,7 @@ function FactoryReelBlock({
             {ctaText && (
               <Button
                 variant="outline"
-                className="mt-8"
+                className="mt-8 bg-primary"
                 onClick={() =>
                   onNavigate &&
                   onNavigate(
@@ -1403,7 +1404,7 @@ function LeadCaptureBlock({ data }: { data: Record<string, unknown> }) {
               <Button
                 type="submit"
                 size="lg"
-                className="bg-background text-foreground hover:bg-background/90"
+                className="bg-primary text-white hover:bg-background/90"
               >
                 {submitText}
                 <Send className="ml-2 h-4 w-4" />
@@ -1493,7 +1494,7 @@ function LeadershipBlock({
               <Button
                 variant="outline"
                 size="sm"
-                className="text-xs"
+                className="text-xs bg-primary"
                 onClick={() => {
                   const ctaLink = (data.ctaLink as string) || "";
                   if (ctaLink && onNavigate) {
@@ -1682,7 +1683,7 @@ function StickyCtaBlock({
               }
               className={
                 btn.type === "primary"
-                  ? "bg-brand text-brand-foreground hover:bg-brand-muted"
+                  ? "bg-primary text-brand-foreground hover:bg-brand-muted"
                   : btn.type === "whatsapp"
                     ? "border-brand-teal text-brand-teal hover:bg-brand-teal/10"
                     : "text-muted-foreground"
@@ -1718,7 +1719,7 @@ function StickyCtaBlock({
                   } else if (btn.link?.startsWith("/blog/")) {
                     onNavigate?.("blog-post", btn.link.replace("/blog/", ""));
                   } else if (btn.link?.startsWith("/product/")) {
-                    onNavigate?.("products");
+                    onNavigate?.("product-page", btn.link.replace("/product/", ""));
                   } else if (btn.link?.startsWith("/")) {
                     onNavigate?.("content-page", btn.link.replace(/^\//, ""));
                   } else if (btn.link) {
@@ -1778,6 +1779,12 @@ const BLOCK_ICONS: Record<
   "address-cards": MapPin,
   "quick-connect": Phone,
   "crm-flow": Workflow,
+  "product-hero": Type,
+  "product-content-split": Columns,
+  "product-cards": LayoutGrid,
+  "product-cta": MousePointerClick,
+  "product-process": GitMerge,
+  "product-infographic": Image,
 };
 
 function BlogGridBlock({
@@ -2078,11 +2085,11 @@ function HeroSplitBlock({
     (data.buttons as Array<{ text: string; link: string; variant: string }>) ||
     [];
   const badges = (data.badges as string[]) || [];
-  const ctaButtonColor = (data.ctaButtonColor as string) || "#2639ED";
+  const ctaButtonColor = data.ctaButtonColor as string;
   const ctaTextColor = (data.ctaTextColor as string) || "#FFFFFF";
 
   return (
-    <section className="relative bg-gradient-to-br from-gray-900 via-[#abd0ff] to-gray-900 text-white py-28 px-4 w-full">
+    <section className="relative bg-gradient-to-br from-green-900 via-[#abd0ff] to-green-900 text-white py-28 px-4 w-full">
       <div className="absolute inset-0 bg-black/40" />
       <div className="relative max-w-5xl mx-auto text-center">
         {badges.length > 0 && (
@@ -2558,7 +2565,7 @@ function SliderBlock({
 
   if (items.length === 0) return null;
 
-  const ctaButtonColor = (data.ctaButtonColor as string) || "#2639ED";
+  const ctaButtonColor = data.ctaButtonColor as string;
   const ctaTextColor = (data.ctaTextColor as string) || "#FFFFFF";
 
   return (
@@ -2683,6 +2690,363 @@ function AboutBlock({
   );
 }
 
+function ProductHeroBlock({ data }: { data: Record<string, unknown> }) {
+  const title = (data.title as string) || "";
+  const subtitle = (data.subtitle as string) || "";
+  const description = (data.description as string) || "";
+
+  return (
+    <section className="container mx-auto max-w-3xl px-4 py-12 text-center">
+      {subtitle && (
+        <p className="text-sm font-medium text-primary uppercase tracking-wider mb-3">
+          {subtitle}
+        </p>
+      )}
+      {title && (
+        <h2 className="text-3xl md:text-4xl font-bold mb-4">{title}</h2>
+      )}
+      {description && (
+        <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl mx-auto">
+          {description}
+        </p>
+      )}
+    </section>
+  );
+}
+
+function ProductContentSplitBlock({ data }: { data: Record<string, unknown> }) {
+  const image = (data.image as string) || "";
+  const heading = (data.heading as string) || "";
+  const paragraph = (data.paragraph as string) || "";
+  const bullets = (data.bullets as string[]) || [];
+
+  return (
+    <section className="container mx-auto max-w-5xl px-4 py-16">
+      <div className="grid md:grid-cols-2 gap-10 items-center">
+        <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-muted">
+          {image ? (
+            <img
+              src={image}
+              alt={heading}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
+              <ImageIcon className="h-16 w-16 text-muted-foreground/30" />
+            </div>
+          )}
+        </div>
+        <div>
+          {heading && (
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">{heading}</h2>
+          )}
+          {paragraph && (
+            <p className="text-muted-foreground leading-relaxed mb-6">
+              {paragraph}
+            </p>
+          )}
+          {bullets.length > 0 && (
+            <ul className="space-y-3">
+              {bullets.map((bullet, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <span className="mt-1.5 h-2 w-2 rounded-full bg-primary flex-shrink-0" />
+                  <span className="text-foreground">{bullet}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ProductCardsBlock({
+  data,
+  onNavigate,
+}: {
+  data: Record<string, unknown>;
+  onNavigate?: (page: string, data?: unknown) => void;
+}) {
+  const title = (data.title as string) || "Our range";
+  const productIds = (data.productIds as string[]) || [];
+  const maxCards = (data.maxCards as number) || 8;
+  const columns = (data.columns as number) || 4;
+
+  const [products, setProducts] = useState<
+    Array<{
+      id: string;
+      name: string;
+      slug: string;
+      shortDescription: string | null;
+      images: string;
+      Category?: { name: string; slug?: string } | null;
+    }>
+  >([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const params = new URLSearchParams({
+          all: "true",
+          limit: String(maxCards),
+        });
+        if (productIds.length > 0) {
+          params.set("ids", productIds.join(","));
+        }
+        const res = await fetch(`/api/products?${params.toString()}`);
+        if (res.ok) {
+          const data = await res.json();
+          setProducts((data.products || []).slice(0, maxCards));
+        }
+      } catch {
+        // silently fail
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProducts();
+  }, [productIds.join(","), maxCards]);
+
+  return (
+    <section className="container mx-auto max-w-6xl px-4 py-16">
+      {title && (
+        <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">
+          {title}
+        </h2>
+      )}
+      {loading ? (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {Array.from({ length: Math.min(columns, 4) }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-xl border bg-card animate-pulse overflow-hidden"
+            >
+              <div className="h-48 bg-muted" />
+              <div className="p-4 space-y-2">
+                <div className="h-4 bg-muted rounded w-3/4" />
+                <div className="h-3 bg-muted rounded w-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : products.length === 0 ? null : (
+        <div
+          className="grid gap-4"
+          style={{
+            gridTemplateColumns: `repeat(${Math.min(columns, 4)}, minmax(0, 1fr))`,
+          }}
+        >
+          {products.map((product) => {
+            const image = getFirstImage(product.images);
+            return (
+              <div
+                key={product.id}
+                className="rounded-xl border bg-card overflow-hidden transition-shadow hover:shadow-md"
+              >
+                <div className="relative h-48 bg-muted overflow-hidden">
+                  {image ? (
+                    <img
+                      src={image}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
+                      <ImageIcon className="h-10 w-10 text-muted-foreground/30" />
+                    </div>
+                  )}
+                </div>
+                <div className="p-4">
+                  <h3 className="font-semibold mb-1">{product.name}</h3>
+                  {product.shortDescription && (
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {product.shortDescription}
+                    </p>
+                  )}
+                  <Button
+                    size="sm"
+                    className="w-full mt-3"
+                    onClick={() =>
+                      useAppStore
+                        .getState()
+                        .openEnquiryModal(product.name, product.id)
+                    }
+                  >
+                    <Send className="mr-2 h-3.5 w-3.5" />
+                    Enquire
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ProductCtaBlock({
+  data,
+  onNavigate,
+}: {
+  data: Record<string, unknown>;
+  onNavigate?: (page: string, data?: unknown) => void;
+}) {
+  const heading = (data.heading as string) || "";
+  const description = (data.description as string) || "";
+  const backgroundColor = (data.backgroundColor as string) || "dark";
+  const showBulkCta = (data.showBulkCta as boolean) !== false;
+  const bulkCtaText =
+    (data.bulkCtaText as string) || "Enquire for Bulk Order →";
+  const bulkCtaLink = (data.bulkCtaLink as string) || "/contact";
+  const showPrivateLabelCta = (data.showPrivateLabelCta as boolean) !== false;
+  const privateLabelCtaText =
+    (data.privateLabelCtaText as string) || "Start Private Label →";
+  const privateLabelCtaLink =
+    (data.privateLabelCtaLink as string) || "/contact";
+
+  const isDark = backgroundColor === "dark";
+
+  return (
+    <section
+      className={`py-16 ${isDark ? "bg-foreground text-background" : "bg-muted"}`}
+    >
+      <div className="container mx-auto max-w-3xl px-4 text-center">
+        {heading && (
+          <h2
+            className={`text-2xl md:text-3xl font-bold mb-3 ${isDark ? "text-background" : ""}`}
+          >
+            {heading}
+          </h2>
+        )}
+        {description && (
+          <p
+            className={`text-lg mb-8 max-w-xl mx-auto ${isDark ? "text-background/70" : "text-muted-foreground"}`}
+          >
+            {description}
+          </p>
+        )}
+        <div className="flex flex-wrap gap-4 justify-center">
+          {showBulkCta && (
+            <Button
+              size="lg"
+              onClick={() => {
+                const [page, slug] = bulkCtaLink.replace(/^\//, "").split("/");
+                if (page === "contact") {
+                  useAppStore.getState().openEnquiryModal(heading);
+                } else {
+                  onNavigate?.("content-page", slug || page);
+                }
+              }}
+            >
+              {bulkCtaText}
+            </Button>
+          )}
+          {showPrivateLabelCta && (
+            <Button
+              size="lg"
+              variant={isDark ? "secondary" : "outline"}
+              onClick={() => {
+                const [page, slug] = privateLabelCtaLink
+                  .replace(/^\//, "")
+                  .split("/");
+                if (page === "contact") {
+                  useAppStore.getState().openEnquiryModal(heading);
+                } else {
+                  onNavigate?.("content-page", slug || page);
+                }
+              }}
+            >
+              {privateLabelCtaText}
+            </Button>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ProductProcessBlock({ data }: { data: Record<string, unknown> }) {
+  const title = (data.title as string) || "";
+  const subtitle = (data.subtitle as string) || "";
+  const steps =
+    (data.steps as Array<{ title: string; description: string }>) || [];
+
+  return (
+    <section className="container mx-auto max-w-5xl px-4 py-16">
+      {title && (
+        <h2 className="text-2xl md:text-3xl font-bold text-center mb-2">
+          {title}
+        </h2>
+      )}
+      {subtitle && (
+        <p className="text-muted-foreground text-center mb-12 max-w-xl mx-auto">
+          {subtitle}
+        </p>
+      )}
+      {steps.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {steps.map((step, i) => (
+            <div
+              key={i}
+              className="flex flex-col items-center text-center relative"
+            >
+              <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-bold mb-3">
+                {i + 1}
+              </div>
+              <h3 className="text-sm font-semibold mb-1">{step.title}</h3>
+              <p className="text-xs text-muted-foreground">
+                {step.description}
+              </p>
+              {i < steps.length - 1 && (
+                <div className="hidden lg:block absolute top-5 left-[60%] w-[80%] h-px bg-border" />
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ProductInfographicBlock({ data }: { data: Record<string, unknown> }) {
+  const image = (data.image as string) || "";
+  const caption = (data.caption as string) || "";
+  const altText = (data.altText as string) || "Infographic";
+
+  return (
+    <section className="container mx-auto max-w-5xl px-4 py-16">
+      <div className="rounded-xl overflow-hidden bg-muted">
+        {image ? (
+          <img
+            src={image}
+            alt={altText}
+            className="w-full h-auto object-cover"
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center py-24 text-center bg-gradient-to-br from-primary/5 to-primary/10">
+            <ImageIcon className="h-16 w-16 text-muted-foreground/30 mb-4" />
+            <p className="text-muted-foreground text-sm">
+              Infographic placeholder
+            </p>
+            <p className="text-muted-foreground/60 text-xs mt-1 max-w-xs">
+              {caption ||
+                "e.g. nutrition breakdown, sourcing map, or comparison visual"}
+            </p>
+          </div>
+        )}
+      </div>
+      {caption && (
+        <p className="text-sm text-muted-foreground text-center mt-3">
+          {caption}
+        </p>
+      )}
+    </section>
+  );
+}
+
 export function PageBlockRenderer({
   block,
   blocks,
@@ -2788,6 +3152,20 @@ export function PageBlockRenderer({
         return (
           <ProductsPage data={data} onNavigate={onNavigate || (() => {})} />
         );
+
+      // Product page blocks
+      case "product-hero":
+        return <ProductHeroBlock data={data} />;
+      case "product-content-split":
+        return <ProductContentSplitBlock data={data} />;
+      case "product-cards":
+        return <ProductCardsBlock data={data} onNavigate={onNavigate} />;
+      case "product-cta":
+        return <ProductCtaBlock data={data} onNavigate={onNavigate} />;
+      case "product-process":
+        return <ProductProcessBlock data={data} />;
+      case "product-infographic":
+        return <ProductInfographicBlock data={data} />;
 
       default:
         return null;

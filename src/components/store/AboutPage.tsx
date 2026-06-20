@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useContentPage, getBlockData } from "@/lib/use-page-content";
 import { BLOCK_DEFAULTS } from "@/lib/page-blocks";
-import { useAppStore } from '@/lib/store';
+import { useAppStore } from "@/lib/store";
 import { useSeo } from "@/lib/use-seo";
 
 interface AboutPageProps {
@@ -60,9 +60,7 @@ export function AboutPage({ onNavigate, data: externalData }: AboutPageProps) {
   const rawData = getBlockData(blocks, "about-page-content");
   if (loading && !externalData) return null;
   const data =
-    externalData ??
-    rawData ??
-    BLOCK_DEFAULTS["about-page-content"].defaultData;
+    externalData ?? rawData ?? BLOCK_DEFAULTS["about-page-content"].defaultData;
 
   const hero = (data.hero as Record<string, string>) || {};
   const stats = (data.stats as Array<{ value: string; label: string }>) || [];
@@ -116,7 +114,7 @@ export function AboutPage({ onNavigate, data: externalData }: AboutPageProps) {
   return (
     <div className="flex flex-col">
       {/* A1: Hero */}
-      <section className="relative bg-gradient-to-br from-gray-900 via-[#abd0ff] to-gray-900 text-white py-28 px-4">
+      <section className="relative bg-gradient-to-br from-green-900 via-[#abd0ff] to-green-900 text-white py-28 px-4">
         {hero.backgroundImage && (
           <img
             src={hero.backgroundImage as string}
@@ -474,7 +472,7 @@ export function AboutPage({ onNavigate, data: externalData }: AboutPageProps) {
                     onClick={() => useAppStore.getState().openEnquiryModal()}
                     className="w-full text-xs font-medium bg-white text-primary rounded-md py-2.5 hover:bg-white/90 transition-colors"
                   >
-                    {item.cta || 'Send Enquiry'}
+                    {item.cta || "Send Enquiry"}
                   </button>
                 ) : (
                   <button

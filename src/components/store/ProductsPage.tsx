@@ -104,7 +104,10 @@ const products = [
   },
 ];
 
-export function ProductsPage({ onNavigate, data: externalData }: ProductsPageProps) {
+export function ProductsPage({
+  onNavigate,
+  data: externalData,
+}: ProductsPageProps) {
   const [activeCategory, setActiveCategory] = useState("all");
 
   // If external data is provided (from PageBlockRenderer), show preview
@@ -116,7 +119,8 @@ export function ProductsPage({ onNavigate, data: externalData }: ProductsPagePro
             {(externalData.hero as any)?.title || "Our Product Catalog"}
           </h1>
           <p className="text-xl text-muted-foreground mb-6">
-            {(externalData.hero as any)?.subtitle || "Discover our complete range of quality products"}
+            {(externalData.hero as any)?.subtitle ||
+              "Discover our complete range of quality products"}
           </p>
           <div className="space-y-8">
             <pre className="text-left text-sm bg-muted p-4 rounded-lg overflow-auto max-h-96">
@@ -137,7 +141,7 @@ export function ProductsPage({ onNavigate, data: externalData }: ProductsPagePro
   return (
     <div className="flex flex-col">
       {/* P-Hero */}
-      <section className="relative bg-gradient-to-br from-gray-900 via-[#abd0ff] to-gray-900 text-white py-28 px-4">
+      <section className="relative bg-gradient-to-br from-green-900 via-[#abd0ff] to-green-900 text-white py-28 px-4">
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative container mx-auto max-w-5xl text-center">
           <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
@@ -188,10 +192,11 @@ export function ProductsPage({ onNavigate, data: externalData }: ProductsPagePro
                 <button
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${activeCategory === cat.id
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-background border-border text-muted-foreground hover:bg-muted"
-                    }`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                    activeCategory === cat.id
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background border-border text-muted-foreground hover:bg-muted"
+                  }`}
                 >
                   {cat.label}
                 </button>
@@ -294,7 +299,7 @@ export function ProductsPage({ onNavigate, data: externalData }: ProductsPagePro
             ))}
           </div>
           <div className="text-center mt-8">
-            <button className="border rounded-full px-6 py-2.5 text-sm font-medium hover:bg-muted transition-colors">
+            <button className="bg-primary text-primary-foreground border-primary rounded-full px-6 py-2.5 text-sm font-medium hover:bg-primary/90 transition-colors">
               Load more products ↓
             </button>
           </div>

@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
+import { useState, useRef, useCallback, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,9 +21,9 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Upload,
   Search,
@@ -45,10 +45,10 @@ import {
   Grid3X3,
   List,
   Info,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { adminFetch } from '@/lib/admin-fetch';
-import { ScrollArea } from '@/components/ui/scroll-area';
+} from "lucide-react";
+import { toast } from "sonner";
+import { adminFetch } from "@/lib/admin-fetch";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,7 +58,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 
 interface MediaItem {
   id: string;
@@ -83,11 +83,11 @@ interface MediaResponse {
 }
 
 function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 B';
+  if (bytes === 0) return "0 B";
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
 }
 
 function getThumbnailUrl(item: MediaItem): string {
@@ -112,16 +112,18 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MediaItem | null>(null);
-  const [deleteConfirmItem, setDeleteConfirmItem] = useState<MediaItem | null>(null);
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState<MediaItem | null>(
+    null,
+  );
   const [previewOpen, setPreviewOpen] = useState(false);
   const [editAltOpen, setEditAltOpen] = useState(false);
-  const [editAlt, setEditAlt] = useState('');
+  const [editAlt, setEditAlt] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
   const limit = 30;
@@ -130,34 +132,37 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
   const [folders, setFolders] = useState<string[]>([]);
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
   const [createFolderOpen, setCreateFolderOpen] = useState(false);
-  const [newFolderName, setNewFolderName] = useState('');
+  const [newFolderName, setNewFolderName] = useState("");
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   const [moveFileId, setMoveFileId] = useState<string | null>(null);
-  const [moveTargetFolder, setMoveTargetFolder] = useState('');
+  const [moveTargetFolder, setMoveTargetFolder] = useState("");
 
-  const fetchMedia = useCallback(async (pageNum: number, searchQuery: string) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        page: String(pageNum),
-        limit: String(limit),
-      });
-      if (searchQuery) params.set('search', searchQuery);
-      if (activeFolder) params.set('folder', activeFolder);
-      const res = await adminFetch(`/api/media?${params}`);
-      if (res.ok) {
-        const data: MediaResponse = await res.json();
-        setMedia(data.media);
-        setTotal(data.total);
-        setPage(data.page);
+  const fetchMedia = useCallback(
+    async (pageNum: number, searchQuery: string) => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({
+          page: String(pageNum),
+          limit: String(limit),
+        });
+        if (searchQuery) params.set("search", searchQuery);
+        if (activeFolder) params.set("folder", activeFolder);
+        const res = await adminFetch(`/api/media?${params}`);
+        if (res.ok) {
+          const data: MediaResponse = await res.json();
+          setMedia(data.media);
+          setTotal(data.total);
+          setPage(data.page);
+        }
+      } catch (error) {
+        console.error("Failed to load media:", error);
+        toast.error("Failed to load media");
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to load media:', error);
-      toast.error('Failed to load media');
-    } finally {
-      setLoading(false);
-    }
-  }, [activeFolder]);
+    },
+    [activeFolder],
+  );
 
   useEffect(() => {
     fetchMedia(page, search);
@@ -174,13 +179,13 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
 
   const fetchFolders = useCallback(async () => {
     try {
-      const res = await adminFetch('/api/media/folders');
+      const res = await adminFetch("/api/media/folders");
       if (res.ok) {
         const data = await res.json();
         setFolders(data.folders || []);
       }
     } catch (error) {
-      console.error('Failed to load folders:', error);
+      console.error("Failed to load folders:", error);
     }
   }, []);
 
@@ -195,47 +200,49 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
 
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) return;
-    const folderPath = newFolderName.trim().startsWith('/') ? newFolderName.trim() : `/${newFolderName.trim()}`;
+    const folderPath = newFolderName.trim().startsWith("/")
+      ? newFolderName.trim()
+      : `/${newFolderName.trim()}`;
     try {
-      const res = await adminFetch('/api/media/folders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await adminFetch("/api/media/folders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ folder: folderPath }),
       });
       if (res.ok) {
-        toast.success('Folder created');
+        toast.success("Folder created");
         setCreateFolderOpen(false);
-        setNewFolderName('');
+        setNewFolderName("");
         fetchFolders();
       } else {
-        toast.error('Failed to create folder');
+        toast.error("Failed to create folder");
       }
     } catch (error) {
-      console.error('Failed to create folder:', error);
-      toast.error('Failed to create folder');
+      console.error("Failed to create folder:", error);
+      toast.error("Failed to create folder");
     }
   };
 
   const handleMoveFile = async () => {
     if (!moveFileId || !moveTargetFolder) return;
     try {
-      const res = await adminFetch('/api/media', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await adminFetch("/api/media", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: moveFileId, folder: moveTargetFolder }),
       });
       if (res.ok) {
-        toast.success('File moved');
+        toast.success("File moved");
         setMoveDialogOpen(false);
         setMoveFileId(null);
         fetchMedia(page, search);
         fetchFolders();
       } else {
-        toast.error('Failed to move file');
+        toast.error("Failed to move file");
       }
     } catch (error) {
-      console.error('Failed to move file:', error);
-      toast.error('Failed to move file');
+      console.error("Failed to move file:", error);
+      toast.error("Failed to move file");
     }
   };
 
@@ -247,48 +254,59 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
     setUploading(true);
     try {
       const formData = new FormData();
-      Array.from(files).forEach(f => formData.append('files', f));
-      const res = await adminFetch('/api/upload', { method: 'POST', body: formData });
+      Array.from(files).forEach((f) => formData.append("files", f));
+      const res = await adminFetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
       if (res.ok) {
         const data = await res.json();
-        const successCount = data.files.filter((f: { error?: string }) => !f.error).length;
-        const errorCount = data.files.filter((f: { error?: string }) => f.error).length;
+        const successCount = data.files.filter(
+          (f: { error?: string }) => !f.error,
+        ).length;
+        const errorCount = data.files.filter(
+          (f: { error?: string }) => f.error,
+        ).length;
         if (successCount > 0) {
-          toast.success(`${successCount} file${successCount > 1 ? 's' : ''} uploaded`);
+          toast.success(
+            `${successCount} file${successCount > 1 ? "s" : ""} uploaded`,
+          );
         }
         if (errorCount > 0) {
-          toast.error(`${errorCount} file${errorCount > 1 ? 's' : ''} failed`);
+          toast.error(`${errorCount} file${errorCount > 1 ? "s" : ""} failed`);
         }
         fetchMedia(1, search);
       } else {
-        toast.error('Upload failed');
+        toast.error("Upload failed");
       }
     } catch (error) {
-      console.error('Upload failed:', error);
-      toast.error('Upload failed');
+      console.error("Upload failed:", error);
+      toast.error("Upload failed");
     } finally {
       setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
   const handleDelete = async (item: MediaItem) => {
     setDeleteConfirmItem(null);
     try {
-      const res = await adminFetch(`/api/media/${item.id}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/media/${item.id}`, {
+        method: "DELETE",
+      });
       if (res.ok) {
-        toast.success('Deleted');
+        toast.success("Deleted");
         fetchMedia(page, search);
         if (selectedItem?.id === item.id) {
           setSelectedItem(null);
           setPreviewOpen(false);
         }
       } else {
-        toast.error('Delete failed');
+        toast.error("Delete failed");
       }
     } catch (error) {
-      console.error('Delete failed:', error);
-      toast.error('Delete failed');
+      console.error("Delete failed:", error);
+      toast.error("Delete failed");
     }
   };
 
@@ -297,30 +315,30 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
       const fullUrl = `${window.location.origin}${url}`;
       await navigator.clipboard.writeText(fullUrl);
       setCopiedId(id);
-      toast.success('URL copied');
+      toast.success("URL copied");
       setTimeout(() => setCopiedId(null), 2000);
       if (onSelect) onSelect(fullUrl);
     } catch {
-      toast.error('Failed to copy');
+      toast.error("Failed to copy");
     }
   };
 
   const handleUpdateAlt = async () => {
     if (!selectedItem) return;
     try {
-      const res = await adminFetch('/api/media', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await adminFetch("/api/media", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: selectedItem.id, alt: editAlt }),
       });
       if (res.ok) {
-        toast.success('Alt text updated');
+        toast.success("Alt text updated");
         setEditAltOpen(false);
         fetchMedia(page, search);
       }
     } catch (error) {
-      console.error('Failed to update alt text:', error);
-      toast.error('Update failed');
+      console.error("Failed to update alt text:", error);
+      toast.error("Update failed");
     }
   };
 
@@ -329,9 +347,11 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
     const files = e.dataTransfer.files;
     if (files.length > 0 && fileInputRef.current) {
       const dt = new DataTransfer();
-      Array.from(files).forEach(f => dt.items.add(f));
+      Array.from(files).forEach((f) => dt.items.add(f));
       fileInputRef.current.files = dt.files;
-      fileInputRef.current.dispatchEvent(new Event('change', { bubbles: true }));
+      fileInputRef.current.dispatchEvent(
+        new Event("change", { bubbles: true }),
+      );
     }
   };
 
@@ -349,27 +369,29 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
             Media Library
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            {total} file{total !== 1 ? 's' : ''} total
+            {total} file{total !== 1 ? "s" : ""} total
             {activeFolder && (
-              <Badge variant="outline" className="ml-2">{activeFolder}</Badge>
+              <Badge variant="outline" className="ml-2">
+                {activeFolder}
+              </Badge>
             )}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center border rounded-md">
             <Button
-              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+              variant={viewMode === "grid" ? "secondary" : "ghost"}
               size="icon"
               className="h-9 w-9 rounded-r-none"
-              onClick={() => setViewMode('grid')}
+              onClick={() => setViewMode("grid")}
             >
               <Grid3X3 className="h-4 w-4" />
             </Button>
             <Button
-              variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+              variant={viewMode === "list" ? "secondary" : "ghost"}
               size="icon"
               className="h-9 w-9 rounded-l-none"
-              onClick={() => setViewMode('list')}
+              onClick={() => setViewMode("list")}
             >
               <List className="h-4 w-4" />
             </Button>
@@ -397,7 +419,7 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
             className="gap-2"
           >
             <Upload className="h-4 w-4" />
-            {uploading ? 'Uploading...' : 'Upload'}
+            {uploading ? "Uploading..." : "Upload"}
           </Button>
         </div>
       </div>
@@ -411,8 +433,8 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
               onClick={() => handleSelectFolder(null)}
               className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                 !activeFolder
-                  ? 'bg-emerald-50 text-emerald-700'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  ? "bg-emerald-50 text-emerald-700"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
               }`}
             >
               <FolderOpen className="h-4 w-4" />
@@ -424,16 +446,20 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
                 onClick={() => handleSelectFolder(folder)}
                 className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   activeFolder === folder
-                    ? 'bg-emerald-50 text-emerald-700'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >
                 <Folder className="h-4 w-4" />
-                <span className="truncate">{folder.replace(/^\//, '') || '/'}</span>
+                <span className="truncate">
+                  {folder.replace(/^\//, "") || "/"}
+                </span>
               </button>
             ))}
             {folders.length === 0 && (
-              <p className="px-3 py-2 text-xs text-muted-foreground">No folders yet</p>
+              <p className="px-3 py-2 text-xs text-muted-foreground">
+                No folders yet
+              </p>
             )}
           </div>
         </div>
@@ -454,7 +480,7 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
                 variant="ghost"
                 size="icon"
                 className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
-                onClick={() => handleSearch('')}
+                onClick={() => handleSearch("")}
               >
                 <X className="h-3 w-3" />
               </Button>
@@ -463,224 +489,244 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
 
           {/* Drop zone overlay hint */}
           <div
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        className="min-h-[400px]"
-      >
-        {loading ? (
-          <div className={
-            viewMode === 'grid'
-              ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4'
-              : 'space-y-2'
-          }>
-            {Array.from({ length: 10 }).map((_, i) => (
-              <Skeleton key={i} className="aspect-square rounded-lg" />
-            ))}
-          </div>
-        ) : media.length === 0 ? (
-          <div className="flex flex-col items-center justify-center min-h-[400px] text-center border-2 border-dashed rounded-lg p-8">
-            <FolderOpen className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold">No media files</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              {search ? 'No files match your search.' : 'Upload your first image or drag and drop files here.'}
-            </p>
-            {!search && (
-              <Button
-                variant="outline"
-                className="mt-4 gap-2"
-                onClick={() => fileInputRef.current?.click()}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            className="min-h-[400px]"
+          >
+            {loading ? (
+              <div
+                className={
+                  viewMode === "grid"
+                    ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+                    : "space-y-2"
+                }
               >
-                <Upload className="h-4 w-4" />
-                Upload Files
-              </Button>
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <Skeleton key={i} className="aspect-square rounded-lg" />
+                ))}
+              </div>
+            ) : media.length === 0 ? (
+              <div className="flex flex-col items-center justify-center min-h-[400px] text-center border-2 border-dashed rounded-lg p-8">
+                <FolderOpen className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold">No media files</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {search
+                    ? "No files match your search."
+                    : "Upload your first image or drag and drop files here."}
+                </p>
+                {!search && (
+                  <Button
+                    variant="outline"
+                    className="mt-4 gap-2"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="h-4 w-4" />
+                    Upload Files
+                  </Button>
+                )}
+              </div>
+            ) : viewMode === "grid" ? (
+              /* Grid View */
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {media.map((item) => (
+                  <Card
+                    key={item.id}
+                    className="group relative overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all"
+                    onClick={() => handleCopyUrl(item.url, item.id)}
+                  >
+                    <div className="aspect-square relative bg-muted">
+                      <img
+                        src={getThumbnailUrl(item)}
+                        alt={item.alt || item.originalName}
+                        className="object-cover w-full h-full"
+                        loading="lazy"
+                      />
+                      {/* Overlay */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                        <div className="flex gap-1">
+                          <Button
+                            size="icon"
+                            variant="secondary"
+                            className="h-8 w-8 text-white"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedItem(item);
+                              setPreviewOpen(true);
+                            }}
+                          >
+                            <ZoomIn className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="secondary"
+                            className="h-8 w-8 text-white"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopyUrl(item.url, item.id);
+                            }}
+                          >
+                            {copiedId === item.id ? (
+                              <Check className="h-4 w-4" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger
+                              asChild
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Button
+                                size="icon"
+                                variant="secondary"
+                                className="h-8 w-8 text-white"
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedItem(item);
+                                  setEditAlt(item.alt || "");
+                                  setEditAltOpen(true);
+                                }}
+                              >
+                                <Edit3 className="h-4 w-4 mr-2" />
+                                Edit Alt Text
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setMoveFileId(item.id);
+                                  setMoveTargetFolder(item.folder || "/");
+                                  setMoveDialogOpen(true);
+                                }}
+                              >
+                                <Move className="h-4 w-4 mr-2" />
+                                Move to Folder
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleCopyUrl(item.url, item.id)}
+                              >
+                                <Copy className="h-4 w-4 mr-2" />
+                                Copy URL
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => setDeleteConfirmItem(item)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                      {/* Copied badge */}
+                      {copiedId === item.id && (
+                        <Badge className="absolute top-2 left-2 text-xs">
+                          <Check className="h-3 w-3 mr-1" />
+                          Copied
+                        </Badge>
+                      )}
+                    </div>
+                    <CardContent className="p-2">
+                      <p
+                        className="text-xs font-medium truncate"
+                        title={item.originalName}
+                      >
+                        {item.originalName}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {formatFileSize(item.size)}
+                        {item.width &&
+                          item.height &&
+                          ` · ${item.width}×${item.height}`}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              /* List View */
+              <div className="space-y-2">
+                {media.map((item) => (
+                  <Card
+                    key={item.id}
+                    className="group hover:ring-2 hover:ring-primary transition-all cursor-pointer"
+                    onClick={() => handleCopyUrl(item.url, item.id)}
+                  >
+                    <CardContent className="p-3 flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                        <img
+                          src={getThumbnailUrl(item)}
+                          alt={item.alt || item.originalName}
+                          className="object-cover w-full h-full"
+                          loading="lazy"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {item.originalName}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatFileSize(item.size)}
+                          {item.width &&
+                            item.height &&
+                            ` · ${item.width}×${item.height}`}
+                          {item.alt && ` · Alt: ${item.alt}`}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          {new Date(item.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedItem(item);
+                            setPreviewOpen(true);
+                          }}
+                        >
+                          <ZoomIn className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopyUrl(item.url, item.id);
+                          }}
+                        >
+                          {copiedId === item.id ? (
+                            <Check className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(item);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             )}
           </div>
-        ) : viewMode === 'grid' ? (
-          /* Grid View */
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {media.map((item) => (
-              <Card
-                key={item.id}
-                className="group relative overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all"
-                onClick={() => handleCopyUrl(item.url, item.id)}
-              >
-                <div className="aspect-square relative bg-muted">
-                  <img
-                    src={getThumbnailUrl(item)}
-                    alt={item.alt || item.originalName}
-                    className="object-cover w-full h-full"
-                    loading="lazy"
-                  />
-                  {/* Overlay */}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-                    <div className="flex gap-1">
-                      <Button
-                        size="icon"
-                        variant="secondary"
-                        className="h-8 w-8"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedItem(item);
-                          setPreviewOpen(true);
-                        }}
-                      >
-                        <ZoomIn className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="secondary"
-                        className="h-8 w-8"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCopyUrl(item.url, item.id);
-                        }}
-                      >
-                        {copiedId === item.id ? (
-                          <Check className="h-4 w-4" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                          <Button size="icon" variant="secondary" className="h-8 w-8">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSelectedItem(item);
-                              setEditAlt(item.alt || '');
-                              setEditAltOpen(true);
-                            }}
-                          >
-                            <Edit3 className="h-4 w-4 mr-2" />
-                            Edit Alt Text
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setMoveFileId(item.id);
-                              setMoveTargetFolder(item.folder || '/');
-                              setMoveDialogOpen(true);
-                            }}
-                          >
-                            <Move className="h-4 w-4 mr-2" />
-                            Move to Folder
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleCopyUrl(item.url, item.id)}
-                          >
-                            <Copy className="h-4 w-4 mr-2" />
-                            Copy URL
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => setDeleteConfirmItem(item)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                  {/* Copied badge */}
-                  {copiedId === item.id && (
-                    <Badge className="absolute top-2 left-2 text-xs">
-                      <Check className="h-3 w-3 mr-1" />
-                      Copied
-                    </Badge>
-                  )}
-                </div>
-                <CardContent className="p-2">
-                  <p className="text-xs font-medium truncate" title={item.originalName}>
-                    {item.originalName}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
-                    {formatFileSize(item.size)}
-                    {item.width && item.height && ` · ${item.width}×${item.height}`}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          /* List View */
-          <div className="space-y-2">
-            {media.map((item) => (
-              <Card
-                key={item.id}
-                className="group hover:ring-2 hover:ring-primary transition-all cursor-pointer"
-                onClick={() => handleCopyUrl(item.url, item.id)}
-              >
-                <CardContent className="p-3 flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-md overflow-hidden bg-muted flex-shrink-0">
-                    <img
-                      src={getThumbnailUrl(item)}
-                      alt={item.alt || item.originalName}
-                      className="object-cover w-full h-full"
-                      loading="lazy"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{item.originalName}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatFileSize(item.size)}
-                      {item.width && item.height && ` · ${item.width}×${item.height}`}
-                      {item.alt && ` · Alt: ${item.alt}`}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                      {new Date(item.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedItem(item);
-                        setPreviewOpen(true);
-                      }}
-                    >
-                      <ZoomIn className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCopyUrl(item.url, item.id);
-                      }}
-                    >
-                      {copiedId === item.id ? (
-                        <Check className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(item);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
         </div>
       </div>
 
@@ -695,7 +741,7 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
               variant="outline"
               size="sm"
               disabled={page <= 1}
-              onClick={() => setPage(p => p - 1)}
+              onClick={() => setPage((p) => p - 1)}
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
               Previous
@@ -715,7 +761,7 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
                 return (
                   <Button
                     key={pageNum}
-                    variant={page === pageNum ? 'default' : 'outline'}
+                    variant={page === pageNum ? "default" : "outline"}
                     size="sm"
                     className="w-9 h-9 p-0"
                     onClick={() => setPage(pageNum)}
@@ -729,7 +775,7 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
               variant="outline"
               size="sm"
               disabled={page >= totalPages}
-              onClick={() => setPage(p => p + 1)}
+              onClick={() => setPage((p) => p + 1)}
             >
               Next
               <ChevronRight className="h-4 w-4 ml-1" />
@@ -756,19 +802,23 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                 <div>
                   <p className="text-muted-foreground">Size</p>
-                  <p className="font-medium">{formatFileSize(selectedItem.size)}</p>
+                  <p className="font-medium">
+                    {formatFileSize(selectedItem.size)}
+                  </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Dimensions</p>
                   <p className="font-medium">
                     {selectedItem.width && selectedItem.height
                       ? `${selectedItem.width} × ${selectedItem.height}`
-                      : 'N/A'}
+                      : "N/A"}
                   </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Type</p>
-                  <p className="font-medium">{selectedItem.mimeType.split('/')[1]?.toUpperCase()}</p>
+                  <p className="font-medium">
+                    {selectedItem.mimeType.split("/")[1]?.toUpperCase()}
+                  </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Uploaded</p>
@@ -786,7 +836,9 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
               <div className="flex gap-2">
                 <Button
                   className="flex-1 gap-2"
-                  onClick={() => handleCopyUrl(selectedItem.url, selectedItem.id)}
+                  onClick={() =>
+                    handleCopyUrl(selectedItem.url, selectedItem.id)
+                  }
                 >
                   {copiedId === selectedItem.id ? (
                     <>
@@ -804,7 +856,7 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
                   variant="outline"
                   className="gap-2"
                   onClick={() => {
-                    setEditAlt(selectedItem.alt || '');
+                    setEditAlt(selectedItem.alt || "");
                     setEditAltOpen(true);
                   }}
                 >
@@ -861,16 +913,22 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
               placeholder="/folder-name"
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
+              onKeyDown={(e) => e.key === "Enter" && handleCreateFolder()}
             />
             <p className="text-xs text-muted-foreground">
               Folder paths start with &quot;/&quot;. e.g., /products, /blog
             </p>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setCreateFolderOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setCreateFolderOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleCreateFolder} disabled={!newFolderName.trim()}>
+              <Button
+                onClick={handleCreateFolder}
+                disabled={!newFolderName.trim()}
+              >
                 Create
               </Button>
             </DialogFooter>
@@ -887,11 +945,11 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
           <div className="space-y-4">
             <div className="space-y-1">
               <button
-                onClick={() => setMoveTargetFolder('/')}
+                onClick={() => setMoveTargetFolder("/")}
                 className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
-                  moveTargetFolder === '/'
-                    ? 'bg-emerald-50 text-emerald-700'
-                    : 'text-muted-foreground hover:bg-muted'
+                  moveTargetFolder === "/"
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "text-muted-foreground hover:bg-muted"
                 }`}
               >
                 <FolderOpen className="h-4 w-4" />
@@ -903,8 +961,8 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
                   onClick={() => setMoveTargetFolder(folder)}
                   className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
                     moveTargetFolder === folder
-                      ? 'bg-emerald-50 text-emerald-700'
-                      : 'text-muted-foreground hover:bg-muted'
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "text-muted-foreground hover:bg-muted"
                   }`}
                 >
                   <Folder className="h-4 w-4" />
@@ -913,7 +971,10 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
               ))}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setMoveDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setMoveDialogOpen(false)}
+              >
                 Cancel
               </Button>
               <Button onClick={handleMoveFile} disabled={!moveTargetFolder}>
@@ -924,20 +985,25 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
         </DialogContent>
       </Dialog>
 
-
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteConfirmItem} onOpenChange={() => setDeleteConfirmItem(null)}>
+      <AlertDialog
+        open={!!deleteConfirmItem}
+        onOpenChange={() => setDeleteConfirmItem(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Media</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this file? This action cannot be undone.
+              Are you sure you want to delete this file? This action cannot be
+              undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => deleteConfirmItem && handleDelete(deleteConfirmItem)}
+              onClick={() =>
+                deleteConfirmItem && handleDelete(deleteConfirmItem)
+              }
               className="bg-rose-600 hover:bg-rose-700"
             >
               Delete

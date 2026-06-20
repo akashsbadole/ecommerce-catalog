@@ -249,11 +249,34 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
     }, 300);
   };
 
-  const handleResultClick = (productId: string) => {
+  const handleResultClick = (product: { name: string; id: string }) => {
     saveSearchToHistory(searchQuery);
     setSearchOpen(false);
-    onNavigate("product", productId);
+    useAppStore.getState().openEnquiryModal(product.name, product.id);
   };
+
+  const navigateOrOpen = useCallback((item: { url?: string | null; page?: string | null; slug?: string | null; openInNewTab?: boolean | null }) => {
+    if (item.url) {
+      if (item.url.startsWith("/")) {
+        const segments = item.url.split("/").filter(Boolean);
+        const p = segments.join("/");
+            if (segments[0] === "product" && segments[1]) onNavigate("category", segments[1]);
+            else if (segments[0] === "product") onNavigate("products");
+        else if (segments[0] === "catalogue" && segments[1]) onNavigate("category", segments[1]);
+        else if (segments[0] === "catalogue") onNavigate("catalogue");
+        else if (segments[0] === "blog" && segments[1]) onNavigate("blog-post", segments[1]);
+        else if (segments[0] === "blog") onNavigate("blog");
+        else if (segments[0] === "about") onNavigate("content-page", "about-us");
+        else if (segments[0] === "manufacturing") onNavigate("content-page", "manufacturing");
+        else if (segments[0] === "contact") onNavigate("content-page", "contact");
+        else onNavigate("content-page", p);
+      } else {
+        window.open(item.url, item.openInNewTab ? "_blank" : "_self");
+      }
+    } else if (item.page && item.page !== "url") {
+      onNavigate(item.page, item.slug ?? undefined);
+    }
+  }, [onNavigate]);
 
   const toggleExpanded = (id: string) => {
     setExpandedItems((prev) => {
@@ -318,17 +341,8 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                       <div key={item.id} className="relative group">
                         <Button
                           variant="ghost"
-                          className="text-sm font-medium px-3"
-                          onClick={() => {
-                            if (item.url) {
-                              window.open(
-                                item.url,
-                                item.openInNewTab ? "_blank" : "_self",
-                              );
-                            } else if (item.page) {
-                              onNavigate(item.page, item.slug);
-                            }
-                          }}
+                          className="text-sm font-medium px-3 text-black hover:text-white"
+                          onClick={() => navigateOrOpen(item)}
                         >
                           {item.label}
                           {hasChildren && (
@@ -341,16 +355,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                               <button
                                 key={child.id}
                                 className="w-full text-left px-4 py-2 text-sm hover:bg-muted transition-colors"
-                                onClick={() => {
-                                  if (child.url) {
-                                    window.open(
-                                      child.url,
-                                      child.openInNewTab ? "_blank" : "_self",
-                                    );
-                                  } else if (child.page) {
-                                    onNavigate(child.page, child.slug);
-                                  }
-                                }}
+                                onClick={() => navigateOrOpen(child)}
                               >
                                 {child.label}
                               </button>
@@ -460,16 +465,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                                   <Button
                                     variant="ghost"
                                     className="justify-start text-sm h-9 w-full"
-                                    onClick={() => {
-                                      if (item.url) {
-                                        window.open(
-                                          item.url,
-                                          item.openInNewTab ? "_blank" : "_self",
-                                        );
-                                      } else if (item.page) {
-                                        onNavigate(item.page, item.slug);
-                                      }
-                                    }}
+                                    onClick={() => navigateOrOpen(item)}
                                   >
                                     {item.label}
                                   </Button>
@@ -482,18 +478,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                                       <Button
                                         variant="ghost"
                                         className="justify-start text-sm h-9 w-full pl-3"
-                                        onClick={() => {
-                                          if (child.url) {
-                                            window.open(
-                                              child.url,
-                                              child.openInNewTab
-                                                ? "_blank"
-                                                : "_self",
-                                            );
-                                          } else if (child.page) {
-                                            onNavigate(child.page, child.slug);
-                                          }
-                                        }}
+                                        onClick={() => navigateOrOpen(child)}
                                       >
                                         {child.label}
                                       </Button>
@@ -612,7 +597,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                   return (
                     <button
                       key={product.id}
-                      onClick={() => handleResultClick(product.id)}
+                      onClick={() => handleResultClick(product)}
                       className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left hover:bg-muted transition-colors"
                     >
                       {image ? (

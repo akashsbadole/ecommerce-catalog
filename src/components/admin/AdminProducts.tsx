@@ -26,6 +26,8 @@ import {
 } from "lucide-react";
 import { AdminProductVariants } from "./AdminProductVariants";
 import { formatPrice as libFormatPrice } from "@/lib/pricing";
+import type { PageBlock } from "@/lib/page-blocks";
+import { normalizePageBlocks } from "@/lib/page-blocks";
 
 const WysiwygEditor = dynamic(
   () => import("@/components/admin/WysiwygEditor"),
@@ -120,6 +122,7 @@ interface Product {
   stock: number;
   lowStockThreshold: number;
   relatedProductIds: string;
+  blocks: string;
   Category?: Category | null;
   createdAt: string;
 }
@@ -259,6 +262,12 @@ export function AdminProducts() {
   // Edit dialog tab
   const [editTab, setEditTab] = useState("general");
 
+  // Page builder state
+  const [productBlocks, setProductBlocks] = useState<PageBlock[]>([]);
+  const [builderOpen, setBuilderOpen] = useState(false);
+  const [builderSaving, setBuilderSaving] = useState(false);
+
+  // Product fields state (replacing blocks)
   const fetchProducts = useCallback(async () => {
     try {
       const params = new URLSearchParams({ all: "true" });
@@ -374,6 +383,7 @@ export function AdminProducts() {
       ),
     );
     setEditTab("general");
+    setProductBlocks(normalizePageBlocks(product.blocks || "[]"));
     setFormOpen(true);
   };
 
@@ -1823,6 +1833,8 @@ export function AdminProducts() {
                 )}
               </div>
             )}
+
+
           </ScrollArea>
           <DialogFooter>
             <Button variant="outline" onClick={() => setFormOpen(false)}>

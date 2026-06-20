@@ -221,6 +221,8 @@ export async function POST(request: NextRequest) {
         stock: typeof body.stock === 'number' ? body.stock : (parseInt(body.stock) || 0),
         lowStockThreshold: typeof body.lowStockThreshold === 'number' ? body.lowStockThreshold : (parseInt(body.lowStockThreshold) || 10),
         relatedProductIds: typeof body.relatedProductIds === 'string' ? body.relatedProductIds : '[]',
+        blocks: typeof body.blocks === 'string' ? body.blocks : JSON.stringify(body.blocks || []),
+
         ...(storeId ? { storeId } : {}),
       },
       include: { Category: true },

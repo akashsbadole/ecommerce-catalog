@@ -94,6 +94,7 @@ const INTERNAL_PAGES = [
   { label: 'Wishlist', value: 'wishlist' },
   { label: 'Orders', value: 'orders' },
   { label: 'Buyer Portal', value: 'portal' },
+  { label: 'Product Page', value: 'product-page' },
   { label: 'Custom Page (Slug)', value: 'content-page' },
   { label: 'External URL', value: 'url' },
 ];
@@ -103,6 +104,7 @@ export function AdminMenus() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [contentPages, setContentPages] = useState<{title: string, slug: string}[]>([]);
+  const [categories, setCategories] = useState<{name: string, slug: string}[]>([]);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
@@ -145,11 +147,22 @@ export function AdminMenus() {
     } catch { /* ignore */ }
   }, []);
 
+  const fetchCategories = useCallback(async () => {
+    try {
+      const res = await adminFetch('/api/categories?all=true');
+      if (res.ok) {
+        const data = await res.json();
+        setCategories(data.categories || []);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
   useEffect(() => {
     setLoading(true);
     fetchMenus();
     fetchContentPages();
-  }, [fetchMenus, fetchContentPages]);
+    fetchCategories();
+  }, [fetchMenus, fetchContentPages, fetchCategories]);
 
   const handleOpenAdd = () => {
     setEditingMenu(null);
@@ -337,6 +350,7 @@ export function AdminMenus() {
     const isUrl = item.page === 'url';
     const isContentPage = item.page === 'content-page';
     const isCategory = item.page === 'category';
+    const isProductPage = item.page === 'product-page';
 
     return (
       <div key={item.id} style={{ marginLeft: `${indent}px` }} className="space-y-2">
@@ -354,7 +368,7 @@ export function AdminMenus() {
             <div className="col-span-3">
                <Select
                 value={item.page || 'home'}
-                onValueChange={(val) => updateMenuItem(item.id!, { page: val, url: val === 'url' ? item.url : null, slug: val === 'content-page' || val === 'category' ? item.slug : null })}
+                onValueChange={(val) => updateMenuItem(item.id!, { page: val, url: val === 'url' ? item.url : null, slug: val === 'content-page' || val === 'category' || val === 'product-page' ? item.slug : null })}
                >
                  <SelectTrigger className="h-8 text-xs">
                    <SelectValue />
@@ -376,8 +390,25 @@ export function AdminMenus() {
                   className="h-8 text-xs"
                 />
               ) : isCategory ? (
+                <Select
+                  value={item.slug || ''}
+                  onValueChange={(val) => updateMenuItem(item.id!, { slug: val })}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Select category..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(c => (
+                      <SelectItem key={c.slug} value={c.slug}>{c.name}</SelectItem>
+                    ))}
+                    {categories.length === 0 && (
+                      <SelectItem value="_none" disabled>No categories found</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              ) : isProductPage ? (
                 <Input
-                  placeholder="Category slug (e.g. biscuits)"
+                  placeholder="Product slug (e.g. peri-peri-roasted-makhana)"
                   value={item.slug || ''}
                   onChange={(e) => updateMenuItem(item.id!, { slug: e.target.value || null })}
                   className="h-8 text-xs"

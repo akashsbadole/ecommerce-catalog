@@ -133,6 +133,9 @@ export async function PUT(
         ...(body.relatedProductIds !== undefined && {
           relatedProductIds: typeof body.relatedProductIds === 'string' ? body.relatedProductIds : JSON.stringify(body.relatedProductIds || []),
         }),
+        ...(body.blocks !== undefined && {
+          blocks: typeof body.blocks === 'string' ? body.blocks : JSON.stringify(body.blocks || []),
+        }),
       },
       include: { Category: true },
     });

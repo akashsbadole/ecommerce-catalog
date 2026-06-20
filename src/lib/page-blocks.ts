@@ -45,6 +45,14 @@ export type BlockType =
   | "crm-flow"
   | "mfg-page-content"
   | "catalogue-page-content"
+
+  // Product page blocks
+  | "product-hero"
+  | "product-content-split"
+  | "product-cards"
+  | "product-cta"
+  | "product-process"
+  | "product-infographic"
   ;
 
 export interface PageBlock {
@@ -249,7 +257,7 @@ slider: {
     ],
       autoplay: true,
         interval: 5000,
-          ctaButtonColor: "#2639ED",
+          ctaButtonColor: "var(--primary)",
             ctaTextColor: "#FFFFFF",
               showButton: true,
                 fullWidth: true,
@@ -296,7 +304,7 @@ about: {
     label: "Who we serve",
       heading: "We manufacture for",
         description: "From first batch to full-scale production",
-          ctaButtonColor: "#2639ED",
+          ctaButtonColor: "var(--primary)",
             ctaTextColor: "#FFFFFF",
               showButton: true,
                 cards: [
@@ -366,7 +374,7 @@ capabilities: {
       ],
         ctaText: "View all products & packaging",
           ctaLink: "/catalogue",
-            ctaButtonColor: "#2639ED",
+            ctaButtonColor: "var(--primary)",
               ctaTextColor: "#FFFFFF",
                 showButton: true,
     },
@@ -608,7 +616,7 @@ leadership: {
                   { text: "Secondary CTA", link: "/catalogue", variant: "outline" },
                 ],
                   badges: [],
-                    ctaButtonColor: "#2639ED",
+                    ctaButtonColor: "var(--primary)",
                       ctaTextColor: "#FFFFFF",
                         showButton: true,
                           fullWidth: true,
@@ -846,7 +854,7 @@ timeline: {
       cta: {
       title: "Ready to see it for yourself?",
         subtitle: "Share your details — we'll get back within 24 hours",
-          formBgColor: "#2639ED",
+          formBgColor: "var(--primary)",
             formTextColor: "#FFFFFF",
       },
   },
@@ -918,6 +926,78 @@ timeline: {
         { id: "digestive", label: "Digestive" },
       ],
     },
+},
+"product-hero": {
+  label: "Product Hero",
+  icon: "Heading1",
+  defaultData: {
+    title: "Product Name",
+    subtitle: "Bulk Manufacturer · Private Label Ready",
+    description: "Premium quality product manufactured in-house — supplied in bulk, retail-ready or fully private labelled.",
+  },
+},
+"product-content-split": {
+  label: "Content Split (Image + Bullets)",
+  icon: "Columns2",
+  defaultData: {
+    image: "",
+    heading: "Sourced direct. Made in-house. Built for bulk.",
+    paragraph: "Our product is sourced directly and processed entirely within our own facility — no intermediaries between source and final pack.",
+    bullets: [
+      "Direct sourcing, no middlemen",
+      "In-house processing",
+      "FSSAI certified, hygienic packaging",
+    ],
+  },
+},
+"product-cards": {
+  label: "Product Cards Grid",
+  icon: "Grid3X3",
+  defaultData: {
+    title: "Our range",
+    productIds: [],
+    maxCards: 8,
+    columns: 4,
+  },
+},
+"product-cta": {
+  label: "Bulk Order / Private Label CTA",
+  icon: "MousePointerClick",
+  defaultData: {
+    heading: "Looking for bulk supply or private label?",
+    description: "Share your requirement and get pricing, samples and lead-time details within 24 hours.",
+    showBulkCta: true,
+    bulkCtaText: "Enquire for Bulk Order →",
+    bulkCtaLink: "/contact",
+    showPrivateLabelCta: true,
+    privateLabelCtaText: "Start Private Label →",
+    privateLabelCtaLink: "/contact",
+    backgroundColor: "dark",
+  },
+},
+"product-process": {
+  label: "Process Flow",
+  icon: "GitMerge",
+  defaultData: {
+    title: "From raw material to dispatch",
+    subtitle: "Every batch follows the same controlled process, start to finish",
+    steps: [
+      { title: "Raw material intake", description: "Sourced direct from growers" },
+      { title: "Grading & cleaning", description: "Sorted by size and quality" },
+      { title: "Processing", description: "Controlled heat and time" },
+      { title: "Quality check", description: "Batch-level inspection" },
+      { title: "Packing & dispatch", description: "Sealed, labelled, shipped" },
+    ],
+  },
+},
+"product-infographic": {
+  label: "Infographic Image",
+  icon: "Image",
+  defaultData: {
+    image: "",
+    caption: "",
+    altText: "Infographic",
+  },
 },
 };
 

@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# uploads (user-generated images, not source code)
+public/uploads/
+
 
 # typescript
 *.tsbuildinfo

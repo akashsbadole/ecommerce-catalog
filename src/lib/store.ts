@@ -12,6 +12,7 @@ export type Page =
   | { type: "manufacturing" }
   | { type: "blog" }
   | { type: "blog-post"; slug: string }
+  | { type: "product-page"; slug: string }
   | { type: "content-page"; slug: string }
   | { type: "admin-login" }
   | { type: "admin"; activeTab: string };
@@ -131,6 +132,11 @@ export const useAppStore = create<AppState>()(
             set({ currentPage: { type: "blog-post", slug: data as string } });
             if (typeof window !== "undefined")
               window.history.pushState({}, "", `/blog/${data as string}`);
+            break;
+          case "product-page":
+            set({ currentPage: { type: "product-page", slug: data as string } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", `/product/${data as string}`);
             break;
           case "content-page": {
             const rawSlug = (data as string) || "";
