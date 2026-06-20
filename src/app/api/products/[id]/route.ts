@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
 async function resolveProduct(idOrSlug: string, includeDeleted = false) {
   const where = {
@@ -21,6 +22,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
     const { id } = await params;
     const body = await request.json();
 
@@ -75,6 +78,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
     const { id } = await params;
     const body = await request.json();
 
@@ -155,6 +160,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
     const { id } = await params;
     const { searchParams } = new URL(request.url);
     const permanent = searchParams.get('permanent') === 'true';

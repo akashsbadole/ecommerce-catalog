@@ -86,6 +86,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
     const body = await request.json();
 
     const result = userCreateSchema.safeParse(body);

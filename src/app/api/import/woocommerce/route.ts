@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { parseCSV } from '@/lib/utils';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
 interface WooProduct {
   ID: string;
@@ -49,6 +50,8 @@ function extractImageUrls(imagesStr: string): string[] {
 // POST /api/import/woocommerce - Import products from WooCommerce CSV
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const categoryId = formData.get('categoryId') as string | null;

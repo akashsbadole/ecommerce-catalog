@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { parseCSV } from '@/lib/utils';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
 interface ShopifyProduct {
   Handle: string;
@@ -54,6 +55,8 @@ function getAllImages(products: ShopifyProduct[], handle: string): string[] {
 // POST /api/import/shopify - Import products from Shopify CSV
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const categoryId = formData.get('categoryId') as string | null;

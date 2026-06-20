@@ -103,6 +103,23 @@ Deleted products go to Trash. You can restore them or permanently delete.
 3. Support **hierarchical nesting** (parent/child categories)
 4. Categories with active products cannot be deleted
 
+#### Category Landing Pages
+
+Each category has a **rich landing page** with dedicated builder sections:
+
+| Field | Description |
+|---|---|
+| **Hero** | Large banner with heading, subtext, and optional buttons |
+| **Content Split** | Two-column text + image section |
+| **Cards** | Feature / info cards grid |
+| **CTA** | Call-to-action banner with button |
+| **Process** | Step-by-step process flow (up to 4 steps) |
+| **Infographic** | Image-rich infographic section |
+
+These fields render on the storefront at `/product/<slug>` (e.g. `/product/khakhra`). Use them to create branded, content-rich category landing pages — no coding required.
+
+Categories also support the full **Page Builder** via the block editor for more complex layouts (26+ block types available).
+
 ### Order Management
 
 1. Go to **Orders** tab
@@ -242,14 +259,15 @@ If you operate multiple stores:
 ### Browsing Products
 
 1. Visit the store homepage
-2. Browse **Featured Products** or navigate to **Catalogue**
+2. Browse **Featured Products** or navigate to **Catalogue** (`/product`)
 3. Use **filters** to narrow by:
    - Category
    - Price range
    - In-stock availability
-4. **Search** for products by name or description
+4. **Search** for products by name or description (opens enquiry modal directly)
 5. **Sort** by relevance, price, newest, or name
-6. Click a product to view details, specifications, and images
+6. Click a **category** to view its landing page at `/product/<slug>` with hero, cards, CTA, and other sections
+7. Click **Enquire** on any product card to open the enquiry modal — fill in quantity and message to send a request directly to the admin
 
 ### Shopping Cart & Checkout
 
@@ -286,9 +304,9 @@ Navigate to `/portal` after logging in as a B2B buyer:
 
 #### Submitting an Enquiry
 
-1. On any product page, click **Enquiry** or **Request Quote**
-2. Fill in quantity and message
-3. Submit - admins will respond with a formal quote
+1. On any **product card** (category pages, search results, featured products), click **Enquire**
+2. Fill in name, email, phone, quantity, and message
+3. Submit — admins will respond with a formal quote
 
 #### Responding to Quotes
 

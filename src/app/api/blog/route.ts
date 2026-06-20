@@ -5,6 +5,7 @@ import { blogPostSchema } from '@/lib/validations';
 import { getStoreId } from '@/lib/store-db';
 import { normalizeBlocksForStorage } from '@/lib/page-blocks';
 import { normalizeImageUrl } from '@/lib/utils';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
 export async function GET(request: NextRequest) {
   try {
@@ -100,6 +101,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
     const body = await request.json();
 
     // Auto-generate slug from title if not provided

@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -17,6 +18,8 @@ const UPLOAD_RATE_LIMIT = { maxRequests: 30, windowMs: 60 * 60 * 1000, prefix: '
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
     const rateLimitResponse = checkRateLimit(request, UPLOAD_RATE_LIMIT);
     if (rateLimitResponse) return rateLimitResponse;
 

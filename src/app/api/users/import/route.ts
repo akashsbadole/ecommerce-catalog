@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { parseCSV, generateRandomPassword } from '@/lib/utils';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
 // Max 10MB file size
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
 

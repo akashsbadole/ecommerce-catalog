@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
     const { ids, action } = await request.json();
     if (!ids || !Array.isArray(ids) || ids.length === 0 || !action) {
       return NextResponse.json({ error: 'ids and action required' }, { status: 400 });
     }
-
-    const role = request.headers.get('x-user-role');
 
     switch (action) {
       case 'activate':
@@ -18,9 +19,6 @@ export async function POST(request: NextRequest) {
         await db.category.updateMany({ where: { id: { in: ids } }, data: { isActive: false } });
         break;
       case 'delete':
-        if (role !== 'admin') {
-          return NextResponse.json({ error: 'Only admin can bulk delete categories' }, { status: 403 });
-        }
         await db.category.deleteMany({ where: { id: { in: ids } } });
         break;
       default:

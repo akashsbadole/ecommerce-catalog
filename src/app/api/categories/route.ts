@@ -4,6 +4,7 @@ import { logActivity } from '@/lib/activity-log';
 import { categorySchema } from '@/lib/validations';
 import { getStoreId } from '@/lib/store-db';
 import { normalizeImageUrl } from '@/lib/utils';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
 export async function GET(request: NextRequest) {
   try {
@@ -54,6 +55,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
     const body = await request.json();
 
     const result = categorySchema.safeParse(body);

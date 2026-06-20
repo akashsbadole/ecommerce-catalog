@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { parseCSV } from '@/lib/utils';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
 type Platform = 'native' | 'woocommerce' | 'shopify';
 
@@ -244,6 +245,8 @@ function mergeShopifyProduct(rows: ShopifyRow[], storeId?: string | null): Produ
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
     const forcePlatform = formData.get('platform') as string | null;

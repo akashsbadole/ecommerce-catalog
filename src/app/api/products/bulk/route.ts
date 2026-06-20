@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
 const MAX_BULK_SIZE = 100;
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdminAuth(request);
+    if (!auth.success) return auth.response;
     const { ids, action } = await request.json();
     if (!ids || !Array.isArray(ids) || ids.length === 0 || !action) {
       return NextResponse.json({ error: 'ids and action required' }, { status: 400 });
