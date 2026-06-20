@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
+import { put } from '@vercel/blob';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { requireAdminAuth } from '@/lib/admin-auth';
 
-const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_TYPES = [
   'image/jpeg',
@@ -15,6 +15,39 @@ const ALLOWED_TYPES = [
 const MAX_FILES_PER_REQUEST = 20;
 
 const UPLOAD_RATE_LIMIT = { maxRequests: 30, windowMs: 60 * 60 * 1000, prefix: 'upload' };
+
+function isVercelBlobConfigured(): boolean {
+  return !!(process.env.BLOB_READ_WRITE_TOKEN);
+}
+
+async function uploadToBlob(file: File, folder: string): Promise<{ url: string }> {
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const ext = path.extname(file.name);
+  const filename = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}${ext}`;
+  const pathname = folder === '/' ? filename : `${folder}/${filename}`;
+  const blob = await put(pathname, buffer, {
+    access: 'public',
+    contentType: file.type,
+  });
+  return { url: blob.url };
+}
+
+async function uploadToLocal(file: File, folder: string): Promise<{ url: string }> {
+  const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
+  const safeFolder = folder.replace(/\.\./g, '').replace(/^\/+/, '').replace(/\/+$/, '') || '/';
+  const targetDir = path.join(UPLOAD_DIR, safeFolder);
+  await mkdir(targetDir, { recursive: true });
+
+  const ext = path.extname(file.name);
+  const filename = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}${ext}`;
+  const filepath = path.join(targetDir, filename);
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  await writeFile(filepath, buffer);
+
+  const url = `/uploads${safeFolder === '/' ? '' : `/${safeFolder}`}/${filename}`;
+  return { url };
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,10 +71,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `Too many files (max ${MAX_FILES_PER_REQUEST})` }, { status: 400 });
     }
 
+    const useBlob = isVercelBlobConfigured();
     const safeFolder = folder.replace(/\.\./g, '').replace(/^\/+/, '').replace(/\/+$/, '') || '/';
-
-    const targetDir = path.join(UPLOAD_DIR, safeFolder);
-    await mkdir(targetDir, { recursive: true });
 
     const results: Array<{ filename: string; id?: string; url?: string; size?: number; error?: string }> = [];
 
@@ -57,17 +88,13 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        const ext = path.extname(file.name);
-        const filename = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}${ext}`;
-        const filepath = path.join(targetDir, filename);
+        const { url } = useBlob
+          ? await uploadToBlob(file, safeFolder)
+          : await uploadToLocal(file, safeFolder);
 
-        const buffer = Buffer.from(await file.arrayBuffer());
-        await writeFile(filepath, buffer);
-
-        const url = `/uploads${safeFolder === '/' ? '' : `/${safeFolder}`}/${filename}`;
         const media = await db.media.create({
           data: {
-            filename,
+            filename: path.basename(url),
             originalName: file.name,
             mimeType: file.type,
             size: file.size,
@@ -78,6 +105,7 @@ export async function POST(request: NextRequest) {
 
         results.push({ filename: file.name, id: media.id, url, size: file.size });
       } catch (error) {
+        console.error('Upload error for file:', file.name, error);
         results.push({ filename: file.name, error: 'Upload failed' });
       }
     }

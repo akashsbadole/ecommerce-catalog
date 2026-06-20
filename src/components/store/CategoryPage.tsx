@@ -37,6 +37,8 @@ const emptyFields: CategoryFieldData = {
   infographicImage: null,
   infographicCaption: null,
   infographicAltText: null,
+  faqTitle: null,
+  faqItems: "[]",
 };
 
 export function CategoryPage({ slug, onNavigate }: CategoryPageProps) {
@@ -98,6 +100,8 @@ export function CategoryPage({ slug, onNavigate }: CategoryPageProps) {
               infographicImage: cat.infographicImage || null,
               infographicCaption: cat.infographicCaption || null,
               infographicAltText: cat.infographicAltText || null,
+              faqTitle: cat.faqTitle || null,
+              faqItems: cat.faqItems || "[]",
             });
             const prodRes = await fetch(`/api/products?categoryId=${cat.id}`);
             if (prodRes.ok) {

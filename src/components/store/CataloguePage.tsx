@@ -288,10 +288,10 @@ export function CataloguePage({
       <section className="py-10 px-4">
         <div className="container mx-auto max-w-6xl">
           {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="border rounded-xl overflow-hidden">
-                  <Skeleton className="h-32 w-full" />
+                  <Skeleton className="h-28 sm:h-32 w-full" />
                   <div className="p-3 space-y-2">
                     <Skeleton className="h-3 w-16" />
                     <Skeleton className="h-4 w-3/4" />
@@ -341,7 +341,7 @@ export function CataloguePage({
                   {products.length} products
                 </p>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
                 {visibleProducts.map((product) => {
                   const image = getFirstImage(product.images);
                   return (
@@ -350,7 +350,7 @@ export function CataloguePage({
                       className="border rounded-xl overflow-hidden bg-background group transition-shadow hover:shadow-lg"
                     >
                       <div
-                        className="relative h-32 bg-muted flex items-center justify-center overflow-hidden cursor-pointer"
+                        className="relative h-28 sm:h-32 bg-muted flex items-center justify-center overflow-hidden cursor-pointer"
                         onClick={() =>
                           onNavigate(
                             "category",

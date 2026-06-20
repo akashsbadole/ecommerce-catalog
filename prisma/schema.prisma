@@ -162,6 +162,8 @@ model Category {
   infographicImage    String?
   infographicCaption  String?
   infographicAltText  String?
+  faqTitle        String?
+  faqItems        String             @default("[]")
   deletedAt       DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @default(now())

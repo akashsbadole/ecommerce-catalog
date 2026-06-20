@@ -173,6 +173,8 @@ export function AdminCategories() {
     infographicImage: "",
     infographicCaption: "",
     infographicAltText: "",
+    faqTitle: "",
+    faqItems: "[]",
   });
   const [savingSections, setSavingSections] = useState(false);
   const [activeSectionTab, setActiveSectionTab] = useState("details");
@@ -240,6 +242,8 @@ export function AdminCategories() {
       infographicImage: "",
       infographicCaption: "",
       infographicAltText: "",
+      faqTitle: "",
+      faqItems: "[]",
     });
   };
 
@@ -321,6 +325,8 @@ export function AdminCategories() {
             infographicImage: c.infographicImage || "",
             infographicCaption: c.infographicCaption || "",
             infographicAltText: c.infographicAltText || "",
+            faqTitle: c.faqTitle || "",
+            faqItems: c.faqItems || "[]",
           });
         }
         if (data.products) {
@@ -389,6 +395,8 @@ export function AdminCategories() {
         infographicImage: categoryFields.infographicImage || null,
         infographicCaption: categoryFields.infographicCaption || null,
         infographicAltText: categoryFields.infographicAltText || null,
+        faqTitle: categoryFields.faqTitle || null,
+        faqItems: categoryFields.faqItems || "[]",
       };
 
       const url = editingCategory

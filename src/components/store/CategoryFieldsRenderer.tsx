@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Send, ImageIcon } from "lucide-react";
+import { Send, ImageIcon, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
 import { getFirstImage } from "@/lib/utils";
@@ -31,6 +31,8 @@ export interface CategoryFieldData {
   infographicImage: string | null;
   infographicCaption: string | null;
   infographicAltText: string | null;
+  faqTitle: string | null;
+  faqItems: string;
 }
 
 function parseJsonArray<T>(val: string): T[] {
@@ -53,17 +55,17 @@ function HeroSection({
 }) {
   if (!title && !subtitle && !description) return null;
   return (
-    <section className="container mx-auto max-w-3xl px-4 py-12 text-center">
+    <section className="container mx-auto max-w-3xl px-4 py-10 md:py-12 text-center">
       {subtitle && (
-        <p className="text-sm font-medium text-primary uppercase tracking-wider mb-3">
+        <p className="text-xs sm:text-sm font-medium text-primary uppercase tracking-wider mb-3">
           {subtitle}
         </p>
       )}
       {title && (
-        <h1 className="text-3xl md:text-4xl font-bold mb-4">{title}</h1>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">{title}</h1>
       )}
       {description && (
-        <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl mx-auto">
+        <p className="text-muted-foreground text-sm sm:text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
           {description}
         </p>
       )}
@@ -84,9 +86,9 @@ function ContentSplitSection({
 }) {
   if (!heading && !paragraph && bullets.length === 0) return null;
   return (
-    <section className="container mx-auto max-w-5xl px-4 py-16">
-      <div className="grid md:grid-cols-2 gap-10 items-center">
-        <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-muted">
+    <section className="container mx-auto max-w-5xl px-4 py-12 md:py-16">
+      <div className="grid md:grid-cols-2 gap-6 md:gap-10 items-center">
+        <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-muted order-1 md:order-none">
           {image ? (
             <img
               src={image}
@@ -95,25 +97,25 @@ function ContentSplitSection({
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
-              <ImageIcon className="h-16 w-16 text-muted-foreground/30" />
+              <ImageIcon className="h-12 w-12 md:h-16 md:w-16 text-muted-foreground/30" />
             </div>
           )}
         </div>
         <div>
           {heading && (
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">{heading}</h2>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 md:mb-4">{heading}</h2>
           )}
           {paragraph && (
-            <p className="text-muted-foreground leading-relaxed mb-6">
+            <p className="text-muted-foreground text-sm sm:text-base leading-relaxed mb-4 md:mb-6">
               {paragraph}
             </p>
           )}
           {bullets.length > 0 && (
-            <ul className="space-y-3">
+            <ul className="space-y-2 md:space-y-3">
               {bullets.map((bullet, i) => (
-                <li key={i} className="flex items-start gap-3">
+                <li key={i} className="flex items-start gap-2 md:gap-3">
                   <span className="mt-1.5 h-2 w-2 rounded-full bg-primary flex-shrink-0" />
-                  <span className="text-foreground">{bullet}</span>
+                  <span className="text-foreground text-sm sm:text-base">{bullet}</span>
                 </li>
               ))}
             </ul>
@@ -172,27 +174,30 @@ function CardsSection({
     fetchProducts();
   }, [productIds.join(","), maxCount]);
 
+  const colCount = Math.min(columns, 4);
+  const gridClass =
+    colCount === 2
+      ? "grid grid-cols-1 sm:grid-cols-2 gap-4"
+      : colCount === 3
+        ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
+        : "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4";
+
   if (loading) {
     return (
-      <section className="container mx-auto max-w-6xl px-4 py-16">
+      <section className="container mx-auto max-w-6xl px-4 py-12 md:py-16">
         {title && (
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center mb-8 md:mb-10">
             {title}
           </h2>
         )}
-        <div
-          className="grid gap-4"
-          style={{
-            gridTemplateColumns: `repeat(${Math.min(columns, 4)}, minmax(0, 1fr))`,
-          }}
-        >
-          {Array.from({ length: Math.min(columns, 4) }).map((_, i) => (
+        <div className={gridClass}>
+          {Array.from({ length: colCount }).map((_, i) => (
             <div
               key={i}
               className="rounded-xl border bg-card animate-pulse overflow-hidden"
             >
-              <div className="h-48 bg-muted" />
-              <div className="p-4 space-y-2">
+              <div className="h-36 sm:h-40 md:h-48 bg-muted" />
+              <div className="p-3 md:p-4 space-y-2">
                 <div className="h-4 bg-muted rounded w-3/4" />
                 <div className="h-3 bg-muted rounded w-full" />
               </div>
@@ -206,18 +211,13 @@ function CardsSection({
   if (products.length === 0) return null;
 
   return (
-    <section className="container mx-auto max-w-6xl px-4 py-16">
+    <section className="container mx-auto max-w-6xl px-4 py-12 md:py-16">
       {title && (
-        <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center mb-8 md:mb-10">
           {title}
         </h2>
       )}
-      <div
-        className="grid gap-4"
-        style={{
-          gridTemplateColumns: `repeat(${Math.min(columns, 4)}, minmax(0, 1fr))`,
-        }}
-      >
+      <div className={gridClass}>
         {products.map((product) => {
           const image = getFirstImage(product.images);
           return (
@@ -225,7 +225,7 @@ function CardsSection({
               key={product.id}
               className="rounded-xl border bg-card overflow-hidden transition-shadow hover:shadow-md"
             >
-              <div className="relative h-48 bg-muted overflow-hidden">
+              <div className="relative h-36 sm:h-40 md:h-48 bg-muted overflow-hidden">
                 {image ? (
                   <img
                     src={image}
@@ -234,20 +234,20 @@ function CardsSection({
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
-                    <ImageIcon className="h-10 w-10 text-muted-foreground/30" />
+                    <ImageIcon className="h-8 w-8 md:h-10 md:w-10 text-muted-foreground/30" />
                   </div>
                 )}
               </div>
-              <div className="p-4">
-                <h3 className="font-semibold mb-1">{product.name}</h3>
+              <div className="p-3 md:p-4">
+                <h3 className="text-sm sm:text-base font-semibold mb-1">{product.name}</h3>
                 {product.shortDescription && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
+                  <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
                     {product.shortDescription}
                   </p>
                 )}
                 <Button
                   size="sm"
-                  className="w-full mt-3"
+                  className="w-full mt-2 md:mt-3 text-xs sm:text-sm"
                   onClick={() =>
                     useAppStore.getState().openEnquiryModal(
                       product.name,
@@ -255,7 +255,7 @@ function CardsSection({
                     )
                   }
                 >
-                  <Send className="mr-2 h-3.5 w-3.5" />
+                  <Send className="mr-2 h-3 w-3 sm:h-3.5 sm:w-3.5" />
                   Enquire
                 </Button>
               </div>
@@ -291,27 +291,28 @@ function CtaSection({
 
   return (
     <section
-      className={`py-16 ${isDark ? "bg-foreground text-background" : "bg-muted"}`}
+      className={`py-12 md:py-16 ${isDark ? "bg-foreground text-background" : "bg-muted"}`}
     >
       <div className="container mx-auto max-w-3xl px-4 text-center">
         {heading && (
           <h2
-            className={`text-2xl md:text-3xl font-bold mb-3 ${isDark ? "text-background" : ""}`}
+            className={`text-xl sm:text-2xl md:text-3xl font-bold mb-3 ${isDark ? "text-background" : ""}`}
           >
             {heading}
           </h2>
         )}
         {description && (
           <p
-            className={`text-lg mb-8 max-w-xl mx-auto ${isDark ? "text-background/70" : "text-muted-foreground"}`}
+            className={`text-sm sm:text-base md:text-lg mb-6 md:mb-8 max-w-xl mx-auto ${isDark ? "text-background/70" : "text-muted-foreground"}`}
           >
             {description}
           </p>
         )}
-        <div className="flex flex-wrap gap-4 justify-center">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
           {bulkText && (
             <Button
-              size="lg"
+              size="default"
+              className="w-full sm:w-auto text-sm sm:text-base"
               onClick={() => {
                 const [page, slug] = (bulkLink || "/contact")
                   .replace(/^\//, "")
@@ -328,7 +329,8 @@ function CtaSection({
           )}
           {privateLabelText && (
             <Button
-              size="lg"
+              size="default"
+              className="w-full sm:w-auto text-sm sm:text-base"
               variant={isDark ? "secondary" : "outline"}
               onClick={() => {
                 const [page, slug] = (privateLabelLink || "/contact")
@@ -340,7 +342,6 @@ function CtaSection({
                   onNavigate?.("content-page", slug || page);
                 }
               }}
-              className="text-white"
             >
               {privateLabelText}
             </Button>
@@ -362,14 +363,14 @@ function ProcessSection({
 }) {
   if (steps.length === 0) return null;
   return (
-    <section className="container mx-auto max-w-5xl px-4 py-16">
+    <section className="container mx-auto max-w-5xl px-4 py-12 md:py-16">
       {title && (
-        <h2 className="text-2xl md:text-3xl font-bold text-center mb-2">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center mb-2">
           {title}
         </h2>
       )}
       {subtitle && (
-        <p className="text-muted-foreground text-center mb-12 max-w-xl mx-auto">
+        <p className="text-muted-foreground text-sm sm:text-base text-center mb-8 md:mb-12 max-w-xl mx-auto">
           {subtitle}
         </p>
       )}
@@ -394,6 +395,48 @@ function ProcessSection({
   );
 }
 
+function FaqSection({
+  title,
+  items,
+}: {
+  title: string;
+  items: Array<{ question: string; answer: string }>;
+}) {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  if (items.length === 0) return null;
+  return (
+    <section className="container mx-auto max-w-3xl px-4 py-12 md:py-16">
+      {title && (
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center mb-8 md:mb-10">
+          {title}
+        </h2>
+      )}
+      <div className="space-y-3">
+        {items.map((item, i) => (
+          <div key={i} className="border rounded-lg overflow-hidden">
+            <button
+              className="flex w-full items-center justify-between px-4 md:px-6 py-3 md:py-4 text-left text-sm md:text-base font-medium hover:bg-muted/50 transition-colors"
+              onClick={() => setOpenIndex(openIndex === i ? null : i)}
+            >
+              <span className="pr-2">{item.question}</span>
+              <ChevronDown
+                className={`h-4 w-4 md:h-5 md:w-5 shrink-0 text-muted-foreground transition-transform duration-200 ${
+                  openIndex === i ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+            {openIndex === i && (
+              <div className="px-4 md:px-6 pb-3 md:pb-4 text-sm md:text-base text-muted-foreground">
+                {item.answer}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function InfographicSection({
   image,
   caption,
@@ -405,7 +448,7 @@ function InfographicSection({
 }) {
   if (!image && !caption) return null;
   return (
-    <section className="container mx-auto max-w-5xl px-4 py-16">
+    <section className="container mx-auto max-w-5xl px-4 py-12 md:py-16">
       <div className="rounded-xl overflow-hidden bg-muted">
         {image ? (
           <img
@@ -414,9 +457,9 @@ function InfographicSection({
             className="w-full h-auto object-cover"
           />
         ) : (
-          <div className="flex flex-col items-center justify-center py-24 text-center bg-gradient-to-br from-primary/5 to-primary/10">
-            <ImageIcon className="h-16 w-16 text-muted-foreground/30 mb-4" />
-            <p className="text-muted-foreground text-sm">
+          <div className="flex flex-col items-center justify-center py-16 md:py-24 text-center bg-gradient-to-br from-primary/5 to-primary/10">
+            <ImageIcon className="h-12 w-12 md:h-16 md:w-16 text-muted-foreground/30 mb-4" />
+            <p className="text-muted-foreground text-xs sm:text-sm">
               Infographic placeholder
             </p>
             {caption && (
@@ -428,7 +471,7 @@ function InfographicSection({
         )}
       </div>
       {caption && (
-        <p className="text-sm text-muted-foreground text-center mt-3">
+        <p className="text-xs sm:text-sm text-muted-foreground text-center mt-2 md:mt-3">
           {caption}
         </p>
       )}
@@ -449,6 +492,9 @@ export function CategoryFieldsRenderer({
   const productIds = parseJsonArray<string>(fields.cardsProductIds);
   const steps = parseJsonArray<{ title: string; description: string }>(
     fields.processSteps,
+  );
+  const faqItems = parseJsonArray<{ question: string; answer: string }>(
+    fields.faqItems,
   );
 
   return (
@@ -495,6 +541,11 @@ export function CategoryFieldsRenderer({
         image={fields.infographicImage || ""}
         caption={fields.infographicCaption || ""}
         altText={fields.infographicAltText || ""}
+      />
+
+      <FaqSection
+        title={fields.faqTitle || ""}
+        items={faqItems}
       />
     </>
   );

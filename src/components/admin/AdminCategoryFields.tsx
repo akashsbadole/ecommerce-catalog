@@ -11,6 +11,7 @@ import {
   GitMerge,
   Image,
   Save,
+  HelpCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -55,6 +56,8 @@ export interface CategoryFieldValues {
   infographicImage: string;
   infographicCaption: string;
   infographicAltText: string;
+  faqTitle: string;
+  faqItems: string;
 }
 
 interface AdminCategoryFieldsProps {
@@ -71,6 +74,7 @@ const sectionIcons: Record<string, React.ReactNode> = {
   cta: <MousePointerClick className="h-4 w-4" />,
   process: <GitMerge className="h-4 w-4" />,
   infographic: <Image className="h-4 w-4" />,
+  faq: <HelpCircle className="h-4 w-4" />,
 };
 
 export function AdminCategoryFields({
@@ -114,6 +118,21 @@ export function AdminCategoryFields({
     update("processSteps", JSON.stringify(newSteps));
   };
 
+  const faqItems: { question: string; answer: string }[] = (() => {
+    try {
+      const parsed = JSON.parse(values.faqItems || "[]");
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  })();
+
+  const setFaqItems = (
+    newItems: { question: string; answer: string }[],
+  ) => {
+    update("faqItems", JSON.stringify(newItems));
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -136,6 +155,7 @@ export function AdminCategoryFields({
           <TabsTrigger value="cta">CTA</TabsTrigger>
           <TabsTrigger value="process">Process</TabsTrigger>
           <TabsTrigger value="infographic">Info</TabsTrigger>
+          <TabsTrigger value="faq">FAQ</TabsTrigger>
         </TabsList>
 
         <TabsContent value="hero" className="space-y-4 pt-4">
@@ -510,6 +530,76 @@ export function AdminCategoryFields({
           </Card>
         </TabsContent>
 
+        <TabsContent value="faq" className="space-y-4 pt-4">
+          <Card className="p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              {sectionIcons.faq}
+              <Label className="text-base font-semibold">
+                FAQ Section
+              </Label>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cat-faq-title">Section Title</Label>
+              <Input
+                id="cat-faq-title"
+                placeholder="Frequently Asked Questions"
+                value={values.faqTitle}
+                onChange={(e) => update("faqTitle", e.target.value)}
+              />
+            </div>
+            <div className="space-y-3">
+              <Label>Questions & Answers</Label>
+              {faqItems.map((item, i) => (
+                <Card key={i} className="p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      Q&A {i + 1}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() =>
+                        setFaqItems(faqItems.filter((_, j) => j !== i))
+                      }
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <Input
+                    placeholder="Question"
+                    value={item.question}
+                    onChange={(e) => {
+                      const next = [...faqItems];
+                      next[i] = { ...next[i], question: e.target.value };
+                      setFaqItems(next);
+                    }}
+                  />
+                  <Textarea
+                    placeholder="Answer"
+                    value={item.answer}
+                    onChange={(e) => {
+                      const next = [...faqItems];
+                      next[i] = { ...next[i], answer: e.target.value };
+                      setFaqItems(next);
+                    }}
+                    rows={3}
+                  />
+                </Card>
+              ))}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setFaqItems([...faqItems, { question: "", answer: "" }])
+                }
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Question
+              </Button>
+            </div>
+          </Card>
+        </TabsContent>
 
       </Tabs>
     </div>
