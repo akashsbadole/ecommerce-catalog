@@ -955,7 +955,7 @@ function CapabilitiesBlock({
               {ctaText && (
                 <Button
                   variant="outline"
-                  className="mt-6 text-sm bg-primary"
+                  className="mt-6 text-sm bg-primary text-white"
                   onClick={() => {
                     if (ctaLink && onNavigate) {
                       onNavigate(
@@ -1189,7 +1189,7 @@ function FactoryReelBlock({
               <div className="absolute inset-0 bg-black/20 group hover:bg-black/30 transition-colors" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <button
-                  className="w-16 h-16 rounded-full bg-primay flex items-center justify-center cursor-pointer hover:scale-110 transition-transform shadow-xl text-brand-foreground bg-primary"
+                  className="w-16 h-16 rounded-full bg-primay flex items-center justify-center cursor-pointer hover:scale-110 transition-transform shadow-xl text-brand-foreground bg-primary text-white"
                   onClick={() => videoUrl && setIsVideoOpen(true)}
                 >
                   <Play className="h-6 w-6 ml-0.5" />
@@ -1199,7 +1199,7 @@ function FactoryReelBlock({
             {ctaText && (
               <Button
                 variant="outline"
-                className="mt-8 bg-primary"
+                className="mt-8 bg-primary text-white"
                 onClick={() =>
                   onNavigate &&
                   onNavigate(
@@ -1719,7 +1719,10 @@ function StickyCtaBlock({
                   } else if (btn.link?.startsWith("/blog/")) {
                     onNavigate?.("blog-post", btn.link.replace("/blog/", ""));
                   } else if (btn.link?.startsWith("/product/")) {
-                    onNavigate?.("product-page", btn.link.replace("/product/", ""));
+                    onNavigate?.(
+                      "product-page",
+                      btn.link.replace("/product/", ""),
+                    );
                   } else if (btn.link?.startsWith("/")) {
                     onNavigate?.("content-page", btn.link.replace(/^\//, ""));
                   } else if (btn.link) {

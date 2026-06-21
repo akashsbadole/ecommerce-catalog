@@ -62,7 +62,9 @@ function HeroSection({
         </p>
       )}
       {title && (
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">{title}</h1>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
+          {title}
+        </h1>
       )}
       {description && (
         <p className="text-muted-foreground text-sm sm:text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
@@ -103,7 +105,9 @@ function ContentSplitSection({
         </div>
         <div>
           {heading && (
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 md:mb-4">{heading}</h2>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 md:mb-4">
+              {heading}
+            </h2>
           )}
           {paragraph && (
             <p className="text-muted-foreground text-sm sm:text-base leading-relaxed mb-4 md:mb-6">
@@ -115,7 +119,9 @@ function ContentSplitSection({
               {bullets.map((bullet, i) => (
                 <li key={i} className="flex items-start gap-2 md:gap-3">
                   <span className="mt-1.5 h-2 w-2 rounded-full bg-primary flex-shrink-0" />
-                  <span className="text-foreground text-sm sm:text-base">{bullet}</span>
+                  <span className="text-foreground text-sm sm:text-base">
+                    {bullet}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -239,7 +245,9 @@ function CardsSection({
                 )}
               </div>
               <div className="p-3 md:p-4">
-                <h3 className="text-sm sm:text-base font-semibold mb-1">{product.name}</h3>
+                <h3 className="text-sm sm:text-base font-semibold mb-1">
+                  {product.name}
+                </h3>
                 {product.shortDescription && (
                   <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
                     {product.shortDescription}
@@ -249,10 +257,9 @@ function CardsSection({
                   size="sm"
                   className="w-full mt-2 md:mt-3 text-xs sm:text-sm"
                   onClick={() =>
-                    useAppStore.getState().openEnquiryModal(
-                      product.name,
-                      product.id,
-                    )
+                    useAppStore
+                      .getState()
+                      .openEnquiryModal(product.name, product.id)
                   }
                 >
                   <Send className="mr-2 h-3 w-3 sm:h-3.5 sm:w-3.5" />
@@ -330,7 +337,7 @@ function CtaSection({
           {privateLabelText && (
             <Button
               size="default"
-              className="w-full sm:w-auto text-sm sm:text-base"
+              className="w-full sm:w-auto text-sm sm:text-base text-white"
               variant={isDark ? "secondary" : "outline"}
               onClick={() => {
                 const [page, slug] = (privateLabelLink || "/contact")
@@ -543,10 +550,7 @@ export function CategoryFieldsRenderer({
         altText={fields.infographicAltText || ""}
       />
 
-      <FaqSection
-        title={fields.faqTitle || ""}
-        items={faqItems}
-      />
+      <FaqSection title={fields.faqTitle || ""} items={faqItems} />
     </>
   );
 }
