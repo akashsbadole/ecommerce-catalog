@@ -319,7 +319,7 @@ function CtaSection({
           {bulkText && (
             <Button
               size="default"
-              className="w-full sm:w-auto text-sm sm:text-base"
+              className="w-full sm:w-auto text-sm sm:text-base text-white"
               onClick={() => {
                 const [page, slug] = (bulkLink || "/contact")
                   .replace(/^\//, "")
