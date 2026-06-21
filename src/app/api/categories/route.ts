@@ -116,6 +116,10 @@ export async function POST(request: NextRequest) {
         infographicImage: validatedData.infographicImage || null,
         infographicCaption: validatedData.infographicCaption || null,
         infographicAltText: validatedData.infographicAltText || null,
+
+        // FAQ fields
+        faqTitle: validatedData.faqTitle || null,
+        faqItems: validatedData.faqItems || '[]',
         parentId: body.parentId || null,
         ...(storeId ? { storeId } : {}),
       },

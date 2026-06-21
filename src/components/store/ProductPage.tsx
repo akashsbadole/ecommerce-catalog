@@ -29,7 +29,13 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
     metaTitle: string | null;
     metaDescription: string | null;
     ogImage: string | null;
-    Category: { id: string; name: string; slug: string; faqTitle: string | null; faqItems: string } | null;
+    Category: {
+      id: string;
+      name: string;
+      slug: string;
+      faqTitle: string | null;
+      faqItems: string;
+    } | null;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [faqOpenIndex, setFaqOpenIndex] = useState<number | null>(null);

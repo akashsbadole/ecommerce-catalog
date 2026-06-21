@@ -105,6 +105,10 @@ export async function PUT(
         ...(body.infographicImage !== undefined && { infographicImage: body.infographicImage || null }),
         ...(body.infographicCaption !== undefined && { infographicCaption: body.infographicCaption || null }),
         ...(body.infographicAltText !== undefined && { infographicAltText: body.infographicAltText || null }),
+
+        // FAQ fields
+        ...(body.faqTitle !== undefined && { faqTitle: body.faqTitle || null }),
+        ...(body.faqItems !== undefined && { faqItems: body.faqItems || '[]' }),
         ...(body.parentId !== undefined && {
           parentId: body.parentId || null,
         }),

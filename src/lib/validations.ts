@@ -64,6 +64,10 @@ export const categorySchema = z.object({
   infographicImage: z.string().optional().nullable(),
   infographicCaption: z.string().optional().nullable(),
   infographicAltText: z.string().optional().nullable(),
+
+  // FAQ fields
+  faqTitle: z.string().optional().nullable(),
+  faqItems: z.string().optional().nullable().default('[]'),
 });
 
 export const enquirySchema = z.object({
