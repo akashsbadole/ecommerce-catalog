@@ -96,6 +96,7 @@ export function ManufacturingPage({
       ctaText?: string;
       ctaLink?: string;
       ctaEnabled?: boolean;
+      image?: string;
     }>) || [];
   const qualitySteps =
     (data.qualitySteps as Array<{
@@ -188,8 +189,18 @@ export function ManufacturingPage({
           </div>
           <div className="border rounded-xl overflow-hidden">
             <div className="flex flex-col md:flex-row">
-              <div className="w-full md:w-[280px] h-48 md:h-auto bg-muted flex items-center justify-center text-muted-foreground text-sm flex-shrink-0">
-                {activeLineData?.name} machinery photo
+              <div className="w-full md:w-[280px] h-48 md:h-auto bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+                {activeLineData?.image ? (
+                  <img
+                    src={activeLineData.image}
+                    alt={activeLineData.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-muted-foreground text-sm">
+                    {activeLineData?.name} machinery photo
+                  </span>
+                )}
               </div>
               <div className="flex-1 p-6">
                 <div className="flex items-center justify-between mb-4">

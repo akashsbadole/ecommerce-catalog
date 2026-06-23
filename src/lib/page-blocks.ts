@@ -1043,6 +1043,7 @@ export const BLOCK_DEFAULTS: Record<
           ctaText: "View Products →",
           ctaLink: "category",
           ctaEnabled: true,
+          image: "",
         },
         {
           id: "bhakhri",
@@ -1056,6 +1057,7 @@ export const BLOCK_DEFAULTS: Record<
           ctaText: "View Products →",
           ctaLink: "category",
           ctaEnabled: true,
+          image: "",
         },
         {
           id: "makhana",
@@ -1069,6 +1071,7 @@ export const BLOCK_DEFAULTS: Record<
           ctaText: "View Products →",
           ctaLink: "category",
           ctaEnabled: true,
+          image: "",
         },
         {
           id: "extruder",
@@ -1082,6 +1085,7 @@ export const BLOCK_DEFAULTS: Record<
           ctaText: "View Products →",
           ctaLink: "category",
           ctaEnabled: true,
+          image: "",
         },
         {
           id: "digestive",
@@ -1095,6 +1099,7 @@ export const BLOCK_DEFAULTS: Record<
           ctaText: "View Products →",
           ctaLink: "category",
           ctaEnabled: true,
+          image: "",
         },
       ],
       qualitySteps: [

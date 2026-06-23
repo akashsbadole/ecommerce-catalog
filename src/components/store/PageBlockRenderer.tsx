@@ -1304,16 +1304,6 @@ function CertificationsBlock({
   const gallery =
     (data.gallery as Array<{ image: string; caption: string }>) || [];
   const hasGallery = gallery.length > 0 && gallery.some((g) => g.image);
-  if (typeof window !== "undefined") {
-    console.log(
-      "[CertificationsBlock] data keys:",
-      Object.keys(data),
-      "gallery:",
-      data.gallery,
-      "items:",
-      data.items,
-    );
-  }
 
   return (
     <section className="bg-muted/30 border-y">
