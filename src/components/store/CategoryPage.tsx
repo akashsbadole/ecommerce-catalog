@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useSeo } from "@/lib/use-seo";
 import { CategoryFieldsRenderer } from "./CategoryFieldsRenderer";
 import type { CategoryFieldData } from "./CategoryFieldsRenderer";
+import { StoreLoading } from "./StoreLoading";
 
 interface CategoryPageProps {
   slug: string;
@@ -126,11 +127,7 @@ export function CategoryPage({ slug, onNavigate }: CategoryPageProps) {
   });
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
-      </div>
-    );
+    return <StoreLoading />;
   }
 
   if (!category) {

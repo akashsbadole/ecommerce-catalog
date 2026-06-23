@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageBlockRenderer } from "./PageBlockRenderer";
 import type { PageBlock } from "@/lib/page-blocks";
 import { normalizePageBlocks } from "@/lib/page-blocks";
 import { useSeo } from "@/lib/use-seo";
+import { StoreLoading } from "./StoreLoading";
 
 interface HomePageProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -101,21 +101,8 @@ export function HomePage({
     },
   });
 
-  // Loading state
   if (cmsLoading) {
-    return (
-      <div className="flex flex-col gap-8">
-        <Skeleton className="h-[400px] w-full rounded-xl" />
-        <Skeleton className="h-20 w-full rounded-xl" />
-        <div className="grid grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-40 rounded-xl" />
-          ))}
-        </div>
-        <Skeleton className="h-32 w-full rounded-xl" />
-        <Skeleton className="h-40 w-full rounded-xl" />
-      </div>
-    );
+    return <StoreLoading />;
   }
 
   // Error state

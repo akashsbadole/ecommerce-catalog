@@ -142,6 +142,28 @@ export const useAppStore = create<AppState>()(
             const rawSlug = (data as string) || "";
             const slug = rawSlug.replace(/^\/+/, "");
             if (!slug) break;
+            // Redirect known dedicated-page slugs to their proper page type
+            const SLUG_REDIRECTS: Record<string, string> = {
+              "blog": "blog",
+              "products": "products",
+              "product": "products",
+              "about": "about",
+              "about-us": "about",
+              "about-page-content": "about",
+              "manufacturing": "manufacturing",
+              "mfg-page-content": "manufacturing",
+              "contact": "contact",
+              "contact-us": "contact",
+              "catalogue": "catalogue",
+              "catalog": "catalogue",
+              "home": "home",
+              "homepage": "home",
+            };
+            const redirectPage = SLUG_REDIRECTS[slug];
+            if (redirectPage) {
+              get().navigate(redirectPage);
+              break;
+            }
             set({
               currentPage: { type: "content-page", slug },
             });

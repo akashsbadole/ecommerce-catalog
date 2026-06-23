@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Package,
   Box,
@@ -13,15 +13,10 @@ import {
   Clock,
 } from "lucide-react";
 import { useAppStore } from '@/lib/store';
-import { useContentPage, getBlockData } from "@/lib/use-page-content";
-import { BLOCK_DEFAULTS } from "@/lib/page-blocks";
+import { BLOCK_DEFAULTS, deepMerge } from "@/lib/page-blocks";
 import { useSeo } from "@/lib/use-seo";
-
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-}
+import { StoreHeroBanner } from "@/components/store/StoreHeroBanner";
+import { useContentPage, getPageContentData } from "@/lib/use-page-content";
 
 interface ContactPageProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -53,20 +48,36 @@ function ResolvedIcon({
 
 export function ContactPage({
   onNavigate,
-  data: externalData,
+  data: _data,
 }: ContactPageProps) {
-  const { blocks, meta, loading } = useContentPage("contact-page-content");
   useSeo("contact", {
-    title: meta?.metaTitle || meta?.title,
-    description: meta?.metaDescription,
-    ogImage: meta?.ogImage,
+    title: "Contact Us | Purva Bites",
+    description: "Looking for bulk supply, private label manufacturing or a distribution partnership? Share your requirement and we'll respond within 24 hours.",
   });
-  const rawData = getBlockData(blocks, "contact-page-content");
-  if (loading && !externalData) return null;
-  const data =
-    externalData ??
-    rawData ??
-    BLOCK_DEFAULTS["contact-page-content"].defaultData;
+
+  const [selectedType, setSelectedType] = useState<string>("bulk");
+
+  const slugMap: Record<string, string> = {
+    "about-page-content": "about-us",
+    "mfg-page-content": "manufacturing",
+    "contact-page-content": "contact",
+    home: "homepage",
+  };
+
+  const cmsSlug =
+    (slugMap["contact-page-content"] as string | undefined) ||
+    "contact-page-content";
+
+  const { blocks: contactBlocks } = useContentPage("contact-page-content");
+  const { blocks: fallbackBlocks } = useContentPage(cmsSlug);
+  const effectiveBlocks = contactBlocks ?? fallbackBlocks;
+  const cmsContactData = getPageContentData(
+    effectiveBlocks,
+    "contact-page-content",
+    BLOCK_DEFAULTS["contact-page-content"].defaultData,
+  );
+  const fallbackContact = BLOCK_DEFAULTS["contact-page-content"].defaultData;
+  const data = deepMerge(fallbackContact, cmsContactData);
 
   const hero = (data.hero as Record<string, unknown>) || {};
   const requirementTypes =
@@ -75,6 +86,7 @@ export function ContactPage({
       label: string;
       icon: string;
     }>) || [];
+
   const formSection = (data.formSection as Record<string, string>) || {};
   const responsePromise =
     (data.responsePromise as Record<string, unknown>) || {};
@@ -94,52 +106,15 @@ export function ContactPage({
       buttons?: Array<{ text: string; icon: string }>;
     }>) || [];
 
-  const [selectedType, setSelectedType] = useState(
-    requirementTypes[0]?.id || "bulk",
-  );
-  const [categories, setCategories] = useState<Category[]>([]);
-
-  useEffect(() => {
-    fetch("/api/categories")
-      .then((r) => (r.ok ? r.json() : { categories: [] }))
-      .then((d) => setCategories(d.categories || []))
-      .catch(() => {});
-  }, []);
-
   return (
     <div className="flex flex-col">
       {/* CT0: Hero */}
-      <section className="bg-gradient-to-br from-gray-900 via-[#abd0ff] to-gray-900 py-28 px-4">
-        <div className="container mx-auto max-w-5xl text-center">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/80 mb-4">
-            Get in touch
-          </p>
-          <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4 text-gray">
-            {(hero.title as string) || "Let's talk about your requirement"}
-          </h1>
-          {(hero.subtitle as string) && (
-            <p className="text-gray max-w-2xl mx-auto leading-relaxed mb-8">
-              {hero.subtitle as string}
-            </p>
-          )}
-          <div className="flex gap-2 justify-center flex-wrap">
-            {requirementTypes.map((type) => (
-              <button
-                key={type.id}
-                onClick={() => setSelectedType(type.id)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium border transition-colors ${
-                  selectedType === type.id
-                    ? "bg-black/40 text-primary border-white"
-                    : "bg-black/40 border-white/20 text-gray hover:bg-black/40"
-                }`}
-              >
-                <ResolvedIcon name={type.icon} className="h-3.5 w-3.5" />
-                {type.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
+      <StoreHeroBanner
+        hero={hero}
+        requirementTypes={requirementTypes}
+        selectedType={selectedType}
+        onSelectType={setSelectedType}
+      />
 
       {/* CT1: Shared Contact Form */}
       <section id="contact-form" className="bg-white py-12 px-4">

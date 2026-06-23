@@ -320,28 +320,21 @@ export function AdminMenus() {
 
   const moveMenuItem = (id: string, direction: 'up' | 'down') => {
     setForm(prev => {
-      const newItems = [...prev.items];
-      const idx = newItems.findIndex(i => i.id === id);
+      const siblings = prev.items.filter(i => i.parentId === prev.items.find(x => x.id === id)?.parentId);
+      const sorted = [...siblings].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+      const idx = sorted.findIndex(i => i.id === id);
       if (idx === -1) return prev;
-      const item = newItems[idx];
-      // Find adjacent sibling (same parentId) in current array order
-      const step = direction === 'up' ? -1 : 1;
-      let targetIdx = -1;
-      for (let i = idx + step; i >= 0 && i < newItems.length; i += step) {
-        if (newItems[i].parentId === item.parentId) {
-          targetIdx = i;
-          break;
-        }
-      }
-      if (targetIdx === -1) return prev;
-      // Move item to target position
-      newItems.splice(idx, 1);
-      const insertAt = targetIdx > idx ? targetIdx - 1 : targetIdx;
-      newItems.splice(insertAt, 0, item);
-      // Recalculate sortOrder for siblings of the same parent
-      const siblings = newItems.filter(i => i.parentId === item.parentId);
-      siblings.forEach((sib, i) => { sib.sortOrder = i; });
-      return { ...prev, items: newItems };
+      if (direction === 'up' && idx === 0) return prev;
+      if (direction === 'down' && idx === sorted.length - 1) return prev;
+      const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+      const currentSort = sorted[idx].sortOrder ?? 0;
+      const swapSort = sorted[swapIdx].sortOrder ?? 0;
+      const updatedItems = prev.items.map(i => {
+        if (i.id === sorted[idx].id) return { ...i, sortOrder: swapSort };
+        if (i.id === sorted[swapIdx].id) return { ...i, sortOrder: currentSort };
+        return i;
+      });
+      return { ...prev, items: updatedItems };
     });
   };
 

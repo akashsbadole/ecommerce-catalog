@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { getFirstImage } from "@/lib/utils";
 import { useSeo } from "@/lib/use-seo";
 import { useAppStore } from "@/lib/store";
+import { StoreLoading } from "./StoreLoading";
 
 interface ProductPageProps {
   slug: string;
@@ -77,11 +78,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
   })();
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
-      </div>
-    );
+    return <StoreLoading />;
   }
 
   if (!product) {

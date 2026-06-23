@@ -91,6 +91,10 @@ export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
                   else if (segs[0] === "catalogue") onNavigate("catalogue");
                   else if (segs[0] === "blog" && segs[1]) onNavigate("blog-post", segs[1]);
                   else if (segs[0] === "blog") onNavigate("blog");
+                  else if (segs[0] === "about") onNavigate("about");
+                  else if (segs[0] === "manufacturing") onNavigate("manufacturing");
+                  else if (segs[0] === "contact") onNavigate("contact");
+                  else if (segs[0] === "products" || (segs[0] === "product" && !segs[1])) onNavigate("products");
                   else onNavigate("content-page", segs.join("/"));
                 } else {
                   window.open(item.url, "_blank");

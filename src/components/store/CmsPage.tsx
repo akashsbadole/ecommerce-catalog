@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useState, useEffect } from 'react';
 import { PageBlockRenderer } from './PageBlockRenderer';
 import type { PageBlock } from '@/lib/page-blocks';
 import { normalizePageBlocks } from '@/lib/page-blocks';
 import { useSeo } from '@/lib/use-seo';
+import { StoreLoading } from './StoreLoading';
 
 interface PageData {
   title: string;
@@ -24,17 +24,20 @@ export function CmsPage({ slug, onNavigate, fallbackBlocks }: CmsPageProps) {
   const [blocks, setBlocks] = useState<PageBlock[] | null>(null);
   const [pageData, setPageData] = useState<PageData | null>(null);
   const [loading, setLoading] = useState(true);
-  const fetchedRef = useRef(false);
 
   useEffect(() => {
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
+    let cancelled = false;
+    setLoading(true);
+    setBlocks(null);
+    setPageData(null);
 
     const fetchPage = async () => {
       try {
         const res = await fetch(`/api/content-pages?slug=${encodeURIComponent(slug)}`, { cache: 'no-store' });
+        if (cancelled) return;
         if (res.ok) {
           const data = await res.json();
+          if (cancelled) return;
           const pages = data.contentPages || [];
           if (pages.length > 0) {
             const page = pages[0];
@@ -64,14 +67,20 @@ export function CmsPage({ slug, onNavigate, fallbackBlocks }: CmsPageProps) {
         }
 
       } catch {
-        if (fallbackBlocks) {
+        if (!cancelled && fallbackBlocks) {
           setBlocks(fallbackBlocks);
         }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
     fetchPage();
+
+    return () => {
+      cancelled = true;
+    };
   }, [slug, fallbackBlocks]);
 
   useSeo(`cms-${slug}`, {
@@ -81,17 +90,7 @@ export function CmsPage({ slug, onNavigate, fallbackBlocks }: CmsPageProps) {
   });
 
   if (loading) {
-    return (
-      <div className="flex flex-col gap-8">
-        <Skeleton className="h-[300px] w-full rounded-xl" />
-        <Skeleton className="h-20 w-full rounded-xl" />
-        <div className="grid grid-cols-3 gap-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-40 rounded-xl" />
-          ))}
-        </div>
-      </div>
-    );
+    return <StoreLoading />;
   }
 
   if (!blocks || blocks.length === 0) {

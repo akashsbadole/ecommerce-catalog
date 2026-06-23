@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
-  Award,
   Factory,
   Leaf,
   Filter,
@@ -15,15 +14,10 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
-import { useContentPage, getBlockData } from "@/lib/use-page-content";
-import { BLOCK_DEFAULTS } from "@/lib/page-blocks";
+import { BLOCK_DEFAULTS, deepMerge } from "@/lib/page-blocks";
 import { useSeo } from "@/lib/use-seo";
-
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-}
+import { StoreHeroBanner } from "@/components/store/StoreHeroBanner";
+import { useContentPage, getPageContentData } from "@/lib/use-page-content";
 
 interface ManufacturingPageProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -40,7 +34,6 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Factory,
   Settings,
   ShieldCheck,
-  Award,
 };
 
 function ResolvedIcon({
@@ -57,22 +50,35 @@ function ResolvedIcon({
 
 export function ManufacturingPage({
   onNavigate,
-  data: externalData,
+  data: _data,
 }: ManufacturingPageProps) {
-  const { blocks, meta, loading } = useContentPage("mfg-page-content");
   useSeo("manufacturing", {
-    title: meta?.metaTitle || meta?.title,
-    description: meta?.metaDescription,
-    ogImage: meta?.ogImage,
+    title: "State-of-the-art FMCG contract manufacturing | Purva Bites",
+    description: "From raw material to finished, packaged goods — at scale, with precision, under one roof in Gujarat. FSSAI certified, 100% own manufacturing.",
   });
-  const rawData = getBlockData(blocks, "mfg-page-content");
-  if (loading && !externalData) return null;
-  const data =
-    externalData ?? rawData ?? BLOCK_DEFAULTS["mfg-page-content"].defaultData;
-
   const [activeLine, setActiveLine] = useState("khakhra");
-  const [categories, setCategories] = useState<Category[]>([]);
 
+  const slugMap: Record<string, string> = {
+    "about-page-content": "about-us",
+    "mfg-page-content": "manufacturing",
+    "contact-page-content": "contact",
+    home: "homepage",
+  };
+
+  const cmsSlug =
+    (slugMap["mfg-page-content"] as string | undefined) ||
+    "mfg-page-content";
+
+  const { blocks: mfgBlocks } = useContentPage("mfg-page-content");
+  const { blocks: fallbackBlocks } = useContentPage(cmsSlug);
+  const effectiveBlocks = mfgBlocks ?? fallbackBlocks;
+  const cmsMfgData = getPageContentData(
+    effectiveBlocks,
+    "mfg-page-content",
+    BLOCK_DEFAULTS["mfg-page-content"].defaultData,
+  );
+  const fallbackMfg = BLOCK_DEFAULTS["mfg-page-content"].defaultData;
+  const data = deepMerge(fallbackMfg, cmsMfgData);
   const hero = (data.hero as Record<string, unknown>) || {};
   const metrics =
     (data.metrics as Array<{ value: string; label: string }>) || [];
@@ -115,56 +121,10 @@ export function ManufacturingPage({
   const activeLineData =
     productionLines.find((l) => l.id === activeLine) || productionLines[0];
 
-  useEffect(() => {
-    fetch("/api/categories")
-      .then((r) => (r.ok ? r.json() : { categories: [] }))
-      .then((data) => setCategories(data.categories || []))
-      .catch(() => {});
-  }, []);
-
   return (
     <div className="flex flex-col">
       {/* M1: Hero */}
-      <section className="relative bg-gradient-to-br from-green-900 via-[#abd0ff] to-green-900 text-white py-28 px-4">
-        <div className="absolute inset-0 bg-black/40" />
-        <div className="relative container mx-auto max-w-5xl text-center">
-          {(hero.badge as string) && (
-            <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 text-xs text-emerald-300 mb-6">
-              <Award className="h-3.5 w-3.5" /> {hero.badge as string}
-            </div>
-          )}
-          <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
-            {(hero.title as string) ||
-              "State-of-the-art FMCG contract manufacturing"}
-          </h1>
-          {(hero.subtitle as string) && (
-            <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed mb-8">
-              {hero.subtitle as string}
-            </p>
-          )}
-          <div className="flex gap-4 justify-center">
-            {(
-              hero.buttons as Array<{
-                text: string;
-                page?: string;
-                variant: string;
-              }>
-            )?.map((btn, i) => (
-              <button
-                key={i}
-                onClick={() => btn.page && onNavigate(btn.page)}
-                className={
-                  btn.variant === "primary"
-                    ? "bg-primary text-primary-foreground text-sm font-medium rounded-full px-6 py-2.5 hover:bg-primary/90 transition-colors"
-                    : "bg-white/10 text-gray-300 text-sm font-medium rounded-full px-6 py-2.5 hover:bg-white/20 transition-colors"
-                }
-              >
-                {btn.text}
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
+      <StoreHeroBanner hero={hero} onNavigate={onNavigate} />
 
       {/* Intro + Metrics */}
       <section className="bg-muted/40 py-12 px-4">

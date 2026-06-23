@@ -14,10 +14,11 @@ import {
   MapPin,
   Linkedin,
 } from "lucide-react";
-import { useContentPage, getBlockData } from "@/lib/use-page-content";
-import { BLOCK_DEFAULTS } from "@/lib/page-blocks";
+import { BLOCK_DEFAULTS, deepMerge } from "@/lib/page-blocks";
 import { useAppStore } from "@/lib/store";
 import { useSeo } from "@/lib/use-seo";
+import { StoreHeroBanner } from "@/components/store/StoreHeroBanner";
+import { useContentPage, getPageContentData } from "@/lib/use-page-content";
 
 interface AboutPageProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -50,19 +51,36 @@ function ResolvedIcon({
   return null;
 }
 
-export function AboutPage({ onNavigate, data: externalData }: AboutPageProps) {
-  const { blocks, meta, loading } = useContentPage("about-page-content");
+export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
   useSeo("about", {
-    title: meta?.metaTitle || meta?.title,
-    description: meta?.metaDescription,
-    ogImage: meta?.ogImage,
+    title: "About Us | Purva Bites",
+    description:
+      "Built on trust. Driven by quality. From a distribution background to a full-scale FMCG manufacturing company — the Purva Bites story is one of conviction and craft.",
   });
-  const rawData = getBlockData(blocks, "about-page-content");
-  if (loading && !externalData) return null;
-  const data =
-    externalData ?? rawData ?? BLOCK_DEFAULTS["about-page-content"].defaultData;
 
-  const hero = (data.hero as Record<string, string>) || {};
+  const slugMap: Record<string, string> = {
+    "about-page-content": "about-us",
+    "mfg-page-content": "manufacturing",
+    "contact-page-content": "contact",
+    home: "homepage",
+  };
+
+  const cmsSlug =
+    (slugMap["about-page-content"] as string | undefined) ||
+    "about-page-content";
+
+  const { blocks: aboutBlocks } = useContentPage("about-page-content");
+  const { blocks: fallbackBlocks } = useContentPage(cmsSlug);
+  const effectiveBlocks = aboutBlocks ?? fallbackBlocks;
+  const cmsAboutData = getPageContentData(
+    effectiveBlocks,
+    "about-page-content",
+    BLOCK_DEFAULTS["about-page-content"].defaultData,
+  );
+  const fallbackAbout = BLOCK_DEFAULTS["about-page-content"].defaultData;
+  const data = deepMerge(fallbackAbout, cmsAboutData);
+
+  const hero = (data.hero as Record<string, unknown>) || {};
   const stats = (data.stats as Array<{ value: string; label: string }>) || [];
   const story = (data.story as Record<string, unknown>) || {};
   const narrative = (story.narrative as string[]) || [];
@@ -114,31 +132,7 @@ export function AboutPage({ onNavigate, data: externalData }: AboutPageProps) {
   return (
     <div className="flex flex-col">
       {/* A1: Hero */}
-      <section className="relative bg-gradient-to-br from-green-900 via-[#abd0ff] to-green-900 text-white py-28 px-4">
-        {hero.backgroundImage && (
-          <img
-            src={hero.backgroundImage as string}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        )}
-        <div className="absolute inset-0 bg-black/40" />
-        <div className="relative container mx-auto max-w-5xl text-center">
-          {(hero.estYear as string) && (
-            <p className="text-xs uppercase tracking-[0.2em] text-gray-400 mb-3">
-              {hero.estYear as string}
-            </p>
-          )}
-          <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
-            {(hero.title as string) || "Built on trust. Driven by quality."}
-          </h1>
-          {(hero.subtitle as string) && (
-            <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed">
-              {hero.subtitle as string}
-            </p>
-          )}
-        </div>
-      </section>
+      <StoreHeroBanner hero={hero} />
 
       {/* A2: Who we are */}
       <section className="bg-muted/40 py-16 px-4">
@@ -259,7 +253,7 @@ export function AboutPage({ onNavigate, data: externalData }: AboutPageProps) {
                 key={i}
                 className="bg-background border rounded-xl overflow-hidden"
               >
-                <div className="h-40 bg-muted flex items-center justify-center overflow-hidden">
+                <div className="h-[65%] bg-muted flex items-center justify-center overflow-hidden">
                   {director.imageUrl ? (
                     <img
                       src={director.imageUrl}
@@ -295,7 +289,7 @@ export function AboutPage({ onNavigate, data: externalData }: AboutPageProps) {
                 </div>
               </div>
             ))}
-            <div className="flex flex-col gap-4 justify-center">
+            <div className="flex flex-col gap-4 justify-start">
               {(quoteData.text as string) ? (
                 <div className="bg-primary/5 border border-primary/20 rounded-xl p-5">
                   <Quote className="h-5 w-5 text-primary mb-3" />

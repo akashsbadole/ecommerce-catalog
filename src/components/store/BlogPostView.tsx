@@ -12,8 +12,8 @@ import {
   Share2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { StoreLoading } from "./StoreLoading";
 import { SocialShare } from "./SocialShare";
 import { generateArticleSchema } from "@/lib/seo/schema-generator";
 import { useSeo } from "@/lib/use-seo";
@@ -168,21 +168,7 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
   }, [post]);
 
   if (loading) {
-    return (
-      <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-        <Skeleton className="h-4 w-40" />
-        <Skeleton className="h-10 w-3/4" />
-        <Skeleton className="h-4 w-60" />
-        <Skeleton className="h-[400px] w-full rounded-xl" />
-        <div className="space-y-4 mt-8">
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-5/6" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-4/5" />
-        </div>
-      </div>
-    );
+    return <StoreLoading />;
   }
 
   if (error || !post) {

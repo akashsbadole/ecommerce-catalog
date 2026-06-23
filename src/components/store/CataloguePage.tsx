@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Search, ShoppingCart, X, Eye, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
+import { StoreLoading } from "./StoreLoading";
 import { toast } from "sonner";
 import {
   Select,
@@ -288,19 +288,7 @@ export function CataloguePage({
       <section className="py-10 px-4">
         <div className="container mx-auto max-w-6xl">
           {loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="border rounded-xl overflow-hidden">
-                  <Skeleton className="h-28 sm:h-32 w-full" />
-                  <div className="p-3 space-y-2">
-                    <Skeleton className="h-3 w-16" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-3 w-full" />
-                    <Skeleton className="h-8 w-full" />
-                  </div>
-                </div>
-              ))}
-            </div>
+            <StoreLoading />
           ) : products.length === 0 ? (
             <div className="text-center py-16">
               <ShoppingCart className="mx-auto h-12 w-12 text-muted-foreground" />

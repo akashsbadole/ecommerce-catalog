@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getFirstImage } from "@/lib/utils";
+import { cn, getFirstImage } from "@/lib/utils";
 import { formatPrice as libFormatPrice } from "@/lib/pricing";
 import Link from "next/link";
 
@@ -68,7 +68,7 @@ interface MenuItem {
 const mainNavLinks: NavItem[] = [];
 
 export function StoreHeader({ onNavigate }: StoreHeaderProps) {
-  const { settings } = useAppStore();
+  const { currentPage, settings } = useAppStore();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -255,28 +255,77 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
     useAppStore.getState().openEnquiryModal(product.name, product.id);
   };
 
-  const navigateOrOpen = useCallback((item: { url?: string | null; page?: string | null; slug?: string | null; openInNewTab?: boolean | null }) => {
-    if (item.url) {
-      if (item.url.startsWith("/")) {
-        const segments = item.url.split("/").filter(Boolean);
-        const p = segments.join("/");
-            if (segments[0] === "product" && segments[1]) onNavigate("category", segments[1]);
-            else if (segments[0] === "product") onNavigate("products");
-        else if (segments[0] === "catalogue" && segments[1]) onNavigate("category", segments[1]);
-        else if (segments[0] === "catalogue") onNavigate("catalogue");
-        else if (segments[0] === "blog" && segments[1]) onNavigate("blog-post", segments[1]);
-        else if (segments[0] === "blog") onNavigate("blog");
-        else if (segments[0] === "about") onNavigate("content-page", "about-us");
-        else if (segments[0] === "manufacturing") onNavigate("content-page", "manufacturing");
-        else if (segments[0] === "contact") onNavigate("content-page", "contact");
-        else onNavigate("content-page", p);
-      } else {
-        window.open(item.url, item.openInNewTab ? "_blank" : "_self");
+  // Map known content-page slugs to their dedicated page routes so menu items
+  // configured as "content-page" with e.g. slug="about-us" or "mfg-page-content"
+  // land on the correct dedicated component instead of the generic CmsPage.
+  const SLUG_TO_DEDICATED_PAGE: Record<string, string> = {
+    about: "about",
+    "about-us": "about",
+    "about-page-content": "about",
+    manufacturing: "manufacturing",
+    "mfg-page-content": "manufacturing",
+    contact: "contact",
+    "contact-us": "contact",
+    blog: "blog",
+    catalogue: "catalogue",
+    catalog: "catalogue",
+    products: "products",
+    product: "products",
+    home: "home",
+    homepage: "home",
+  };
+
+  const navigateOrOpen = useCallback(
+    (item: {
+      url?: string | null;
+      page?: string | null;
+      slug?: string | null;
+      openInNewTab?: boolean | null;
+    }) => {
+      if (item.url) {
+        if (item.url.startsWith("/")) {
+          const segments = item.url.split("/").filter(Boolean);
+          const p = segments.join("/");
+          if (segments[0] === "product" && segments[1])
+            onNavigate("category", segments[1]);
+          else if (segments[0] === "product") onNavigate("products");
+          else if (segments[0] === "catalogue" && segments[1])
+            onNavigate("category", segments[1]);
+          else if (segments[0] === "catalogue") onNavigate("catalogue");
+          else if (segments[0] === "blog" && segments[1])
+            onNavigate("blog-post", segments[1]);
+          else if (segments[0] === "blog") onNavigate("blog");
+          else if (segments[0] === "about") onNavigate("about");
+          else if (segments[0] === "manufacturing") onNavigate("manufacturing");
+          else if (segments[0] === "contact") onNavigate("contact");
+          else if (
+            segments[0] === "products" ||
+            (segments[0] === "product" && !segments[1])
+          )
+            onNavigate("products");
+          else onNavigate("content-page", p);
+        } else {
+          window.open(item.url, item.openInNewTab ? "_blank" : "_self");
+        }
+      } else if (item.page && item.page !== "url") {
+        // If the page is "content-page" but the slug maps to a known dedicated page,
+        // route to that dedicated page instead of the generic CmsPage.
+        const dedicatedPage = item.slug
+          ? SLUG_TO_DEDICATED_PAGE[item.slug]
+          : undefined;
+
+        if (item.page === "content-page" && dedicatedPage) {
+          onNavigate(dedicatedPage);
+        } else if (item.page === "category" && !item.slug) {
+          // Top-level "Product Category" item without a specific slug
+          onNavigate("catalogue");
+        } else {
+          onNavigate(item.page, item.slug ?? undefined);
+        }
       }
-    } else if (item.page && item.page !== "url") {
-      onNavigate(item.page, item.slug ?? undefined);
-    }
-  }, [onNavigate]);
+    },
+    [onNavigate],
+  );
 
   const toggleExpanded = (id: string) => {
     setExpandedItems((prev) => {
@@ -294,6 +343,18 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
     return libFormatPrice(price, settings?.currency || "USD");
   };
 
+  const isNavItemActive = (item: { page?: string | null; slug?: string | null }) => {
+    if (!item.page) return false;
+    if (item.page === "content-page" && item.slug) {
+      const dedicated = SLUG_TO_DEDICATED_PAGE[item.slug];
+      if (dedicated) return currentPage.type === dedicated;
+      return currentPage.type === "content-page" && currentPage.slug === item.slug;
+    }
+    if (item.page === "category") return currentPage.type === "category";
+    if (item.page === "url") return false;
+    return currentPage.type === item.page;
+  };
+
   return (
     <>
       {/* === MAIN NAVIGATION BAR === */}
@@ -309,7 +370,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                 <img
                   src={settings.site_logo}
                   alt={settings.site_name || "Logo"}
-                  className="h-8 w-auto object-contain"
+                  className="h-[50px] w-auto object-contain"
                 />
               ) : (
                 <ShoppingBag className="h-6 w-6 text-primary" />
@@ -337,11 +398,16 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                 ? primaryMenuItems.map((item) => {
                     const hasChildren =
                       item.children && item.children.length > 0;
+                    const active = isNavItemActive(item);
                     return (
                       <div key={item.id} className="relative group">
                         <Button
                           variant="ghost"
-                          className="text-sm font-medium px-3 text-black hover:text-white"
+                          className={cn(
+                            "relative text-sm font-medium px-3 text-black hover:text-white",
+                            active &&
+                              "after:absolute after:-bottom-[1px] after:left-2 after:right-2 after:h-0.5 after:bg-primary after:rounded-full after:content-['']"
+                          )}
                           onClick={() => navigateOrOpen(item)}
                         >
                           {item.label}
@@ -365,16 +431,23 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                       </div>
                     );
                   })
-                : allNavLinks.map((link) => (
-                    <Button
-                      key={link.slug || link.page}
-                      variant="ghost"
-                      className="text-sm font-medium px-3"
-                      onClick={() => onNavigate(link.page, link.slug)}
-                    >
-                      {link.label}
-                    </Button>
-                  ))}
+                : allNavLinks.map((link) => {
+                    const active = currentPage.type === link.page;
+                    return (
+                      <Button
+                        key={link.slug || link.page}
+                        variant="ghost"
+                        className={cn(
+                          "relative text-sm font-medium px-3",
+                          active &&
+                            "after:absolute after:-bottom-[1px] after:left-2 after:right-2 after:h-0.5 after:bg-primary after:rounded-full after:content-['']"
+                        )}
+                        onClick={() => onNavigate(link.page, link.slug)}
+                      >
+                        {link.label}
+                      </Button>
+                    );
+                  })}
           </nav>
 
           {/* Right: Search + CTA */}
