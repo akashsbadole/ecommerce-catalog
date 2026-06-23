@@ -4,7 +4,6 @@ import { useEffect, useState, useMemo } from "react";
 import DOMPurify from "dompurify";
 import {
   Calendar,
-  User,
   ArrowLeft,
   Clock,
   ChevronRight,
@@ -33,7 +32,7 @@ interface BlogPostData {
   isPublished: boolean;
   publishedAt: string | null;
   createdAt: string;
-  User?: { id: string; name: string; email: string } | null;
+  User?: { id: string; name: string; email: string; avatar?: string | null; bio?: string | null } | null;
 }
 
 interface BlogPostViewProps {
@@ -141,12 +140,19 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
       .catch(() => {});
   }, [post]);
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (typeof window !== "undefined"
+      ? window.location.origin
+      : "http://localhost:3000");
   const brandName = process.env.NEXT_PUBLIC_SITE_NAME;
 
   useSeo(`blog-post-${post?.slug || ""}`, {
     title: post?.metaTitle || (post ? `${post.title} | Blog` : undefined),
-    description: post?.metaDescription || post?.excerpt || post?.content?.substring(0, 160),
+    description:
+      post?.metaDescription ||
+      post?.excerpt ||
+      post?.content?.substring(0, 160),
     ogImage: post?.ogImage || post?.coverImage,
     ogType: "article",
     publishedAt: post?.publishedAt || null,
@@ -262,7 +268,7 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
   return (
     <article className="max-w-4xl mx-auto px-4 py-8">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-8">
+      <nav className="flex gap-1.5 text-sm text-muted-foreground mb-8">
         <button
           onClick={() => onNavigate("home")}
           className="hover:text-foreground transition-colors inline-flex items-center gap-1"
@@ -291,9 +297,19 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
       {/* Author | Date | Read Time | Views */}
       <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-8">
         {post.User && (
-          <span className="flex items-center gap-1.5">
-            <User className="h-4 w-4 text-primary" />
-            {post.User.name}
+          <span className="flex items-center gap-2">
+            {post.User.avatar ? (
+              <img
+                src={post.User.avatar}
+                alt={post.User.name}
+                className="h-8 w-8 rounded-full object-cover"
+              />
+            ) : (
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
+                {post.User.name.charAt(0).toUpperCase()}
+              </span>
+            )}
+            <span className="font-medium text-foreground">{post.User.name}</span>
           </span>
         )}
         {post.publishedAt && (
@@ -427,6 +443,31 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
                     {tag}
                   </Badge>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Author Bio Card */}
+          {post.User && post.User.bio && (
+            <div className="mt-10 pt-8 border-t">
+              <div className="flex gap-4 p-5 rounded-xl bg-muted/30 border">
+                {post.User.avatar ? (
+                  <img
+                    src={post.User.avatar}
+                    alt={post.User.name}
+                    className="h-14 w-14 rounded-full object-cover shrink-0"
+                  />
+                ) : (
+                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-lg font-bold">
+                    {post.User.name.charAt(0).toUpperCase()}
+                  </span>
+                )}
+                <div className="min-w-0">
+                  <p className="font-semibold text-foreground">{post.User.name}</p>
+                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                    {post.User.bio}
+                  </p>
+                </div>
               </div>
             </div>
           )}

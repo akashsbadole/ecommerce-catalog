@@ -722,10 +722,19 @@ function TrustBarBlock({ data }: { data: Record<string, unknown> }) {
     [];
   if (stats.length === 0) return null;
 
+  const gridCols =
+    stats.length === 1
+      ? "grid-cols-1"
+      : stats.length === 2
+        ? "grid-cols-1 md:grid-cols-2"
+        : stats.length <= 4
+          ? "grid-cols-2 md:grid-cols-4"
+          : "grid-cols-2 md:grid-cols-5";
+
   return (
     <section className="border-y bg-muted/50">
       <div className="container mx-auto px-4 py-10">
-        <div className="grid grid-cols-2 md:grid-cols-5 divide-x divide-border">
+        <div className={`grid ${gridCols} divide-x divide-border`}>
           {stats.map((stat, i) => (
             <div key={i} className="text-center px-4 py-4 md:py-0">
               <div className="text-2xl md:text-3xl font-bold text-foreground">
@@ -856,7 +865,38 @@ function CapabilitiesBlock({
 
   const iconList = [Building2, Verified, Layers, Package, ShieldCheck, Clock];
 
+  const galleryUrls = (data.galleryImages as string[]) || [];
+  const hasGallery =
+    galleryUrls.length > 0 && galleryUrls.some((u) => u && u.length > 0);
+
   const renderMedia = () => {
+    if (hasGallery) {
+      return (
+        <div className="grid grid-cols-2 gap-2 w-full">
+          {[0, 1, 2, 3].map((i) =>
+            galleryUrls[i] ? (
+              <div
+                key={i}
+                className="aspect-square rounded-md overflow-hidden bg-muted"
+              >
+                <img
+                  src={galleryUrls[i]}
+                  alt={`${imageCaption || "Capabilities"} ${i + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <div
+                key={i}
+                className="aspect-square rounded-md bg-muted flex items-center justify-center"
+              >
+                <Building2 className="h-6 w-6 text-muted-foreground/30" />
+              </div>
+            ),
+          )}
+        </div>
+      );
+    }
     if (videoUrl) {
       return (
         <div
@@ -976,7 +1016,9 @@ function CapabilitiesBlock({
                 </Button>
               )}
             </div>
-            <div className="lg:col-span-2 relative aspect-[4/3] rounded-xl overflow-hidden bg-muted">
+            <div
+              className={`relative rounded-xl overflow-hidden bg-muted ${hasGallery ? "lg:col-span-2" : "lg:col-span-2 aspect-[4/3]"}`}
+            >
               {renderMedia()}
             </div>
           </div>
@@ -1008,6 +1050,8 @@ function ProductCategoriesBlock({
       name: string;
       slug?: string;
       description?: string | null;
+      image?: string | null;
+      _count?: { Product: number };
     }>
   >([]);
   const [loading, setLoading] = useState(true);
@@ -1016,7 +1060,7 @@ function ProductCategoriesBlock({
     let cancelled = false;
     async function load() {
       try {
-        const res = await fetch("/api/categories");
+        const res = await fetch("/api/categories?all=true");
         if (res.ok && !cancelled) {
           const json = await res.json();
           const cats = (json.categories || json.data || []).filter(
@@ -1036,9 +1080,17 @@ function ProductCategoriesBlock({
     };
   }, []);
 
+  const categoryIds = (data.categoryIds as string[]) || [];
   const cmsCategories =
     (data.categories as Array<{ name: string; variants: string }>) || [];
-  const categories = apiCategories.length > 0 ? apiCategories : cmsCategories;
+
+  let displayCategories = apiCategories;
+  if (categoryIds.length > 0) {
+    displayCategories = apiCategories.filter((c) => categoryIds.includes(c.id));
+  }
+  if (displayCategories.length === 0) {
+    displayCategories = cmsCategories;
+  }
 
   return (
     <section className="container mx-auto px-4 py-16 text-center">
@@ -1074,7 +1126,7 @@ function ProductCategoriesBlock({
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-            {categories.map((cat, i) => (
+            {displayCategories.map((cat, i) => (
               <motion.div
                 key={cat.id || cat.name}
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -1093,14 +1145,27 @@ function ProductCategoriesBlock({
                 }
               >
                 <div className="aspect-square rounded-xl bg-muted flex items-center justify-center overflow-hidden border group-hover:border-brand/30 transition-colors">
-                  <Package className="h-8 w-8 text-muted-foreground/40" />
+                  {"image" in cat && cat.image ? (
+                    <img
+                      src={cat.image as string}
+                      alt={cat.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <Package className="h-8 w-8 text-muted-foreground/40" />
+                  )}
                 </div>
                 <h3 className="font-medium text-sm mt-2">{cat.name}</h3>
-                {"variants" in cat && (
+                {"variants" in cat ? (
                   <p className="text-xs text-muted-foreground">
                     {(cat as { variants: string }).variants}
                   </p>
-                )}
+                ) : cat._count ? (
+                  <p className="text-xs text-muted-foreground">
+                    {cat._count.Product} product
+                    {cat._count.Product !== 1 ? "s" : ""}
+                  </p>
+                ) : null}
               </motion.div>
             ))}
           </div>
@@ -1236,6 +1301,19 @@ function CertificationsBlock({
   const heading = (data.heading as string) || "";
   const items = (data.items as string[]) || [];
   const ctaText = (data.ctaText as string) || "";
+  const gallery =
+    (data.gallery as Array<{ image: string; caption: string }>) || [];
+  const hasGallery = gallery.length > 0 && gallery.some((g) => g.image);
+  if (typeof window !== "undefined") {
+    console.log(
+      "[CertificationsBlock] data keys:",
+      Object.keys(data),
+      "gallery:",
+      data.gallery,
+      "items:",
+      data.items,
+    );
+  }
 
   return (
     <section className="bg-muted/30 border-y">
@@ -1254,16 +1332,42 @@ function CertificationsBlock({
           {heading && (
             <h2 className="text-xl md:text-2xl font-bold mb-8">{heading}</h2>
           )}
-          <div className="flex flex-wrap justify-center gap-6 items-center">
-            {items.map((cert) => (
-              <div
-                key={cert}
-                className="w-20 h-14 rounded-lg bg-background border flex items-center justify-center text-xs font-semibold text-muted-foreground hover:border-brand/40 hover:text-brand transition-colors"
-              >
-                {cert}
-              </div>
-            ))}
-          </div>
+          {hasGallery ? (
+            <div className="flex flex-wrap justify-center gap-8 items-center">
+              {gallery
+                .filter((g) => g.image)
+                .map((item, i) => (
+                  <div
+                    key={i}
+                    className="flex flex-col items-center gap-2 max-w-[140px]"
+                  >
+                    <div className="w-[170px] h-full rounded-xl bg-background border flex items-center justify-center p-2 overflow-hidden">
+                      <img
+                        src={item.image}
+                        alt={item.caption || `Certification ${i + 1}`}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    {item.caption && (
+                      <span className="text-xs font-semibold text-muted-foreground text-center leading-tight">
+                        {item.caption}
+                      </span>
+                    )}
+                  </div>
+                ))}
+            </div>
+          ) : (
+            <div className="flex flex-wrap justify-center gap-6 items-center">
+              {items.map((cert) => (
+                <div
+                  key={cert}
+                  className="w-20 h-14 rounded-lg bg-background border flex items-center justify-center text-xs font-semibold text-muted-foreground hover:border-brand/40 hover:text-brand transition-colors"
+                >
+                  {cert}
+                </div>
+              ))}
+            </div>
+          )}
           {ctaText && (
             <p className="text-xs text-muted-foreground mt-6">{ctaText}</p>
           )}
@@ -1291,7 +1395,7 @@ function LeadCaptureBlock({ data }: { data: Record<string, unknown> }) {
 
   return (
     <section className="relative overflow-hidden bg-foreground text-background">
-      <div className="absolute inset-0 bg-gradient-to-br from-brand-primary via-brand-primary/80 to-brand-primary" />
+      <div className="absolute inset-0 bg-green-900" />
       <div className="relative z-10 container mx-auto px-4 py-16">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -1404,7 +1508,7 @@ function LeadCaptureBlock({ data }: { data: Record<string, unknown> }) {
               <Button
                 type="submit"
                 size="lg"
-                className="bg-primary text-white hover:bg-background/90"
+                className="bg-primary text-white hover:bg-background/40"
               >
                 {submitText}
                 <Send className="ml-2 h-4 w-4" />
@@ -1469,12 +1573,12 @@ function LeadershipBlock({
               transition={{ delay: i * 0.1, duration: 0.4 }}
               className="flex items-start gap-4 p-4 rounded-xl border"
             >
-              <div className="w-12 h-14 rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center border">
+              <div className="w-[150px] h-full rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center border">
                 {person.image ? (
                   <img
                     src={person.image}
                     alt={person.name}
-                    className="w-full h-full object-cover"
+                    className="w-[full] h-full object-cover"
                   />
                 ) : (
                   <UserCircle className="h-6 w-6 text-muted-foreground/40" />
@@ -1494,7 +1598,7 @@ function LeadershipBlock({
               <Button
                 variant="outline"
                 size="sm"
-                className="text-xs bg-primary"
+                className="text-xs bg-primary text-white"
                 onClick={() => {
                   const ctaLink = (data.ctaLink as string) || "";
                   if (ctaLink && onNavigate) {

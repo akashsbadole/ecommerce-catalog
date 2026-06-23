@@ -123,6 +123,7 @@ export function parseBlocks(blocksData: unknown): any[] {
  * Validate and sanitize a file path to prevent path traversal
  */
 export function sanitizeFilePath(filePath: string, baseDir: string): string | null {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const path = require('path');
   const fullPath = path.join(baseDir, filePath);
   const resolvedPath = path.resolve(fullPath);
@@ -165,3 +166,70 @@ export function normalizeImageUrl(url: string | null | undefined): string | null
   if (!url) return null;
   return url.replace(/^https?:\/\/localhost:\d+/, "");
 }
+
+/**
+ * Converts a standard Google Maps web URL or search URL into an embeddable iframe source URL.
+ * If the URL is already an embed URL, it returns it unchanged.
+ */
+export function getGoogleMapsEmbedUrl(url: string | null | undefined): string {
+  if (!url) return "";
+
+  const trimmed = url.trim();
+
+  // If already an embed URL or output=embed is set, return as-is
+  if (
+    trimmed.includes("/maps/embed") ||
+    trimmed.includes("output=embed")
+  ) {
+    return trimmed;
+  }
+
+  // Handle standard google maps links
+  try {
+    const parsedUrl = new URL(trimmed);
+
+    // Ensure it's a Google domain and contains maps or has maps.google.com
+    const isGoogle =
+      parsedUrl.hostname.includes("google.com") ||
+      parsedUrl.hostname.includes("google.co.in") ||
+      parsedUrl.hostname === "maps.google.com";
+
+    if (!isGoogle) {
+      return trimmed;
+    }
+
+    // 1. Try to extract place name from path: /maps/place/Place+Name/...
+    const placeMatch = parsedUrl.pathname.match(/\/maps\/place\/([^/]+)/);
+    if (placeMatch && placeMatch[1] && !placeMatch[1].startsWith("@")) {
+      const placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, " "));
+      return `https://maps.google.com/maps?q=${encodeURIComponent(placeName)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+    }
+
+    // 2. Try to extract coordinates from pathname: e.g. @18.6178949,73.7599339
+    const coordMatch = parsedUrl.pathname.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (coordMatch && coordMatch[1] && coordMatch[2]) {
+      return `https://maps.google.com/maps?q=${coordMatch[1]},${coordMatch[2]}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+    }
+
+    // 3. Try to extract search query query parameters: q or query
+    const q = parsedUrl.searchParams.get("q") || parsedUrl.searchParams.get("query");
+    if (q) {
+      return `https://maps.google.com/maps?q=${encodeURIComponent(q)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+    }
+  } catch {
+    // Fallback regex matching in case the URL constructor fails (e.g. invalid scheme or format)
+    const placeMatch = trimmed.match(/\/maps\/place\/([^/]+)/);
+    if (placeMatch && placeMatch[1] && !placeMatch[1].startsWith("@")) {
+      const placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, " "));
+      return `https://maps.google.com/maps?q=${encodeURIComponent(placeName)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+    }
+
+    const coordMatch = trimmed.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (coordMatch && coordMatch[1] && coordMatch[2]) {
+      return `https://maps.google.com/maps?q=${coordMatch[1]},${coordMatch[2]}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+    }
+  }
+
+  return trimmed;
+}
+

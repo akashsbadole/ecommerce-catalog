@@ -355,6 +355,7 @@ export const BLOCK_DEFAULTS: Record<
       image: "",
       videoUrl: "",
       imageCaption: "Facility / production line image",
+      galleryImages: ["", "", "", ""],
       ctaText: "View full capabilities",
       ctaLink: "/page/manufacturing",
     },
@@ -367,6 +368,7 @@ export const BLOCK_DEFAULTS: Record<
       heading: "Product categories",
       description:
         "Manufactured in-house · available for bulk, private label & contract production",
+      categoryIds: [],
       categories: [
         { name: "Khakhra", variants: "12+ variants" },
         { name: "Bhakhri", variants: "8+ variants" },
@@ -405,6 +407,7 @@ export const BLOCK_DEFAULTS: Record<
       items: ["FSSAI", "ISO", "BIS", "HACCP", "GMP"],
       ctaText: "View all certifications",
       ctaLink: "/page/manufacturing",
+      gallery: [{ image: "", caption: "" }],
     },
   },
   "lead-capture": {
@@ -935,6 +938,7 @@ export const BLOCK_DEFAULTS: Record<
       location: {
         factoryAddress:
           "[Factory address line 1]\n[City, District] — [PIN code]\nGujarat, India",
+        googleMapsEmbedUrl: "",
         logistics: [
           {
             icon: "Train",

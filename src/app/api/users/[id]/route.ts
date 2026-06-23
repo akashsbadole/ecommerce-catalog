@@ -10,14 +10,21 @@ export async function GET(
     const auth = await requireAdminAuth(request);
     if (!auth.success) return auth.response;
     const { id } = await params;
-    const user = await db.user.findUnique({
-      where: { id },
+    const user = await db.user.findFirst({
+      where: {
+        OR: [
+          { id },
+          { clerkId: id },
+        ],
+      },
       select: {
         id: true,
         email: true,
         name: true,
         role: true,
         isActive: true,
+        avatar: true,
+        bio: true,
         createdAt: true,
         updatedAt: true,
         _count: { select: { Enquiry: true, BlogPost: true } },
@@ -43,10 +50,17 @@ export async function PUT(
     const { id } = await params;
     const userId = request.headers.get('x-user-id');
     const body = await request.json();
-    const { name, email, role, isActive, password } = body;
+    const { name, email, role, isActive, password, bio, avatar } = body;
 
     // Check user exists
-    const existing = await db.user.findUnique({ where: { id } });
+    const existing = await db.user.findFirst({
+      where: {
+        OR: [
+          { id },
+          { clerkId: id },
+        ],
+      },
+    });
     if (!existing) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
@@ -80,6 +94,8 @@ export async function PUT(
     if (body.isVerified !== undefined) data.isVerified = body.isVerified;
     if (body.tier !== undefined) data.tier = body.tier;
     if (body.companyId !== undefined) data.companyId = body.companyId;
+    if (bio !== undefined) data.bio = bio;
+    if (avatar !== undefined) data.avatar = avatar;
 
     // Handle password change
     if (password !== undefined && password !== '') {
@@ -88,7 +104,7 @@ export async function PUT(
     }
 
     const user = await db.user.update({
-      where: { id },
+      where: { id: existing.id },
       data,
       select: {
         id: true,
@@ -96,6 +112,8 @@ export async function PUT(
         name: true,
         role: true,
         isActive: true,
+        avatar: true,
+        bio: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -124,12 +142,19 @@ export async function DELETE(
       );
     }
 
-    const user = await db.user.findUnique({ where: { id } });
+    const user = await db.user.findFirst({
+      where: {
+        OR: [
+          { id },
+          { clerkId: id },
+        ],
+      },
+    });
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    await db.user.delete({ where: { id } });
+    await db.user.delete({ where: { id: user.id } });
 
     return NextResponse.json({ success: true });
   } catch (error) {

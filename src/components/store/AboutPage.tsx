@@ -19,6 +19,8 @@ import { useAppStore } from "@/lib/store";
 import { useSeo } from "@/lib/use-seo";
 import { StoreHeroBanner } from "@/components/store/StoreHeroBanner";
 import { useContentPage, getPageContentData } from "@/lib/use-page-content";
+import { ContactFormSection } from "@/components/store/ContactFormSection";
+import { getGoogleMapsEmbedUrl } from "@/lib/utils";
 
 interface AboutPageProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -174,13 +176,7 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
           <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
             Our Journey
           </p>
-          <h2 className="text-2xl font-bold mb-2">
-            {(story.heading as string) || "How we got here"}
-          </h2>
-          <p className="text-sm text-muted-foreground mb-10">
-            {(story.subtitle as string) ||
-              "A business built from the ground up"}
-          </p>
+          <h2 className="text-2xl font-bold mb-10">How we got here</h2>
           <div className="flex flex-col md:flex-row gap-10">
             <div className="flex-1 md:pr-10 md:border-r">
               {narrative.map((p, i) => (
@@ -429,11 +425,25 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
               </div>
             </div>
             <div className="flex-[1.4]">
-              <div className="bg-muted border rounded-lg h-full min-h-[300px] flex items-center justify-center text-muted-foreground text-sm flex-col gap-2">
-                <MapPin className="h-8 w-8" />
-                <p>Google Maps embed</p>
-                <p className="text-xs">Factory pin marked with brand marker</p>
-              </div>
+              {location.googleMapsEmbedUrl ? (
+                <iframe
+                  src={getGoogleMapsEmbedUrl(location.googleMapsEmbedUrl as string)}
+                  width="100%"
+                  height="100%"
+                  className="rounded-lg min-h-[300px] border"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Factory location"
+                />
+              ) : (
+                <div className="bg-muted border rounded-lg h-full min-h-[300px] flex items-center justify-center text-muted-foreground text-sm flex-col gap-2">
+                  <MapPin className="h-8 w-8" />
+                  <p>Google Maps embed</p>
+                  <p className="text-xs">Factory pin marked with brand marker</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -481,6 +491,8 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
           </div>
         </div>
       </section>
+
+      <ContactFormSection title="Get in Touch" submitText="Send Enquiry →" />
     </div>
   );
 }

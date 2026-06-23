@@ -51,6 +51,8 @@ export async function PUT(
     if (body.blocks !== undefined) {
       try {
         blocks = normalizeBlocksForStorage(body.blocks);
+        const certBlock = (body.blocks as any[])?.find((b: any) => b.type === 'certifications');
+        console.log('[PUT] certifications block data:', JSON.stringify(certBlock?.data));
       } catch {
         return NextResponse.json(
           { error: 'Blocks must be an array or a valid JSON string' },

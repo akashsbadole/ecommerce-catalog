@@ -312,7 +312,7 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
 
   const handleCopyUrl = async (url: string, id: string) => {
     try {
-      const fullUrl = `${window.location.origin}${url}`;
+      const fullUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
       await navigator.clipboard.writeText(fullUrl);
       setCopiedId(id);
       toast.success("URL copied");

@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
           publishedAt: true,
           createdAt: true,
           updatedAt: true,
-          User: { select: { id: true, name: true, email: true } },
+          User: { select: { id: true, name: true, email: true, avatar: true, bio: true } },
         },
         orderBy: published === 'true' || !all
           ? { publishedAt: 'desc' }
@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
         publishedAt: validatedData.isPublished ? new Date() : null,
         ...(storeId ? { storeId } : {}),
       },
-      include: { User: { select: { id: true, name: true, email: true } } },
+      include: { User: { select: { id: true, name: true, email: true, avatar: true, bio: true } } },
     });
 
     // Log blog creation

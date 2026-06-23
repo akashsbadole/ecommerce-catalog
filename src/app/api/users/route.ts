@@ -39,6 +39,8 @@ export async function GET(request: NextRequest) {
           name: true,
           role: true,
           isActive: true,
+          avatar: true,
+          bio: true,
           createdAt: true,
           updatedAt: true,
         },

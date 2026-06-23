@@ -12,11 +12,11 @@ import {
   Factory,
   Clock,
 } from "lucide-react";
-import { useAppStore } from '@/lib/store';
 import { BLOCK_DEFAULTS, deepMerge } from "@/lib/page-blocks";
 import { useSeo } from "@/lib/use-seo";
 import { StoreHeroBanner } from "@/components/store/StoreHeroBanner";
 import { useContentPage, getPageContentData } from "@/lib/use-page-content";
+import { ContactFormSection } from "@/components/store/ContactFormSection";
 
 interface ContactPageProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -116,29 +116,11 @@ export function ContactPage({
         onSelectType={setSelectedType}
       />
 
-      {/* CT1: Shared Contact Form */}
-      <section id="contact-form" className="bg-white py-12 px-4">
-        <div className="container mx-auto max-w-3xl">
-          {(formSection.title as string) && (
-            <h2 className="text-xl font-bold text-center mb-2 text-foreground">
-              {formSection.title as string}
-            </h2>
-          )}
-          {(formSection.subtitle as string) && (
-            <p className="text-sm text-muted-foreground text-center mb-8">
-              {formSection.subtitle as string}
-            </p>
-          )}
-          <div className="flex justify-center">
-            <button
-              onClick={() => useAppStore.getState().openEnquiryModal()}
-              className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-medium px-8 py-3 rounded-md hover:bg-primary/90 transition-colors"
-            >
-              Submit Enquiry
-            </button>
-          </div>
-        </div>
-      </section>
+      {/* CT1: Contact Form */}
+      <ContactFormSection
+        title={(formSection.title as string) || "Send us your requirement"}
+        subtitle={(formSection.subtitle as string) || "Fields marked * are required. We respond within 24 working hours."}
+      />
 
       {/* Response promise */}
       {promiseItems.length > 0 && (

@@ -50,6 +50,7 @@ import {
   Tablet,
   Smartphone,
   Eye,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,8 +59,8 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MediaPickerField } from "@/components/admin/MediaPickerField";
 import {
@@ -1523,9 +1524,28 @@ function BlockEditDialog({
                       <Plus className="mr-2 h-4 w-4" /> Add Item
                     </Button>
                     <Separator />
+                    <Label className="text-base font-semibold">
+                      Gallery Images (2×2 grid)
+                    </Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[0, 1, 2, 3].map((i) => (
+                        <MediaPickerField
+                          key={i}
+                          label={`Image ${i + 1}`}
+                          value={((localData.galleryImages as string[]) || [])[i] || ""}
+                          onChange={(v) => {
+                            const arr = [...((localData.galleryImages as string[]) || ["", "", "", ""])];
+                            arr[i] = v;
+                            updateField("galleryImages", arr);
+                          }}
+                          placeholder="Select image"
+                        />
+                      ))}
+                    </div>
+                    <Separator />
                     <div className="space-y-2">
                       <MediaPickerField
-                        label="Image"
+                        label="Single Image (fallback)"
                         value={(localData.image as string) || ""}
                         onChange={(v) => updateField("image", v)}
                         placeholder="Select or upload an image"
@@ -1541,8 +1561,7 @@ function BlockEditDialog({
                         placeholder="https://youtube.com/..."
                       />
                       <p className="text-xs text-muted-foreground">
-                        If set, a play button overlays the image and opens this
-                        URL
+                        Video is shown when gallery images are empty
                       </p>
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -1601,77 +1620,12 @@ function BlockEditDialog({
                       />
                     </div>
                     <Separator />
-                    <Label className="text-base font-semibold">
-                      Categories
-                    </Label>
-                    {(
-                      (localData.categories as Array<{
-                        name: string;
-                        variants: string;
-                      }>) || []
-                    ).map((cat, i) => (
-                      <Card key={i} className="p-4 space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium">
-                            Category {i + 1}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-rose-600"
-                            onClick={() => {
-                              const arr = [
-                                ...((localData.categories as Array<unknown>) ||
-                                  []),
-                              ];
-                              arr.splice(i, 1);
-                              updateField("categories", arr);
-                            }}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                        <Input
-                          placeholder="Name"
-                          value={cat.name}
-                          onChange={(e) => {
-                            const arr = [
-                              ...((localData.categories as Array<
-                                Record<string, string>
-                              >) || []),
-                            ];
-                            arr[i] = { ...arr[i], name: e.target.value };
-                            updateField("categories", arr);
-                          }}
-                        />
-                        <Input
-                          placeholder="Variants (e.g. 12+ variants)"
-                          value={cat.variants}
-                          onChange={(e) => {
-                            const arr = [
-                              ...((localData.categories as Array<
-                                Record<string, string>
-                              >) || []),
-                            ];
-                            arr[i] = { ...arr[i], variants: e.target.value };
-                            updateField("categories", arr);
-                          }}
-                        />
-                      </Card>
-                    ))}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const arr = [
-                          ...((localData.categories as Array<unknown>) || []),
-                          { name: "New", variants: "0 variants" },
-                        ];
-                        updateField("categories", arr);
-                      }}
-                    >
-                      <Plus className="mr-2 h-4 w-4" /> Add Category
-                    </Button>
+                    <CategoryPicker
+                      selectedIds={
+                        (localData.categoryIds as string[]) || []
+                      }
+                      onChange={(ids) => updateField("categoryIds", ids)}
+                    />
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-2">
                         <Label>CTA Text</Label>
@@ -1820,6 +1774,58 @@ function BlockEditDialog({
                       }}
                     >
                       <Plus className="mr-2 h-4 w-4" /> Add Certification
+                    </Button>
+                    <Separator />
+                    <Label className="text-base font-semibold">
+                      Logo Gallery (image + caption)
+                    </Label>
+                    {((localData.gallery as Array<{ image: string; caption: string }>) || []).map((item, i) => (
+                      <div key={i} className="border rounded-lg p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">Item {i + 1}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-rose-600"
+                            onClick={() => {
+                              const arr = [...((localData.gallery as Array<{ image: string; caption: string }>) || [])];
+                              arr.splice(i, 1);
+                              updateField("gallery", arr);
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <MediaPickerField
+                          label="Logo Image"
+                          value={item.image || ""}
+                          onChange={(v) => {
+                            const arr = [...((localData.gallery as Array<{ image: string; caption: string }>) || [])];
+                            arr[i] = { ...arr[i], image: v };
+                            updateField("gallery", arr);
+                          }}
+                          placeholder="Select or upload image"
+                        />
+                        <Input
+                          placeholder="Caption (e.g. ISO 9001:2015)"
+                          value={item.caption || ""}
+                          onChange={(e) => {
+                            const arr = [...((localData.gallery as Array<{ image: string; caption: string }>) || [])];
+                            arr[i] = { ...arr[i], caption: e.target.value };
+                            updateField("gallery", arr);
+                          }}
+                        />
+                      </div>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const arr = [...((localData.gallery as Array<{ image: string; caption: string }>) || []), { image: "", caption: "" }];
+                        updateField("gallery", arr);
+                      }}
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Add Logo
                     </Button>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-2">
@@ -3526,6 +3532,101 @@ export function PageBuilder({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+}
+
+function CategoryPicker({
+  selectedIds,
+  onChange,
+}: {
+  selectedIds: string[];
+  onChange: (ids: string[]) => void;
+}) {
+  const [categories, setCategories] = useState<
+    Array<{ id: string; name: string; productCount: number }>
+  >([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const res = await fetch("/api/categories?all=true");
+        if (res.ok) {
+          const json = await res.json();
+          const cats = (json.categories || json.data || []).filter(
+            (c: { isActive?: boolean }) => c.isActive !== false,
+          );
+          if (!cancelled) {
+            setCategories(
+              cats.map((c: { id: string; name: string; _count?: { Product: number } }) => ({
+                id: c.id,
+                name: c.name,
+                productCount: c._count?.Product || 0,
+              })),
+            );
+          }
+        }
+      } catch {
+        // ignore
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const toggle = (id: string) => {
+    if (selectedIds.includes(id)) {
+      onChange(selectedIds.filter((i) => i !== id));
+    } else {
+      onChange([...selectedIds, id]);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label className="text-base font-semibold">Select Categories</Label>
+      <p className="text-xs text-muted-foreground">
+        Choose categories to display. If none selected, all active categories will be shown.
+      </p>
+      {loading ? (
+        <div className="flex items-center gap-2 py-2">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span className="text-sm text-muted-foreground">Loading categories...</span>
+        </div>
+      ) : categories.length === 0 ? (
+        <p className="text-sm text-muted-foreground py-2">No categories found</p>
+      ) : (
+        <ScrollArea className="h-48 border rounded-md p-2">
+          <div className="space-y-1">
+            {categories.map((cat) => (
+              <label
+                key={cat.id}
+                className="flex items-center gap-2 rounded px-2 py-1.5 hover:bg-muted cursor-pointer text-sm"
+              >
+                <Checkbox
+                  checked={selectedIds.includes(cat.id)}
+                  onCheckedChange={() => toggle(cat.id)}
+                />
+                <span className="flex-1">{cat.name}</span>
+                <span className="text-xs text-muted-foreground">
+                  {cat.productCount} product{cat.productCount !== 1 ? "s" : ""}
+                </span>
+              </label>
+            ))}
+          </div>
+        </ScrollArea>
+      )}
+      {selectedIds.length > 0 && (
+        <p className="text-xs text-muted-foreground">
+          {selectedIds.length} category{selectedIds.length !== 1 ? "ies" : "y"} selected
+        </p>
+      )}
     </div>
   );
 }

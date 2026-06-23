@@ -6,6 +6,7 @@ import type { PageBlock } from "@/lib/page-blocks";
 import { normalizePageBlocks } from "@/lib/page-blocks";
 import { useSeo } from "@/lib/use-seo";
 import { StoreLoading } from "./StoreLoading";
+// import { ContactFormSection } from "./ContactFormSection";
 
 interface HomePageProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -65,10 +66,13 @@ export function HomePage({
     fetchHomepage();
   }, [externalData]);
 
-  const siteOrigin = typeof window !== "undefined" ? window.location.origin : "";
+  const siteOrigin =
+    typeof window !== "undefined" ? window.location.origin : "";
 
   useSeo("home", {
-    title: homeMeta?.metaTitle || (settings?.site_name ? `${settings.site_name}` : undefined),
+    title:
+      homeMeta?.metaTitle ||
+      (settings?.site_name ? `${settings.site_name}` : undefined),
     description: homeMeta?.metaDescription,
     ogImage: homeMeta?.ogImage,
     jsonLd: {
@@ -145,6 +149,7 @@ export function HomePage({
   return (
     <div className="flex flex-col">
       <PageBlockRenderer blocks={blocks ?? undefined} onNavigate={onNavigate} />
+      {/* <ContactFormSection title="Contact Us" submitText="Send Enquiry →" /> */}
     </div>
   );
 }

@@ -15,12 +15,14 @@ import {
   FileText,
   Download,
   Building2,
+  Upload,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminFetch } from '@/lib/admin-fetch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -68,6 +70,8 @@ interface User {
   isVerified: boolean;
   tier: string;
   companyId: string | null;
+  avatar?: string | null;
+  bio?: string | null;
   Company?: {
     id: string;
     name: string;
@@ -85,6 +89,8 @@ interface UserFormData {
   isVerified: boolean;
   tier: string;
   companyId: string;
+  avatar: string;
+  bio: string;
 }
 
 const emptyForm: UserFormData = {
@@ -96,6 +102,8 @@ const emptyForm: UserFormData = {
   isVerified: false,
   tier: 'standard',
   companyId: '',
+  avatar: '',
+  bio: '',
 };
 
 function RoleBadge({ role }: { role: string }) {
@@ -263,6 +271,8 @@ export function AdminUsers() {
       isVerified: user.isVerified || false,
       tier: user.tier || 'standard',
       companyId: user.companyId || '',
+      avatar: user.avatar || '',
+      bio: user.bio || '',
     });
     setFormOpen(true);
   };
@@ -291,6 +301,8 @@ export function AdminUsers() {
         isVerified: form.isVerified,
         tier: form.tier,
         companyId: form.companyId || null,
+        avatar: form.avatar || null,
+        bio: form.bio.trim() || null,
       };
 
       if (!editingUser) {
@@ -630,6 +642,67 @@ export function AdminUsers() {
                   setForm(prev => ({ ...prev, email: e.target.value }))
                 }
               />
+            </div>
+
+            {/* Avatar */}
+            <div className="space-y-2">
+              <Label>Avatar</Label>
+              <div className="flex items-center gap-3">
+                {form.avatar ? (
+                  <img
+                    src={form.avatar}
+                    alt="Avatar"
+                    className="h-12 w-12 rounded-full object-cover border"
+                  />
+                ) : (
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold border">
+                    {form.name.charAt(0).toUpperCase()}
+                  </span>
+                )}
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const fd = new FormData();
+                      fd.append('file', file);
+                      const res = await adminFetch('/api/upload', { method: 'POST', body: fd });
+                      if (res.ok) {
+                        const data = await res.json();
+                        setForm(prev => ({ ...prev, avatar: data.url }));
+                        toast.success('Avatar uploaded');
+                      } else {
+                        toast.error('Upload failed');
+                      }
+                      e.target.value = '';
+                    }}
+                  />
+                  <Button type="button" variant="outline" size="sm" asChild>
+                    <span>
+                      <Upload className="mr-1.5 h-3.5 w-3.5" />
+                      Upload
+                    </span>
+                  </Button>
+                </label>
+              </div>
+            </div>
+
+            {/* Bio */}
+            <div className="space-y-2">
+              <Label htmlFor="user-bio">Bio</Label>
+              <Textarea
+                id="user-bio"
+                placeholder="Short bio for blog posts..."
+                value={form.bio}
+                onChange={(e) => setForm(prev => ({ ...prev, bio: e.target.value }))}
+                rows={3}
+              />
+              <p className="text-xs text-muted-foreground">
+                Displayed on blog posts authored by this user.
+              </p>
             </div>
 
             {/* Password */}

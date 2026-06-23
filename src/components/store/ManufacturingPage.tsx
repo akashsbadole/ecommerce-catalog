@@ -13,11 +13,11 @@ import {
   Settings,
   ShieldCheck,
 } from "lucide-react";
-import { useAppStore } from "@/lib/store";
 import { BLOCK_DEFAULTS, deepMerge } from "@/lib/page-blocks";
 import { useSeo } from "@/lib/use-seo";
 import { StoreHeroBanner } from "@/components/store/StoreHeroBanner";
 import { useContentPage, getPageContentData } from "@/lib/use-page-content";
+import { ContactFormSection } from "@/components/store/ContactFormSection";
 
 interface ManufacturingPageProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -398,27 +398,11 @@ export function ManufacturingPage({
         </section>
       )}
 
-      {/* M7: CTA with Shared Contact Form */}
-      <section className="bg-primary text-primary-foreground py-16 px-4">
-        <div className="container mx-auto max-w-5xl">
-          <h2 className="text-2xl font-bold text-white text-center mb-2">
-            {(ctaData.title as string) || "Ready to see it for yourself?"}
-          </h2>
-          {(ctaData.subtitle as string) && (
-            <p className="text-sm text-white/70 text-center mb-10">
-              {ctaData.subtitle as string}
-            </p>
-          )}
-          <div className="text-center">
-            <button
-              onClick={() => useAppStore.getState().openEnquiryModal()}
-              className="inline-flex items-center gap-2 bg-white text-primary font-medium px-8 py-3 rounded-md hover:bg-white/90 transition-colors"
-            >
-              Send Enquiry
-            </button>
-          </div>
-        </div>
-      </section>
+      {/* M7: Contact Form */}
+      <ContactFormSection
+        title={(ctaData.title as string) || "Ready to see it for yourself?"}
+        subtitle={ctaData.subtitle as string}
+      />
     </div>
   );
 }

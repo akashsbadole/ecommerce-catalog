@@ -15,6 +15,8 @@ import {
   Info,
   Upload,
   FileText,
+  Users,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -31,6 +33,16 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { adminFetch } from "@/lib/admin-fetch";
 import { AdminImport } from "@/components/admin/AdminImport";
 import { AdminBackup } from "@/components/admin/AdminBackup";
@@ -988,6 +1000,9 @@ export function AdminSettings() {
         </CardContent>
       </Card>
 
+      {/* Author Profiles */}
+      <AuthorProfiles />
+
       {/* Import Products */}
       <AdminImport />
 
@@ -1005,6 +1020,250 @@ export function AdminSettings() {
           {saving ? "Saving..." : "Save All Settings"}
         </Button>
       </div>
+    </div>
+  );
+}
+
+function AuthorProfiles() {
+  interface UserProfile {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string | null;
+    bio: string | null;
+  }
+
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [savingId, setSavingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const res = await adminFetch('/api/users?all=true');
+      if (res.ok) {
+        const data = await res.json();
+        setUsers(data.users || data);
+      }
+    } catch {
+      toast.error('Failed to load users');
+    }
+  };
+
+  const uploadAvatar = async (file: File, userId: string) => {
+    setSavingId(userId);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await adminFetch('/api/upload', { method: 'POST', body: fd });
+      if (res.ok) {
+        const data = await res.json();
+        const updateRes = await adminFetch(`/api/users/${userId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ avatar: data.url }),
+        });
+        if (updateRes.ok) {
+          setUsers(prev => prev.map(u => u.id === userId ? { ...u, avatar: data.url } : u));
+          toast.success('Avatar uploaded');
+        }
+      } else {
+        toast.error('Upload failed');
+      }
+    } catch {
+      toast.error('Upload failed');
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const deleteUser = async (userId: string) => {
+    try {
+      const res = await adminFetch(`/api/users/${userId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setUsers(prev => prev.filter(u => u.id !== userId));
+        toast.success('User deleted');
+      } else {
+        const err = await res.json();
+        toast.error(err.error || 'Failed to delete user');
+      }
+    } catch {
+      toast.error('Failed to delete user');
+    }
+  };
+
+  const saveBio = async (userId: string, bio: string) => {
+    setSavingId(userId);
+    try {
+      const res = await adminFetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bio: bio.trim() || null }),
+      });
+      if (res.ok) {
+        toast.success('Bio saved');
+      } else {
+        toast.error('Failed to save bio');
+      }
+    } catch {
+      toast.error('Failed to save bio');
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Users className="h-5 w-5" />
+          Author Profiles
+        </CardTitle>
+        <CardDescription>
+          Manage author bios and avatars displayed on blog posts
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {users.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No users found</p>
+        ) : (
+          users.map((user) => (
+            <AuthorRow
+              key={user.id}
+              user={user}
+              savingId={savingId}
+              onUploadAvatar={uploadAvatar}
+              onSaveBio={saveBio}
+              onDelete={deleteUser}
+            />
+          ))
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function AuthorRow({
+  user,
+  savingId,
+  onUploadAvatar,
+  onSaveBio,
+  onDelete,
+}: {
+  user: { id: string; name: string; email: string; avatar: string | null; bio: string | null };
+  savingId: string | null;
+  onUploadAvatar: (file: File, userId: string) => void;
+  onSaveBio: (userId: string, bio: string) => void;
+  onDelete: (userId: string) => void;
+}) {
+  const [bio, setBio] = useState(user.bio || '');
+  const [dirty, setDirty] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  useEffect(() => {
+    setBio(user.bio || '');
+    setDirty(false);
+  }, [user.bio]);
+
+  const isSaving = savingId === user.id;
+
+  return (
+    <div className="border rounded-lg p-4 space-y-3">
+      <div className="flex items-center gap-3">
+        {user.avatar ? (
+          <img
+            src={user.avatar}
+            alt={user.name}
+            className="h-10 w-10 rounded-full object-cover border"
+          />
+        ) : (
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold border">
+            {user.name.charAt(0).toUpperCase()}
+          </span>
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="font-medium truncate">{user.name}</p>
+          <p className="text-sm text-muted-foreground truncate">{user.email}</p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <label className="cursor-pointer">
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              disabled={isSaving}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) onUploadAvatar(file, user.id);
+                e.target.value = '';
+              }}
+            />
+            <Button type="button" variant="outline" size="sm" asChild disabled={isSaving}>
+              <span>
+                {isSaving ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Upload className="h-3.5 w-3.5" />
+                )}
+                <span className="ml-1.5">Avatar</span>
+              </span>
+            </Button>
+          </label>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setConfirmDelete(true)}
+          >
+            <Trash2 className="h-4 w-4 text-destructive" />
+          </Button>
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <Textarea
+          placeholder="Short bio for blog posts..."
+          value={bio}
+          onChange={(e) => { setBio(e.target.value); setDirty(true); }}
+          rows={2}
+          className="text-sm"
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          className="shrink-0 self-end"
+          disabled={!dirty || isSaving}
+          onClick={() => onSaveBio(user.id, bio)}
+        >
+          {isSaving ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Save className="h-3.5 w-3.5" />
+          )}
+          <span className="ml-1.5">Save</span>
+        </Button>
+      </div>
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {user.name}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { onDelete(user.id); setConfirmDelete(false); }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

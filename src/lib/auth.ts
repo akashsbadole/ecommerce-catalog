@@ -13,6 +13,8 @@ export interface AuthUser {
   companyName?: string | null;
   taxId?: string | null;
   businessAddress?: string | null;
+  avatar?: string | null;
+  bio?: string | null;
 }
 
 export async function getUserById(id: string): Promise<AuthUser | null> {
@@ -32,6 +34,8 @@ export async function getUserById(id: string): Promise<AuthUser | null> {
     companyName: user.Company?.name,
     taxId: user.Company?.taxId,
     businessAddress: user.Company?.address,
+    avatar: user.avatar,
+    bio: user.bio,
   };
 }
 

@@ -14,7 +14,7 @@ async function resolveBlogPost(idOrSlug: string, storeId: string | null) {
       ],
       ...(storeId ? { storeId } : {}),
     },
-    include: { User: { select: { id: true, name: true, email: true } } },
+    include: { User: { select: { id: true, name: true, email: true, avatar: true, bio: true } } },
   });
 }
 

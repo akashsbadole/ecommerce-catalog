@@ -343,12 +343,17 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
     return libFormatPrice(price, settings?.currency || "USD");
   };
 
-  const isNavItemActive = (item: { page?: string | null; slug?: string | null }) => {
+  const isNavItemActive = (item: {
+    page?: string | null;
+    slug?: string | null;
+  }) => {
     if (!item.page) return false;
     if (item.page === "content-page" && item.slug) {
       const dedicated = SLUG_TO_DEDICATED_PAGE[item.slug];
       if (dedicated) return currentPage.type === dedicated;
-      return currentPage.type === "content-page" && currentPage.slug === item.slug;
+      return (
+        currentPage.type === "content-page" && currentPage.slug === item.slug
+      );
     }
     if (item.page === "category") return currentPage.type === "category";
     if (item.page === "url") return false;
@@ -373,7 +378,11 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                   className="h-[50px] w-auto object-contain"
                 />
               ) : (
-                <ShoppingBag className="h-6 w-6 text-primary" />
+                <img
+                  src="/pruvabites.jpg"
+                  alt="Logo"
+                  className="h-[50px] w-auto object-contain"
+                />
               )}
               <span className="text-lg font-bold tracking-tight hidden sm:inline">
                 {settings?.site_name}
@@ -406,7 +415,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                           className={cn(
                             "relative text-sm font-medium px-3 text-black hover:text-white",
                             active &&
-                              "after:absolute after:-bottom-[1px] after:left-2 after:right-2 after:h-0.5 after:bg-primary after:rounded-full after:content-['']"
+                              "after:absolute after:-bottom-[1px] after:left-2 after:right-2 after:h-0.5 after:bg-primary after:rounded-full after:content-['']",
                           )}
                           onClick={() => navigateOrOpen(item)}
                         >
@@ -440,7 +449,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                         className={cn(
                           "relative text-sm font-medium px-3",
                           active &&
-                            "after:absolute after:-bottom-[1px] after:left-2 after:right-2 after:h-0.5 after:bg-primary after:rounded-full after:content-['']"
+                            "after:absolute after:-bottom-[1px] after:left-2 after:right-2 after:h-0.5 after:bg-primary after:rounded-full after:content-['']",
                         )}
                         onClick={() => onNavigate(link.page, link.slug)}
                       >

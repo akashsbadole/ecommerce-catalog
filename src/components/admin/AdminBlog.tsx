@@ -28,8 +28,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
@@ -75,6 +75,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { adminFetch } from '@/lib/admin-fetch';
 import type { PageBlock } from '@/lib/page-blocks';
 import { normalizePageBlocks } from '@/lib/page-blocks';
+import { marked } from 'marked';
+import TurndownService from 'turndown';
+import WysiwygEditor from './WysiwygEditor';
 
 interface Author {
   id: string;
@@ -177,7 +180,6 @@ export function AdminBlog() {
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [form, setForm] = useState<BlogFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [seoOpen, setSeoOpen] = useState(false);
 
   // Delete dialog state
@@ -305,7 +307,7 @@ export function AdminBlog() {
       title: post.title,
       slug: post.slug,
       excerpt: post.excerpt || '',
-      content: post.content || '',
+      content: turndownService.turndown(post.content || ''),
       blocks: blocks,
       coverImage: post.coverImage || '',
       authorId: post.authorId || '',
@@ -320,36 +322,17 @@ export function AdminBlog() {
     setFormOpen(true);
   };
 
+  const turndownService = new TurndownService({
+    headingStyle: 'atx',
+    codeBlockStyle: 'fenced',
+  });
+
   const handleTitleChange = (title: string) => {
     setForm(prev => ({
       ...prev,
       title,
       slug: editingPost ? prev.slug : generateSlug(title),
     }));
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const res = await adminFetch('/api/upload', { method: 'POST', body: formData });
-      if (res.ok) {
-        const data = await res.json();
-        const imgTag = `\n<img src="${data.url}" alt="" />\n`;
-        setForm(prev => ({ ...prev, content: prev.content + imgTag }));
-        toast.success('Image uploaded');
-      } else {
-        toast.error('Failed to upload image');
-      }
-    } catch {
-      toast.error('Failed to upload image');
-    } finally {
-      setUploading(false);
-      e.target.value = '';
-    }
   };
 
   const handleSave = async () => {
@@ -364,7 +347,7 @@ export function AdminBlog() {
         title: form.title.trim(),
         slug: form.slug.trim() || generateSlug(form.title),
         excerpt: form.excerpt.trim() || null,
-        content: form.content.trim() || '',
+        content: (await marked.parse(form.content.trim() || '')),
         coverImage: form.coverImage.trim() || null,
         authorId: form.authorId || null,
         metaTitle: form.metaTitle.trim() || null,
@@ -824,46 +807,12 @@ export function AdminBlog() {
                 </div>
                 <div className="space-y-2">
                   <Label>Content</Label>
-                  <div className="flex items-center gap-2 mb-2">
-                    <label className="cursor-pointer">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleImageUpload}
-                        disabled={uploading}
-                      />
-                      <Button type="button" variant="outline" size="sm" disabled={uploading} asChild>
-                        <span>
-                          <Upload className="mr-1.5 h-3.5 w-3.5" />
-                          {uploading ? 'Uploading...' : 'Insert Image'}
-                        </span>
-                      </Button>
-                    </label>
-                    <span className="text-xs text-muted-foreground">Uploads image and inserts HTML at cursor</span>
-                  </div>
-                  <Textarea
-                    placeholder="Write blog post content with HTML..."
+                  <WysiwygEditor
                     value={form.content}
-                    onChange={(e) => setForm(prev => ({ ...prev, content: e.target.value }))}
-                    className="min-h-[400px] font-mono text-sm"
+                    onChange={(value) => setForm(prev => ({ ...prev, content: value }))}
+                    minHeight="400px"
+                    placeholder="Start writing your blog post..."
                   />
-                  <details className="text-xs text-muted-foreground">
-                    <summary className="cursor-pointer hover:text-foreground transition-colors font-medium">
-                      Supported HTML tags
-                    </summary>
-                    <div className="mt-2 p-3 border rounded-lg bg-muted/30 space-y-1.5">
-                      <p><strong>Headings:</strong> <code>{'<h2>'}</code> <code>{'<h3>'}</code> <code>{'<h4>'}</code></p>
-                      <p><strong>Text:</strong> <code>{'<p>'}</code> <code>{'<strong>'}</code> <code>{'<em>'}</code> <code>{'<u>'}</code> <code>{'<s>'}</code> <code>{'<br>'}</code></p>
-                      <p><strong>Lists:</strong> <code>{'<ul>'}</code> <code>{'<ol>'}</code> <code>{'<li>'}</code></p>
-                      <p><strong>Links:</strong> <code>{'<a href="...">'}</code></p>
-                      <p><strong>Images:</strong> <code>{'<img src="..." alt="..." />'}</code> (use Insert Image button)</p>
-                      <p><strong>Video:</strong> <code>{'<iframe src="..." allowfullscreen>'}</code></p>
-                      <p><strong>Code:</strong> <code>{'<pre><code>'}</code> <code>{'<code>'}</code></p>
-                      <p><strong>Blockquote:</strong> <code>{'<blockquote>'}</code></p>
-                      <p><strong>Tables:</strong> <code>{'<table>'}</code> <code>{'<thead>'}</code> <code>{'<tbody>'}</code> <code>{'<tr>'}</code> <code>{'<th>'}</code> <code>{'<td>'}</code></p>
-                    </div>
-                  </details>
                 </div>
               </TabsContent>
 
@@ -922,6 +871,7 @@ export function AdminBlog() {
                         onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (!file) return;
+                          setSaving(true);
                           const fd = new FormData();
                           fd.append('file', file);
                           const res = await adminFetch('/api/upload', { method: 'POST', body: fd });
@@ -932,11 +882,11 @@ export function AdminBlog() {
                           } else {
                             toast.error('Upload failed');
                           }
+                          setSaving(false);
                           e.target.value = '';
                         }}
-                        disabled={uploading}
                       />
-                      <Button type="button" variant="outline" size="sm" disabled={uploading} asChild>
+                      <Button type="button" variant="outline" size="sm" asChild>
                         <span><Upload className="mr-1.5 h-3.5 w-3.5" />Upload</span>
                       </Button>
                     </label>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { Calendar, User, ImageIcon, Search, Tag, Send } from "lucide-react";
+import { Calendar, ImageIcon, Search, Tag, Send } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,7 @@ interface BlogPost {
   isPublished: boolean;
   publishedAt: string | null;
   tags: string | null;
-  User?: { id: string; name: string; email: string } | null;
+  User?: { id: string; name: string; email: string; avatar?: string | null; bio?: string | null } | null;
 }
 
 interface BlogPageProps {
@@ -305,9 +305,19 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
                       </span>
                     )}
                     {post.User && (
-                      <span className="flex items-center gap-1">
-                        <User className="h-3 w-3" />
-                        {post.User.name}
+                      <span className="flex items-center gap-1.5">
+                        {post.User.avatar ? (
+                          <img
+                            src={post.User.avatar}
+                            alt={post.User.name}
+                            className="h-5 w-5 rounded-full object-cover"
+                          />
+                        ) : (
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[9px] font-bold">
+                            {post.User.name.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                        <span className="truncate max-w-[120px]">{post.User.name}</span>
                       </span>
                     )}
                   </div>

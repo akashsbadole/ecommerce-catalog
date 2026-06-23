@@ -412,6 +412,7 @@ model User {
   addresses               String               @default("[]")
   phone                   String?
   avatar                  String?
+  bio                     String?
   currentStoreId          String?
   createdAt               DateTime             @default(now())
   updatedAt               DateTime             @default(now())
