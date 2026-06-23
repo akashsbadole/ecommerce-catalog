@@ -1089,7 +1089,7 @@ function ProductCategoriesBlock({
     displayCategories = apiCategories.filter((c) => categoryIds.includes(c.id));
   }
   if (displayCategories.length === 0) {
-    displayCategories = cmsCategories;
+    displayCategories = cmsCategories as any;
   }
 
   return (
