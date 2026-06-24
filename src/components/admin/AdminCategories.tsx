@@ -173,6 +173,8 @@ export function AdminCategories() {
     infographicImage: "",
     infographicCaption: "",
     infographicAltText: "",
+    galleryTitle: "",
+    galleryImages: "[]",
     faqTitle: "",
     faqItems: "[]",
   });
@@ -242,6 +244,8 @@ export function AdminCategories() {
       infographicImage: "",
       infographicCaption: "",
       infographicAltText: "",
+      galleryTitle: "",
+      galleryImages: "[]",
       faqTitle: "",
       faqItems: "[]",
     });
@@ -325,6 +329,8 @@ export function AdminCategories() {
             infographicImage: c.infographicImage || "",
             infographicCaption: c.infographicCaption || "",
             infographicAltText: c.infographicAltText || "",
+            galleryTitle: c.galleryTitle || "",
+            galleryImages: c.galleryImages || "[]",
             faqTitle: c.faqTitle || "",
             faqItems: c.faqItems || "[]",
           });
@@ -395,6 +401,8 @@ export function AdminCategories() {
         infographicImage: categoryFields.infographicImage || null,
         infographicCaption: categoryFields.infographicCaption || null,
         infographicAltText: categoryFields.infographicAltText || null,
+        galleryTitle: categoryFields.galleryTitle || null,
+        galleryImages: categoryFields.galleryImages || "[]",
         faqTitle: categoryFields.faqTitle || null,
         faqItems: categoryFields.faqItems || "[]",
       };

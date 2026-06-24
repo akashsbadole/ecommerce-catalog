@@ -1,7 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Send, ImageIcon, ChevronDown } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import {
+  Send,
+  ImageIcon,
+  ChevronDown,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  ZoomIn,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
 import { getFirstImage } from "@/lib/utils";
@@ -31,6 +39,8 @@ export interface CategoryFieldData {
   infographicImage: string | null;
   infographicCaption: string | null;
   infographicAltText: string | null;
+  galleryTitle: string | null;
+  galleryImages: string;
   faqTitle: string | null;
   faqItems: string;
 }
@@ -486,6 +496,161 @@ function InfographicSection({
   );
 }
 
+function GallerySection({
+  title,
+  images,
+}: {
+  title: string;
+  images: string[];
+}) {
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [loaded, setLoaded] = useState<Set<number>>(new Set());
+  const sectionRef = useRef<HTMLElement>(null);
+
+  const openLightbox = useCallback((idx: number) => setLightboxIndex(idx), []);
+  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (lightboxIndex === null) return;
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowLeft")
+        setLightboxIndex((prev) =>
+          prev !== null ? (prev - 1 + images.length) % images.length : null,
+        );
+      if (e.key === "ArrowRight")
+        setLightboxIndex((prev) =>
+          prev !== null ? (prev + 1) % images.length : null,
+        );
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [lightboxIndex, images.length, closeLightbox]);
+
+  if (images.length === 0) return null;
+
+  return (
+    <>
+      <section
+        ref={sectionRef}
+        className="container mx-auto max-w-6xl px-4 py-12 md:py-16"
+      >
+        {title && (
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center mb-8 md:mb-10">
+            {title}
+          </h2>
+        )}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 md:gap-3">
+          {images.map((src, i) => (
+            <button
+              key={i}
+              onClick={() => openLightbox(i)}
+              className="group relative aspect-square rounded-xl overflow-hidden bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              style={{
+                animation: `gallery-fade-in 0.5s ease-out ${i * 0.08}s both`,
+              }}
+            >
+              {!loaded.has(i) && (
+                <div className="absolute inset-0 bg-muted animate-pulse" />
+              )}
+              <img
+                src={src}
+                alt={`${title || "Gallery"} image ${i + 1}`}
+                loading="lazy"
+                onLoad={() =>
+                  setLoaded((prev) => new Set(prev).add(i))
+                }
+                className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-110 ${
+                  loaded.has(i) ? "opacity-100" : "opacity-0"
+                }`}
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-center justify-center">
+                <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-all duration-300 scale-50 group-hover:scale-100" />
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Lightbox */}
+      {lightboxIndex !== null && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={closeLightbox}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image lightbox"
+        >
+          <button
+            onClick={closeLightbox}
+            className="absolute top-4 right-4 p-2 text-white/70 hover:text-white transition-colors z-10"
+            aria-label="Close lightbox"
+          >
+            <X className="h-6 w-6" />
+          </button>
+
+          {images.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightboxIndex(
+                    (prev) =>
+                      prev !== null
+                        ? (prev - 1 + images.length) % images.length
+                        : null,
+                  );
+                }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 p-2 text-white/70 hover:text-white transition-colors z-10"
+                aria-label="Previous image"
+              >
+                <ChevronLeft className="h-8 w-8" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightboxIndex(
+                    (prev) =>
+                      prev !== null ? (prev + 1) % images.length : null,
+                  );
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-white/70 hover:text-white transition-colors z-10"
+                aria-label="Next image"
+              >
+                <ChevronRight className="h-8 w-8" />
+              </button>
+            </>
+          )}
+
+          <img
+            src={images[lightboxIndex]}
+            alt={`${title || "Gallery"} image ${lightboxIndex + 1}`}
+            className="max-h-[85vh] max-w-[90vw] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-sm">
+            {lightboxIndex + 1} / {images.length}
+          </div>
+        </div>
+      )}
+
+      <style jsx global>{`
+        @keyframes gallery-fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(12px) scale(0.96);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+      `}</style>
+    </>
+  );
+}
+
 interface CategoryFieldsRendererProps {
   fields: CategoryFieldData;
   onNavigate?: (page: string, data?: unknown) => void;
@@ -503,6 +668,7 @@ export function CategoryFieldsRenderer({
   const faqItems = parseJsonArray<{ question: string; answer: string }>(
     fields.faqItems,
   );
+  const galleryImages = parseJsonArray<string>(fields.galleryImages);
 
   return (
     <>
@@ -548,6 +714,11 @@ export function CategoryFieldsRenderer({
         image={fields.infographicImage || ""}
         caption={fields.infographicCaption || ""}
         altText={fields.infographicAltText || ""}
+      />
+
+      <GallerySection
+        title={fields.galleryTitle || ""}
+        images={galleryImages}
       />
 
       <FaqSection title={fields.faqTitle || ""} items={faqItems} />

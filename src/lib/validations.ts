@@ -65,6 +65,10 @@ export const categorySchema = z.object({
   infographicCaption: z.string().optional().nullable(),
   infographicAltText: z.string().optional().nullable(),
 
+  // Gallery fields
+  galleryTitle: z.string().optional().nullable(),
+  galleryImages: z.string().optional().nullable().default('[]'),
+
   // FAQ fields
   faqTitle: z.string().optional().nullable(),
   faqItems: z.string().optional().nullable().default('[]'),

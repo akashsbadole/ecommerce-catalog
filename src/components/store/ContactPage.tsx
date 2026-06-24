@@ -60,7 +60,7 @@ export function ContactPage({
   const slugMap: Record<string, string> = {
     "about-page-content": "about-us",
     "mfg-page-content": "manufacturing",
-    "contact-page-content": "contact",
+    "contact-page-content": "contact-us",
     home: "homepage",
   };
 
@@ -93,18 +93,19 @@ export function ContactPage({
   const promiseItems =
     (responsePromise.items as Array<{ label: string; time: string }>) || [];
   const locations = (data.locations as Record<string, unknown>) || {};
-  const locationCards =
-    (locations.cards as Array<{
-      type: string;
-      title: string;
-      subtitle?: string;
-      address?: string;
-      accessibility?: string;
-      description?: string;
-      highlights?: string[];
-      cta?: string;
-      buttons?: Array<{ text: string; icon: string }>;
-    }>) || [];
+      const locationCards =
+        (locations.cards as Array<{
+          type: string;
+          title: string;
+          subtitle?: string;
+          address?: string;
+          accessibility?: string;
+          description?: string;
+          highlights?: string[];
+          cta?: string;
+          link?: string;
+          buttons?: Array<{ text: string; icon: string; link?: string }>;
+        }>) || [];
 
   return (
     <div className="flex flex-col">
@@ -210,27 +211,66 @@ export function ContactPage({
                   )}
                   {card.buttons && (
                     <div className="flex gap-2">
-                      {card.buttons.map((btn) => (
-                        <button
-                          key={btn.text}
-                          className="text-[10px] border rounded px-2 py-1 flex items-center gap-1 hover:bg-muted"
-                        >
-                          <ResolvedIcon name={btn.icon} className="h-3 w-3" />{" "}
-                          {btn.text}
-                        </button>
-                      ))}
+                      {card.buttons.map((btn) => {
+                        const isVisitButton =
+                          /book|schedule|visit/i.test(btn.text || "");
+                        const fallbackLink =
+                          btn.text === "Get directions"
+                            ? card.address
+                              ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(card.address)}`
+                              : undefined
+                            : isVisitButton
+                              ? "#contact-form"
+                              : undefined;
+                        const href = btn.link || fallbackLink;
+                        if (href) {
+                          const isExternal = href.startsWith("http");
+                          return (
+                            <a
+                              key={btn.text}
+                              href={href}
+                              target={isExternal ? "_blank" : undefined}
+                              rel={isExternal ? "noopener noreferrer" : undefined}
+                              className="text-[10px] border rounded px-2 py-1 flex items-center gap-1 hover:bg-muted"
+                            >
+                              <ResolvedIcon name={btn.icon} className="h-3 w-3" />{" "}
+                              {btn.text}
+                            </a>
+                          );
+                        }
+                        return (
+                          <button
+                            key={btn.text}
+                            className="text-[10px] border rounded px-2 py-1 flex items-center gap-1 hover:bg-muted"
+                          >
+                            <ResolvedIcon name={btn.icon} className="h-3 w-3" />{" "}
+                            {btn.text}
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                   {card.cta && (
-                    <button
-                      onClick={() => {
-                        const form = document.getElementById("contact-form");
-                        if (form) form.scrollIntoView({ behavior: "smooth" });
-                      }}
-                      className="w-full bg-primary text-primary-foreground text-xs font-medium rounded py-2.5 hover:bg-primary/90 transition-colors"
-                    >
-                      {card.cta}
-                    </button>
+                    <>
+                      {card.link ? (
+                        <a
+                          href={card.link}
+                          className="w-full bg-primary text-primary-foreground text-xs font-medium rounded py-2.5 hover:bg-primary/90 transition-colors text-center block"
+                        >
+                          {card.cta}
+                        </a>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            const form = document.getElementById("contact-form");
+                            if (form) form.scrollIntoView({ behavior: "smooth" });
+                          }}
+                          className="w-full bg-primary text-primary-foreground text-xs font-medium rounded py-2.5 hover:bg-primary/90 transition-colors"
+                        >
+                          {card.cta}
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               ))}

@@ -10,6 +10,7 @@ import {
   MousePointerClick,
   GitMerge,
   Image,
+  Images,
   Save,
   HelpCircle,
 } from "lucide-react";
@@ -56,6 +57,8 @@ export interface CategoryFieldValues {
   infographicImage: string;
   infographicCaption: string;
   infographicAltText: string;
+  galleryTitle: string;
+  galleryImages: string;
   faqTitle: string;
   faqItems: string;
 }
@@ -74,6 +77,7 @@ const sectionIcons: Record<string, React.ReactNode> = {
   cta: <MousePointerClick className="h-4 w-4" />,
   process: <GitMerge className="h-4 w-4" />,
   infographic: <Image className="h-4 w-4" />,
+  gallery: <Images className="h-4 w-4" />,
   faq: <HelpCircle className="h-4 w-4" />,
 };
 
@@ -118,6 +122,19 @@ export function AdminCategoryFields({
     update("processSteps", JSON.stringify(newSteps));
   };
 
+  const galleryImageList: string[] = (() => {
+    try {
+      const parsed = JSON.parse(values.galleryImages || "[]");
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  })();
+
+  const setGalleryImages = (newImages: string[]) => {
+    update("galleryImages", JSON.stringify(newImages));
+  };
+
   const faqItems: { question: string; answer: string }[] = (() => {
     try {
       const parsed = JSON.parse(values.faqItems || "[]");
@@ -155,6 +172,7 @@ export function AdminCategoryFields({
           <TabsTrigger value="cta">CTA</TabsTrigger>
           <TabsTrigger value="process">Process</TabsTrigger>
           <TabsTrigger value="infographic">Info</TabsTrigger>
+          <TabsTrigger value="gallery">Gallery</TabsTrigger>
           <TabsTrigger value="faq">FAQ</TabsTrigger>
         </TabsList>
 
@@ -526,6 +544,60 @@ export function AdminCategoryFields({
                 value={values.infographicAltText}
                 onChange={(e) => update("infographicAltText", e.target.value)}
               />
+            </div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="gallery" className="space-y-4 pt-4">
+          <Card className="p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              {sectionIcons.gallery}
+              <Label className="text-base font-semibold">
+                Gallery Section
+              </Label>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cat-gallery-title">Section Title</Label>
+              <Input
+                id="cat-gallery-title"
+                placeholder="Product Gallery"
+                value={values.galleryTitle}
+                onChange={(e) => update("galleryTitle", e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Gallery Images</Label>
+              {galleryImageList.map((url, i) => (
+                <div key={i} className="flex gap-2 items-center">
+                  <MediaPickerField
+                    label={`Image ${i + 1}`}
+                    value={url}
+                    onChange={(newUrl) => {
+                      const next = [...galleryImageList];
+                      next[i] = newUrl;
+                      setGalleryImages(next);
+                    }}
+                    placeholder="https://example.com/image.jpg"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() =>
+                      setGalleryImages(galleryImageList.filter((_, j) => j !== i))
+                    }
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setGalleryImages([...galleryImageList, ""])}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Image
+              </Button>
             </div>
           </Card>
         </TabsContent>

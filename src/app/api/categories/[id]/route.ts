@@ -106,6 +106,10 @@ export async function PUT(
         ...(body.infographicCaption !== undefined && { infographicCaption: body.infographicCaption || null }),
         ...(body.infographicAltText !== undefined && { infographicAltText: body.infographicAltText || null }),
 
+        // Gallery fields
+        ...(body.galleryTitle !== undefined && { galleryTitle: body.galleryTitle || null }),
+        ...(body.galleryImages !== undefined && { galleryImages: body.galleryImages || '[]' }),
+
         // FAQ fields
         ...(body.faqTitle !== undefined && { faqTitle: body.faqTitle || null }),
         ...(body.faqItems !== undefined && { faqItems: body.faqItems || '[]' }),

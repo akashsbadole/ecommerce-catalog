@@ -57,6 +57,7 @@ export function ManufacturingPage({
     description: "From raw material to finished, packaged goods — at scale, with precision, under one roof in Gujarat. FSSAI certified, 100% own manufacturing.",
   });
   const [activeLine, setActiveLine] = useState("khakhra");
+  const [imgErrors, setImgErrors] = useState<Set<string>>(new Set());
 
   const slugMap: Record<string, string> = {
     "about-page-content": "about-us",
@@ -74,7 +75,7 @@ export function ManufacturingPage({
   const effectiveBlocks = mfgBlocks ?? fallbackBlocks;
   const cmsMfgData = getPageContentData(
     effectiveBlocks,
-    "mfg-page-content",
+    "manufacturing-content",
     BLOCK_DEFAULTS["mfg-page-content"].defaultData,
   );
   const fallbackMfg = BLOCK_DEFAULTS["mfg-page-content"].defaultData;
@@ -190,11 +191,14 @@ export function ManufacturingPage({
           <div className="border rounded-xl overflow-hidden">
             <div className="flex flex-col md:flex-row">
               <div className="w-full md:w-[280px] h-48 md:h-auto bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
-                {activeLineData?.image ? (
+                {activeLineData?.image && !imgErrors.has(activeLine) ? (
                   <img
                     src={activeLineData.image}
                     alt={activeLineData.name}
                     className="w-full h-full object-cover"
+                    onError={() =>
+                      setImgErrors((prev) => new Set(prev).add(activeLine))
+                    }
                   />
                 ) : (
                   <span className="text-muted-foreground text-sm">

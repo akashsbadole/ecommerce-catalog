@@ -1240,8 +1240,8 @@ export const BLOCK_DEFAULTS: Record<
               "[Factory address line 1]\n[Area / Industrial estate]\n[City, District] — [PIN]\nGujarat, India",
             accessibility: "[Station] Xkm · [Airport] Xkm",
             buttons: [
-              { text: "Get directions", icon: "MapPin" },
-              { text: "Book visit", icon: "Factory" },
+              { text: "Get directions", icon: "MapPin", link: "" },
+              { text: "Book visit", icon: "Factory", link: "" },
             ],
           },
           {
@@ -1251,7 +1251,7 @@ export const BLOCK_DEFAULTS: Record<
             address:
               "[Office address line 1]\n[Area / Colony]\n[City] — [PIN]\nGujarat, India",
             accessibility: "Mon–Sat · 9am–6pm IST",
-            buttons: [{ text: "Get directions", icon: "MapPin" }],
+            buttons: [{ text: "Get directions", icon: "MapPin", link: "" }],
           },
           {
             type: "visit",
@@ -1266,6 +1266,7 @@ export const BLOCK_DEFAULTS: Record<
               "Product sampling on request",
             ],
             cta: "Schedule a factory visit →",
+            link: "#contact-form",
           },
         ],
       },
@@ -1514,6 +1515,31 @@ export function deepMerge<T extends Record<string, unknown>>(
         baseVal as Record<string, unknown>,
         overVal as Record<string, unknown>,
       );
+    } else if (
+      Array.isArray(baseVal) &&
+      Array.isArray(overVal) &&
+      overVal.length > 0 &&
+      typeof overVal[0] === "object" &&
+      "id" in overVal[0] &&
+      typeof baseVal[0] === "object" &&
+      "id" in baseVal[0]
+    ) {
+      const merged = [...baseVal];
+      for (const overItem of overVal) {
+        const item = overItem as Record<string, unknown>;
+        const idx = merged.findIndex(
+          (m) => (m as Record<string, unknown>)?.id === item.id,
+        );
+        if (idx >= 0) {
+          merged[idx] = deepMerge(
+            merged[idx] as Record<string, unknown>,
+            item,
+          );
+        } else {
+          merged.push(item);
+        }
+      }
+      out[key] = merged;
     } else if (overVal !== undefined && overVal !== null && overVal !== "") {
       out[key] = overVal;
     }

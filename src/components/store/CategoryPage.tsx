@@ -13,7 +13,7 @@ interface CategoryPageProps {
   onNavigate: (page: string, data?: unknown) => void;
 }
 
-const emptyFields: CategoryFieldData = {
+  const emptyFields: CategoryFieldData = {
   heroTitle: null,
   heroSubtitle: null,
   heroDescription: null,
@@ -38,6 +38,8 @@ const emptyFields: CategoryFieldData = {
   infographicImage: null,
   infographicCaption: null,
   infographicAltText: null,
+  galleryTitle: null,
+  galleryImages: "[]",
   faqTitle: null,
   faqItems: "[]",
 };
@@ -101,8 +103,10 @@ export function CategoryPage({ slug, onNavigate }: CategoryPageProps) {
               infographicImage: cat.infographicImage || null,
               infographicCaption: cat.infographicCaption || null,
               infographicAltText: cat.infographicAltText || null,
-              faqTitle: cat.faqTitle || null,
-              faqItems: cat.faqItems || "[]",
+               galleryTitle: cat.galleryTitle || null,
+               galleryImages: cat.galleryImages || "[]",
+               faqTitle: cat.faqTitle || null,
+               faqItems: cat.faqItems || "[]",
             });
             const prodRes = await fetch(`/api/products?categoryId=${cat.id}`);
             if (prodRes.ok) {
