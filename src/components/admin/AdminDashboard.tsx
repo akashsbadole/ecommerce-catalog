@@ -50,6 +50,8 @@ import { AdminMedia } from "@/components/admin/AdminMedia";
 import { AdminPages } from "@/components/admin/AdminPages";
 import { AdminSearchDialog } from "@/components/admin/AdminSearchDialog";
 import { AdminMenus } from "@/components/admin/AdminMenus";
+import { AdminNewsletter } from "@/components/admin/AdminNewsletter";
+import { AdminAbandonedCarts } from "@/components/admin/AdminAbandonedCarts";
 import { AdminBlog } from "@/components/admin/AdminBlog";
 import { NotificationBell } from "@/components/admin/NotificationBell";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -70,6 +72,7 @@ const sidebarItems = [
   { id: "brands", label: "Brands", icon: ShoppingBag },
   { id: "blog", label: "Blog", icon: BookOpen },
   { id: "orders", label: "Orders", icon: ShoppingBag },
+  { id: "abandoned-carts", label: "Abandoned Carts", icon: ShoppingCart },
   { id: "coupons", label: "Coupons", icon: Ticket },
   { id: "reviews", label: "Reviews", icon: Star },
   { id: "quotes", label: "Quotes", icon: FileText },
@@ -77,6 +80,7 @@ const sidebarItems = [
   { id: "media", label: "Media", icon: ImageIcon },
   { id: "pages", label: "Pages", icon: FileText },
   { id: "banners", label: "Banners", icon: ImageIcon },
+  { id: "newsletter", label: "Newsletter", icon: Mail },
   { id: "menus", label: "Menus", icon: Menu },
   { id: "settings", label: "Settings", icon: Settings },
 ];
@@ -306,6 +310,8 @@ export function AdminDashboard({
         return <AdminEnquiries />;
       case "orders":
         return <AdminOrders />;
+      case "abandoned-carts":
+        return <AdminAbandonedCarts />;
       case "coupons":
         return <AdminCoupons />;
       case "reviews":
@@ -322,6 +328,8 @@ export function AdminDashboard({
         return <AdminBlog />;
       case "menus":
         return <AdminMenus />;
+      case "newsletter":
+        return <AdminNewsletter />;
       case "settings":
         return <AdminSettings />;
       default:

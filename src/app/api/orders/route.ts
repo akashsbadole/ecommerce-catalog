@@ -6,7 +6,7 @@ import { requireAuth } from '@/lib/admin-auth';
 
 export async function POST(request: NextRequest) {
   try {
-    const auth = await requireAuth(request);
+    const auth = await requireAuth(request).catch(() => ({ success: false }));
     const storeId = getStoreId(request);
     const body = await request.json();
     const { items, customer, paymentMethod, couponCode } = body;

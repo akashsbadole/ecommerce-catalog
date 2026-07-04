@@ -15,7 +15,7 @@ export async function PUT(
 
     const { id } = params;
     const body = await request.json();
-    const { status, paymentStatus, returnStatus, refundAmount } = body;
+    const { status, paymentStatus, returnStatus, refundAmount, trackingNumber } = body;
 
     const order = await db.order.update({
       where: { id, ...(storeId ? { storeId } : {}) },
@@ -24,6 +24,7 @@ export async function PUT(
         paymentStatus: paymentStatus || undefined,
         returnStatus: returnStatus || undefined,
         refundAmount: refundAmount !== undefined ? parseFloat(refundAmount) : undefined,
+        trackingNumber: trackingNumber !== undefined ? trackingNumber : undefined,
       },
     });
 

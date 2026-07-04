@@ -111,7 +111,11 @@ interface Product {
   images: string;
   categoryId: string | null;
   isFeatured: boolean;
+  isBestSeller: boolean;
   isActive: boolean;
+  isDigital: boolean;
+  downloadUrl: string;
+  videoUrl: string;
   sortOrder: number;
   specifications: string | null;
   metaTitle: string | null;
@@ -150,6 +154,8 @@ interface ProductFormData {
   ogImage: string;
   customSchema: string;
   whatsappNumber: string;
+  tags: string;
+  attributes: string;
   stock: string;
   lowStockThreshold: string;
   relatedProductIds: string;
@@ -169,7 +175,11 @@ const emptyForm: ProductFormData = {
   images: "",
   categoryId: "",
   isFeatured: false,
+  isBestSeller: false,
   isActive: true,
+  isDigital: false,
+  downloadUrl: "",
+  videoUrl: "",
   sortOrder: "0",
   specifications: "",
   metaTitle: "",
@@ -366,7 +376,11 @@ export function AdminProducts() {
       images: imgs.join(", "),
       categoryId: product.categoryId || "",
       isFeatured: product.isFeatured,
+      isBestSeller: product.isBestSeller || false,
       isActive: product.isActive,
+      isDigital: product.isDigital || false,
+      downloadUrl: product.downloadUrl || "",
+      videoUrl: product.videoUrl || "",
       sortOrder: String(product.sortOrder),
       specifications: product.specifications || "",
       metaTitle: product.metaTitle || "",
@@ -374,6 +388,8 @@ export function AdminProducts() {
       ogImage: product.ogImage || "",
       customSchema: product.customSchema || "",
       whatsappNumber: product.whatsappNumber || "",
+      tags: product.tags || "",
+      attributes: product.attributes || "{}",
       stock: String(product.stock ?? 0),
       lowStockThreshold: String(product.lowStockThreshold ?? 10),
       relatedProductIds: product.relatedProductIds || "",
@@ -432,7 +448,12 @@ export function AdminProducts() {
         images: imagesArray,
         categoryId: form.categoryId || null,
         isFeatured: form.isFeatured,
+        brandId: form.brandId || null,
+        isBestSeller: form.isBestSeller,
         isActive: form.isActive,
+        isDigital: form.isDigital,
+        downloadUrl: form.downloadUrl.trim() || null,
+        videoUrl: form.videoUrl.trim() || null,
         sortOrder: parseInt(form.sortOrder) || 0,
         specifications: form.specifications.trim() || null,
         metaTitle: form.metaTitle.trim() || null,
@@ -440,6 +461,8 @@ export function AdminProducts() {
         ogImage: form.ogImage.trim() || null,
         customSchema: form.customSchema.trim() || null,
         whatsappNumber: form.whatsappNumber.trim() || null,
+        tags: form.tags.trim() || null,
+        attributes: form.attributes.trim() || "{}",
         stock: parseInt(form.stock) || 0,
         lowStockThreshold: parseInt(form.lowStockThreshold) || 10,
         relatedProductIds: JSON.stringify(selectedRelatedIds),
@@ -1411,8 +1434,19 @@ export function AdminProducts() {
                   </CollapsibleContent>
                 </Collapsible>
 
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="prod-tags">Tags (comma separated)</Label>
+                    <Input id="prod-tags" placeholder="new, summer, popular" value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="prod-attrs">Attributes (JSON)</Label>
+                    <Input id="prod-attrs" placeholder='{"Material": "Wood"}' value={form.attributes} onChange={(e) => setForm({ ...form, attributes: e.target.value })} />
+                  </div>
+                </div>
+
                 {/* SKU & Barcode & Category */}
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="prod-sku">SKU</Label>
                     <Input
@@ -1546,6 +1580,17 @@ export function AdminProducts() {
                   />
                 </div>
 
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                        <Label htmlFor="prod-video">Video URL</Label>
+                        <Input id="prod-video" placeholder="YouTube/Vimeo link" value={form.videoUrl} onChange={(e) => setForm({ ...form, videoUrl: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="prod-download">Download URL (Digital)</Label>
+                        <Input id="prod-download" placeholder="External link to file" value={form.downloadUrl} onChange={(e) => setForm({ ...form, downloadUrl: e.target.value })} />
+                    </div>
+                </div>
+
                 {/* Switches */}
                 <div className="flex flex-wrap gap-6">
                   <div className="flex items-center gap-2">
@@ -1585,6 +1630,24 @@ export function AdminProducts() {
                     >
                       Active
                     </Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={form.isBestSeller}
+                      onCheckedChange={(checked) =>
+                        setForm((prev) => ({ ...prev, isBestSeller: checked }))
+                      }
+                    />
+                    <Label>Best Seller</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={form.isDigital}
+                      onCheckedChange={(checked) =>
+                        setForm((prev) => ({ ...prev, isDigital: checked }))
+                      }
+                    />
+                    <Label>Digital Product</Label>
                   </div>
                 </div>
 

@@ -21,7 +21,8 @@ export type Page =
   | { type: "order-success"; orderId: string }
   | { type: "orders" }
   | { type: "wishlist" }
-  | { type: "faq" };
+  | { type: "faq" }
+  | { type: "compare" };
 
 interface AdminUser {
   id: string;
@@ -90,6 +91,12 @@ interface AppState {
   enquiryModal: { open: boolean; productName?: string; productId?: string };
   openEnquiryModal: (productName?: string, productId?: string) => void;
   closeEnquiryModal: () => void;
+
+  // Comparison
+  compareList: any[];
+  addToCompare: (product: any) => void;
+  removeFromCompare: (productId: string) => void;
+  clearCompare: () => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -246,6 +253,11 @@ export const useAppStore = create<AppState>()(
             if (typeof window !== "undefined")
               window.history.pushState({}, "", "/faq");
             break;
+          case "compare":
+            set({ currentPage: { type: "compare" } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", "/compare");
+            break;
         }
       },
 
@@ -357,6 +369,20 @@ export const useAppStore = create<AppState>()(
       enquiryModal: { open: false },
       openEnquiryModal: (productName, productId) => set({ enquiryModal: { open: true, productName, productId } }),
       closeEnquiryModal: () => set({ enquiryModal: { open: false } }),
+
+      compareList: [],
+      addToCompare: (product) => {
+        const list = get().compareList;
+        if (list.length >= 4) {
+            toast.error("You can compare up to 4 products");
+            return;
+        }
+        if (!list.find(p => p.id === product.id)) {
+            set({ compareList: [...list, product] });
+        }
+      },
+      removeFromCompare: (id) => set({ compareList: get().compareList.filter(p => p.id !== id) }),
+      clearCompare: () => set({ compareList: [] }),
     }),
     {
       name: "app-storage",

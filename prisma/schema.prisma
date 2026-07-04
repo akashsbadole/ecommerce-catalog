@@ -100,12 +100,16 @@ model Product {
   sku               String?
   barcode           String?
   images            String           @default("[]")
+  tags              String?
+  attributes        String?          @default("{}") // JSON for size, color etc
   categoryId        String?
   brandId           String?
   whatsappNumber    String?
   isDigital         Boolean          @default(false)
   downloadUrl       String?
   isFeatured        Boolean          @default(false)
+  isBestSeller      Boolean          @default(false)
+  videoUrl          String?
   isActive          Boolean          @default(true)
   sortOrder         Int              @default(0)
   specifications    String?
@@ -248,6 +252,7 @@ model Order {
   notes           String?
   returnStatus    String?     // requested, approved, rejected, completed
   refundAmount    Float       @default(0)
+  trackingNumber  String?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   Store           Store?      @relation(fields: [storeId], references: [id])

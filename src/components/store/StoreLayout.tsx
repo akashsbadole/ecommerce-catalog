@@ -13,6 +13,7 @@ import { StoreFooter } from "./StoreFooter";
 import { BackToTop } from "./BackToTop";
 import { CookieConsent } from "./CookieConsent";
 import { MobileBottomNav } from "./MobileBottomNav";
+import { CompareBar } from "./CompareBar";
 import { GlobalEnquiryModal } from "./GlobalEnquiryModal";
 import { useEffect } from "react";
 import { StickyCtaBar } from "./StickyCtaBar";
@@ -129,6 +130,8 @@ export function StoreLayout({
       <StoreFooter onNavigate={onNavigate} settings={settings} />
 
       <MobileBottomNav onNavigate={onNavigate} />
+
+      <CompareBar />
 
       <div className="md:mb-16 lg:mb-0">
         <BackToTop />

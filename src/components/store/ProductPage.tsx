@@ -112,7 +112,9 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
 
   const specs = (() => {
     try {
-        return JSON.parse(product.specifications || "{}");
+        const baseSpecs = JSON.parse(product.specifications || "{}");
+        const attrs = JSON.parse(product.attributes || "{}");
+        return { ...baseSpecs, ...attrs };
     } catch { return {}; }
   })();
 

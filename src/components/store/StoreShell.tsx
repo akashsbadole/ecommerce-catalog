@@ -21,6 +21,7 @@ import { OrderSuccessPage } from "./OrderSuccessPage";
 import { OrdersPage } from "./OrdersPage";
 import { WishlistPage } from "./WishlistPage";
 import { FaqPage } from "./FaqPage";
+import { ComparisonPage } from "./ComparisonPage";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 interface StoreShellProps {
@@ -52,6 +53,8 @@ const routeFromPath = (path: string, navigate: (page: string, data?: unknown) =>
     navigate("wishlist");
   } else if (segments[0] === "faq") {
     navigate("faq");
+  } else if (segments[0] === "compare") {
+    navigate("compare");
   } else if (segments[0] === "blog") {
     if (segments[1]) navigate("blog-post", segments[1]);
     else navigate("blog");
@@ -154,6 +157,8 @@ export function StoreShell({ initialPage, children }: StoreShellProps) {
         return <WishlistPage />;
       case "faq":
         return <FaqPage />;
+      case "compare":
+        return <ComparisonPage />;
       default:
         return (
           <div className="flex flex-col items-center justify-center py-20 text-center">

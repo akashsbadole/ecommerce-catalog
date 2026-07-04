@@ -232,6 +232,12 @@ export function AdminOrders() {
                         <DropdownMenuItem onClick={() => updateOrderStatus(order.id, "cancelled")} className="text-destructive">
                           <XCircle className="mr-2 h-4 w-4" /> Cancel Order
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                            const track = prompt("Enter tracking number:");
+                            if (track !== null) adminFetch(`/api/admin/orders/${order.id}`, { method: 'PUT', body: JSON.stringify({ trackingNumber: track }) }).then(() => fetchOrders());
+                        }}>
+                            Add Tracking
+                        </DropdownMenuItem>
                         <Separator />
                         <DropdownMenuItem onClick={() => {
                             const amt = prompt("Enter refund amount:");

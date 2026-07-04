@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Clock, Zap, ShoppingBag } from "lucide-react";
+import { Clock, Zap, ShoppingBag, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/pricing";
 import { getFirstImage } from "@/lib/utils";
 import { PageBlockRenderer } from "./PageBlockRenderer";
+import { RecentlyViewed } from "./RecentlyViewed";
 import type { PageBlock } from "@/lib/page-blocks";
 import { normalizePageBlocks } from "@/lib/page-blocks";
 import { useSeo } from "@/lib/use-seo";
@@ -193,6 +194,12 @@ export function HomePage({
       )}
 
       <PageBlockRenderer blocks={blocks ?? undefined} onNavigate={onNavigate} />
+
+      <section className="py-20 border-t">
+        <div className="container mx-auto px-4">
+            <RecentlyViewed />
+        </div>
+      </section>
     </div>
   );
 }

@@ -13,6 +13,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 import { useState, useEffect } from "react";
+import { Newsletter } from "./Newsletter";
 
 interface StoreFooterProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -120,6 +121,10 @@ export function StoreFooter({ onNavigate, settings }: StoreFooterProps) {
   return (
     <footer className="border-t bg-muted/30" role="contentinfo">
       <div className="container mx-auto px-4 py-12">
+        <div className="mb-12 max-w-2xl">
+            <Newsletter />
+        </div>
+        <Separator className="mb-12" />
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {/* Company Info */}
           <div className="space-y-4">

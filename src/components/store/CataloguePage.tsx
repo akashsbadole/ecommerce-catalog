@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, X, Check, Heart, Eye, ShoppingCart, Filter, ChevronRight } from "lucide-react";
+import { Search, X, Check, Heart, Eye, ShoppingCart, Filter, ChevronRight, ArrowRightLeft, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAppStore } from "@/lib/store";
@@ -24,7 +24,7 @@ import { Breadcrumbs } from "./Breadcrumbs";
 import { StoreLoading } from "./StoreLoading";
 
 export function CataloguePage() {
-  const { auth, settings, navigate, addToCart } = useAppStore();
+  const { auth, settings, navigate, addToCart, addToCompare } = useAppStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
     categoryId: "all",
@@ -275,6 +275,12 @@ export function CataloguePage() {
                                 className="h-9 w-9 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary hover:text-white transition-colors"
                             >
                                 <Eye className="h-4 w-4" />
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); addToCompare(product); }}
+                                className="h-9 w-9 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-blue-50 hover:text-blue-500 transition-colors"
+                            >
+                                <ArrowRightLeft className="h-4 w-4" />
                             </button>
                         </div>
                       </div>
