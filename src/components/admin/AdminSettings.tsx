@@ -84,6 +84,7 @@ const defaultSettings: Settings = {
   b2b_default_moq: "1",
   b2b_auto_reply: "true",
   b2b_enable_tiered_pricing: "false",
+  store_mode: "b2b", // b2b or b2c
   b2b_enable_buyer_portal: "false",
   b2b_verify_new_accounts: "false",
 
@@ -229,6 +230,32 @@ export function AdminSettings() {
           <CardDescription>Basic store information</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="store_mode">Store Mode</Label>
+            <div className="flex items-center gap-4 mt-2">
+              <Button
+                type="button"
+                variant={settings.store_mode === "b2b" ? "default" : "outline"}
+                onClick={() => handleSettingChange("store_mode", "b2b")}
+                className="flex-1"
+              >
+                B2B (Wholesale / Quotes)
+              </Button>
+              <Button
+                type="button"
+                variant={settings.store_mode === "b2c" ? "default" : "outline"}
+                onClick={() => handleSettingChange("store_mode", "b2c")}
+                className="flex-1"
+              >
+                B2C (Retail / Checkout)
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {settings.store_mode === "b2b"
+                ? "In B2B mode, customers request quotes for products. Direct checkout is disabled."
+                : "In B2C mode, customers can add products to cart and checkout directly with payments."}
+            </p>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="site_name">Site Name</Label>
             <Input

@@ -15,7 +15,11 @@ export type Page =
   | { type: "product-page"; slug: string }
   | { type: "content-page"; slug: string }
   | { type: "admin-login" }
-  | { type: "admin"; activeTab: string };
+  | { type: "admin"; activeTab: string }
+  | { type: "cart" }
+  | { type: "checkout" }
+  | { type: "order-success"; orderId: string }
+  | { type: "orders" };
 
 interface AdminUser {
   id: string;
@@ -28,6 +32,29 @@ interface AppState {
   // Navigation
   currentPage: Page;
   navigate: (page: string, data?: unknown) => void;
+
+  // Cart
+  cart: {
+    items: Array<{
+      productId: string;
+      variantId?: string;
+      quantity: number;
+      name: string;
+      price: number;
+      image?: string;
+    }>;
+  };
+  addToCart: (item: {
+    productId: string;
+    variantId?: string;
+    quantity: number;
+    name: string;
+    price: number;
+    image?: string;
+  }) => void;
+  removeFromCart: (productId: string, variantId?: string) => void;
+  updateCartQuantity: (productId: string, quantity: number, variantId?: string) => void;
+  clearCart: () => void;
 
   // Auth
   isAdmin: boolean;
@@ -187,8 +214,70 @@ export const useAppStore = create<AppState>()(
             if (typeof window !== "undefined")
               window.history.pushState({}, "", "/admin");
             break;
+          case "cart":
+            set({ currentPage: { type: "cart" } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", "/cart");
+            break;
+          case "checkout":
+            set({ currentPage: { type: "checkout" } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", "/checkout");
+            break;
+          case "order-success":
+            set({ currentPage: { type: "order-success", orderId: data as string } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", `/order-success/${data as string}`);
+            break;
+          case "orders":
+            set({ currentPage: { type: "orders" } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", "/portal/orders");
+            break;
         }
       },
+
+      cart: { items: [] },
+      addToCart: (item) => {
+        const currentItems = get().cart.items;
+        const existing = currentItems.find(
+          (i) => i.productId === item.productId && i.variantId === item.variantId
+        );
+        if (existing) {
+          set({
+            cart: {
+              items: currentItems.map((i) =>
+                i.productId === item.productId && i.variantId === item.variantId
+                  ? { ...i, quantity: i.quantity + item.quantity }
+                  : i
+              ),
+            },
+          });
+        } else {
+          set({ cart: { items: [...currentItems, item] } });
+        }
+      },
+      removeFromCart: (productId, variantId) => {
+        set({
+          cart: {
+            items: get().cart.items.filter(
+              (i) => !(i.productId === productId && i.variantId === variantId)
+            ),
+          },
+        });
+      },
+      updateCartQuantity: (productId, quantity, variantId) => {
+        set({
+          cart: {
+            items: get().cart.items.map((i) =>
+              i.productId === productId && i.variantId === variantId
+                ? { ...i, quantity }
+                : i
+            ),
+          },
+        });
+      },
+      clearCart: () => set({ cart: { items: [] } }),
 
       isAdmin: false,
       adminUser: null,
@@ -264,6 +353,7 @@ export const useAppStore = create<AppState>()(
         adminUser: state.adminUser,
         adminToken: state.adminToken,
         auth: state.auth,
+        cart: state.cart,
       }),
     },
   ),

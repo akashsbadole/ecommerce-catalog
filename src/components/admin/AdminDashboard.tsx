@@ -38,6 +38,9 @@ import { AdminDashboardHome } from "@/components/admin/AdminDashboardHome";
 import { AdminProducts } from "@/components/admin/AdminProducts";
 import { AdminCategories } from "@/components/admin/AdminCategories";
 import { AdminEnquiries } from "@/components/admin/AdminEnquiries";
+import { AdminOrders } from "@/components/admin/AdminOrders";
+import { AdminCoupons } from "@/components/admin/AdminCoupons";
+import { AdminReviews } from "@/components/admin/AdminReviews";
 import { AdminQuotes } from "@/components/admin/AdminQuotes";
 import { AdminBanners } from "@/components/admin/AdminBanners";
 import { AdminSettings } from "@/components/admin/AdminSettings";
@@ -48,6 +51,7 @@ import { AdminMenus } from "@/components/admin/AdminMenus";
 import { AdminBlog } from "@/components/admin/AdminBlog";
 import { NotificationBell } from "@/components/admin/NotificationBell";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Ticket, Star } from "lucide-react";
 
 interface AdminDashboardProps {
   user: { id: string; email: string; name: string; role: string } | null;
@@ -61,6 +65,9 @@ const sidebarItems = [
   { id: "products", label: "Products", icon: Package },
   { id: "categories", label: "Categories", icon: FolderOpen },
   { id: "blog", label: "Blog", icon: BookOpen },
+  { id: "orders", label: "Orders", icon: ShoppingBag },
+  { id: "coupons", label: "Coupons", icon: Ticket },
+  { id: "reviews", label: "Reviews", icon: Star },
   { id: "quotes", label: "Quotes", icon: FileText },
   { id: "enquiries", label: "Enquiries", icon: MessageSquare },
   { id: "media", label: "Media", icon: ImageIcon },
@@ -289,6 +296,12 @@ export function AdminDashboard({
         return <AdminCategories />;
       case "enquiries":
         return <AdminEnquiries />;
+      case "orders":
+        return <AdminOrders />;
+      case "coupons":
+        return <AdminCoupons />;
+      case "reviews":
+        return <AdminReviews />;
       case "quotes":
         return <AdminQuotes />;
       case "banners":

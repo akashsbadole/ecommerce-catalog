@@ -178,8 +178,22 @@ export function CataloguePage({
     setSearchQuery("");
   };
 
+  const isB2C = settings?.store_mode === "b2c";
+  const addToCart = useAppStore((s) => s.addToCart);
+
   const handleEnquiryClick = (product: Product) => {
     useAppStore.getState().openEnquiryModal(product.name, product.id);
+  };
+
+  const handleAddToCart = (product: Product) => {
+    addToCart({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
+      image: getFirstImage(product.images) || undefined,
+    });
+    toast.success("Added to cart");
   };
 
   return (
@@ -387,13 +401,37 @@ export function CataloguePage({
                             {product.shortDescription}
                           </p>
                         )}
-                        <Button
-                          size="sm"
-                          className="w-full text-xs font-medium"
-                          onClick={() => handleEnquiryClick(product)}
-                        >
-                          Enquire
-                        </Button>
+                        {isB2C ? (
+                            <div className="flex gap-2">
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="flex-1 text-[10px] h-8 px-1"
+                                    onClick={() => handleAddToCart(product)}
+                                >
+                                    <ShoppingCart className="mr-1 h-3 w-3" />
+                                    +Cart
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    className="flex-1 text-[10px] h-8 px-1"
+                                    onClick={() => {
+                                        handleAddToCart(product);
+                                        onNavigate("cart");
+                                    }}
+                                >
+                                    Buy
+                                </Button>
+                            </div>
+                        ) : (
+                            <Button
+                                size="sm"
+                                className="w-full text-xs font-medium"
+                                onClick={() => handleEnquiryClick(product)}
+                            >
+                                Enquire
+                            </Button>
+                        )}
                       </div>
                     </div>
                   );

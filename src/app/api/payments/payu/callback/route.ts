@@ -1,0 +1,46 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { verifyPayUHash } from '@/lib/payments/payu';
+
+export async function POST(request: NextRequest) {
+  try {
+    const formData = await request.formData();
+    const data: Record<string, string> = {};
+    formData.forEach((value, key) => {
+      data[key] = value.toString();
+    });
+
+    const payuSalt = process.env.PAYU_MERCHANT_SALT || 'test_salt';
+    const isValid = verifyPayUHash(data, payuSalt);
+
+    if (!isValid) {
+      console.error('Invalid PayU hash in callback');
+      return NextResponse.redirect(new URL('/checkout?error=payment_verification_failed', request.url));
+    }
+
+    const orderId = data.txnid;
+    const status = data.status; // success or failure
+
+    if (status === 'success') {
+      await db.order.update({
+        where: { id: orderId },
+        data: {
+          paymentStatus: 'paid',
+          paymentId: data.mihpayid, // PayU transaction ID
+        },
+      });
+      return NextResponse.redirect(new URL(`/order-success/${orderId}`, request.url));
+    } else {
+      await db.order.update({
+        where: { id: orderId },
+        data: {
+          paymentStatus: 'failed',
+        },
+      });
+      return NextResponse.redirect(new URL(`/checkout?error=payment_failed&orderId=${orderId}`, request.url));
+    }
+  } catch (error) {
+    console.error('PayU callback error:', error);
+    return NextResponse.redirect(new URL('/checkout?error=callback_error', request.url));
+  }
+}

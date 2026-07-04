@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Package, Send, ChevronDown } from "lucide-react";
+import { Package, Send, ChevronDown, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getFirstImage } from "@/lib/utils";
+import { toast } from "sonner";
 import { useSeo } from "@/lib/use-seo";
 import { useAppStore } from "@/lib/store";
 import { StoreLoading } from "./StoreLoading";
+import { ProductReviews } from "./ProductReviews";
 
 interface ProductPageProps {
   slug: string;
@@ -97,6 +99,20 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
   }
 
   const image = getFirstImage(product.images);
+  const settings = useAppStore((s) => s.settings);
+  const isB2C = settings?.store_mode === "b2c";
+  const addToCart = useAppStore((s) => s.addToCart);
+
+  const handleAddToCart = () => {
+    addToCart({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
+      image: image || undefined,
+    });
+    toast.success("Added to cart");
+  };
 
   return (
     <div className="flex flex-col">
@@ -118,16 +134,42 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
             {product.shortDescription}
           </p>
         )}
-        <Button
-          size="default"
-          className="mt-4 md:mt-6 w-full sm:w-auto text-sm sm:text-base"
-          onClick={() =>
-            useAppStore.getState().openEnquiryModal(product.name, product.id)
-          }
-        >
-          <Send className="mr-2 h-4 w-4" />
-          Enquire Now
-        </Button>
+      <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+        {isB2C ? (
+          <>
+            <Button
+              size="lg"
+              className="w-full sm:w-auto text-sm sm:text-base px-8"
+              onClick={handleAddToCart}
+            >
+              <ShoppingCart className="mr-2 h-4 w-4" />
+              Add to Cart
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full sm:w-auto text-sm sm:text-base px-8"
+              onClick={() => {
+                handleAddToCart();
+                onNavigate("cart");
+              }}
+            >
+              Buy Now
+            </Button>
+          </>
+        ) : (
+          <Button
+            size="lg"
+            className="w-full sm:w-auto text-sm sm:text-base px-8"
+            onClick={() =>
+              useAppStore.getState().openEnquiryModal(product.name, product.id)
+            }
+          >
+            <Send className="mr-2 h-4 w-4" />
+            Enquire Now
+          </Button>
+        )}
+      </div>
       </section>
 
       {faqItems.length > 0 && (
@@ -159,6 +201,12 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
               </div>
             ))}
           </div>
+        </section>
+      )}
+
+      {isB2C && (
+        <section className="container mx-auto max-w-3xl px-4 py-12 md:py-16 border-t">
+          <ProductReviews productId={product.id} />
         </section>
       )}
     </div>
