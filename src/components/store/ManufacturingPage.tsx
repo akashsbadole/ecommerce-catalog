@@ -17,7 +17,7 @@ import { BLOCK_DEFAULTS, deepMerge } from "@/lib/page-blocks";
 import { useSeo } from "@/lib/use-seo";
 import { StoreHeroBanner } from "@/components/store/StoreHeroBanner";
 import { useContentPage, getPageContentData } from "@/lib/use-page-content";
-import { ContactFormSection } from "@/components/store/ContactFormSection";
+import { LeadCaptureSection } from "@/components/store/LeadCaptureSection";
 
 interface ManufacturingPageProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -80,34 +80,50 @@ export function ManufacturingPage({
   );
   const fallbackMfg = BLOCK_DEFAULTS["mfg-page-content"].defaultData;
   const data = deepMerge(fallbackMfg, cmsMfgData);
-  const hero = (data.hero as Record<string, unknown>) || {};
-  const metrics =
-    (data.metrics as Array<{ value: string; label: string }>) || [];
+  const rawHero = (cmsMfgData?.hero as Record<string, unknown>) || {};
+  const hero = rawHero.title ? rawHero : (data.hero as Record<string, unknown>) || {};
+  const metrics = cmsMfgData?.metrics
+    ? (cmsMfgData.metrics as Array<{ value: string; label: string }>)
+    : (data.metrics as Array<{ value: string; label: string }>) || [];
   const intro = (data.intro as Record<string, string>) || {};
-  const productionLines =
-    (data.productionLines as Array<{
-      id: string;
-      name: string;
-      flagship: boolean;
-      capacity: string;
-      variants: string;
-      packs: string;
-      desc: string;
-      tags: string[];
-      ctaText?: string;
-      ctaLink?: string;
-      ctaEnabled?: boolean;
-      image?: string;
-    }>) || [];
-  const qualitySteps =
-    (data.qualitySteps as Array<{
-      icon: string;
-      color: string;
-      title: string;
-      desc: string;
-    }>) || [];
-  const qualityFooterItems = (data.qualityFooterItems as string[]) || [];
-  const privateLabel = (data.privateLabel as Record<string, unknown>) || {};
+  const productionLines = cmsMfgData?.productionLines
+    ? (cmsMfgData.productionLines as Array<{
+        id: string;
+        name: string;
+        flagship: boolean;
+        capacity: string;
+        variants: string;
+        packs: string;
+        desc: string;
+        tags: string[];
+        ctaText?: string;
+        ctaLink?: string;
+        ctaEnabled?: boolean;
+        image?: string;
+      }>)
+    : (data.productionLines as Array<{
+        id: string;
+        name: string;
+        flagship: boolean;
+        capacity: string;
+        variants: string;
+        packs: string;
+        desc: string;
+        tags: string[];
+        ctaText?: string;
+        ctaLink?: string;
+        ctaEnabled?: boolean;
+        image?: string;
+      }>) || [];
+  const qualitySteps = cmsMfgData?.qualitySteps
+    ? (cmsMfgData.qualitySteps as Array<{ icon: string; color: string; title: string; desc: string }>)
+    : (data.qualitySteps as Array<{ icon: string; color: string; title: string; desc: string }>) || [];
+  const qualityFooterItems = cmsMfgData?.qualityFooterItems
+    ? (cmsMfgData.qualityFooterItems as string[])
+    : (data.qualityFooterItems as string[]) || [];
+  const privateLabel = cmsMfgData?.privateLabel
+    ? (cmsMfgData.privateLabel as Record<string, unknown>)
+    : (data.privateLabel as Record<string, unknown>) || {};
   const plItems =
     (privateLabel.items as Array<{
       icon: string;
@@ -116,9 +132,12 @@ export function ManufacturingPage({
     }>) || [];
   const plDetails =
     (privateLabel.details as Array<{ label: string; value: string }>) || [];
-  const certifications =
-    (data.certifications as Array<{ name: string; desc: string }>) || [];
-  const ctaData = (data.cta as Record<string, string>) || {};
+  const certifications = cmsMfgData?.certifications
+    ? (cmsMfgData.certifications as Array<{ name: string; desc: string }>)
+    : (data.certifications as Array<{ name: string; desc: string }>) || [];
+  const ctaData = cmsMfgData?.cta
+    ? (cmsMfgData.cta as Record<string, string>)
+    : (data.cta as Record<string, string>) || {};
 
   const activeLineData =
     productionLines.find((l) => l.id === activeLine) || productionLines[0];
@@ -386,7 +405,7 @@ export function ManufacturingPage({
       </section>
 
       {/* M6: Certifications */}
-      {data.showCertifications === true && (
+      {certifications.length > 0 && (
         <section className="bg-muted/40 py-16 px-4">
           <div className="container mx-auto max-w-5xl">
             <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
@@ -414,9 +433,21 @@ export function ManufacturingPage({
       )}
 
       {/* M7: Contact Form */}
-      <ContactFormSection
-        title={(ctaData.title as string) || "Ready to see it for yourself?"}
-        subtitle={ctaData.subtitle as string}
+      <LeadCaptureSection
+        heading={(ctaData.title as string) || "Ready to see it for yourself?"}
+        description={ctaData.subtitle as string}
+        submitText="Send Enquiry"
+        fields={[
+          { name: "name", label: "Your name", type: "text", required: true, placeholder: "Your name *" },
+          { name: "company", label: "Company name", type: "text", required: true, placeholder: "Company name *" },
+          { name: "phone", label: "Phone number", type: "tel", required: true, placeholder: "Phone number *" },
+          { name: "email", label: "Email address", type: "email", required: false, placeholder: "Email address" },
+          { name: "requirement", label: "Requirement type", type: "select", required: true, placeholder: "Inquiry type", options: ["Bulk Order", "Private Label", "White Label", "Distribution", "Institutional Order", "Other"] },
+          { name: "city", label: "City / state", type: "text", required: false, placeholder: "City / state" },
+        ]}
+        messageField
+        successMessage="Thank You For Showing an Interest. We will get in touch with you soon."
+        bgColor="#85AA64"
       />
     </div>
   );

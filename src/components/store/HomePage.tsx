@@ -6,7 +6,7 @@ import type { PageBlock } from "@/lib/page-blocks";
 import { normalizePageBlocks } from "@/lib/page-blocks";
 import { useSeo } from "@/lib/use-seo";
 import { StoreLoading } from "./StoreLoading";
-// import { ContactFormSection } from "./ContactFormSection";
+import { LeadCaptureSection } from "./LeadCaptureSection";
 
 interface HomePageProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -149,7 +149,23 @@ export function HomePage({
   return (
     <div className="flex flex-col">
       <PageBlockRenderer blocks={blocks ?? undefined} onNavigate={onNavigate} />
-      {/* <ContactFormSection title="Contact Us" submitText="Send Enquiry →" /> */}
+      <LeadCaptureSection
+        heading="Looking for a Manufacturing Partner?"
+        description="Submit Your Requirements"
+        submitText="Submit"
+        fields={[
+          { name: "name", label: "Your name", type: "text", required: true, placeholder: "Your name *" },
+          { name: "company", label: "Company name", type: "text", required: true, placeholder: "Company name *" },
+          { name: "phone", label: "Phone number", type: "tel", required: true, placeholder: "Phone number *" },
+          { name: "email", label: "Email address", type: "email", required: false, placeholder: "Email address" },
+          { name: "requirement", label: "Requirement type", type: "select", required: true, placeholder: "Inquiry type", options: ["Bulk Order", "Private Label", "White Label", "Distribution", "Institutional Order", "Other"] },
+          { name: "city", label: "City / state", type: "text", required: false, placeholder: "City / state" },
+        ]}
+        messageField
+        disclaimer="Data goes directly to CRM · No spam"
+        successMessage="Thank You For Showing an Interest. We will get in touch with you soon."
+        bgColor="#85AA64"
+      />
     </div>
   );
 }

@@ -26,6 +26,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -619,6 +620,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
         <DialogContent className="max-w-lg p-0 gap-0">
           <DialogHeader className="sr-only">
             <DialogTitle>Search Products</DialogTitle>
+            <DialogDescription>Search our product catalogue</DialogDescription>
           </DialogHeader>
           <div className="flex items-center border-b px-4">
             <Search className="h-4 w-4 shrink-0 text-muted-foreground" />

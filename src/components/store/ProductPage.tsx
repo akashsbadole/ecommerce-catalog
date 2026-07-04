@@ -7,6 +7,7 @@ import { getFirstImage } from "@/lib/utils";
 import { useSeo } from "@/lib/use-seo";
 import { useAppStore } from "@/lib/store";
 import { StoreLoading } from "./StoreLoading";
+import { LeadCaptureSection } from "./LeadCaptureSection";
 
 interface ProductPageProps {
   slug: string;
@@ -129,6 +130,24 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
           Enquire Now
         </Button>
       </section>
+
+      <LeadCaptureSection
+        heading={`Enquire about ${product.name}`}
+        description="Fill in your details and we'll get back to you within 24 hours"
+        submitText="Send Enquiry"
+        fields={[
+          { name: "name", label: "Your name", type: "text", required: true, placeholder: "Your name *" },
+          { name: "company", label: "Company name", type: "text", required: true, placeholder: "Company name *" },
+          { name: "phone", label: "Phone number", type: "tel", required: true, placeholder: "Phone number *" },
+          { name: "email", label: "Email address", type: "email", required: false, placeholder: "Email address" },
+          { name: "requirement", label: "Requirement type", type: "select", required: true, placeholder: "Inquiry type", options: ["Bulk Order", "Private Label", "White Label", "Distribution", "Institutional Order", "Other"] },
+          { name: "city", label: "City / state", type: "text", required: false, placeholder: "City / state" },
+        ]}
+        messageField
+        productContext={{ name: product.name, id: product.id }}
+        successMessage="Thank You For Showing an Interest. We will get in touch with you soon."
+        bgColor="#85AA64"
+      />
 
       {faqItems.length > 0 && (
         <section className="container mx-auto max-w-3xl px-4 py-12 md:py-16">

@@ -16,7 +16,7 @@ import { BLOCK_DEFAULTS, deepMerge } from "@/lib/page-blocks";
 import { useSeo } from "@/lib/use-seo";
 import { StoreHeroBanner } from "@/components/store/StoreHeroBanner";
 import { useContentPage, getPageContentData } from "@/lib/use-page-content";
-import { ContactFormSection } from "@/components/store/ContactFormSection";
+import { LeadCaptureSection } from "@/components/store/LeadCaptureSection";
 
 interface ContactPageProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -118,9 +118,21 @@ export function ContactPage({
       />
 
       {/* CT1: Contact Form */}
-      <ContactFormSection
-        title={(formSection.title as string) || "Send us your requirement"}
-        subtitle={(formSection.subtitle as string) || "Fields marked * are required. We respond within 24 working hours."}
+      <LeadCaptureSection
+        heading={(formSection.title as string) || "Send us your requirement"}
+        description={(formSection.subtitle as string) || "Fields marked * are required. We respond within 24 working hours."}
+        submitText="Send Enquiry"
+        fields={[
+          { name: "name", label: "Your name", type: "text", required: true, placeholder: "Your name *" },
+          { name: "company", label: "Company name", type: "text", required: true, placeholder: "Company name *" },
+          { name: "phone", label: "Phone number", type: "tel", required: true, placeholder: "Phone number *" },
+          { name: "email", label: "Email address", type: "email", required: false, placeholder: "Email address" },
+          { name: "requirement", label: "Requirement type", type: "select", required: true, placeholder: "Inquiry type", options: ["Bulk Order", "Private Label", "White Label", "Distribution", "Institutional Order", "Other"] },
+          { name: "city", label: "City / state", type: "text", required: false, placeholder: "City / state" },
+        ]}
+        messageField
+        successMessage="Thank You For Showing an Interest. We will get in touch with you soon."
+        bgColor="#85AA64"
       />
 
       {/* Response promise */}

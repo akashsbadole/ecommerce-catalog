@@ -19,7 +19,7 @@ import { useAppStore } from "@/lib/store";
 import { useSeo } from "@/lib/use-seo";
 import { StoreHeroBanner } from "@/components/store/StoreHeroBanner";
 import { useContentPage, getPageContentData } from "@/lib/use-page-content";
-import { ContactFormSection } from "@/components/store/ContactFormSection";
+import { LeadCaptureSection } from "@/components/store/LeadCaptureSection";
 import { getGoogleMapsEmbedUrl } from "@/lib/utils";
 
 interface AboutPageProps {
@@ -286,7 +286,7 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
               </div>
             ))}
             <div className="flex flex-col gap-4 justify-start">
-              {(quoteData.text as string) ? (
+              {cmsAboutData.quote ? (
                 <div className="bg-primary/5 border border-primary/20 rounded-xl p-5">
                   <Quote className="h-5 w-5 text-primary mb-3" />
                   <p className="text-sm text-primary italic leading-relaxed">
@@ -308,20 +308,22 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
                   </div>
                 </div>
               ) : null}
-              <div className="bg-background border rounded-xl p-5">
-                <h4 className="text-sm font-semibold mb-2">
-                  {ctaCard.title || "Direct access to leadership"}
-                </h4>
-                <p className="text-xs text-muted-foreground leading-relaxed mb-4">
-                  {ctaCard.desc || ""}
-                </p>
-                <button
-                  onClick={() => onNavigate("contact")}
-                  className="w-full text-xs font-medium bg-primary text-primary-foreground rounded-md py-2 hover:bg-primary/90 transition-colors"
-                >
-                  {ctaCard.cta || "Speak to us directly →"}
-                </button>
-              </div>
+              {cmsAboutData.ctaCard ? (
+                <div className="bg-background border rounded-xl p-5">
+                  <h4 className="text-sm font-semibold mb-2">
+                    {ctaCard.title || "Direct access to leadership"}
+                  </h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed mb-4">
+                    {ctaCard.desc || ""}
+                  </p>
+                  <button
+                    onClick={() => onNavigate("contact")}
+                    className="w-full text-xs font-medium bg-primary text-primary-foreground rounded-md py-2 hover:bg-primary/90 transition-colors"
+                  >
+                    {ctaCard.cta || "Speak to us directly →"}
+                  </button>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
@@ -427,7 +429,9 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
             <div className="flex-[1.4]">
               {location.googleMapsEmbedUrl ? (
                 <iframe
-                  src={getGoogleMapsEmbedUrl(location.googleMapsEmbedUrl as string)}
+                  src={getGoogleMapsEmbedUrl(
+                    location.googleMapsEmbedUrl as string,
+                  )}
                   width="100%"
                   height="100%"
                   className="rounded-lg min-h-[300px] border"
@@ -441,7 +445,9 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
                 <div className="bg-muted border rounded-lg h-full min-h-[300px] flex items-center justify-center text-muted-foreground text-sm flex-col gap-2">
                   <MapPin className="h-8 w-8" />
                   <p>Google Maps embed</p>
-                  <p className="text-xs">Factory pin marked with brand marker</p>
+                  <p className="text-xs">
+                    Factory pin marked with brand marker
+                  </p>
                 </div>
               )}
             </div>
@@ -450,49 +456,69 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
       </section>
 
       {/* A8: CTA Strip */}
-      <section className="bg-muted/40 py-16 px-4">
-        <div className="container mx-auto max-w-5xl">
-          <h2 className="text-2xl font-bold text-center mb-10 text-foreground">
-            {(ctaData.title as string) || "Ready to work with us?"}
-          </h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {ctaCards.map((item, idx) => (
-              <div
-                key={item.title || idx}
-                className="bg-primary rounded-xl p-6 text-center"
-              >
-                <ResolvedIcon
-                  name={item.icon}
-                  className="h-6 w-6 text-white mx-auto mb-3"
-                />
-                <h3 className="text-sm font-semibold mb-2 text-white">
-                  {item.title}
-                </h3>
-                <p className="text-xs text-white/70 mb-5 leading-relaxed">
-                  {item.desc}
-                </p>
-                {item.useForm || idx >= 1 ? (
-                  <button
-                    onClick={() => useAppStore.getState().openEnquiryModal()}
-                    className="w-full text-xs font-medium bg-white text-primary rounded-md py-2.5 hover:bg-white/90 transition-colors"
-                  >
-                    {item.cta || "Send Enquiry"}
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => onNavigate(item.page)}
-                    className="w-full text-xs font-medium bg-white text-primary rounded-md py-2.5 hover:bg-white/90 transition-colors"
-                  >
-                    {item.cta}
-                  </button>
-                )}
-              </div>
-            ))}
+      {cmsAboutData.cta ? (
+        <section className="bg-muted/40 py-16 px-4">
+          <div className="container mx-auto max-w-5xl">
+            <h2 className="text-2xl font-bold text-center mb-10 text-foreground">
+              {(ctaData.title as string) || "Ready to work with us?"}
+            </h2>
+            <div className="grid md:grid-cols-3 gap-6">
+              {ctaCards.map((item, idx) => (
+                <div
+                  key={item.title || idx}
+                  className="bg-primary rounded-xl p-6 text-center"
+                >
+                  <ResolvedIcon
+                    name={item.icon}
+                    className="h-6 w-6 text-white mx-auto mb-3"
+                  />
+                  <h3 className="text-sm font-semibold mb-2 text-white">
+                    {item.title}
+                  </h3>
+                  <p className="text-xs text-white/70 mb-5 leading-relaxed">
+                    {item.desc}
+                  </p>
+                  {item.cta ? (
+                    item.useForm || !item.page || idx >= 1 ? (
+                      <button
+                        onClick={() =>
+                          useAppStore.getState().openEnquiryModal()
+                        }
+                        className="w-full text-xs font-medium bg-white text-primary rounded-md py-2.5 hover:bg-white/90 transition-colors"
+                      >
+                        {item.cta}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => onNavigate(item.page)}
+                        className="w-full text-xs font-medium bg-white text-primary rounded-md py-2.5 hover:bg-white/90 transition-colors"
+                      >
+                        {item.cta}
+                      </button>
+                    )
+                  ) : null}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
-      <ContactFormSection title="Get in Touch" submitText="Send Enquiry →" />
+      <LeadCaptureSection
+        heading="Get in Touch"
+        submitText="Send Enquiry →"
+        fields={[
+          { name: "name", label: "Your name", type: "text", required: true, placeholder: "Your name *" },
+          { name: "company", label: "Company name", type: "text", required: true, placeholder: "Company name *" },
+          { name: "phone", label: "Phone number", type: "tel", required: true, placeholder: "Phone number *" },
+          { name: "email", label: "Email address", type: "email", required: false, placeholder: "Email address" },
+          { name: "requirement", label: "Requirement type", type: "select", required: true, placeholder: "Inquiry type", options: ["Bulk Order", "Private Label", "White Label", "Distribution", "Institutional Order", "Other"] },
+          { name: "city", label: "City / state", type: "text", required: false, placeholder: "City / state" },
+        ]}
+        messageField
+        successMessage="Thank You For Showing an Interest. We will get in touch with you soon."
+        bgColor="#85AA64"
+      />
     </div>
   );
 }

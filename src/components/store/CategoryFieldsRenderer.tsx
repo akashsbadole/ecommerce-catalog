@@ -241,7 +241,7 @@ function CardsSection({
               key={product.id}
               className="rounded-xl border bg-card overflow-hidden transition-shadow hover:shadow-md"
             >
-              <div className="relative h-36 sm:h-40 md:h-48 bg-muted overflow-hidden">
+              <div className="relative h-36 sm:h-65 md:h-65 bg-muted overflow-hidden">
                 {image ? (
                   <img
                     src={image}
@@ -254,7 +254,7 @@ function CardsSection({
                   </div>
                 )}
               </div>
-              <div className="p-3 md:p-4">
+              <div className="p-3 md:p-2">
                 <h3 className="text-sm sm:text-base font-semibold mb-1">
                   {product.name}
                 </h3>
@@ -263,7 +263,7 @@ function CardsSection({
                     {product.shortDescription}
                   </p>
                 )}
-                <Button
+                {/* <Button
                   size="sm"
                   className="w-full mt-2 md:mt-3 text-xs sm:text-sm"
                   onClick={() =>
@@ -274,7 +274,7 @@ function CardsSection({
                 >
                   <Send className="mr-2 h-3 w-3 sm:h-3.5 sm:w-3.5" />
                   Enquire
-                </Button>
+                </Button> */}
               </div>
             </div>
           );
@@ -557,9 +557,7 @@ function GallerySection({
                 src={src}
                 alt={`${title || "Gallery"} image ${i + 1}`}
                 loading="lazy"
-                onLoad={() =>
-                  setLoaded((prev) => new Set(prev).add(i))
-                }
+                onLoad={() => setLoaded((prev) => new Set(prev).add(i))}
                 className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-110 ${
                   loaded.has(i) ? "opacity-100" : "opacity-0"
                 }`}
@@ -594,11 +592,10 @@ function GallerySection({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setLightboxIndex(
-                    (prev) =>
-                      prev !== null
-                        ? (prev - 1 + images.length) % images.length
-                        : null,
+                  setLightboxIndex((prev) =>
+                    prev !== null
+                      ? (prev - 1 + images.length) % images.length
+                      : null,
                   );
                 }}
                 className="absolute left-4 top-1/2 -translate-y-1/2 p-2 text-white/70 hover:text-white transition-colors z-10"
@@ -609,9 +606,8 @@ function GallerySection({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setLightboxIndex(
-                    (prev) =>
-                      prev !== null ? (prev + 1) % images.length : null,
+                  setLightboxIndex((prev) =>
+                    prev !== null ? (prev + 1) % images.length : null,
                   );
                 }}
                 className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-white/70 hover:text-white transition-colors z-10"
