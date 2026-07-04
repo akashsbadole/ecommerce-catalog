@@ -24,6 +24,7 @@ interface FaqItem {
 
 export function ProductPage({ slug, onNavigate }: ProductPageProps) {
   const [activeImage, setActiveImage] = useState<string | null>(null);
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [product, setProduct] = useState<{
     id: string;
     name: string;
@@ -36,6 +37,13 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
     metaDescription: string | null;
     ogImage: string | null;
     categoryId: string | null;
+    ProductVariant: Array<{
+        id: string;
+        name: string;
+        price: number | null;
+        stock: number;
+        images: string;
+    }>;
     Category: {
       id: string;
       name: string;
@@ -134,17 +142,22 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
       return [];
     }
   })();
+
   const settings = useAppStore((s) => s.settings);
   const isB2C = settings?.store_mode === "b2c";
   const addToCart = useAppStore((s) => s.addToCart);
 
+  const selectedVariant = product.ProductVariant.find(v => v.id === selectedVariantId);
+  const currentPrice = selectedVariant?.price ?? product.price;
+
   const handleAddToCart = () => {
     addToCart({
       productId: product.id,
-      name: product.name,
-      price: product.price,
+      variantId: selectedVariantId || undefined,
+      name: selectedVariant ? `${product.name} - ${selectedVariant.name}` : product.name,
+      price: currentPrice,
       quantity: 1,
-      image: image || undefined,
+      image: activeImage || undefined,
     });
     toast.success("Added to cart");
   };
@@ -154,11 +167,11 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
       <section className="container mx-auto max-w-3xl px-4 pt-12 md:pt-16 pb-6 md:pb-8 text-center">
         {activeImage && (
           <div className="space-y-4 mb-6">
-            <div className="relative h-64 sm:h-80 md:h-96 w-full max-w-2xl mx-auto rounded-2xl overflow-hidden bg-muted border shadow-sm">
+            <div className="relative h-64 sm:h-80 md:h-96 w-full max-w-2xl mx-auto rounded-2xl overflow-hidden bg-muted border shadow-sm group">
                 <img
                     src={activeImage}
                     alt={product.name}
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
             </div>
             {images.length > 1 && (
@@ -184,6 +197,32 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
             {product.shortDescription}
           </p>
         )}
+
+        <div className="mt-4 text-2xl font-bold text-primary">
+            {libFormatPrice(currentPrice, settings?.currency || "INR")}
+        </div>
+
+        {product.ProductVariant.length > 0 && (
+            <div className="mt-8 max-w-md mx-auto">
+                <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3 text-left">Select Option</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                    {product.ProductVariant.map((v) => (
+                        <button
+                            key={v.id}
+                            onClick={() => {
+                                setSelectedVariantId(v.id);
+                                const vImg = getFirstImage(v.images);
+                                if (vImg) setActiveImage(vImg);
+                            }}
+                            className={`px-4 py-2 rounded-full border-2 text-sm font-medium transition-all ${selectedVariantId === v.id ? 'border-primary bg-primary text-white' : 'border-border hover:border-primary/50'}`}
+                        >
+                            {v.name}
+                        </button>
+                    ))}
+                </div>
+            </div>
+        )}
+
       <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
         {isB2C ? (
           <>

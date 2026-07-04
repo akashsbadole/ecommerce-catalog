@@ -20,7 +20,8 @@ export type Page =
   | { type: "checkout" }
   | { type: "order-success"; orderId: string }
   | { type: "orders" }
-  | { type: "wishlist" };
+  | { type: "wishlist" }
+  | { type: "faq" };
 
 interface AdminUser {
   id: string;
@@ -239,6 +240,11 @@ export const useAppStore = create<AppState>()(
             set({ currentPage: { type: "wishlist" } });
             if (typeof window !== "undefined")
               window.history.pushState({}, "", "/wishlist");
+            break;
+          case "faq":
+            set({ currentPage: { type: "faq" } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", "/faq");
             break;
         }
       },

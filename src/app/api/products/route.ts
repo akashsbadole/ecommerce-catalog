@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
     const scopedWhere = { ...where, ...(storeId ? { storeId } : {}) };
 
     // Cursor-based or page-based pagination
-    let products;
+    let products: any[];
     let nextCursor = null;
     let total = 0;
 
@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
       // Cursor-based pagination
       products = await db.product.findMany({
         where: { ...scopedWhere, id: { gt: cursor } },
-        include: { Category: true },
+        include: { Category: true, ProductVariant: true },
         orderBy,
         take: limit + 1,
       });
@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
       [products, total] = await Promise.all([
         db.product.findMany({
           where: scopedWhere,
-          include: { Category: true },
+          include: { Category: true, ProductVariant: true },
           orderBy,
           skip,
           take: limit,
@@ -206,6 +206,7 @@ export async function POST(request: NextRequest) {
         wholesalePrice: validatedData.wholesalePrice || null,
         minOrderQty: validatedData.minOrderQty ?? 1,
         sku: validatedData.sku || null,
+        barcode: body.barcode || null,
         images: typeof body.images === 'string' ? body.images : JSON.stringify(body.images || []),
         categoryId: validatedData.categoryId || null,
         whatsappNumber: validatedData.whatsappNumber || null,

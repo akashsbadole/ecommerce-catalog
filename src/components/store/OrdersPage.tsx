@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Package, Calendar, CheckCircle2, Clock, Truck, ChevronRight, ShoppingBag } from "lucide-react";
+import { Package, Calendar, CheckCircle2, Clock, Truck, ChevronRight, ShoppingBag, FileText } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { formatPrice } from "@/lib/pricing";
 import { format } from "date-fns";
@@ -86,9 +86,14 @@ export function OrdersPage() {
                     <Badge variant="outline" className="mt-0.5">{order.status}</Badge>
                   </div>
                 </div>
-                <div className="text-right">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Order #</p>
-                    <p className="text-sm font-mono">{order.id.slice(0, 8)}</p>
+                <div className="text-right flex items-center gap-4">
+                    <Button variant="ghost" size="sm" className="text-xs h-8" onClick={() => window.print()}>
+                        <FileText className="mr-1 h-3 w-3" /> Invoice
+                    </Button>
+                    <div>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Order #</p>
+                        <p className="text-sm font-mono">{order.id.slice(0, 8)}</p>
+                    </div>
                 </div>
               </div>
               <div className="p-6 space-y-8">
@@ -129,8 +134,31 @@ export function OrdersPage() {
                                 <p className="text-xs text-muted-foreground mt-0.5">Qty: {item.quantity}</p>
                                 <p className="text-sm font-medium mt-1">{formatPrice(item.price, currency)}</p>
                             </div>
-                            <div className="flex items-center">
-                                <Button variant="outline" size="sm" onClick={() => navigate("product-page", item.Product?.slug || item.productId)}>
+                            <div className="flex flex-col items-end gap-2">
+                                {item.Product?.isDigital && order.paymentStatus === 'paid' && item.Product.downloadUrl && (
+                                    <Button className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-8" onClick={() => window.open(item.Product.downloadUrl)}>
+                                        Download
+                                    </Button>
+                                )}
+                                {order.status === 'delivered' && !order.returnStatus && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-xs h-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                                        onClick={async () => {
+                                            if (confirm("Request return for this order?")) {
+                                                const res = await fetch(`/api/orders?orderId=${order.id}`, {
+                                                    method: 'PUT',
+                                                    body: JSON.stringify({ returnStatus: 'requested' })
+                                                });
+                                                if (res.ok) { window.location.reload(); }
+                                            }
+                                        }}
+                                    >
+                                        Return
+                                    </Button>
+                                )}
+                                <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => navigate("product-page", item.Product?.slug || item.productId)}>
                                     Buy Again
                                 </Button>
                             </div>

@@ -71,9 +71,11 @@ export function CataloguePage({
   const cmsPageDescription = cmsData ? (cmsData.pageDescription as string) || "" : "";
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [selectedCategoryData, setSelectedCategoryData] =
     useState<Category | null>(null);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(
@@ -97,6 +99,7 @@ export function CataloguePage({
       const params = new URLSearchParams();
       if (searchQuery) params.set("search", searchQuery);
       if (selectedCategory) params.set("categoryId", selectedCategory);
+      if (selectedBrand) params.set("brandId", selectedBrand);
       if (sortBy && sortBy !== "featured") params.set("sort", sortBy);
       if (priceRange.min) params.set("minPrice", priceRange.min);
       if (priceRange.max) params.set("maxPrice", priceRange.max);
@@ -111,22 +114,29 @@ export function CataloguePage({
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedCategory, sortBy]);
+  }, [searchQuery, selectedCategory, selectedBrand, sortBy, priceRange]);
 
   useEffect(() => {
     let cancelled = false;
-    async function loadCategories() {
+    async function loadFilters() {
       try {
-        const res = await fetch("/api/categories");
-        if (res.ok && !cancelled) {
-          const data = await res.json();
+        const [catRes, brandRes] = await Promise.all([
+            fetch("/api/categories"),
+            fetch("/api/brands")
+        ]);
+        if (catRes.ok && !cancelled) {
+          const data = await catRes.json();
           setCategories(data.categories || []);
         }
+        if (brandRes.ok && !cancelled) {
+            const data = await brandRes.json();
+            setBrands(data.brands || []);
+        }
       } catch (error) {
-        console.error("Failed to fetch categories:", error);
+        console.error("Failed to fetch filters:", error);
       }
     }
-    loadCategories();
+    loadFilters();
     return () => {
       cancelled = true;
     };
@@ -350,7 +360,22 @@ export function CataloguePage({
                     />
                   </div>
                </div>
-               {(priceRange.min || priceRange.max || searchQuery || selectedCategory) && (
+               <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-muted-foreground uppercase">Brand:</span>
+                  <Select value={selectedBrand || "all"} onValueChange={(v) => setSelectedBrand(v === "all" ? null : v)}>
+                    <SelectTrigger className="w-[120px] h-8 text-xs">
+                        <SelectValue placeholder="All Brands" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Brands</SelectItem>
+                        {brands.map(b => (
+                            <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+               </div>
+
+               {(priceRange.min || priceRange.max || searchQuery || selectedCategory || selectedBrand) && (
                    <Button
                     variant="ghost"
                     size="sm"
@@ -359,6 +384,7 @@ export function CataloguePage({
                         setPriceRange({ min: "", max: "" });
                         setSearchQuery("");
                         setSelectedCategory(null);
+                        setSelectedBrand(null);
                     }}
                    >
                      Reset All

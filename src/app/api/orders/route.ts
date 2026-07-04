@@ -18,9 +18,14 @@ export async function POST(request: NextRequest) {
 
     // Fetch product data from DB to prevent price tampering
     const productIds = items.map((i: any) => i.productId);
-    const dbProducts = await db.product.findMany({
-        where: { id: { in: productIds } }
-    });
+    const variantIds = items.map((i: any) => i.variantId).filter(Boolean);
+
+    const [dbProducts, dbVariants] = await Promise.all([
+        db.product.findMany({ where: { id: { in: productIds } } }),
+        db.productVariant.findMany({ where: { id: { in: variantIds as string[] } } })
+    ]);
+
+    const isAllDigital = dbProducts.every(p => p.isDigital);
 
     // Calculate totals on server
     let calculatedSubtotal = 0;
@@ -28,7 +33,12 @@ export async function POST(request: NextRequest) {
         const dbProduct = dbProducts.find(p => p.id === item.productId);
         if (!dbProduct) throw new Error(`Product ${item.productId} not found`);
 
-        const price = dbProduct.price;
+        let price = dbProduct.price;
+        if (item.variantId) {
+            const variant = dbVariants.find(v => v.id === item.variantId);
+            if (variant && variant.price) price = variant.price;
+        }
+
         const total = price * item.quantity;
         calculatedSubtotal += total;
 
@@ -74,7 +84,7 @@ export async function POST(request: NextRequest) {
     }
 
     const taxAmount = (calculatedSubtotal - discount) * (gstRate / 100);
-    const shippingAmount = (calculatedSubtotal - discount) >= freeShippingThreshold && freeShippingThreshold > 0 ? 0 : shippingFixed;
+    const shippingAmount = isAllDigital ? 0 : ((calculatedSubtotal - discount) >= freeShippingThreshold && freeShippingThreshold > 0 ? 0 : shippingFixed);
     const calculatedTotal = (calculatedSubtotal - discount) + taxAmount + shippingAmount;
 
     // Create order in transaction
@@ -164,6 +174,30 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PUT(request: NextRequest) {
+    try {
+        const auth = await requireAuth(request);
+        if (!auth.success) return auth.response;
+
+        const { searchParams } = new URL(request.url);
+        const orderId = searchParams.get('orderId');
+        const body = await request.json();
+
+        if (!orderId) return NextResponse.json({ error: 'Order ID required' }, { status: 400 });
+
+        const order = await db.order.update({
+            where: { id: orderId, userId: auth.payload.userId },
+            data: {
+                returnStatus: body.returnStatus || undefined,
+            }
+        });
+
+        return NextResponse.json({ order });
+    } catch (error) {
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+}
+
 export async function GET(request: NextRequest) {
     try {
         const auth = await requireAuth(request);
@@ -186,7 +220,16 @@ export async function GET(request: NextRequest) {
             orderBy: { createdAt: 'desc' },
             include: {
                 items: {
-                    include: { Product: { select: { images: true, slug: true } } }
+                    include: {
+                        Product: {
+                            select: {
+                                images: true,
+                                slug: true,
+                                isDigital: true,
+                                downloadUrl: true
+                            }
+                        }
+                    }
                 }
             }
         });

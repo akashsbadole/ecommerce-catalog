@@ -50,6 +50,8 @@ interface Order {
   customerName: string;
   customerEmail: string;
   paymentStatus: string;
+  returnStatus?: string;
+  refundAmount?: number;
   shippingAddress: string;
   paymentId: string;
   createdAt: string;
@@ -196,9 +198,16 @@ export function AdminOrders() {
                   </TableCell>
                   <TableCell>{getStatusBadge(order.status)}</TableCell>
                   <TableCell>
-                    <Badge variant={order.paymentStatus === 'paid' ? 'outline' : 'secondary'} className={order.paymentStatus === 'paid' ? 'text-emerald-600 border-emerald-200 bg-emerald-50' : ''}>
-                      {order.paymentStatus}
-                    </Badge>
+                    <div className="flex flex-col gap-1">
+                        <Badge variant={order.paymentStatus === 'paid' ? 'outline' : 'secondary'} className={order.paymentStatus === 'paid' ? 'text-emerald-600 border-emerald-200 bg-emerald-50' : ''}>
+                        {order.paymentStatus}
+                        </Badge>
+                        {order.returnStatus && (
+                            <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50">
+                                Return: {order.returnStatus}
+                            </Badge>
+                        )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
@@ -222,6 +231,13 @@ export function AdminOrders() {
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => updateOrderStatus(order.id, "cancelled")} className="text-destructive">
                           <XCircle className="mr-2 h-4 w-4" /> Cancel Order
+                        </DropdownMenuItem>
+                        <Separator />
+                        <DropdownMenuItem onClick={() => {
+                            const amt = prompt("Enter refund amount:");
+                            if (amt) adminFetch(`/api/admin/orders/${order.id}`, { method: 'PUT', body: JSON.stringify({ returnStatus: 'completed', refundAmount: amt }) }).then(() => fetchOrders());
+                        }}>
+                            Issue Refund
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

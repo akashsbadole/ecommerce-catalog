@@ -94,6 +94,10 @@ const defaultSettings: Settings = {
   company_gstin: "",
   company_fssai: "",
   company_cin: "",
+  tax_rate_gst: "18",
+  shipping_fixed_cost: "50",
+  shipping_free_threshold: "500",
+  chat_widget_id: "",
 };
 
 export function AdminSettings() {
@@ -475,6 +479,36 @@ export function AdminSettings() {
               }
               placeholder="U01234DL2025PTC123456"
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Business & Support */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <MessageCircle className="h-4 w-4" />
+            Support & Business
+          </CardTitle>
+          <CardDescription>Configure tax, shipping and live chat</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-3">
+          <div className="space-y-2">
+            <Label htmlFor="gst">GST Rate (%)</Label>
+            <Input id="gst" type="number" value={settings.tax_rate_gst} onChange={(e) => handleSettingChange("tax_rate_gst", e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="ship">Flat Shipping Cost</Label>
+            <Input id="ship" type="number" value={settings.shipping_fixed_cost} onChange={(e) => handleSettingChange("shipping_fixed_cost", e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="free">Free Shipping Min Amount</Label>
+            <Input id="free" type="number" value={settings.shipping_free_threshold} onChange={(e) => handleSettingChange("shipping_free_threshold", e.target.value)} />
+          </div>
+          <div className="space-y-2 sm:col-span-3">
+            <Label htmlFor="chat">Tawk.to Chat Widget ID</Label>
+            <Input id="chat" placeholder="6789..." value={settings.chat_widget_id} onChange={(e) => handleSettingChange("chat_widget_id", e.target.value)} />
+            <p className="text-xs text-muted-foreground">Found in your Tawk.to dashboard property settings.</p>
           </div>
         </CardContent>
       </Card>

@@ -15,13 +15,15 @@ export async function PUT(
 
     const { id } = params;
     const body = await request.json();
-    const { status, paymentStatus } = body;
+    const { status, paymentStatus, returnStatus, refundAmount } = body;
 
     const order = await db.order.update({
       where: { id, ...(storeId ? { storeId } : {}) },
       data: {
         status: status || undefined,
         paymentStatus: paymentStatus || undefined,
+        returnStatus: returnStatus || undefined,
+        refundAmount: refundAmount !== undefined ? parseFloat(refundAmount) : undefined,
       },
     });
 

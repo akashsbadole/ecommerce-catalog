@@ -107,6 +107,7 @@ interface Product {
   wholesalePrice: number | null;
   minOrderQty: number;
   sku: string | null;
+  barcode: string | null;
   images: string;
   categoryId: string | null;
   isFeatured: boolean;
@@ -137,6 +138,7 @@ interface ProductFormData {
   wholesalePrice: string;
   minOrderQty: string;
   sku: string;
+  barcode: string;
   images: string;
   categoryId: string;
   isFeatured: boolean;
@@ -163,6 +165,7 @@ const emptyForm: ProductFormData = {
   wholesalePrice: "",
   minOrderQty: "1",
   sku: "",
+  barcode: "",
   images: "",
   categoryId: "",
   isFeatured: false,
@@ -359,6 +362,7 @@ export function AdminProducts() {
         : "",
       minOrderQty: String(product.minOrderQty || 1),
       sku: product.sku || "",
+      barcode: product.barcode || "",
       images: imgs.join(", "),
       categoryId: product.categoryId || "",
       isFeatured: product.isFeatured,
@@ -424,6 +428,7 @@ export function AdminProducts() {
           : null,
         minOrderQty: parseInt(form.minOrderQty) || 1,
         sku: form.sku.trim() || null,
+        barcode: form.barcode.trim() || null,
         images: imagesArray,
         categoryId: form.categoryId || null,
         isFeatured: form.isFeatured,
@@ -1406,8 +1411,8 @@ export function AdminProducts() {
                   </CollapsibleContent>
                 </Collapsible>
 
-                {/* SKU & Category */}
-                <div className="grid gap-4 sm:grid-cols-2">
+                {/* SKU & Barcode & Category */}
+                <div className="grid gap-4 sm:grid-cols-3">
                   <div className="space-y-2">
                     <Label htmlFor="prod-sku">SKU</Label>
                     <Input
@@ -1416,6 +1421,17 @@ export function AdminProducts() {
                       value={form.sku}
                       onChange={(e) =>
                         setForm((prev) => ({ ...prev, sku: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="prod-barcode">Barcode</Label>
+                    <Input
+                      id="prod-barcode"
+                      placeholder="123456789"
+                      value={form.barcode}
+                      onChange={(e) =>
+                        setForm((prev) => ({ ...prev, barcode: e.target.value }))
                       }
                     />
                   </div>

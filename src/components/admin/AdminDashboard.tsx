@@ -35,8 +35,10 @@ import {
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminDashboardHome } from "@/components/admin/AdminDashboardHome";
+import { AdminAnalytics } from "@/components/admin/AdminAnalytics";
 import { AdminProducts } from "@/components/admin/AdminProducts";
 import { AdminCategories } from "@/components/admin/AdminCategories";
+import { AdminBrands } from "@/components/admin/AdminBrands";
 import { AdminEnquiries } from "@/components/admin/AdminEnquiries";
 import { AdminOrders } from "@/components/admin/AdminOrders";
 import { AdminCoupons } from "@/components/admin/AdminCoupons";
@@ -62,8 +64,10 @@ interface AdminDashboardProps {
 
 const sidebarItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "analytics", label: "Analytics", icon: TrendingUp },
   { id: "products", label: "Products", icon: Package },
   { id: "categories", label: "Categories", icon: FolderOpen },
+  { id: "brands", label: "Brands", icon: ShoppingBag },
   { id: "blog", label: "Blog", icon: BookOpen },
   { id: "orders", label: "Orders", icon: ShoppingBag },
   { id: "coupons", label: "Coupons", icon: Ticket },
@@ -290,10 +294,14 @@ export function AdminDashboard({
     switch (currentTab) {
       case "dashboard":
         return <AdminDashboardHome onNavigate={handleQuickNav} />;
+      case "analytics":
+        return <AdminAnalytics />;
       case "products":
         return <AdminProducts />;
       case "categories":
         return <AdminCategories />;
+      case "brands":
+        return <AdminBrands />;
       case "enquiries":
         return <AdminEnquiries />;
       case "orders":

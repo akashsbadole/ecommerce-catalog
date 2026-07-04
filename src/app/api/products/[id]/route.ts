@@ -116,6 +116,7 @@ export async function PUT(
         }),
         ...(body.minOrderQty !== undefined && { minOrderQty: body.minOrderQty }),
         ...(body.sku !== undefined && { sku: body.sku }),
+        ...(body.barcode !== undefined && { barcode: body.barcode }),
         ...(body.images !== undefined && {
           images: typeof body.images === 'string' ? body.images : JSON.stringify(body.images),
         }),

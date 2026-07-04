@@ -1,6 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Clock, Zap, ShoppingBag } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { formatPrice } from "@/lib/pricing";
+import { getFirstImage } from "@/lib/utils";
 import { PageBlockRenderer } from "./PageBlockRenderer";
 import type { PageBlock } from "@/lib/page-blocks";
 import { normalizePageBlocks } from "@/lib/page-blocks";
@@ -27,6 +31,13 @@ export function HomePage({
     metaDescription: string | null;
     ogImage: string | null;
   } | null>(null);
+  const [newArrivals, setNewArrivals] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch("/api/products?limit=4&sort=newest")
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data?.products) setNewArrivals(data.products); });
+  }, []);
 
   useEffect(() => {
     if (externalData) {
@@ -148,8 +159,40 @@ export function HomePage({
   // Render CMS blocks
   return (
     <div className="flex flex-col">
+      {newArrivals.length > 0 && (
+        <section className="py-12 bg-muted/30">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-2">
+                    <Clock className="h-6 w-6 text-primary" />
+                    <h2 className="text-2xl font-bold">New Arrivals</h2>
+                </div>
+                <Button variant="link" onClick={() => onNavigate("products")}>View All</Button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {newArrivals.map((p) => (
+                    <div key={p.id} className="bg-background rounded-2xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer group" onClick={() => onNavigate("product-page", p.slug)}>
+                        <div className="aspect-square bg-muted rounded-xl overflow-hidden mb-4 relative">
+                            {p.comparePrice && (
+                                <div className="absolute top-2 left-2 bg-rose-500 text-white text-[10px] font-bold px-2 py-1 rounded-full z-10 flex items-center gap-1">
+                                    <Zap className="h-3 w-3 fill-current" /> SALE
+                                </div>
+                            )}
+                            <img src={getFirstImage(p.images) || ''} alt={p.name} className="h-full w-full object-cover group-hover:scale-105 transition-transform" />
+                        </div>
+                        <h3 className="font-bold text-sm truncate">{p.name}</h3>
+                        <div className="flex items-center gap-2 mt-1">
+                            <span className="text-primary font-bold">{formatPrice(p.price, settings?.currency || "INR")}</span>
+                            {p.comparePrice && <span className="text-xs text-muted-foreground line-through">{formatPrice(p.comparePrice, settings?.currency || "INR")}</span>}
+                        </div>
+                    </div>
+                ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       <PageBlockRenderer blocks={blocks ?? undefined} onNavigate={onNavigate} />
-      {/* <ContactFormSection title="Contact Us" submitText="Send Enquiry →" /> */}
     </div>
   );
 }

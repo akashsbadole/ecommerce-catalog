@@ -30,6 +30,7 @@ model Store {
   CurrentUsers   User[]   @relation("CurrentUserStore")
   Product       Product[]
   Category      Category[]
+  Brand         Brand[]
   Quote         Quote[]
   BlogPost      BlogPost[]
   Banner        Banner[]
@@ -97,9 +98,13 @@ model Product {
   wholesalePrice    Float?
   minOrderQty       Int              @default(1)
   sku               String?
+  barcode           String?
   images            String           @default("[]")
   categoryId        String?
+  brandId           String?
   whatsappNumber    String?
+  isDigital         Boolean          @default(false)
+  downloadUrl       String?
   isFeatured        Boolean          @default(false)
   isActive          Boolean          @default(true)
   sortOrder         Int              @default(0)
@@ -118,6 +123,7 @@ model Product {
   updatedAt         DateTime         @default(now())
   Enquiry           Enquiry[]
   Category          Category?        @relation(fields: [categoryId], references: [id])
+  Brand             Brand?           @relation(fields: [brandId], references: [id])
   Store             Store?           @relation(fields: [storeId], references: [id])
   ProductVariant    ProductVariant[]
   ProductTier       ProductTier[]
@@ -203,6 +209,7 @@ model ProductVariant {
   productId      String
   name           String
   sku            String?
+  barcode        String?
   price          Float?
   comparePrice   Float?
   wholesalePrice Float?
@@ -239,6 +246,8 @@ model Order {
   customerEmail   String?
   customerPhone   String?
   notes           String?
+  returnStatus    String?     // requested, approved, rejected, completed
+  refundAmount    Float       @default(0)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   Store           Store?      @relation(fields: [storeId], references: [id])
@@ -409,6 +418,22 @@ model Banner {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
   Store     Store?   @relation(fields: [storeId], references: [id])
+
+  @@index([storeId])
+}
+
+model Brand {
+  id          String    @id @default(cuid())
+  storeId     String?
+  name        String
+  slug        String    @unique
+  description String?
+  image       String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  Store       Store?    @relation(fields: [storeId], references: [id])
+  Product     Product[]
 
   @@index([storeId])
 }

@@ -35,12 +35,19 @@ export async function POST(request: NextRequest) {
 
         // 2. Decrement Stock
         for (const item of order.items) {
-            await tx.product.update({
-                where: { id: item.productId },
-                data: {
-                    stock: { decrement: item.quantity }
-                }
-            });
+            if (item.variantId) {
+                await tx.productVariant.update({
+                    where: { id: item.variantId },
+                    data: { stock: { decrement: item.quantity } }
+                });
+            } else {
+                await tx.product.update({
+                    where: { id: item.productId },
+                    data: {
+                        stock: { decrement: item.quantity }
+                    }
+                });
+            }
         }
       });
 
