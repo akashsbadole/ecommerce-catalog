@@ -102,7 +102,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Lock: () => null, // Placeholder for security icon
   Globe: () => null, // Placeholder for global icon
 };
-import { motion, useInView, animate } from "framer-motion";
+import { motion, useInView, animate, AnimatePresence } from "framer-motion";
+import { routeFromPath } from "@/lib/routing";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -258,6 +259,178 @@ function HeroBlock({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function HeroCarouselBlock({
+  data,
+  onNavigate,
+}: {
+  data: Record<string, unknown>;
+  onNavigate?: (page: string, data?: unknown) => void;
+}) {
+  const slides =
+    (data.slides as Array<{
+      image: string;
+      title: string;
+      subtitle: string;
+      buttonText: string;
+      buttonLink: string;
+    }>) || [];
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const interval = (data.interval as number) || 6000;
+  const height = (data.height as string) || "medium";
+  const alignment = (data.alignment as string) || "center";
+
+  const heightClasses: Record<string, string> = {
+    small: "min-h-[200px] sm:min-h-[250px]",
+    medium: "min-h-[300px] sm:min-h-[400px] lg:min-h-[450px]",
+    large: "min-h-[400px] sm:min-h-[500px] lg:min-h-[600px]",
+  };
+
+  const alignClasses: Record<string, string> = {
+    left: "text-left",
+    center: "text-center",
+    right: "text-right",
+  };
+
+  useEffect(() => {
+    if (!data.autoplay || slides.length <= 1 || isPaused) return;
+    const timer = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % slides.length);
+    }, interval);
+    return () => clearInterval(timer);
+  }, [slides.length, data.autoplay, interval, isPaused]);
+
+  const goTo = (index: number) => setActiveIndex(index);
+  const goNext = () => setActiveIndex((prev) => (prev + 1) % slides.length);
+  const goPrev = () =>
+    setActiveIndex((prev) => (prev - 1 + slides.length) % slides.length);
+
+  if (slides.length === 0) return null;
+
+  return (
+    <div
+      className={`relative flex items-center overflow-hidden w-full ${heightClasses[height] || heightClasses.medium}`}
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeIndex}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.8 }}
+          className="absolute inset-0"
+        >
+          {slides[activeIndex].image ? (
+            <img
+              src={slides[activeIndex].image}
+              alt=""
+              className="absolute inset-0 w-full h-full object-contain"
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary/80" />
+          )}
+          <div className="absolute inset-0 bg-black/30" />
+        </motion.div>
+      </AnimatePresence>
+
+      <div
+        className={`relative z-10 w-full ${alignClasses[alignment] || alignClasses.center}`}
+      >
+        <div className="mx-auto w-full px-6">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`text-${activeIndex}`}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            >
+              {slides[activeIndex].title && (
+                <motion.h1
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.1 }}
+                  className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl"
+                >
+                  {slides[activeIndex].title}
+                </motion.h1>
+              )}
+              {slides[activeIndex].subtitle && (
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.2 }}
+                  className="mt-4 text-lg text-white/90 sm:text-xl"
+                >
+                  {slides[activeIndex].subtitle}
+                </motion.p>
+              )}
+              {slides[activeIndex].buttonText && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.3 }}
+                  className="mt-6"
+                >
+                  <Button
+                    size="lg"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                    onClick={() =>
+                      onNavigate &&
+                      slides[activeIndex].buttonLink &&
+                      onNavigate(
+                        slides[activeIndex].buttonLink.startsWith("/")
+                          ? "content-page"
+                          : "catalogue",
+                        slides[activeIndex].buttonLink.replace("/page/", ""),
+                      )
+                    }
+                  >
+                    {slides[activeIndex].buttonText}
+                  </Button>
+                </motion.div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {slides.length > 1 && (
+        <>
+          <button
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/20 text-white hover:bg-white/40 transition-all"
+            onClick={goPrev}
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          <button
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/20 text-white hover:bg-white/40 transition-all"
+            onClick={goNext}
+          >
+            <ChevronRight className="h-6 w-6" />
+          </button>
+
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => goTo(i)}
+                className={`h-2.5 rounded-full transition-all duration-300 ${
+                  i === activeIndex
+                    ? "w-8 bg-white"
+                    : "w-2.5 bg-white/50 hover:bg-white/80"
+                }`}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -818,6 +991,12 @@ function AudienceCardsBlock({
                   }}
                   className="text-xs px-4 py-1.5 h-auto hover:opacity-90"
                   onClick={() => {
+                    if (card.link?.startsWith("#")) {
+                      const el = document.getElementById(card.link.slice(1));
+                      el?.scrollIntoView({ behavior: "smooth" });
+                      return;
+                    }
+
                     if (card.link && onNavigate) {
                       if (card.link.startsWith("/")) {
                         onNavigate(
@@ -872,7 +1051,7 @@ function CapabilitiesBlock({
   const renderMedia = () => {
     if (hasGallery) {
       return (
-        <div className="grid grid-cols-2 gap-2 w-full">
+        <div className="grid grid-cols-2 gap-2 w-75">
           {[0, 1, 2, 3].map((i) =>
             galleryUrls[i] ? (
               <div
@@ -997,15 +1176,8 @@ function CapabilitiesBlock({
                   variant="outline"
                   className="mt-6 text-sm bg-primary text-white"
                   onClick={() => {
-                    if (ctaLink && onNavigate) {
-                      onNavigate(
-                        ctaLink.startsWith("/page/")
-                          ? "content-page"
-                          : ctaLink === "/contact"
-                            ? "contact"
-                            : "catalogue",
-                        ctaLink.replace("/page/", ""),
-                      );
+                    if (ctaLink) {
+                      routeFromPath(ctaLink, onNavigate || (() => {}));
                     } else if (onNavigate) {
                       onNavigate("catalogue");
                     }
@@ -1017,7 +1189,7 @@ function CapabilitiesBlock({
               )}
             </div>
             <div
-              className={`relative rounded-xl overflow-hidden bg-muted ${hasGallery ? "lg:col-span-2" : "lg:col-span-2 aspect-[4/3]"}`}
+              className={`relative rounded-xl overflow-hidden  justify-self-end ${hasGallery ? "lg:col-span-2" : "lg:col-span-2 aspect-[4/3]"}`}
             >
               {renderMedia()}
             </div>
@@ -1116,7 +1288,7 @@ function ProductCategoriesBlock({
           </p>
         )}
         {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
@@ -1125,7 +1297,7 @@ function ProductCategoriesBlock({
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {displayCategories.map((cat, i) => (
               <motion.div
                 key={cat.id || cat.name}
@@ -1176,15 +1348,12 @@ function ProductCategoriesBlock({
               style={{ backgroundColor: ctaButtonColor, color: ctaTextColor }}
               className="hover:opacity-90"
               onClick={() => {
-                if (ctaLink && onNavigate) {
-                  onNavigate(
-                    ctaLink.startsWith("/page/")
-                      ? "content-page"
-                      : ctaLink === "/contact"
-                        ? "contact"
-                        : "catalogue",
-                    ctaLink.replace("/page/", ""),
-                  );
+                if (ctaLink) {
+                  if (ctaLink.startsWith("/")) {
+                    routeFromPath(ctaLink, onNavigate || (() => {}));
+                  } else {
+                    window.open(ctaLink, "_blank");
+                  }
                 } else if (onNavigate) {
                   onNavigate("catalogue");
                 }
@@ -1384,8 +1553,14 @@ function LeadCaptureBlock({ data }: { data: Record<string, unknown> }) {
   const messageField = (data.messageField as boolean) ?? true;
 
   return (
-    <section className="relative overflow-hidden bg-foreground text-background">
-      <div className="absolute inset-0 bg-green-900" />
+    <section
+      className="relative overflow-hidden bg-foreground text-background scroll-mt-14"
+      id="contact"
+    >
+      <div
+        className="absolute inset-0"
+        style={{ backgroundColor: (data.bgColor as string) || "#016129" }}
+      />
       <div className="relative z-10 container mx-auto px-4 py-16">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -1454,7 +1629,7 @@ function LeadCaptureBlock({ data }: { data: Record<string, unknown> }) {
                     )}
                     {field.type === "select" ? (
                       <Select name={field.name} required={field.required}>
-                        <SelectTrigger className="bg-background/10 border-background/20 text-background">
+                        <SelectTrigger className="bg-white/10 border-white/20 text-white placeholder:text-white/50 text-base w-full">
                           <SelectValue placeholder={field.placeholder} />
                         </SelectTrigger>
                         <SelectContent>
@@ -1470,7 +1645,7 @@ function LeadCaptureBlock({ data }: { data: Record<string, unknown> }) {
                         name={field.name}
                         placeholder={field.placeholder}
                         required={field.required}
-                        className="bg-background/10 border-background/20 text-background placeholder:text-background/50"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50 text-base"
                         rows={4}
                       />
                     ) : (
@@ -1479,7 +1654,7 @@ function LeadCaptureBlock({ data }: { data: Record<string, unknown> }) {
                         type={field.type}
                         placeholder={field.placeholder}
                         required={field.required}
-                        className="bg-background/10 border-background/20 text-background placeholder:text-background/50"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50 text-base"
                       />
                     )}
                   </div>
@@ -1491,7 +1666,7 @@ function LeadCaptureBlock({ data }: { data: Record<string, unknown> }) {
                 name="message"
                 placeholder="Brief requirement or message (optional)"
                 rows={3}
-                className="bg-background/10 border-background/20 text-background placeholder:text-background/50"
+                className="bg-white/10 border-white/20 text-white placeholder:text-white/50 text-base"
               />
             )}
             <div className="text-center">
@@ -1549,7 +1724,7 @@ function LeadershipBlock({
           </p>
         )}
         {heading && (
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-8 text-center">
             {heading}
           </h2>
         )}
@@ -1583,34 +1758,27 @@ function LeadershipBlock({
               </div>
             </motion.div>
           ))}
-          {ctaText && (
-            <div className="flex flex-col justify-center items-center gap-2 p-4 rounded-xl border border-dashed">
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs bg-primary text-white"
-                onClick={() => {
-                  const ctaLink = (data.ctaLink as string) || "";
-                  if (ctaLink && onNavigate) {
-                    onNavigate(
-                      ctaLink.startsWith("/page/")
-                        ? "content-page"
-                        : ctaLink === "/contact"
-                          ? "contact"
-                          : "catalogue",
-                      ctaLink.replace("/page/", ""),
-                    );
-                  } else if (onNavigate) {
-                    onNavigate("contact");
-                  }
-                }}
-              >
-                {ctaText}
-                <ArrowRight className="ml-2 h-3 w-3" />
-              </Button>
-            </div>
-          )}
         </div>
+        {ctaText && (
+          <div className="flex flex-col justify-center items-center gap-2 p-4 rounded-xl border border-dashed">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs bg-primary text-white"
+              onClick={() => {
+                const ctaLink = (data.ctaLink as string) || "";
+                if (ctaLink) {
+                  routeFromPath(ctaLink, onNavigate || (() => {}));
+                } else if (onNavigate) {
+                  onNavigate("contact");
+                }
+              }}
+            >
+              {ctaText}
+              <ArrowRight className="ml-2 h-3 w-3" />
+            </Button>
+          </div>
+        )}
       </motion.div>
     </section>
   );
@@ -1761,8 +1929,19 @@ function StickyCtaBlock({
 
   return (
     <div className="sticky bottom-0 z-30 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
-        {text && <span className="text-sm font-semibold">{text}</span>}
+      <div className="container mx-auto px-4 py-3 flex items-center justify-center">
+        {text && (
+          <button
+            type="button"
+            className="text-sm font-semibold hover:underline cursor-pointer"
+            onClick={() => {
+              const el = document.getElementById("contact");
+              el?.scrollIntoView({ behavior: "smooth" });
+            }}
+          >
+            {text}
+          </button>
+        )}
         <div className="flex gap-2">
           {buttons.map((btn, i) => (
             <Button
@@ -1783,45 +1962,17 @@ function StickyCtaBlock({
                     : "text-muted-foreground"
               }
               onClick={() => {
-                if (btn.action === "enquiry") {
-                  onNavigate?.("contact");
+                if (btn.link?.startsWith("#")) {
+                  const el = document.getElementById(btn.link.slice(1));
+                  el?.scrollIntoView({ behavior: "smooth" });
+                } else if (btn.action === "enquiry") {
+                  routeFromPath(btn.link || "/contact", onNavigate || (() => {}));
                 } else if (btn.action === "whatsapp") {
                   window.open(btn.link || "https://wa.me/", "_blank");
                 } else if (btn.action === "phone") {
                   window.location.href = btn.link || "tel:";
                 } else if (btn.action === "link") {
-                  if (btn.link?.startsWith("/page/")) {
-                    onNavigate?.(
-                      "content-page",
-                      btn.link.replace("/page/", ""),
-                    );
-                  } else if (btn.link === "/" || btn.link === "/home") {
-                    onNavigate?.("home");
-                  } else if (btn.link === "/catalogue") {
-                    onNavigate?.("catalogue");
-                  } else if (btn.link === "/contact") {
-                    onNavigate?.("contact");
-                  } else if (
-                    btn.link === "/about" ||
-                    btn.link === "/about-us"
-                  ) {
-                    onNavigate?.("about");
-                  } else if (btn.link === "/manufacturing") {
-                    onNavigate?.("manufacturing");
-                  } else if (btn.link === "/blog") {
-                    onNavigate?.("blog");
-                  } else if (btn.link?.startsWith("/blog/")) {
-                    onNavigate?.("blog-post", btn.link.replace("/blog/", ""));
-                  } else if (btn.link?.startsWith("/product/")) {
-                    onNavigate?.(
-                      "product-page",
-                      btn.link.replace("/product/", ""),
-                    );
-                  } else if (btn.link?.startsWith("/")) {
-                    onNavigate?.("content-page", btn.link.replace(/^\//, ""));
-                  } else if (btn.link) {
-                    window.open(btn.link, "_blank");
-                  }
+                  routeFromPath(btn.link || "/", onNavigate || (() => {}));
                 }
               }}
             >
@@ -1843,6 +1994,7 @@ const BLOCK_ICONS: Record<
   React.ComponentType<{ className?: string }>
 > = {
   hero: Image,
+  "hero-carousel": GalleryHorizontal,
   features: LayoutGrid,
   cta: MousePointerClick,
   testimonials: Quote,
@@ -3190,6 +3342,8 @@ export function PageBlockRenderer({
       // Essential reusable blocks
       case "hero":
         return <HeroBlock data={data} onNavigate={onNavigate} />;
+      case "hero-carousel":
+        return <HeroCarouselBlock data={data} onNavigate={onNavigate} />;
       case "text":
         return <TextBlock data={data} />;
       case "image-gallery":

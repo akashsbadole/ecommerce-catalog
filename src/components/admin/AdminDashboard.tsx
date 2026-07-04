@@ -61,11 +61,11 @@ const sidebarItems = [
   { id: "products", label: "Products", icon: Package },
   { id: "categories", label: "Categories", icon: FolderOpen },
   { id: "blog", label: "Blog", icon: BookOpen },
-  { id: "quotes", label: "Quotes", icon: FileText },
+  // { id: "quotes", label: "Quotes", icon: FileText },
   { id: "enquiries", label: "Enquiries", icon: MessageSquare },
   { id: "media", label: "Media", icon: ImageIcon },
   { id: "pages", label: "Pages", icon: FileText },
-  { id: "banners", label: "Banners", icon: ImageIcon },
+  // { id: "banners", label: "Banners", icon: ImageIcon },
   { id: "menus", label: "Menus", icon: Menu },
   { id: "settings", label: "Settings", icon: Settings },
 ];

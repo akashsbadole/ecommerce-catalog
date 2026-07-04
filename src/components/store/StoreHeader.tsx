@@ -462,7 +462,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
           {/* Right: Search + CTA */}
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {/* Search Button */}
-            <Button
+            {/* <Button
               variant="ghost"
               size="icon"
               className="h-9 w-9"
@@ -470,15 +470,15 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
               aria-label="Search products"
             >
               <Search className="h-4.5 w-4.5" />
-            </Button>
+            </Button> */}
             {/* Get Bulk Quote CTA */}
             <Button
               size="sm"
               className="hidden md:flex text-sm bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 px-4"
-              onClick={() => onNavigate("products")}
+              onClick={() => onNavigate("purva-bites-distribution")}
             >
               <FileText className="h-4 w-4" />
-              Get Bulk Quote
+              Purva Bites Distribution
             </Button>
             {/* Mobile Menu Trigger */}
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>

@@ -51,6 +51,7 @@ import {
   Smartphone,
   Eye,
   Loader2,
+  GalleryHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -108,6 +109,7 @@ const BLOCK_ICONS: Record<
 > = {
   // Essential reusable blocks
   hero: Image,
+  "hero-carousel": GalleryHorizontal,
   text: Type,
   "image-gallery": Images,
   features: LayoutGrid,
@@ -470,6 +472,184 @@ function BlockEditDialog({
                         </select>
                       </div>
                     </div>
+                  </>
+                )}
+
+                {block.type === "hero-carousel" && (
+                  <>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="hc-autoplay"
+                          checked={!!localData.autoplay}
+                          onCheckedChange={(val) =>
+                            updateField("autoplay", !!val)
+                          }
+                        />
+                        <Label htmlFor="hc-autoplay">Autoplay</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Label>Interval (ms)</Label>
+                        <Input
+                          type="number"
+                          className="w-24 h-8"
+                          value={(localData.interval as number) || 6000}
+                          onChange={(e) =>
+                            updateField("interval", Number(e.target.value))
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Height</Label>
+                      <select
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
+                        value={(localData.height as string) || "large"}
+                        onChange={(e) => updateField("height", e.target.value)}
+                      >
+                        <option value="small">Small</option>
+                        <option value="medium">Medium</option>
+                        <option value="large">Large</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Alignment</Label>
+                      <select
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors"
+                        value={(localData.alignment as string) || "center"}
+                        onChange={(e) => updateField("alignment", e.target.value)}
+                      >
+                        <option value="left">Left</option>
+                        <option value="center">Center</option>
+                        <option value="right">Right</option>
+                      </select>
+                    </div>
+                    <Separator />
+                    <Label className="text-base font-semibold">Slides</Label>
+                    {(
+                      (localData.slides as Array<Record<string, string>>) || []
+                    ).map((slide, i) => (
+                      <Card key={i} className="p-4 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">
+                            Slide {i + 1}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-rose-600"
+                            onClick={() => {
+                              const slides = [
+                                ...((localData.slides as Array<unknown>) || []),
+                              ];
+                              slides.splice(i, 1);
+                              updateField("slides", slides);
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <MediaPickerField
+                          label="Background Image"
+                          value={slide.image}
+                          onChange={(v) => {
+                            const slides = [
+                              ...((localData.slides as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            slides[i] = { ...slides[i], image: v };
+                            updateField("slides", slides);
+                          }}
+                          placeholder="Image URL"
+                        />
+                        <Input
+                          placeholder="Title"
+                          value={slide.title}
+                          onChange={(e) => {
+                            const slides = [
+                              ...((localData.slides as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            slides[i] = { ...slides[i], title: e.target.value };
+                            updateField("slides", slides);
+                          }}
+                        />
+                        <Input
+                          placeholder="Subtitle"
+                          value={slide.subtitle}
+                          onChange={(e) => {
+                            const slides = [
+                              ...((localData.slides as Array<
+                                Record<string, string>
+                              >) || []),
+                            ];
+                            slides[i] = {
+                              ...slides[i],
+                              subtitle: e.target.value,
+                            };
+                            updateField("slides", slides);
+                          }}
+                        />
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <Input
+                            placeholder="Button Text"
+                            value={slide.buttonText}
+                            onChange={(e) => {
+                              const slides = [
+                                ...((localData.slides as Array<
+                                  Record<string, string>
+                                >) || []),
+                              ];
+                              slides[i] = {
+                                ...slides[i],
+                                buttonText: e.target.value,
+                              };
+                              updateField("slides", slides);
+                            }}
+                          />
+                          <Input
+                            placeholder="Button Link"
+                            value={slide.buttonLink}
+                            onChange={(e) => {
+                              const slides = [
+                                ...((localData.slides as Array<
+                                  Record<string, string>
+                                >) || []),
+                              ];
+                              slides[i] = {
+                                ...slides[i],
+                                buttonLink: e.target.value,
+                              };
+                              updateField("slides", slides);
+                            }}
+                          />
+                        </div>
+                      </Card>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const slides = [
+                          ...((localData.slides as Array<
+                            Record<string, string>
+                          >) || []),
+                          {
+                            image: "",
+                            title: "Slide",
+                            subtitle: "",
+                            buttonText: "Shop Now",
+                            buttonLink: "/catalogue",
+                          },
+                        ];
+                        updateField("slides", slides);
+                      }}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Slide
+                    </Button>
                   </>
                 )}
 
@@ -1922,6 +2102,26 @@ function BlockEditDialog({
                       <Label htmlFor="lead-message-field">
                         Show Message Field
                       </Label>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Background Color</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="color"
+                          className="w-12 h-9 p-1 cursor-pointer"
+                          value={(localData.bgColor as string) || "#016129"}
+                          onChange={(e) =>
+                            updateField("bgColor", e.target.value)
+                          }
+                        />
+                        <Input
+                          value={(localData.bgColor as string) || "#016129"}
+                          onChange={(e) =>
+                            updateField("bgColor", e.target.value)
+                          }
+                          placeholder="#016129"
+                        />
+                      </div>
                     </div>
                     <Separator />
                     <Label className="text-base font-semibold">

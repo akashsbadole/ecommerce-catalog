@@ -20,6 +20,7 @@ export type BlockType =
   | "products-page-content"
 
   // Additional blocks from page-blocks library
+  | "hero-carousel"
   | "slider"
   | "product-carousel"
   | "about"
@@ -75,6 +76,32 @@ export const BLOCK_DEFAULTS: Record<
       buttonLink: "/products",
       backgroundImage: "",
       height: "medium",
+      alignment: "center",
+    },
+  },
+  "hero-carousel": {
+    label: "Hero Carousel",
+    icon: "GalleryHorizontal",
+    defaultData: {
+      slides: [
+        {
+          image: "",
+          title: "Slide 1",
+          subtitle: "Description for slide 1",
+          buttonText: "Shop Now",
+          buttonLink: "/catalogue",
+        },
+        {
+          image: "",
+          title: "Slide 2",
+          subtitle: "Description for slide 2",
+          buttonText: "Learn More",
+          buttonLink: "/about",
+        },
+      ],
+      autoplay: true,
+      interval: 6000,
+      height: "large",
       alignment: "center",
     },
   },
@@ -474,6 +501,7 @@ export const BLOCK_DEFAULTS: Record<
         },
       ],
       messageField: true,
+      bgColor: "#016129",
     },
   },
   leadership: {
@@ -590,7 +618,7 @@ export const BLOCK_DEFAULTS: Record<
           text: "Get bulk quote",
           type: "primary",
           action: "enquiry",
-          link: "/contact",
+          link: "#contact",
         },
         {
           text: "WhatsApp us",

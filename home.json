@@ -95,7 +95,10 @@
           { "name": "Digestive", "variants": "4+ variants" }
         ],
         "ctaText": "View all products & packaging →",
-        "ctaLink": "/catalogue"
+        "ctaLink": "/manufacturing",
+        "ctaButtonColor": "var(--primary)",
+        "ctaTextColor": "#FFFFFF",
+        "showButton": true
       }
     },
     {
@@ -237,7 +240,7 @@
             "text": "Get bulk quote",
             "type": "primary",
             "action": "enquiry",
-            "link": "/contact"
+            "link": "#contact"
           },
           {
             "text": "WhatsApp us",

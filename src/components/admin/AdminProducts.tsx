@@ -1225,8 +1225,8 @@ export function AdminProducts() {
             <Tabs value={editTab} onValueChange={setEditTab}>
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="general">General</TabsTrigger>
-                <TabsTrigger value="variants">Variants</TabsTrigger>
-                <TabsTrigger value="related">Related</TabsTrigger>
+                {/* <TabsTrigger value="variants">Variants</TabsTrigger>
+                <TabsTrigger value="related">Related</TabsTrigger> */}
               </TabsList>
             </Tabs>
           )}
@@ -1246,7 +1246,7 @@ export function AdminProducts() {
                       onChange={(e) => handleNameChange(e.target.value)}
                     />
                   </div>
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label htmlFor="prod-slug">Slug</Label>
                     <Input
                       id="prod-slug"
@@ -1256,7 +1256,7 @@ export function AdminProducts() {
                         setForm((prev) => ({ ...prev, slug: e.target.value }))
                       }
                     />
-                  </div>
+                  </div> */}
                 </div>
 
                 {/* Description */}
@@ -1289,7 +1289,7 @@ export function AdminProducts() {
                 </div>
 
                 {/* Price */}
-                <div className="grid gap-4 sm:grid-cols-2">
+                {/* <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="prod-price">
                       Price <span className="text-rose-500">*</span>
@@ -1321,10 +1321,10 @@ export function AdminProducts() {
                       }
                     />
                   </div>
-                </div>
+                </div> */}
 
                 {/* B2B Section (Collapsible) */}
-                <Collapsible open={b2bOpen} onOpenChange={setB2bOpen}>
+                {/* <Collapsible open={b2bOpen} onOpenChange={setB2bOpen}>
                   <CollapsibleTrigger asChild>
                     <Button
                       type="button"
@@ -1404,11 +1404,11 @@ export function AdminProducts() {
                       </div>
                     </div>
                   </CollapsibleContent>
-                </Collapsible>
+                </Collapsible> */}
 
                 {/* SKU & Category */}
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label htmlFor="prod-sku">SKU</Label>
                     <Input
                       id="prod-sku"
@@ -1418,7 +1418,7 @@ export function AdminProducts() {
                         setForm((prev) => ({ ...prev, sku: e.target.value }))
                       }
                     />
-                  </div>
+                  </div> */}
                   <div className="space-y-2">
                     <Label>Category</Label>
                     <Select
@@ -1514,7 +1514,7 @@ export function AdminProducts() {
                 )}
 
                 {/* Sort Order */}
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="prod-sort">Sort Order</Label>
                   <Input
                     id="prod-sort"
@@ -1528,11 +1528,11 @@ export function AdminProducts() {
                       }))
                     }
                   />
-                </div>
+                </div> */}
 
                 {/* Switches */}
                 <div className="flex flex-wrap gap-6">
-                  <div className="flex items-center gap-2">
+                  {/* <div className="flex items-center gap-2">
                     <Switch
                       checked={form.isFeatured}
                       onCheckedChange={(checked) =>
@@ -1550,7 +1550,7 @@ export function AdminProducts() {
                     >
                       Featured
                     </Label>
-                  </div>
+                  </div> */}
                   <div className="flex items-center gap-2">
                     <Switch
                       checked={form.isActive}
@@ -1573,7 +1573,7 @@ export function AdminProducts() {
                 </div>
 
                 {/* Specifications */}
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="prod-specs">Specifications (JSON)</Label>
                   <Textarea
                     id="prod-specs"
@@ -1594,10 +1594,10 @@ export function AdminProducts() {
                   </p>
                 </div>
 
-                <Separator />
+                <Separator /> */}
 
                 {/* Stock & Low Stock Threshold */}
-                <div className="grid gap-4 sm:grid-cols-2">
+                {/* <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="prod-stock">Stock</Label>
                     <Input
@@ -1634,7 +1634,7 @@ export function AdminProducts() {
                   </div>
                 </div>
 
-                <Separator />
+                <Separator /> */}
 
                 {/* SEO Section (Collapsible) */}
                 <Collapsible open={seoOpen} onOpenChange={setSeoOpen}>
@@ -1714,27 +1714,37 @@ export function AdminProducts() {
                         placeholder="https://example.com/og-image.jpg"
                         value={form.ogImage}
                         onChange={(e) =>
-                          setForm(prev => ({ ...prev, ogImage: e.target.value }))
+                          setForm((prev) => ({
+                            ...prev,
+                            ogImage: e.target.value,
+                          }))
                         }
                       />
                       <p className="text-xs text-muted-foreground">
-                        Image shown when this product is shared on social media (recommended 1200×630px)
+                        Image shown when this product is shared on social media
+                        (recommended 1200×630px)
                       </p>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="prod-custom-schema">Custom JSON-LD Schema (optional)</Label>
+                      <Label htmlFor="prod-custom-schema">
+                        Custom JSON-LD Schema (optional)
+                      </Label>
                       <Textarea
                         id="prod-custom-schema"
                         placeholder='{"@type": "Product", ...}'
                         value={form.customSchema}
                         onChange={(e) =>
-                          setForm(prev => ({ ...prev, customSchema: e.target.value }))
+                          setForm((prev) => ({
+                            ...prev,
+                            customSchema: e.target.value,
+                          }))
                         }
                         rows={3}
                         className="font-mono text-xs"
                       />
                       <p className="text-xs text-muted-foreground">
-                        Override or extend the default Product schema. Must be valid JSON.
+                        Override or extend the default Product schema. Must be
+                        valid JSON.
                       </p>
                     </div>
                   </CollapsibleContent>
@@ -1743,17 +1753,17 @@ export function AdminProducts() {
             )}
 
             {/* Variants Tab */}
-            {editingProduct && editTab === "variants" && (
+            {/* {editingProduct && editTab === "variants" && (
               <div className="py-4">
                 <AdminProductVariants
                   productId={editingProduct.id}
                   lowStockThreshold={parseInt(form.lowStockThreshold) || 10}
                 />
               </div>
-            )}
+            )} */}
 
             {/* Related Products Tab */}
-            {editingProduct && editTab === "related" && (
+            {/* {editingProduct && editTab === "related" && (
               <div className="py-4 space-y-4">
                 <div className="space-y-2">
                   <Label>Related Products</Label>
@@ -1832,9 +1842,7 @@ export function AdminProducts() {
                   </div>
                 )}
               </div>
-            )}
-
-
+            )} */}
           </ScrollArea>
           <DialogFooter>
             <Button variant="outline" onClick={() => setFormOpen(false)}>
