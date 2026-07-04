@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Search, X, Check, Heart, Eye, ShoppingCart, Filter, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,10 +25,6 @@ import { StoreLoading } from "./StoreLoading";
 
 export function CataloguePage() {
   const { auth, settings, navigate, addToCart } = useAppStore();
-  const [products, setProducts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [brands, setBrands] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
     categoryId: "all",
@@ -42,40 +39,37 @@ export function CataloguePage() {
   const isB2C = settings?.store_mode === "b2c";
   const currency = settings?.currency || "INR";
 
-  useEffect(() => {
-    Promise.all([
-      fetch("/api/categories"),
-      fetch("/api/brands")
-    ]).then(async ([catRes, brandRes]) => {
-      if (catRes.ok) setCategories((await catRes.json()).categories || []);
-      if (brandRes.ok) setBrands((await brandRes.json()).brands || []);
-    });
-  }, []);
-
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (searchQuery) params.set("search", searchQuery);
-      if (filters.categoryId !== "all") params.set("categoryId", filters.categoryId);
-      if (filters.brandId !== "all") params.set("brandId", filters.brandId);
-      if (filters.minPrice) params.set("minPrice", filters.minPrice);
-      if (filters.maxPrice) params.set("maxPrice", filters.maxPrice);
-      if (filters.sortBy !== "featured") params.set("sort", filters.sortBy);
-
-      const res = await fetch(`/api/products?${params.toString()}`);
-      if (res.ok) {
-        setProducts((await res.json()).products || []);
-      }
-    } finally {
-      setLoading(false);
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+        const res = await fetch("/api/categories");
+        return (await res.json()).categories || [];
     }
-  };
+  });
 
-  useEffect(() => {
-    const timer = setTimeout(fetchProducts, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery, filters]);
+  const { data: brands = [] } = useQuery({
+    queryKey: ["brands"],
+    queryFn: async () => {
+        const res = await fetch("/api/brands");
+        return (await res.json()).brands || [];
+    }
+  });
+
+  const { data: products = [], isLoading: loading } = useQuery({
+    queryKey: ["products", searchQuery, filters],
+    queryFn: async () => {
+        const params = new URLSearchParams();
+        if (searchQuery) params.set("search", searchQuery);
+        if (filters.categoryId !== "all") params.set("categoryId", filters.categoryId);
+        if (filters.brandId !== "all") params.set("brandId", filters.brandId);
+        if (filters.minPrice) params.set("minPrice", filters.minPrice);
+        if (filters.maxPrice) params.set("maxPrice", filters.maxPrice);
+        if (filters.sortBy !== "featured") params.set("sort", filters.sortBy);
+
+        const res = await fetch(`/api/products?${params.toString()}`);
+        return (await res.json()).products || [];
+    }
+  });
 
   const handleAddToCart = (product: any) => {
     if (product.stock <= 0) {

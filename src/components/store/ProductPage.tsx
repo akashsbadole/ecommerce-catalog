@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import Image from "next/image";
 import { Package, Send, ChevronDown, ShoppingCart, Heart, ShieldCheck, Truck, RefreshCw, ZoomIn, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getFirstImage } from "@/lib/utils";
@@ -24,27 +26,19 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [product, setProduct] = useState<any | null>(null);
-  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [faqOpenIndex, setFaqOpenIndex] = useState<number | null>(null);
 
   const { auth, settings, addToCart } = useAppStore();
   const currency = settings?.currency || "INR";
   const isB2C = settings?.store_mode === "b2c";
 
-  useEffect(() => {
-    async function load() {
-      try {
+  const { data: product, isLoading: loading } = useQuery({
+    queryKey: ["product", slug],
+    queryFn: async () => {
         const res = await fetch(`/api/products?slug=${slug}`);
-        if (res.ok) {
-          const data = await res.json();
-          const prod = (data.products || [])[0];
-          if (prod) {
-            setProduct(prod);
-            const firstImg = getFirstImage(prod.images);
-            if (firstImg) setActiveImage(firstImg);
-
+        const data = await res.json();
+        const prod = (data.products || [])[0];
+        if (prod) {
             // Recently Viewed
             try {
                 const stored = localStorage.getItem('recently_viewed') || '[]';
@@ -53,25 +47,27 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                 viewed.unshift({ id: prod.id, name: prod.name, slug: prod.slug, images: prod.images, price: prod.price });
                 localStorage.setItem('recently_viewed', JSON.stringify(viewed.slice(0, 10)));
             } catch { /* ignore */ }
-
-            // Related
-            if (prod.categoryId) {
-                fetch(`/api/products?categoryId=${prod.categoryId}&limit=5`)
-                    .then(r => r.ok ? r.json() : null)
-                    .then(data => {
-                        if (data?.products) {
-                            setRelatedProducts(data.products.filter((p: any) => p.id !== prod.id).slice(0, 4));
-                        }
-                    });
-            }
-          }
         }
-      } finally {
-        setLoading(false);
-      }
+        return prod;
     }
-    load();
-  }, [slug]);
+  });
+
+  const { data: relatedProducts = [] } = useQuery({
+    queryKey: ["related-products", product?.id],
+    enabled: !!product?.categoryId,
+    queryFn: async () => {
+        const res = await fetch(`/api/products?categoryId=${product.categoryId}&limit=5`);
+        const data = await res.json();
+        return (data.products || []).filter((p: any) => p.id !== product.id).slice(0, 4);
+    }
+  });
+
+  useEffect(() => {
+    if (product && !activeImage) {
+        const firstImg = getFirstImage(product.images);
+        if (firstImg) setActiveImage(firstImg);
+    }
+  }, [product, activeImage]);
 
   useSeo(`product-${slug}`, {
     title: product?.metaTitle || product?.name,
@@ -133,8 +129,17 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
           {/* Left: Gallery */}
           <div className="space-y-6">
             <div className="relative aspect-square bg-muted rounded-3xl overflow-hidden border group cursor-zoom-in" onClick={() => setLightboxOpen(true)}>
-                {activeImage && <img src={activeImage} alt={product.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />}
-                <div className="absolute top-4 right-4 bg-white/80 backdrop-blur-md p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                {activeImage && (
+                    <Image
+                        src={activeImage}
+                        alt={product.name}
+                        fill
+                        priority
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                )}
+                <div className="absolute top-4 right-4 bg-white/80 backdrop-blur-md p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
                     <ZoomIn className="h-5 w-5" />
                 </div>
                 {product.comparePrice && (

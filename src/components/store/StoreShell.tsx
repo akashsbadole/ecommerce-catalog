@@ -2,6 +2,7 @@
 
 import { useEffect, useCallback, useState, ReactNode } from "react";
 import { useAppStore } from "@/lib/store";
+import { motion, AnimatePresence } from "framer-motion";
 import { StoreLayout } from "./StoreLayout";
 import { HomePage } from "./HomePage";
 import { CataloguePage } from "./CataloguePage";
@@ -190,7 +191,17 @@ export function StoreShell({ initialPage, children }: StoreShellProps) {
 
   return (
     <StoreLayout currentPage={page.type} onNavigate={navigate}>
-      <ErrorBoundary>{renderPage()}</ErrorBoundary>
+      <AnimatePresence mode="wait">
+        <motion.div
+            key={page.type + (page.slug || "")}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+        >
+            <ErrorBoundary>{renderPage()}</ErrorBoundary>
+        </motion.div>
+      </AnimatePresence>
     </StoreLayout>
   );
 }
