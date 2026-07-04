@@ -16,17 +16,20 @@ export function CartPage() {
 
   if (cart.items.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-20 text-center">
+      <div className="container mx-auto px-4 py-32 text-center bg-card border-2 border-dashed rounded-[3rem] my-12">
         <div className="mb-6 flex justify-center">
-          <div className="rounded-full bg-muted p-6">
-            <ShoppingCart className="h-12 w-12 text-muted-foreground" />
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
+            <div className="relative rounded-full bg-primary/10 p-10 ring-1 ring-primary/20">
+                <ShoppingCart className="h-16 w-16 text-primary" />
+            </div>
           </div>
         </div>
-        <h1 className="text-2xl font-bold mb-2">Your cart is empty</h1>
-        <p className="text-muted-foreground mb-8">
-          Looks like you haven't added anything to your cart yet.
+        <h1 className="text-3xl font-black mb-4">Your cart is empty</h1>
+        <p className="text-muted-foreground mb-10 max-w-md mx-auto text-lg">
+          Looks like you haven't added anything to your cart yet. Browse our collections to find something you love.
         </p>
-        <Button onClick={() => navigate("products")}>Start Shopping</Button>
+        <Button size="lg" className="rounded-full px-10 h-14 text-lg font-bold shadow-xl shadow-primary/20" onClick={() => navigate("products")}>Start Shopping</Button>
       </div>
     );
   }
@@ -57,7 +60,7 @@ export function CartPage() {
               </div>
 
               <div className="flex-1 min-w-0">
-                <h3 className="font-medium truncate">{item.name}</h3>
+                <h3 className="font-bold truncate hover:text-primary cursor-pointer" onClick={() => navigate("product-page", item.productId.split('/').pop())}>{item.name}</h3>
                 <p className="text-sm text-primary font-bold mt-1">
                   {formatPrice(item.price, currency)}
                 </p>

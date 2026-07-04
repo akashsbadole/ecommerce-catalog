@@ -60,10 +60,17 @@ export function WishlistPage() {
 
   if (!auth.user) {
     return (
-      <div className="container mx-auto px-4 py-20 text-center">
-        <Heart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-        <h1 className="text-2xl font-bold mb-4">Please log in to view your wishlist</h1>
-        <Button onClick={() => navigate("home")}>Return to Home</Button>
+      <div className="container mx-auto px-4 py-32 text-center bg-card border-2 border-dashed rounded-[3rem] my-12">
+        <div className="mb-6 flex justify-center">
+            <div className="rounded-full bg-rose-50 p-10 ring-1 ring-rose-100">
+                <Heart className="h-16 w-16 text-rose-500" />
+            </div>
+        </div>
+        <h1 className="text-3xl font-black mb-4">Your wishlist awaits</h1>
+        <p className="text-muted-foreground mb-10 max-w-md mx-auto text-lg">
+          Please log in to save your favorite items and sync them across all your devices.
+        </p>
+        <Button size="lg" className="rounded-full px-10 h-14 text-lg font-bold" onClick={() => navigate("home")}>Log In Now</Button>
       </div>
     );
   }
@@ -79,10 +86,15 @@ export function WishlistPage() {
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="text-center py-20 border rounded-xl bg-muted/30">
-          <Heart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">Your wishlist is empty.</p>
-          <Button variant="link" onClick={() => navigate("products")}>Browse products</Button>
+        <div className="text-center py-32 bg-card border-2 border-dashed rounded-[3rem]">
+          <div className="mb-6 flex justify-center">
+            <div className="rounded-full bg-muted p-10">
+                <Heart className="h-16 w-16 text-muted-foreground/30" />
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold mb-2">No favorites yet</h2>
+          <p className="text-muted-foreground mb-10">Tap the heart icon on any product to save it here.</p>
+          <Button size="lg" variant="outline" className="rounded-full px-8 font-bold" onClick={() => navigate("products")}>Browse Collections</Button>
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
