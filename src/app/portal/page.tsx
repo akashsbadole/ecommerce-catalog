@@ -25,6 +25,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { formatPrice } from '@/lib/pricing';
+import { AddressBook } from '@/components/store/AddressBook';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface QuoteItem {
   id: string;
@@ -61,6 +63,7 @@ const quoteStatusColors: Record<string, string> = {
 
 export default function BuyerPortalPage() {
   const { auth, navigate, settings } = useAppStore();
+  const isB2C = settings?.store_mode === 'b2c';
   const [enquiries, setEnquiries] = useState<any[]>([]);
   const [quotes, setQuotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -129,21 +132,37 @@ export default function BuyerPortalPage() {
     <div className="container mx-auto py-8 px-4 space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Buyer Portal</h1>
-          <p className="text-muted-foreground">Welcome back, {auth.user.name}. Manage your business account, quotes, and enquiries.</p>
+          <h1 className="text-3xl font-bold tracking-tight">{isB2C ? 'Customer Portal' : 'Buyer Portal'}</h1>
+          <p className="text-muted-foreground">Welcome back, {auth.user.name}. {isB2C ? 'Manage your account and orders.' : 'Manage your business account, quotes, and enquiries.'}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => navigate('catalogue')}>
             <Package className="mr-2 h-4 w-4" />
             Browse Products
           </Button>
-          <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => navigate('catalogue')}>
-            <FileText className="mr-2 h-4 w-4" />
-            New Quote
-          </Button>
+          {isB2C ? (
+             <Button className="bg-primary text-white" onClick={() => navigate('orders')}>
+                <Package className="mr-2 h-4 w-4" />
+                My Orders
+             </Button>
+          ) : (
+            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => navigate('catalogue')}>
+                <FileText className="mr-2 h-4 w-4" />
+                New Quote
+            </Button>
+          )}
         </div>
       </div>
 
+      <Tabs defaultValue="dashboard" className="w-full">
+        <TabsList className="mb-8">
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            {isB2C && <TabsTrigger value="orders" onClick={() => navigate('orders')}>Orders</TabsTrigger>}
+            <TabsTrigger value="addresses">Address Book</TabsTrigger>
+            {!isB2C && <TabsTrigger value="quotes">Quotes</TabsTrigger>}
+        </TabsList>
+
+        <TabsContent value="dashboard" className="space-y-8">
       <div className="grid gap-6 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
@@ -336,6 +355,22 @@ export default function BuyerPortalPage() {
           </CardContent>
         </Card>
       </div>
+      </TabsContent>
+
+      <TabsContent value="addresses">
+        <Card>
+            <CardContent className="pt-6">
+                <AddressBook />
+            </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="quotes">
+        <div className="space-y-8">
+            {/* Move Quotes and Enquiries here for B2B */}
+        </div>
+      </TabsContent>
+      </Tabs>
 
       {/* Quote Detail Dialog */}
       <Dialog open={!!selectedQuote} onOpenChange={() => setSelectedQuote(null)}>

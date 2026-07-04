@@ -42,7 +42,16 @@ export async function POST(request: NextRequest) {
         };
     });
 
-    let calculatedTotal = calculatedSubtotal;
+    // Fetch store settings for GST and Shipping
+    const settings = await db.siteSetting.findMany({
+        where: { storeId: storeId ? storeId : null }
+    });
+    const getSetting = (key: string) => settings.find(s => s.key === key)?.value;
+
+    const gstRate = parseFloat(getSetting('tax_rate_gst') || '0');
+    const shippingFixed = parseFloat(getSetting('shipping_fixed_cost') || '0');
+    const freeShippingThreshold = parseFloat(getSetting('shipping_free_threshold') || '0');
+
     let discount = 0;
 
     // Apply coupon if provided
@@ -56,8 +65,6 @@ export async function POST(request: NextRequest) {
             } else {
                 discount = Math.min(coupon.discountValue, calculatedSubtotal);
             }
-            calculatedTotal = Math.max(0, calculatedSubtotal - discount);
-
             // Increment usage
             await db.coupon.update({
                 where: { id: coupon.id },
@@ -65,6 +72,10 @@ export async function POST(request: NextRequest) {
             });
         }
     }
+
+    const taxAmount = (calculatedSubtotal - discount) * (gstRate / 100);
+    const shippingAmount = (calculatedSubtotal - discount) >= freeShippingThreshold && freeShippingThreshold > 0 ? 0 : shippingFixed;
+    const calculatedTotal = (calculatedSubtotal - discount) + taxAmount + shippingAmount;
 
     // Create order in transaction
     const order = await db.$transaction(async (tx) => {
@@ -75,6 +86,8 @@ export async function POST(request: NextRequest) {
           userId: auth.success ? auth.payload.userId : null,
           totalAmount: calculatedTotal,
           subtotal: calculatedSubtotal,
+          tax: taxAmount,
+          shipping: shippingAmount,
           discount: discount,
           couponCode: couponCode || null,
           paymentMethod,

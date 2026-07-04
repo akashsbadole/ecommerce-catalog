@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Image from "next/image";
-import { Search, ShoppingCart, X, Eye, Check } from "lucide-react";
+import { Search, ShoppingCart, X, Eye, Check, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StoreLoading } from "./StoreLoading";
@@ -44,6 +44,7 @@ interface Product {
   wholesalePrice: number | null;
   minOrderQty: number;
   images: string;
+  stock: number;
   Category: { id: string; name: string; slug?: string } | null;
   isFeatured: boolean;
   specifications?: string | null;
@@ -79,6 +80,7 @@ export function CataloguePage({
     null,
   );
   const [sortBy, setSortBy] = useState("featured");
+  const [priceRange, setPriceRange] = useState({ min: "", max: "" });
   const [visibleCount, setVisibleCount] = useState(12);
   const [loadingMore, setLoadingMore] = useState(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -96,6 +98,8 @@ export function CataloguePage({
       if (searchQuery) params.set("search", searchQuery);
       if (selectedCategory) params.set("categoryId", selectedCategory);
       if (sortBy && sortBy !== "featured") params.set("sort", sortBy);
+      if (priceRange.min) params.set("minPrice", priceRange.min);
+      if (priceRange.max) params.set("maxPrice", priceRange.max);
 
       const res = await fetch(`/api/products?${params.toString()}`);
       if (res.ok) {
@@ -144,6 +148,12 @@ export function CataloguePage({
     return () => clearTimeout(timer);
   }, [fetchProducts]);
 
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPriceRange(prev => ({ ...prev, [name]: value }));
+    setVisibleCount(12);
+  };
+
   useSeo(`catalogue-${selectedCategoryData?.slug || ""}`, {
     title: selectedCategoryData?.name || cmsPageTitle,
     description: cmsPageDescription || selectedCategoryData?.description || "Browse our complete catalogue of premium products.",
@@ -186,6 +196,10 @@ export function CataloguePage({
   };
 
   const handleAddToCart = (product: Product) => {
+    if (product.stock <= 0) {
+        toast.error("Product is out of stock");
+        return;
+    }
     addToCart({
       productId: product.id,
       name: product.name,
@@ -194,6 +208,24 @@ export function CataloguePage({
       image: getFirstImage(product.images) || undefined,
     });
     toast.success("Added to cart");
+  };
+
+  const handleWishlist = async (productId: string) => {
+    if (!auth.user) {
+        toast.error("Please log in to use wishlist");
+        return;
+    }
+    try {
+        const res = await fetch("/api/wishlist", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ productId }),
+        });
+        if (res.ok) toast.success("Added to wishlist");
+        else toast.error("Failed to add to wishlist");
+    } catch {
+        toast.error("An error occurred");
+    }
   };
 
   return (
@@ -248,7 +280,8 @@ export function CataloguePage({
       {/* Search and Sort Bar */}
       <section className="border-b py-4 px-4">
         <div className="container mx-auto max-w-6xl">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -272,27 +305,65 @@ export function CataloguePage({
                 </button>
               )}
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Sort:</span>
-              <Select
-                value={sortBy}
-                onValueChange={(val) => {
-                  setSortBy(val);
-                  setVisibleCount(12);
-                }}
-              >
-                <SelectTrigger className="w-[150px] h-8 text-sm">
-                  <SelectValue placeholder="Featured" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="featured">Featured</SelectItem>
-                  <SelectItem value="price_asc">Price: Low to High</SelectItem>
-                  <SelectItem value="price_desc">Price: High to Low</SelectItem>
-                  <SelectItem value="newest">Newest First</SelectItem>
-                  <SelectItem value="name_asc">Name: A-Z</SelectItem>
-                  <SelectItem value="name_desc">Name: Z-A</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Sort:</span>
+                <Select
+                  value={sortBy}
+                  onValueChange={(val) => {
+                    setSortBy(val);
+                    setVisibleCount(12);
+                  }}
+                >
+                  <SelectTrigger className="w-[150px] h-8 text-sm">
+                    <SelectValue placeholder="Featured" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="featured">Featured</SelectItem>
+                    <SelectItem value="price_asc">Price: Low to High</SelectItem>
+                    <SelectItem value="price_desc">Price: High to Low</SelectItem>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="name_asc">Name: A-Z</SelectItem>
+                    <SelectItem value="name_desc">Name: Z-A</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4 py-2 border-t sm:border-t-0 sm:pt-0">
+               <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-muted-foreground uppercase">Price Range:</span>
+                  <div className="flex items-center gap-1">
+                    <Input
+                      name="min"
+                      placeholder="Min"
+                      value={priceRange.min}
+                      onChange={handlePriceChange}
+                      className="w-20 h-8 text-xs"
+                    />
+                    <span className="text-muted-foreground">-</span>
+                    <Input
+                      name="max"
+                      placeholder="Max"
+                      value={priceRange.max}
+                      onChange={handlePriceChange}
+                      className="w-20 h-8 text-xs"
+                    />
+                  </div>
+               </div>
+               {(priceRange.min || priceRange.max || searchQuery || selectedCategory) && (
+                   <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-[10px] h-7 text-muted-foreground uppercase font-bold"
+                    onClick={() => {
+                        setPriceRange({ min: "", max: "" });
+                        setSearchQuery("");
+                        setSelectedCategory(null);
+                    }}
+                   >
+                     Reset All
+                   </Button>
+               )}
             </div>
           </div>
         </div>
@@ -372,17 +443,32 @@ export function CataloguePage({
                             No image
                           </span>
                         )}
-                        <Button
-                          variant="secondary"
-                          size="icon"
-                          className="absolute bottom-2 right-2 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md bg-white/90 hover:bg-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setQuickViewProduct(product);
-                          }}
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                        </Button>
+                        <div className="absolute bottom-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                                variant="secondary"
+                                size="icon"
+                                className="h-8 w-8 rounded-full shadow-md bg-white/90 hover:bg-white"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setQuickViewProduct(product);
+                                }}
+                            >
+                                <Eye className="h-3.5 w-3.5" />
+                            </Button>
+                            {isB2C && (
+                                <Button
+                                    variant="secondary"
+                                    size="icon"
+                                    className="h-8 w-8 rounded-full shadow-md bg-white/90 hover:text-rose-500 hover:bg-white"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleWishlist(product.id);
+                                    }}
+                                >
+                                    <Heart className="h-3.5 w-3.5" />
+                                </Button>
+                            )}
+                        </div>
                       </div>
                       <div className="p-3">
                         <h3
@@ -408,9 +494,14 @@ export function CataloguePage({
                                     variant="outline"
                                     className="flex-1 text-[10px] h-8 px-1"
                                     onClick={() => handleAddToCart(product)}
+                                    disabled={product.stock <= 0}
                                 >
-                                    <ShoppingCart className="mr-1 h-3 w-3" />
-                                    +Cart
+                                    {product.stock > 0 ? (
+                                        <>
+                                            <ShoppingCart className="mr-1 h-3 w-3" />
+                                            +Cart
+                                        </>
+                                    ) : 'Stock Out'}
                                 </Button>
                                 <Button
                                     size="sm"
@@ -419,8 +510,9 @@ export function CataloguePage({
                                         handleAddToCart(product);
                                         onNavigate("cart");
                                     }}
+                                    disabled={product.stock <= 0}
                                 >
-                                    Buy
+                                    {product.stock > 0 ? 'Buy' : 'N/A'}
                                 </Button>
                             </div>
                         ) : (

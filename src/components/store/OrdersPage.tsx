@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Package, Calendar, CheckCircle2, Clock, Truck, ChevronRight } from "lucide-react";
+import { Package, Calendar, CheckCircle2, Clock, Truck, ChevronRight, ShoppingBag } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { formatPrice } from "@/lib/pricing";
 import { format } from "date-fns";
@@ -13,6 +13,16 @@ export function OrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const currency = settings?.currency || "INR";
+
+  const getStepStatus = (status: string) => {
+    const steps = ["pending", "processing", "shipped", "delivered"];
+    const currentIdx = steps.indexOf(status.toLowerCase());
+    return steps.map((s, i) => ({
+        label: s.charAt(0).toUpperCase() + s.slice(1),
+        isCompleted: i <= currentIdx,
+        isCurrent: i === currentIdx
+    }));
+  };
 
   useEffect(() => {
     async function fetchOrders() {
@@ -81,8 +91,23 @@ export function OrdersPage() {
                     <p className="text-sm font-mono">{order.id.slice(0, 8)}</p>
                 </div>
               </div>
-              <div className="p-6">
-                <div className="space-y-4">
+              <div className="p-6 space-y-8">
+                {/* Order Tracking Stepper */}
+                <div className="relative flex justify-between max-w-2xl mx-auto py-4">
+                    <div className="absolute top-1/2 left-0 w-full h-0.5 bg-muted -translate-y-1/2 z-0" />
+                    {getStepStatus(order.status).map((step, idx) => (
+                        <div key={idx} className="relative z-10 flex flex-col items-center gap-2">
+                            <div className={`h-8 w-8 rounded-full flex items-center justify-center border-2 transition-colors ${step.isCompleted ? 'bg-primary border-primary text-white' : 'bg-background border-muted text-muted-foreground'}`}>
+                                {step.isCompleted ? <CheckCircle2 className="h-4 w-4" /> : <div className="h-2 w-2 rounded-full bg-current" />}
+                            </div>
+                            <span className={`text-[10px] font-bold uppercase tracking-wider ${step.isCurrent ? 'text-primary' : 'text-muted-foreground'}`}>
+                                {step.label}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="space-y-4 pt-4 border-t">
                     {order.items.map((item: any) => (
                         <div key={item.id} className="flex gap-4">
                             <div className="h-16 w-16 bg-muted rounded-md flex-shrink-0 overflow-hidden border">

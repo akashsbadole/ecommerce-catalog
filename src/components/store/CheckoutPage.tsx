@@ -1,19 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { formatPrice } from "@/lib/pricing";
-import { Loader2, ArrowLeft, ShieldCheck } from "lucide-react";
+import { Loader2, ArrowLeft, ShieldCheck, MapPin, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 export function CheckoutPage() {
-  const { cart, navigate, settings, clearCart } = useAppStore();
+  const { cart, navigate, settings, clearCart, auth } = useAppStore();
   const currency = settings?.currency || "INR";
   const [loading, setLoading] = useState(false);
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -41,6 +43,40 @@ export function CheckoutPage() {
     : 0;
 
   const total = subtotal - discount;
+
+  useEffect(() => {
+    if (auth.user) {
+        fetchAddresses();
+    }
+  }, [auth.user]);
+
+  const fetchAddresses = async () => {
+    try {
+        const res = await fetch("/api/account/addresses", {
+            headers: { 'Authorization': `Bearer ${auth.token}` }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            setAddresses(data.addresses || []);
+            const def = data.addresses.find((a: any) => a.isDefault);
+            if (def) handleSelectAddress(def);
+        }
+    } catch { /* ignore */ }
+  };
+
+  const handleSelectAddress = (addr: any) => {
+    setSelectedAddressId(addr.id);
+    setFormData({
+        name: addr.name,
+        email: auth.user?.email || '',
+        phone: addr.phone,
+        address: addr.address,
+        city: addr.city,
+        state: addr.state,
+        zipCode: addr.pincode,
+        notes: formData.notes
+    });
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -141,6 +177,35 @@ export function CheckoutPage() {
       <div className="grid lg:grid-cols-3 gap-12">
         <div className="lg:col-span-2">
           <h1 className="text-2xl font-bold mb-8">Shipping Information</h1>
+
+          {addresses.length > 0 && (
+            <div className="mb-8 space-y-4">
+              <h2 className="text-sm font-bold uppercase text-muted-foreground flex items-center gap-2">
+                <MapPin className="h-4 w-4" /> Saved Addresses
+              </h2>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {addresses.map((addr) => (
+                    <div
+                        key={addr.id}
+                        className={`p-4 border rounded-xl cursor-pointer transition-all ${selectedAddressId === addr.id ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'hover:border-primary/50'}`}
+                        onClick={() => handleSelectAddress(addr)}
+                    >
+                        <p className="font-bold text-sm">{addr.label}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{addr.name}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-1">{addr.address}</p>
+                    </div>
+                ))}
+                <div
+                    className="p-4 border border-dashed rounded-xl flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground cursor-pointer"
+                    onClick={() => { setSelectedAddressId(null); setFormData({ ...formData, address: '', city: '', state: '', zipCode: '' }); }}
+                >
+                    <Plus className="h-4 w-4" />
+                    <span className="text-sm font-medium">Use New Address</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">

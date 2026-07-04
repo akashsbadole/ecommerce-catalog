@@ -4,11 +4,13 @@ import { useState, useEffect } from "react";
 import { Package, Send, ChevronDown, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getFirstImage } from "@/lib/utils";
+import { formatPrice as libFormatPrice } from "@/lib/pricing";
 import { toast } from "sonner";
 import { useSeo } from "@/lib/use-seo";
 import { useAppStore } from "@/lib/store";
 import { StoreLoading } from "./StoreLoading";
 import { ProductReviews } from "./ProductReviews";
+import { RecentlyViewed } from "./RecentlyViewed";
 
 interface ProductPageProps {
   slug: string;
@@ -21,6 +23,7 @@ interface FaqItem {
 }
 
 export function ProductPage({ slug, onNavigate }: ProductPageProps) {
+  const [activeImage, setActiveImage] = useState<string | null>(null);
   const [product, setProduct] = useState<{
     id: string;
     name: string;
@@ -32,6 +35,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
     metaTitle: string | null;
     metaDescription: string | null;
     ogImage: string | null;
+    categoryId: string | null;
     Category: {
       id: string;
       name: string;
@@ -40,6 +44,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
       faqItems: string;
     } | null;
   } | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [faqOpenIndex, setFaqOpenIndex] = useState<number | null>(null);
 
@@ -53,6 +58,29 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
           if (prod) {
             const { blocks: _blocks, ...rest } = prod;
             setProduct(rest);
+            const firstImg = getFirstImage(rest.images);
+            if (firstImg) setActiveImage(firstImg);
+
+            // Recently Viewed logic
+            try {
+                const stored = localStorage.getItem('recently_viewed') || '[]';
+                let viewed = JSON.parse(stored);
+                viewed = viewed.filter((p: any) => p.id !== rest.id);
+                viewed.unshift({ id: rest.id, name: rest.name, slug: rest.slug, images: rest.images, price: rest.price });
+                localStorage.setItem('recently_viewed', JSON.stringify(viewed.slice(0, 10)));
+            } catch { /* ignore */ }
+
+            // Fetch related products
+            if (rest.categoryId) {
+                fetch(`/api/products?categoryId=${rest.categoryId}&limit=5`)
+                    .then(r => r.ok ? r.json() : null)
+                    .then(data => {
+                        if (data?.products) {
+                            setRelatedProducts(data.products.filter((p: any) => p.id !== rest.id).slice(0, 4));
+                        }
+                    })
+                    .catch(() => {});
+            }
           }
         }
       } catch {
@@ -98,7 +126,14 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
     );
   }
 
-  const image = getFirstImage(product.images);
+  const images = (() => {
+    try {
+      const parsed = JSON.parse(product.images || "[]");
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  })();
   const settings = useAppStore((s) => s.settings);
   const isB2C = settings?.store_mode === "b2c";
   const addToCart = useAppStore((s) => s.addToCart);
@@ -117,13 +152,28 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
   return (
     <div className="flex flex-col">
       <section className="container mx-auto max-w-3xl px-4 pt-12 md:pt-16 pb-6 md:pb-8 text-center">
-        {image && (
-          <div className="relative h-48 sm:h-56 md:h-64 w-full max-w-lg mx-auto mb-4 md:mb-6 rounded-xl overflow-hidden bg-muted">
-            <img
-              src={image}
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
+        {activeImage && (
+          <div className="space-y-4 mb-6">
+            <div className="relative h-64 sm:h-80 md:h-96 w-full max-w-2xl mx-auto rounded-2xl overflow-hidden bg-muted border shadow-sm">
+                <img
+                    src={activeImage}
+                    alt={product.name}
+                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                />
+            </div>
+            {images.length > 1 && (
+                <div className="flex justify-center gap-2 overflow-x-auto py-2">
+                    {images.map((img, idx) => (
+                        <button
+                            key={idx}
+                            onClick={() => setActiveImage(img)}
+                            className={`relative h-16 w-16 rounded-lg overflow-hidden border-2 transition-all ${activeImage === img ? 'border-primary' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                        >
+                            <img src={img} alt="" className="h-full w-full object-cover" />
+                        </button>
+                    ))}
+                </div>
+            )}
           </div>
         )}
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 md:mb-3">
@@ -209,6 +259,30 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
           <ProductReviews productId={product.id} />
         </section>
       )}
+
+      {relatedProducts.length > 0 && (
+        <section className="container mx-auto max-w-3xl px-4 py-12 border-t">
+            <h2 className="text-xl font-bold mb-6">Related Products</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {relatedProducts.map((p) => {
+                    const img = getFirstImage(p.images);
+                    return (
+                        <div key={p.id} className="group cursor-pointer" onClick={() => onNavigate("product-page", p.slug)}>
+                            <div className="aspect-square bg-muted rounded-xl overflow-hidden mb-2">
+                                {img && <img src={img} alt={p.name} className="h-full w-full object-cover group-hover:scale-105 transition-transform" />}
+                            </div>
+                            <p className="text-sm font-medium truncate">{p.name}</p>
+                            <p className="text-xs text-primary font-bold">{libFormatPrice(p.price, settings?.currency || "INR")}</p>
+                        </div>
+                    );
+                })}
+            </div>
+        </section>
+      )}
+
+      <section className="container mx-auto max-w-3xl px-4 py-12 border-t">
+        <RecentlyViewed productId={product.id} />
+      </section>
     </div>
   );
 }

@@ -42,6 +42,7 @@ model Store {
   Cart          Cart[]
   Coupon        Coupon[]
   Review        Review[]
+  Wishlist      Wishlist[]
 
   @@index([ownerUserId])
   @@index([isActive])
@@ -123,6 +124,7 @@ model Product {
   OrderItem         OrderItem[]
   CartItem          CartItem[]
   Review            Review[]
+  Wishlist          Wishlist[]
 
 
   @@index([deletedAt])
@@ -326,6 +328,20 @@ model Review {
   @@index([storeId])
   @@index([productId])
   @@index([userId])
+}
+
+model Wishlist {
+  id        String   @id @default(cuid())
+  storeId   String?
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  Store     Store?   @relation(fields: [storeId], references: [id])
+  Product   Product  @relation(fields: [productId], references: [id])
+  User      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, productId])
+  @@index([storeId])
 }
 
 // ─── Content / CMS ─────────────────────────────────────────────
@@ -548,6 +564,7 @@ model User {
   Order                   Order[]
   Cart                    Cart?
   Review                  Review[]
+  Wishlist                Wishlist[]
   Store                   Store?               @relation("CurrentUserStore", fields: [currentStoreId], references: [id])
   OwnedStores             Store[]              @relation("StoreOwner")
 }

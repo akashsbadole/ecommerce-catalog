@@ -22,13 +22,28 @@ export async function POST(request: NextRequest) {
     const status = data.status; // success or failure
 
     if (status === 'success') {
-      await db.order.update({
-        where: { id: orderId },
-        data: {
-          paymentStatus: 'paid',
-          paymentId: data.mihpayid, // PayU transaction ID
-        },
+      await db.$transaction(async (tx) => {
+        // 1. Update Order Status
+        const order = await tx.order.update({
+            where: { id: orderId },
+            data: {
+                paymentStatus: 'paid',
+                paymentId: data.mihpayid,
+            },
+            include: { items: true }
+        });
+
+        // 2. Decrement Stock
+        for (const item of order.items) {
+            await tx.product.update({
+                where: { id: item.productId },
+                data: {
+                    stock: { decrement: item.quantity }
+                }
+            });
+        }
       });
+
       return NextResponse.redirect(new URL(`/order-success/${orderId}`, request.url));
     } else {
       await db.order.update({

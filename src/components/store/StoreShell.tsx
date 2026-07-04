@@ -18,6 +18,7 @@ import { CartPage } from "./CartPage";
 import { CheckoutPage } from "./CheckoutPage";
 import { OrderSuccessPage } from "./OrderSuccessPage";
 import { OrdersPage } from "./OrdersPage";
+import { WishlistPage } from "./WishlistPage";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 interface StoreShellProps {
@@ -45,6 +46,8 @@ const routeFromPath = (path: string, navigate: (page: string, data?: unknown) =>
     navigate("checkout");
   } else if (segments[0] === "order-success" && segments[1]) {
     navigate("order-success", segments[1]);
+  } else if (segments[0] === "wishlist") {
+    navigate("wishlist");
   } else if (segments[0] === "blog") {
     if (segments[1]) navigate("blog-post", segments[1]);
     else navigate("blog");
@@ -143,6 +146,8 @@ export function StoreShell({ initialPage, children }: StoreShellProps) {
         return <OrderSuccessPage orderId={(page as any).orderId} />;
       case "orders":
         return <OrdersPage />;
+      case "wishlist":
+        return <WishlistPage />;
       default:
         return (
           <div className="flex flex-col items-center justify-center py-20 text-center">
