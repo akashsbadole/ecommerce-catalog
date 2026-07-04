@@ -21,6 +21,7 @@ interface ImportResult {
 export function AdminImport() {
   const [importing, setImporting] = useState(false);
   const [platform, setPlatform] = useState<'shopify' | 'woocommerce'>('shopify');
+  const [entity, setEntity] = useState<'products' | 'orders' | 'users' | 'categories' | 'coupons' | 'reviews'>('products');
   const [result, setResult] = useState<ImportResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -35,7 +36,12 @@ export function AdminImport() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const res = await adminFetch(`/api/import/${platform}`, {
+      let url = `/api/import/${platform}`;
+      if (platform === 'woocommerce' && entity !== 'products') {
+        url = `/api/import/woocommerce/${entity}`;
+      }
+
+      const res = await adminFetch(url, {
         method: 'POST',
         body: formData,
       });
@@ -44,7 +50,7 @@ export function AdminImport() {
 
       if (res.ok) {
         setResult(data);
-        toast.success(`Imported ${data.imported} products`);
+        toast.success(`Imported ${data.imported} ${entity}`);
       } else {
         toast.error(data.error || 'Import failed');
       }
@@ -78,8 +84,8 @@ sample-product,Sample Product,This is a sample product description,My Brand,Cate
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Import Products</h2>
-        <p className="text-muted-foreground mt-1">Migrate products from Shopify or WooCommerce</p>
+        <h2 className="text-2xl font-bold tracking-tight">Data Migration</h2>
+        <p className="text-muted-foreground mt-1">Migrate your store data from Shopify or WooCommerce</p>
       </div>
 
       <Card>
@@ -89,21 +95,41 @@ sample-product,Sample Product,This is a sample product description,My Brand,Cate
             Import from CSV
           </CardTitle>
           <CardDescription>
-            Upload a product export CSV from your current platform
+            Upload an export CSV from your current platform
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Platform</Label>
-            <Select value={platform} onValueChange={(v) => setPlatform(v as 'shopify' | 'woocommerce')}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="shopify">Shopify</SelectItem>
-                <SelectItem value="woocommerce">WooCommerce</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Platform</Label>
+              <Select value={platform} onValueChange={(v) => setPlatform(v as 'shopify' | 'woocommerce')}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="shopify">Shopify</SelectItem>
+                  <SelectItem value="woocommerce">WooCommerce</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {platform === 'woocommerce' && (
+              <div className="space-y-2">
+                <Label>Entity</Label>
+                <Select value={entity} onValueChange={(v) => setEntity(v as any)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="products">Products</SelectItem>
+                    <SelectItem value="orders">Orders</SelectItem>
+                    <SelectItem value="users">Users / Customers</SelectItem>
+                    <SelectItem value="categories">Categories</SelectItem>
+                    <SelectItem value="coupons">Coupons</SelectItem>
+                    <SelectItem value="reviews">Reviews</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           <div className="rounded-lg border border-dashed p-6 text-center">

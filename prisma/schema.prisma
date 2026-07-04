@@ -30,6 +30,7 @@ model Store {
   CurrentUsers   User[]   @relation("CurrentUserStore")
   Product       Product[]
   Category      Category[]
+  Brand         Brand[]
   Quote         Quote[]
   BlogPost      BlogPost[]
   Banner        Banner[]
@@ -38,6 +39,11 @@ model Store {
   Media         Media[]
   Redirect      Redirect[]
   Menu          Menu[]
+  Order         Order[]
+  Cart          Cart[]
+  Coupon        Coupon[]
+  Review        Review[]
+  Wishlist      Wishlist[]
 
   @@index([ownerUserId])
   @@index([isActive])
@@ -92,10 +98,18 @@ model Product {
   wholesalePrice    Float?
   minOrderQty       Int              @default(1)
   sku               String?
+  barcode           String?
   images            String           @default("[]")
+  tags              String?
+  attributes        String?          @default("{}") // JSON for size, color etc
   categoryId        String?
+  brandId           String?
   whatsappNumber    String?
+  isDigital         Boolean          @default(false)
+  downloadUrl       String?
   isFeatured        Boolean          @default(false)
+  isBestSeller      Boolean          @default(false)
+  videoUrl          String?
   isActive          Boolean          @default(true)
   sortOrder         Int              @default(0)
   specifications    String?
@@ -113,9 +127,14 @@ model Product {
   updatedAt         DateTime         @default(now())
   Enquiry           Enquiry[]
   Category          Category?        @relation(fields: [categoryId], references: [id])
+  Brand             Brand?           @relation(fields: [brandId], references: [id])
   Store             Store?           @relation(fields: [storeId], references: [id])
   ProductVariant    ProductVariant[]
   ProductTier       ProductTier[]
+  OrderItem         OrderItem[]
+  CartItem          CartItem[]
+  Review            Review[]
+  Wishlist          Wishlist[]
 
 
   @@index([deletedAt])
@@ -194,6 +213,7 @@ model ProductVariant {
   productId      String
   name           String
   sku            String?
+  barcode        String?
   price          Float?
   comparePrice   Float?
   wholesalePrice Float?
@@ -206,6 +226,136 @@ model ProductVariant {
   Product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
+}
+
+// ─── Ecommerce ─────────────────────────────────────────────────
+
+model Order {
+  id              String      @id @default(cuid())
+  storeId         String?
+  userId          String?
+  status          String      @default("pending") // pending, processing, shipped, delivered, cancelled
+  totalAmount     Float
+  subtotal        Float
+  tax             Float       @default(0)
+  shipping        Float       @default(0)
+  discount        Float       @default(0)
+  couponCode      String?
+  paymentStatus   String      @default("unpaid") // unpaid, paid, failed, refunded
+  paymentMethod   String?     // payu, cod, etc.
+  paymentId       String?     // external transaction ID
+  shippingAddress String?     // JSON
+  billingAddress  String?     // JSON
+  customerName    String?
+  customerEmail   String?
+  customerPhone   String?
+  notes           String?
+  returnStatus    String?     // requested, approved, rejected, completed
+  refundAmount    Float       @default(0)
+  trackingNumber  String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  Store           Store?      @relation(fields: [storeId], references: [id])
+  User            User?       @relation(fields: [userId], references: [id])
+  items           OrderItem[]
+
+  @@index([storeId])
+  @@index([userId])
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  productId String
+  variantId String?
+  name      String
+  sku       String?
+  quantity  Int
+  price     Float
+  total     Float
+  Order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  Product   Product  @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  storeId   String?
+  userId    String?    @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  items     CartItem[]
+  Store     Store?     @relation(fields: [storeId], references: [id])
+  User      User?      @relation(fields: [userId], references: [id])
+
+  @@index([storeId])
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  productId String
+  variantId String?
+  quantity  Int      @default(1)
+  Cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  Product   Product  @relation(fields: [productId], references: [id])
+
+  @@index([cartId])
+  @@index([productId])
+}
+
+model Coupon {
+  id             String    @id @default(cuid())
+  storeId        String?
+  code           String    @unique
+  discountType   String    @default("percentage") // percentage, fixed
+  discountValue  Float
+  minOrderAmount Float     @default(0)
+  startDate      DateTime?
+  endDate        DateTime?
+  isActive       Boolean   @default(true)
+  usageLimit     Int?
+  usageCount     Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  Store          Store?    @relation(fields: [storeId], references: [id])
+
+  @@index([storeId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  storeId   String?
+  productId String
+  userId    String
+  rating    Int      @default(5)
+  comment   String?
+  isActive  Boolean  @default(false) // moderate reviews by default
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Store     Store?   @relation(fields: [storeId], references: [id])
+  Product   Product  @relation(fields: [productId], references: [id])
+  User      User     @relation(fields: [userId], references: [id])
+
+  @@index([storeId])
+  @@index([productId])
+  @@index([userId])
+}
+
+model Wishlist {
+  id        String   @id @default(cuid())
+  storeId   String?
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  Store     Store?   @relation(fields: [storeId], references: [id])
+  Product   Product  @relation(fields: [productId], references: [id])
+  User      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, productId])
+  @@index([storeId])
 }
 
 // ─── Content / CMS ─────────────────────────────────────────────
@@ -273,6 +423,22 @@ model Banner {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
   Store     Store?   @relation(fields: [storeId], references: [id])
+
+  @@index([storeId])
+}
+
+model Brand {
+  id          String    @id @default(cuid())
+  storeId     String?
+  name        String
+  slug        String    @unique
+  description String?
+  image       String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  Store       Store?    @relation(fields: [storeId], references: [id])
+  Product     Product[]
 
   @@index([storeId])
 }
@@ -425,6 +591,10 @@ model User {
   EmailVerificationToken  EmailVerificationToken[]
   Company                 Company?             @relation(fields: [companyId], references: [id])
   Quote                   Quote[]
+  Order                   Order[]
+  Cart                    Cart?
+  Review                  Review[]
+  Wishlist                Wishlist[]
   Store                   Store?               @relation("CurrentUserStore", fields: [currentStoreId], references: [id])
   OwnedStores             Store[]              @relation("StoreOwner")
 }

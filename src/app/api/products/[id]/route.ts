@@ -116,6 +116,9 @@ export async function PUT(
         }),
         ...(body.minOrderQty !== undefined && { minOrderQty: body.minOrderQty }),
         ...(body.sku !== undefined && { sku: body.sku }),
+        ...(body.barcode !== undefined && { barcode: body.barcode }),
+        ...(body.attributes !== undefined && { attributes: body.attributes }),
+        ...(body.tags !== undefined && { tags: body.tags }),
         ...(body.images !== undefined && {
           images: typeof body.images === 'string' ? body.images : JSON.stringify(body.images),
         }),
@@ -123,6 +126,10 @@ export async function PUT(
         ...(body.whatsappNumber !== undefined && { whatsappNumber: body.whatsappNumber || null }),
         ...(body.isFeatured !== undefined && { isFeatured: body.isFeatured }),
         ...(body.isActive !== undefined && { isActive: body.isActive }),
+        ...(body.isBestSeller !== undefined && { isBestSeller: body.isBestSeller }),
+        ...(body.isDigital !== undefined && { isDigital: body.isDigital }),
+        ...(body.downloadUrl !== undefined && { downloadUrl: body.downloadUrl }),
+        ...(body.videoUrl !== undefined && { videoUrl: body.videoUrl }),
         ...(body.sortOrder !== undefined && { sortOrder: body.sortOrder }),
         ...(body.specifications !== undefined && {
           specifications: body.specifications

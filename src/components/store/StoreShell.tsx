@@ -2,6 +2,7 @@
 
 import { useEffect, useCallback, useState, ReactNode } from "react";
 import { useAppStore } from "@/lib/store";
+import { motion, AnimatePresence } from "framer-motion";
 import { StoreLayout } from "./StoreLayout";
 import { HomePage } from "./HomePage";
 import { CataloguePage } from "./CataloguePage";
@@ -14,6 +15,13 @@ import { CmsPage } from "./CmsPage";
 import { AboutPage } from "./AboutPage";
 import { ManufacturingPage } from "./ManufacturingPage";
 import { ContactPage } from "./ContactPage";
+import { CartPage } from "./CartPage";
+import { CheckoutPage } from "./CheckoutPage";
+import { OrderSuccessPage } from "./OrderSuccessPage";
+import { OrdersPage } from "./OrdersPage";
+import { WishlistPage } from "./WishlistPage";
+import { FaqPage } from "./FaqPage";
+import { ComparisonPage } from "./ComparisonPage";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 interface StoreShellProps {
@@ -35,6 +43,18 @@ const routeFromPath = (path: string, navigate: (page: string, data?: unknown) =>
     navigate("manufacturing");
   } else if (segments[0] === "contact") {
     navigate("contact");
+  } else if (segments[0] === "cart") {
+    navigate("cart");
+  } else if (segments[0] === "checkout") {
+    navigate("checkout");
+  } else if (segments[0] === "order-success" && segments[1]) {
+    navigate("order-success", segments[1]);
+  } else if (segments[0] === "wishlist") {
+    navigate("wishlist");
+  } else if (segments[0] === "faq") {
+    navigate("faq");
+  } else if (segments[0] === "compare") {
+    navigate("compare");
   } else if (segments[0] === "blog") {
     if (segments[1]) navigate("blog-post", segments[1]);
     else navigate("blog");
@@ -125,6 +145,20 @@ export function StoreShell({ initialPage, children }: StoreShellProps) {
         return <ManufacturingPage onNavigate={navigate} />;
       case "contact":
         return <ContactPage onNavigate={navigate} />;
+      case "cart":
+        return <CartPage />;
+      case "checkout":
+        return <CheckoutPage />;
+      case "order-success":
+        return <OrderSuccessPage orderId={(page as any).orderId} />;
+      case "orders":
+        return <OrdersPage />;
+      case "wishlist":
+        return <WishlistPage />;
+      case "faq":
+        return <FaqPage />;
+      case "compare":
+        return <ComparisonPage />;
       default:
         return (
           <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -162,7 +196,17 @@ export function StoreShell({ initialPage, children }: StoreShellProps) {
 
   return (
     <StoreLayout currentPage={page.type} onNavigate={navigate}>
-      <ErrorBoundary>{renderPage()}</ErrorBoundary>
+      <AnimatePresence mode="wait">
+        <motion.div
+            key={page.type + (page.slug || "")}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+        >
+            <ErrorBoundary>{renderPage()}</ErrorBoundary>
+        </motion.div>
+      </AnimatePresence>
     </StoreLayout>
   );
 }

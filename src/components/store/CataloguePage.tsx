@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import Image from "next/image";
-import { Search, ShoppingCart, X, Eye, Check } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Search, X, Check, Heart, Eye, ShoppingCart, Filter, ChevronRight, ArrowRightLeft, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { StoreLoading } from "./StoreLoading";
+import { useAppStore } from "@/lib/store";
+import { formatPrice } from "@/lib/pricing";
+import { getFirstImage } from "@/lib/utils";
 import { toast } from "sonner";
 import {
   Select,
@@ -14,430 +16,340 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { QuickViewModal } from "./QuickViewModal";
-import { useAppStore } from "@/lib/store";
-import {
-  calculateTieredPrice,
-  formatPrice as libFormatPrice,
-} from "@/lib/pricing";
-import { getFirstImage } from "@/lib/utils";
-import { useContentPage, getPageContentData } from "@/lib/use-page-content";
-import { BLOCK_DEFAULTS } from "@/lib/page-blocks";
-import { useSeo } from "@/lib/use-seo";
+import { Breadcrumbs } from "./Breadcrumbs";
+import { StoreLoading } from "./StoreLoading";
 
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  image: string | null;
-}
-
-interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  shortDescription: string | null;
-  description: string | null;
-  price: number;
-  comparePrice: number | null;
-  wholesalePrice: number | null;
-  minOrderQty: number;
-  images: string;
-  Category: { id: string; name: string; slug?: string } | null;
-  isFeatured: boolean;
-  specifications?: string | null;
-}
-
-interface CataloguePageProps {
-  onNavigate: (page: string, data?: unknown) => void;
-  data?: Record<string, unknown>;
-}
-
-export function CataloguePage({
-  onNavigate,
-  data: externalData,
-}: CataloguePageProps) {
-  const { auth, settings } = useAppStore();
-  const { blocks, loading: cmsLoading } = useContentPage("catalogue-page-content");
-  const rawData = blocks ? getPageContentData(
-    blocks,
-    "catalogue-page-content",
-    BLOCK_DEFAULTS["catalogue-page-content"].defaultData,
-  ) : null;
-  const cmsData = externalData ?? (cmsLoading ? null : rawData ?? BLOCK_DEFAULTS["catalogue-page-content"].defaultData);
-  const cmsPageTitle = cmsData ? (cmsData.pageTitle as string) || "Product Catalogue" : "";
-  const cmsPageDescription = cmsData ? (cmsData.pageDescription as string) || "" : "";
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+export function CataloguePage() {
+  const { auth, settings, navigate, addToCart, addToCompare } = useAppStore();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedCategoryData, setSelectedCategoryData] =
-    useState<Category | null>(null);
-  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(
-    null,
-  );
-  const [sortBy, setSortBy] = useState("featured");
+  const [filters, setFilters] = useState({
+    categoryId: "all",
+    brandId: "all",
+    minPrice: "",
+    maxPrice: "",
+    sortBy: "featured"
+  });
+  const [quickViewProduct, setQuickViewProduct] = useState<any>(null);
   const [visibleCount, setVisibleCount] = useState(12);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  const visibleProducts = useMemo(
-    () => products.slice(0, visibleCount),
-    [products, visibleCount],
-  );
-  const hasMore = visibleCount < products.length;
+  const isB2C = settings?.store_mode === "b2c";
+  const currency = settings?.currency || "INR";
 
-  const fetchProducts = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (searchQuery) params.set("search", searchQuery);
-      if (selectedCategory) params.set("categoryId", selectedCategory);
-      if (sortBy && sortBy !== "featured") params.set("sort", sortBy);
-
-      const res = await fetch(`/api/products?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        setProducts(data.products || []);
-      }
-    } catch (error) {
-      console.error("Failed to fetch products:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [searchQuery, selectedCategory, sortBy]);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function loadCategories() {
-      try {
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
         const res = await fetch("/api/categories");
-        if (res.ok && !cancelled) {
-          const data = await res.json();
-          setCategories(data.categories || []);
-        }
-      } catch (error) {
-        console.error("Failed to fetch categories:", error);
-      }
+        return (await res.json()).categories || [];
     }
-    loadCategories();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (selectedCategory) {
-      const cat = categories.find((c) => c.id === selectedCategory);
-      setSelectedCategoryData(cat || null);
-    } else {
-      setSelectedCategoryData(null);
-    }
-  }, [selectedCategory, categories]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchProducts();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [fetchProducts]);
-
-  useSeo(`catalogue-${selectedCategoryData?.slug || ""}`, {
-    title: selectedCategoryData?.name || cmsPageTitle,
-    description: cmsPageDescription || selectedCategoryData?.description || "Browse our complete catalogue of premium products.",
-    siteName: settings?.site_name,
   });
 
-  useEffect(() => {
-    if (!sentinelRef.current || !hasMore) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loading) {
-          setLoadingMore(true);
-          setTimeout(() => {
-            setVisibleCount((prev) => Math.min(prev + 12, products.length));
-            setLoadingMore(false);
-          }, 300);
-        }
-      },
-      { rootMargin: "200px" },
-    );
-    observer.observe(sentinelRef.current);
-    return () => observer.disconnect();
-  }, [hasMore, loading, products.length]);
+  const { data: brands = [] } = useQuery({
+    queryKey: ["brands"],
+    queryFn: async () => {
+        const res = await fetch("/api/brands");
+        return (await res.json()).brands || [];
+    }
+  });
 
-  const userTier = auth.user?.tier;
-  const formatPrice = (price: number) =>
-    libFormatPrice(price, settings?.currency || "USD");
+  const { data: products = [], isLoading: loading } = useQuery({
+    queryKey: ["products", searchQuery, filters],
+    queryFn: async () => {
+        const params = new URLSearchParams();
+        if (searchQuery) params.set("search", searchQuery);
+        if (filters.categoryId !== "all") params.set("categoryId", filters.categoryId);
+        if (filters.brandId !== "all") params.set("brandId", filters.brandId);
+        if (filters.minPrice) params.set("minPrice", filters.minPrice);
+        if (filters.maxPrice) params.set("maxPrice", filters.maxPrice);
+        if (filters.sortBy !== "featured") params.set("sort", filters.sortBy);
 
-  const handleCategorySelect = (categoryId: string | null) => {
-    setSelectedCategory(categoryId);
-    setVisibleCount(12);
-    setSearchQuery("");
+        const res = await fetch(`/api/products?${params.toString()}`);
+        return (await res.json()).products || [];
+    }
+  });
+
+  const handleAddToCart = (product: any) => {
+    if (product.stock <= 0) {
+      toast.error("Out of stock");
+      return;
+    }
+    addToCart({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
+      image: getFirstImage(product.images) || undefined,
+    });
+    toast.success("Added to cart");
   };
 
-  const handleEnquiryClick = (product: Product) => {
-    useAppStore.getState().openEnquiryModal(product.name, product.id);
+  const handleWishlist = async (productId: string) => {
+    if (!auth.user) {
+        toast.error("Please log in to use wishlist");
+        return;
+    }
+    try {
+        const res = await fetch("/api/wishlist", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ productId }),
+        });
+        if (res.ok) toast.success("Added to wishlist");
+    } catch { /* ignore */ }
   };
+
+  const FilterSidebar = () => (
+    <div className="space-y-8">
+      <div className="space-y-4">
+        <h3 className="text-sm font-bold uppercase tracking-wider">Categories</h3>
+        <div className="flex flex-col gap-2">
+            <button
+                onClick={() => setFilters({ ...filters, categoryId: "all" })}
+                className={`text-sm text-left px-3 py-2 rounded-lg transition-colors ${filters.categoryId === 'all' ? 'bg-primary text-white font-bold' : 'hover:bg-muted'}`}
+            >
+                All Products
+            </button>
+            {categories.map(cat => (
+                <button
+                    key={cat.id}
+                    onClick={() => setFilters({ ...filters, categoryId: cat.id })}
+                    className={`text-sm text-left px-3 py-2 rounded-lg transition-colors ${filters.categoryId === cat.id ? 'bg-primary text-white font-bold' : 'hover:bg-muted'}`}
+                >
+                    {cat.name}
+                </button>
+            ))}
+        </div>
+      </div>
+
+      <Separator />
+
+      <div className="space-y-4">
+        <h3 className="text-sm font-bold uppercase tracking-wider">Brands</h3>
+        <Select value={filters.brandId} onValueChange={(v) => setFilters({ ...filters, brandId: v })}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select Brand" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Brands</SelectItem>
+            {brands.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Separator />
+
+      <div className="space-y-4">
+        <h3 className="text-sm font-bold uppercase tracking-wider">Price Range</h3>
+        <div className="grid grid-cols-2 gap-2">
+            <Input
+                placeholder="Min"
+                type="number"
+                value={filters.minPrice}
+                onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })}
+                className="h-9"
+            />
+            <Input
+                placeholder="Max"
+                type="number"
+                value={filters.maxPrice}
+                onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
+                className="h-9"
+            />
+        </div>
+      </div>
+
+      <Button
+        variant="outline"
+        className="w-full text-xs uppercase font-bold"
+        onClick={() => {
+            setFilters({ categoryId: "all", brandId: "all", minPrice: "", maxPrice: "", sortBy: "featured" });
+            setSearchQuery("");
+        }}
+      >
+        Reset Filters
+      </Button>
+    </div>
+  );
 
   return (
-    <div className="flex flex-col">
-      {/* Page Header */}
-      <section className="bg-muted/30 border-b py-10 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <h1 className="text-3xl font-bold tracking-tight">
-            {selectedCategoryData?.name || cmsPageTitle}
-          </h1>
-          {(cmsPageDescription || selectedCategoryData?.description) && (
-            <p className="mt-2 text-muted-foreground max-w-3xl leading-relaxed">
-              {selectedCategoryData?.description || cmsPageDescription}
-            </p>
-          )}
-        </div>
-      </section>
+    <div className="bg-background min-h-screen">
+      <div className="container mx-auto px-4 py-8">
+        <Breadcrumbs items={[{ label: "Catalogue" }]} />
 
-      {/* Category Tabs */}
-      {categories.length > 0 && (
-        <section className="py-4 px-4 border-b bg-background sticky top-0 z-10">
-          <div className="container mx-auto max-w-6xl">
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-              <button
-                onClick={() => handleCategorySelect(null)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors whitespace-nowrap shrink-0 ${
-                  !selectedCategory
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-background border-border text-muted-foreground hover:bg-muted"
-                }`}
-              >
-                All Products
-              </button>
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => handleCategorySelect(cat.id)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors whitespace-nowrap shrink-0 ${
-                    selectedCategory === cat.id
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-background border-border text-muted-foreground hover:bg-muted"
-                  }`}
-                >
-                  {cat.name}
-                </button>
-              ))}
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Desktop Sidebar */}
+          <aside className="hidden lg:block w-64 shrink-0">
+            <div className="sticky top-24">
+                <FilterSidebar />
             </div>
-          </div>
-        </section>
-      )}
+          </aside>
 
-      {/* Search and Sort Bar */}
-      <section className="border-b py-4 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search products by name..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setVisibleCount(12);
-                }}
-                className="pl-10 pr-10"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => {
-                    setSearchQuery("");
-                    setVisibleCount(12);
-                  }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Sort:</span>
-              <Select
-                value={sortBy}
-                onValueChange={(val) => {
-                  setSortBy(val);
-                  setVisibleCount(12);
-                }}
-              >
-                <SelectTrigger className="w-[150px] h-8 text-sm">
-                  <SelectValue placeholder="Featured" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="featured">Featured</SelectItem>
-                  <SelectItem value="price_asc">Price: Low to High</SelectItem>
-                  <SelectItem value="price_desc">Price: High to Low</SelectItem>
-                  <SelectItem value="newest">Newest First</SelectItem>
-                  <SelectItem value="name_asc">Name: A-Z</SelectItem>
-                  <SelectItem value="name_desc">Name: Z-A</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-      </section>
+          {/* Main Content */}
+          <main className="flex-1 space-y-6">
+            <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-card p-4 border rounded-2xl">
+              <div className="relative w-full sm:max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                    placeholder="Search products..."
+                    className="pl-10 h-10 bg-muted/50 border-transparent focus:bg-background"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
 
-      {/* Product Grid */}
-      <section className="py-10 px-4">
-        <div className="container mx-auto max-w-6xl">
-          {loading ? (
-            <StoreLoading />
-          ) : products.length === 0 ? (
-            <div className="text-center py-16">
-              <ShoppingCart className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-4 text-lg font-semibold">No products found</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Try adjusting your search or filter to find what you&apos;re
-                looking for.
-              </p>
-              <div className="flex gap-2 justify-center mt-4">
-                {searchQuery && (
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setSearchQuery("");
-                      setVisibleCount(12);
-                    }}
-                  >
-                    Clear Search
-                  </Button>
-                )}
-                {selectedCategory && (
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      handleCategorySelect(null);
-                    }}
-                  >
-                    Clear Filter
-                  </Button>
-                )}
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <Sheet>
+                    <SheetTrigger asChild>
+                        <Button variant="outline" className="lg:hidden shrink-0 h-10 px-4">
+                            <Filter className="mr-2 h-4 w-4" /> Filters
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="w-[300px]">
+                        <SheetHeader className="mb-6">
+                            <SheetTitle>Filter Products</SheetTitle>
+                        </SheetHeader>
+                        <FilterSidebar />
+                    </SheetContent>
+                </Sheet>
+
+                <Select value={filters.sortBy} onValueChange={(v) => setFilters({ ...filters, sortBy: v })}>
+                    <SelectTrigger className="h-10 w-full sm:w-[180px]">
+                        <SelectValue placeholder="Sort By" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="featured">Featured</SelectItem>
+                        <SelectItem value="newest">Newest First</SelectItem>
+                        <SelectItem value="price_asc">Price: Low to High</SelectItem>
+                        <SelectItem value="price_desc">Price: High to Low</SelectItem>
+                    </SelectContent>
+                </Select>
               </div>
             </div>
-          ) : (
-            <>
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm text-muted-foreground">
-                  Showing {Math.min(visibleCount, products.length)} of{" "}
-                  {products.length} products
-                </p>
+
+            {loading ? (
+              <StoreLoading />
+            ) : products.length === 0 ? (
+              <div className="text-center py-32 bg-card border border-dashed rounded-3xl">
+                <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-20" />
+                <h3 className="text-xl font-bold">No products found</h3>
+                <p className="text-muted-foreground">Try clearing some filters or searching for something else.</p>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
-                {visibleProducts.map((product) => {
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                {products.slice(0, visibleCount).map((product) => {
                   const image = getFirstImage(product.images);
                   return (
-                    <div
-                      key={product.id}
-                      className="border rounded-xl overflow-hidden bg-background group transition-shadow hover:shadow-lg"
-                    >
-                      <div
-                        className="relative h-28 sm:h-32 bg-muted flex items-center justify-center overflow-hidden cursor-pointer"
-                        onClick={() =>
-                          onNavigate(
-                            "category",
-                            product.Category?.slug || "all",
-                          )
-                        }
-                      >
-                        {image ? (
-                          <Image
+                    <div key={product.id} className="group bg-card border rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full">
+                      <div className="relative aspect-[4/5] overflow-hidden bg-muted cursor-pointer" onClick={() => navigate("product-page", product.slug)}>
+                        {image && (
+                          <img
                             src={image}
                             alt={product.name}
-                            fill
-                            className="object-cover transition-transform duration-300 group-hover:scale-105"
+                            className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500"
                           />
-                        ) : (
-                          <span className="text-xs text-muted-foreground">
-                            No image
-                          </span>
                         )}
-                        <Button
-                          variant="secondary"
-                          size="icon"
-                          className="absolute bottom-2 right-2 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md bg-white/90 hover:bg-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setQuickViewProduct(product);
-                          }}
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                        </Button>
+                        {product.stock <= 0 && (
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px]">
+                                <Badge className="bg-white text-black font-bold">OUT OF STOCK</Badge>
+                            </div>
+                        )}
+                        {product.comparePrice && (
+                            <div className="absolute top-3 left-3">
+                                <Badge className="bg-rose-500 text-white border-none">SALE</Badge>
+                            </div>
+                        )}
+
+                        {/* Action Overlay */}
+                        <div className="absolute top-3 right-3 flex flex-col gap-2 translate-x-12 group-hover:translate-x-0 transition-transform duration-300">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handleWishlist(product.id); }}
+                                className="h-9 w-9 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-rose-50 hover:text-rose-500 transition-colors"
+                            >
+                                <Heart className="h-4 w-4" />
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setQuickViewProduct(product); }}
+                                className="h-9 w-9 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary hover:text-white transition-colors"
+                            >
+                                <Eye className="h-4 w-4" />
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); addToCompare(product); }}
+                                className="h-9 w-9 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-blue-50 hover:text-blue-500 transition-colors"
+                            >
+                                <ArrowRightLeft className="h-4 w-4" />
+                            </button>
+                        </div>
                       </div>
-                      <div className="p-3">
-                        <h3
-                          className="text-sm font-semibold mb-1 cursor-pointer hover:text-primary transition-colors line-clamp-1"
-                          onClick={() =>
-                            onNavigate(
-                              "category",
-                              product.Category?.slug || "all",
-                            )
-                          }
-                        >
-                          {product.name}
-                        </h3>
-                        {product.shortDescription && (
-                          <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
-                            {product.shortDescription}
-                          </p>
+
+                      <div className="p-4 flex-1 flex flex-col">
+                        <div className="flex-1">
+                            <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest mb-1">{product.Category?.name || 'General'}</p>
+                            <h3 className="font-bold text-sm md:text-base mb-1 line-clamp-2 hover:text-primary transition-colors cursor-pointer" onClick={() => navigate("product-page", product.slug)}>
+                                {product.name}
+                            </h3>
+                            <div className="flex items-center gap-2 mb-4">
+                                <span className="text-primary font-black text-base md:text-lg">
+                                    {product.ProductVariant?.length > 0 ? 'From ' : ''}
+                                    {formatPrice(product.price, currency)}
+                                </span>
+                                {product.comparePrice && (
+                                    <span className="text-xs text-muted-foreground line-through">{formatPrice(product.comparePrice, currency)}</span>
+                                )}
+                            </div>
+                        </div>
+
+                        {isB2C ? (
+                            <Button
+                                size="sm"
+                                className="w-full rounded-xl gap-2 font-bold"
+                                disabled={product.stock <= 0}
+                                onClick={() => handleAddToCart(product)}
+                            >
+                                <ShoppingCart className="h-4 w-4" /> Add to Cart
+                            </Button>
+                        ) : (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="w-full rounded-xl gap-2 font-bold"
+                                onClick={() => useAppStore.getState().openEnquiryModal(product.name, product.id)}
+                            >
+                                Send Enquiry
+                            </Button>
                         )}
-                        <Button
-                          size="sm"
-                          className="w-full text-xs font-medium"
-                          onClick={() => handleEnquiryClick(product)}
-                        >
-                          Enquire
-                        </Button>
                       </div>
                     </div>
                   );
                 })}
               </div>
+            )}
 
-              {hasMore && (
-                <div ref={sentinelRef} className="text-center mt-8">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setLoadingMore(true);
-                      setTimeout(() => {
-                        setVisibleCount((prev) =>
-                          Math.min(prev + 12, products.length),
-                        );
-                        setLoadingMore(false);
-                      }, 300);
-                    }}
-                    disabled={loadingMore}
-                    className="rounded-full px-6"
-                  >
-                    {loadingMore ? "Loading..." : "Load more products ↓"}
-                  </Button>
+            {products.length > visibleCount && (
+                <div className="text-center pt-12 pb-20">
+                    <Button
+                        variant="outline"
+                        size="lg"
+                        className="rounded-full px-12 h-12 font-bold"
+                        onClick={() => setVisibleCount(prev => prev + 12)}
+                    >
+                        Load More Products
+                    </Button>
                 </div>
-              )}
-              {!hasMore && products.length > 12 && (
-                <p className="text-center text-sm text-muted-foreground py-8">
-                  All {products.length} products loaded
-                </p>
-              )}
-            </>
-          )}
+            )}
+          </main>
         </div>
-      </section>
+      </div>
 
       {quickViewProduct && (
         <QuickViewModal
           product={quickViewProduct}
           open={!!quickViewProduct}
-          onOpenChange={(open) => {
-            if (!open) setQuickViewProduct(null);
-          }}
-          onNavigate={onNavigate}
+          onOpenChange={(open) => { if (!open) setQuickViewProduct(null); }}
+          onNavigate={navigate}
         />
       )}
     </div>

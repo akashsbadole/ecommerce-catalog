@@ -13,7 +13,9 @@ import { StoreFooter } from "./StoreFooter";
 import { BackToTop } from "./BackToTop";
 import { CookieConsent } from "./CookieConsent";
 import { MobileBottomNav } from "./MobileBottomNav";
+import { CompareBar } from "./CompareBar";
 import { GlobalEnquiryModal } from "./GlobalEnquiryModal";
+import { useEffect } from "react";
 import { StickyCtaBar } from "./StickyCtaBar";
 import { CustomScripts } from "./CustomScripts";
 
@@ -89,6 +91,21 @@ export function StoreLayout({
     }
   }, [currentPage]);
 
+  useEffect(() => {
+    if (settings?.chat_widget_id) {
+        const script = document.createElement("script");
+        script.async = true;
+        script.src = `https://embed.tawk.to/${settings.chat_widget_id}/default`;
+        script.charset = "UTF-8";
+        script.setAttribute("crossorigin", "*");
+        document.body.appendChild(script);
+        return () => {
+            const currentScript = document.querySelector(`script[src="https://embed.tawk.to/${settings.chat_widget_id}/default"]`);
+            if (currentScript) document.body.removeChild(currentScript);
+        };
+    }
+  }, [settings?.chat_widget_id]);
+
   return (
     <div className="flex min-h-screen flex-col">
       {/* Announcement Bar */}
@@ -113,6 +130,8 @@ export function StoreLayout({
       <StoreFooter onNavigate={onNavigate} settings={settings} />
 
       <MobileBottomNav onNavigate={onNavigate} />
+
+      <CompareBar />
 
       <div className="md:mb-16 lg:mb-0">
         <BackToTop />

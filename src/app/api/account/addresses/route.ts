@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { verifyToken } from '@/lib/auth-edge';
+import { requireAuth } from '@/lib/admin-auth';
 
 interface Address {
   id: string;
@@ -18,18 +18,11 @@ interface Address {
 // GET /api/account/addresses - Get user's saved addresses
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    const token = authHeader.split(' ')[1];
-    const payload = await verifyToken(token);
-    if (!payload?.userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await requireAuth(request);
+    if (!auth.success) return auth.response;
 
     const user = await db.user.findUnique({
-      where: { id: payload.userId },
+      where: { id: auth.payload.userId },
       select: { addresses: true },
     });
 
@@ -54,15 +47,8 @@ export async function GET(request: NextRequest) {
 // POST /api/account/addresses - Add a new address
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    const token = authHeader.split(' ')[1];
-    const payload = await verifyToken(token);
-    if (!payload?.userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await requireAuth(request);
+    if (!auth.success) return auth.response;
 
     const body = await request.json();
     const { label, name, phone, address, city, state, pincode, country, isDefault } = body;
@@ -72,7 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     const user = await db.user.findUnique({
-      where: { id: payload.userId },
+      where: { id: auth.payload.userId },
       select: { addresses: true },
     });
 
@@ -108,7 +94,7 @@ export async function POST(request: NextRequest) {
     addresses.push(newAddress);
 
     await db.user.update({
-      where: { id: payload.userId },
+      where: { id: auth.payload.userId },
       data: { addresses: JSON.stringify(addresses) },
     });
 
@@ -122,15 +108,8 @@ export async function POST(request: NextRequest) {
 // PUT /api/account/addresses - Update addresses (bulk replace)
 export async function PUT(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    const token = authHeader.split(' ')[1];
-    const payload = await verifyToken(token);
-    if (!payload?.userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await requireAuth(request);
+    if (!auth.success) return auth.response;
 
     const body = await request.json();
     const { addresses } = body;
@@ -140,7 +119,7 @@ export async function PUT(request: NextRequest) {
     }
 
     await db.user.update({
-      where: { id: payload.userId },
+      where: { id: auth.payload.userId },
       data: { addresses: JSON.stringify(addresses) },
     });
 

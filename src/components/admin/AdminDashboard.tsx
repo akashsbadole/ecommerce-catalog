@@ -35,9 +35,14 @@ import {
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminDashboardHome } from "@/components/admin/AdminDashboardHome";
+import { AdminAnalytics } from "@/components/admin/AdminAnalytics";
 import { AdminProducts } from "@/components/admin/AdminProducts";
 import { AdminCategories } from "@/components/admin/AdminCategories";
+import { AdminBrands } from "@/components/admin/AdminBrands";
 import { AdminEnquiries } from "@/components/admin/AdminEnquiries";
+import { AdminOrders } from "@/components/admin/AdminOrders";
+import { AdminCoupons } from "@/components/admin/AdminCoupons";
+import { AdminReviews } from "@/components/admin/AdminReviews";
 import { AdminQuotes } from "@/components/admin/AdminQuotes";
 import { AdminBanners } from "@/components/admin/AdminBanners";
 import { AdminSettings } from "@/components/admin/AdminSettings";
@@ -45,9 +50,12 @@ import { AdminMedia } from "@/components/admin/AdminMedia";
 import { AdminPages } from "@/components/admin/AdminPages";
 import { AdminSearchDialog } from "@/components/admin/AdminSearchDialog";
 import { AdminMenus } from "@/components/admin/AdminMenus";
+import { AdminNewsletter } from "@/components/admin/AdminNewsletter";
+import { AdminAbandonedCarts } from "@/components/admin/AdminAbandonedCarts";
 import { AdminBlog } from "@/components/admin/AdminBlog";
 import { NotificationBell } from "@/components/admin/NotificationBell";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Ticket, Star } from "lucide-react";
 
 interface AdminDashboardProps {
   user: { id: string; email: string; name: string; role: string } | null;
@@ -58,14 +66,21 @@ interface AdminDashboardProps {
 
 const sidebarItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "analytics", label: "Analytics", icon: TrendingUp },
   { id: "products", label: "Products", icon: Package },
   { id: "categories", label: "Categories", icon: FolderOpen },
+  { id: "brands", label: "Brands", icon: ShoppingBag },
   { id: "blog", label: "Blog", icon: BookOpen },
+  { id: "orders", label: "Orders", icon: ShoppingBag },
+  { id: "abandoned-carts", label: "Abandoned Carts", icon: ShoppingCart },
+  { id: "coupons", label: "Coupons", icon: Ticket },
+  { id: "reviews", label: "Reviews", icon: Star },
   { id: "quotes", label: "Quotes", icon: FileText },
   { id: "enquiries", label: "Enquiries", icon: MessageSquare },
   { id: "media", label: "Media", icon: ImageIcon },
   { id: "pages", label: "Pages", icon: FileText },
   { id: "banners", label: "Banners", icon: ImageIcon },
+  { id: "newsletter", label: "Newsletter", icon: Mail },
   { id: "menus", label: "Menus", icon: Menu },
   { id: "settings", label: "Settings", icon: Settings },
 ];
@@ -283,12 +298,24 @@ export function AdminDashboard({
     switch (currentTab) {
       case "dashboard":
         return <AdminDashboardHome onNavigate={handleQuickNav} />;
+      case "analytics":
+        return <AdminAnalytics />;
       case "products":
         return <AdminProducts />;
       case "categories":
         return <AdminCategories />;
+      case "brands":
+        return <AdminBrands />;
       case "enquiries":
         return <AdminEnquiries />;
+      case "orders":
+        return <AdminOrders />;
+      case "abandoned-carts":
+        return <AdminAbandonedCarts />;
+      case "coupons":
+        return <AdminCoupons />;
+      case "reviews":
+        return <AdminReviews />;
       case "quotes":
         return <AdminQuotes />;
       case "banners":
@@ -301,6 +328,8 @@ export function AdminDashboard({
         return <AdminBlog />;
       case "menus":
         return <AdminMenus />;
+      case "newsletter":
+        return <AdminNewsletter />;
       case "settings":
         return <AdminSettings />;
       default:

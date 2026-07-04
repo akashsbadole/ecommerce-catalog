@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ClerkProvider } from "@clerk/nextjs";
+import { QueryProvider } from "@/providers/QueryProvider";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -90,10 +91,12 @@ export default function RootLayout({
         className={`${poppins.variable} antialiased bg-background text-foreground`}
       >
         <ClerkProvider>
-          <ThemeProvider>
-            {children}
-            <Toaster position="top-right" richColors closeButton />
-          </ThemeProvider>
+          <QueryProvider>
+            <ThemeProvider>
+              {children}
+              <Toaster position="top-right" richColors closeButton />
+            </ThemeProvider>
+          </QueryProvider>
         </ClerkProvider>
       </body>
     </html>

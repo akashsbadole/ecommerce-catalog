@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
     const scopedWhere = { ...where, ...(storeId ? { storeId } : {}) };
 
     // Cursor-based or page-based pagination
-    let products;
+    let products: any[];
     let nextCursor = null;
     let total = 0;
 
@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
       // Cursor-based pagination
       products = await db.product.findMany({
         where: { ...scopedWhere, id: { gt: cursor } },
-        include: { Category: true },
+        include: { Category: true, ProductVariant: true },
         orderBy,
         take: limit + 1,
       });
@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
       [products, total] = await Promise.all([
         db.product.findMany({
           where: scopedWhere,
-          include: { Category: true },
+          include: { Category: true, ProductVariant: true },
           orderBy,
           skip,
           take: limit,
@@ -206,6 +206,9 @@ export async function POST(request: NextRequest) {
         wholesalePrice: validatedData.wholesalePrice || null,
         minOrderQty: validatedData.minOrderQty ?? 1,
         sku: validatedData.sku || null,
+        barcode: body.barcode || null,
+        attributes: body.attributes || "{}",
+        tags: body.tags || null,
         images: typeof body.images === 'string' ? body.images : JSON.stringify(body.images || []),
         categoryId: validatedData.categoryId || null,
         whatsappNumber: validatedData.whatsappNumber || null,
@@ -224,6 +227,10 @@ export async function POST(request: NextRequest) {
         stock: typeof body.stock === 'number' ? body.stock : (parseInt(body.stock) || 0),
         lowStockThreshold: typeof body.lowStockThreshold === 'number' ? body.lowStockThreshold : (parseInt(body.lowStockThreshold) || 10),
         relatedProductIds: typeof body.relatedProductIds === 'string' ? body.relatedProductIds : '[]',
+        isBestSeller: body.isBestSeller === true,
+        isDigital: body.isDigital === true,
+        downloadUrl: body.downloadUrl || null,
+        videoUrl: body.videoUrl || null,
         blocks: typeof body.blocks === 'string' ? body.blocks : JSON.stringify(body.blocks || []),
 
         ...(storeId ? { storeId } : {}),

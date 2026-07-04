@@ -15,7 +15,14 @@ export type Page =
   | { type: "product-page"; slug: string }
   | { type: "content-page"; slug: string }
   | { type: "admin-login" }
-  | { type: "admin"; activeTab: string };
+  | { type: "admin"; activeTab: string }
+  | { type: "cart" }
+  | { type: "checkout" }
+  | { type: "order-success"; orderId: string }
+  | { type: "orders" }
+  | { type: "wishlist" }
+  | { type: "faq" }
+  | { type: "compare" };
 
 interface AdminUser {
   id: string;
@@ -28,6 +35,29 @@ interface AppState {
   // Navigation
   currentPage: Page;
   navigate: (page: string, data?: unknown) => void;
+
+  // Cart
+  cart: {
+    items: Array<{
+      productId: string;
+      variantId?: string;
+      quantity: number;
+      name: string;
+      price: number;
+      image?: string;
+    }>;
+  };
+  addToCart: (item: {
+    productId: string;
+    variantId?: string;
+    quantity: number;
+    name: string;
+    price: number;
+    image?: string;
+  }) => void;
+  removeFromCart: (productId: string, variantId?: string) => void;
+  updateCartQuantity: (productId: string, quantity: number, variantId?: string) => void;
+  clearCart: () => void;
 
   // Auth
   isAdmin: boolean;
@@ -61,6 +91,12 @@ interface AppState {
   enquiryModal: { open: boolean; productName?: string; productId?: string };
   openEnquiryModal: (productName?: string, productId?: string) => void;
   closeEnquiryModal: () => void;
+
+  // Comparison
+  compareList: any[];
+  addToCompare: (product: any) => void;
+  removeFromCompare: (productId: string) => void;
+  clearCompare: () => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -187,8 +223,85 @@ export const useAppStore = create<AppState>()(
             if (typeof window !== "undefined")
               window.history.pushState({}, "", "/admin");
             break;
+          case "cart":
+            set({ currentPage: { type: "cart" } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", "/cart");
+            break;
+          case "checkout":
+            set({ currentPage: { type: "checkout" } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", "/checkout");
+            break;
+          case "order-success":
+            set({ currentPage: { type: "order-success", orderId: data as string } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", `/order-success/${data as string}`);
+            break;
+          case "orders":
+            set({ currentPage: { type: "orders" } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", "/portal/orders");
+            break;
+          case "wishlist":
+            set({ currentPage: { type: "wishlist" } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", "/wishlist");
+            break;
+          case "faq":
+            set({ currentPage: { type: "faq" } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", "/faq");
+            break;
+          case "compare":
+            set({ currentPage: { type: "compare" } });
+            if (typeof window !== "undefined")
+              window.history.pushState({}, "", "/compare");
+            break;
         }
       },
+
+      cart: { items: [] },
+      addToCart: (item) => {
+        const currentItems = get().cart.items;
+        const existing = currentItems.find(
+          (i) => i.productId === item.productId && i.variantId === item.variantId
+        );
+        if (existing) {
+          set({
+            cart: {
+              items: currentItems.map((i) =>
+                i.productId === item.productId && i.variantId === item.variantId
+                  ? { ...i, quantity: i.quantity + item.quantity }
+                  : i
+              ),
+            },
+          });
+        } else {
+          set({ cart: { items: [...currentItems, item] } });
+        }
+      },
+      removeFromCart: (productId, variantId) => {
+        set({
+          cart: {
+            items: get().cart.items.filter(
+              (i) => !(i.productId === productId && i.variantId === variantId)
+            ),
+          },
+        });
+      },
+      updateCartQuantity: (productId, quantity, variantId) => {
+        set({
+          cart: {
+            items: get().cart.items.map((i) =>
+              i.productId === productId && i.variantId === variantId
+                ? { ...i, quantity }
+                : i
+            ),
+          },
+        });
+      },
+      clearCart: () => set({ cart: { items: [] } }),
 
       isAdmin: false,
       adminUser: null,
@@ -256,6 +369,20 @@ export const useAppStore = create<AppState>()(
       enquiryModal: { open: false },
       openEnquiryModal: (productName, productId) => set({ enquiryModal: { open: true, productName, productId } }),
       closeEnquiryModal: () => set({ enquiryModal: { open: false } }),
+
+      compareList: [],
+      addToCompare: (product) => {
+        const list = get().compareList;
+        if (list.length >= 4) {
+            toast.error("You can compare up to 4 products");
+            return;
+        }
+        if (!list.find(p => p.id === product.id)) {
+            set({ compareList: [...list, product] });
+        }
+      },
+      removeFromCompare: (id) => set({ compareList: get().compareList.filter(p => p.id !== id) }),
+      clearCompare: () => set({ compareList: [] }),
     }),
     {
       name: "app-storage",
@@ -264,6 +391,7 @@ export const useAppStore = create<AppState>()(
         adminUser: state.adminUser,
         adminToken: state.adminToken,
         auth: state.auth,
+        cart: state.cart,
       }),
     },
   ),

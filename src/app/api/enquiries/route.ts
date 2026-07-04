@@ -5,6 +5,7 @@ import { createNotification } from '@/lib/notifications';
 import { enquirySchema } from '@/lib/validations';
 import { getStoreId } from '@/lib/store-db';
 import { requireAdminAuth } from '@/lib/admin-auth';
+import { getSetting } from '@/lib/settings';
 
 // Max 10 enquiry submissions per hour per IP (POST only)
 const ENQUIRY_RATE_LIMIT = { maxRequests: 10, windowMs: 60 * 60 * 1000, prefix: 'enquiries-post' };
@@ -77,6 +78,17 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const storeId = getStoreId(request);
+
+    // Check if enquiries are disabled in B2C mode
+    const storeMode = await getSetting('store_mode', storeId);
+    if (storeMode === 'b2c') {
+      return NextResponse.json(
+        { error: 'Enquiries are disabled in B2C mode. Please use the shopping cart.' },
+        { status: 403 }
+      );
+    }
+
     // Rate limiting
     const rateLimitResponse = checkRateLimit(request, ENQUIRY_RATE_LIMIT);
     if (rateLimitResponse) return rateLimitResponse;
