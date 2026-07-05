@@ -1,0 +1,4665 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WCommerce Catalogue - User Guide</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --bg: #f8fafc;
+        --surface: #fff;
+        --border: #e2e8f0;
+        --text: #1e293b;
+        --text-muted: #64748b;
+        --primary: #2563eb;
+        --primary-light: #eff6ff;
+        --accent: #f59e0b;
+        --code-bg: #1e293b;
+        --code-text: #e2e8f0;
+        --table-bg: #f8fafc;
+        --table-stripe: #f1f5f9;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.7;
+      }
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      header {
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        padding: 32px 0;
+        margin-bottom: 48px;
+      }
+      header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      header p {
+        color: var(--text-muted);
+        font-size: 1.05rem;
+      }
+      nav#toc {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 24px 32px;
+        margin-bottom: 48px;
+      }
+      nav#toc h2 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      nav#toc a {
+        color: var(--primary);
+        text-decoration: none;
+        font-size: 0.95rem;
+      }
+      nav#toc a:hover {
+        text-decoration: underline;
+      }
+      nav#toc ul {
+        list-style: none;
+        padding: 0;
+      }
+      nav#toc > ul > li {
+        margin: 6px 0;
+      }
+      nav#toc > ul > li > ul {
+        padding-left: 20px;
+        margin-top: 4px;
+      }
+      nav#toc > ul > li > ul > li {
+        margin: 3px 0;
+      }
+      section {
+        margin-bottom: 48px;
+      }
+      h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        padding-bottom: 8px;
+        border-bottom: 2px solid var(--border);
+        margin-bottom: 24px;
+      }
+      h3 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin: 28px 0 16px;
+      }
+      h4 {
+        font-size: 1.05rem;
+        font-weight: 600;
+        margin: 20px 0 12px;
+        color: var(--text-muted);
+      }
+      p,
+      li {
+        font-size: 0.95rem;
+        color: var(--text);
+      }
+      p {
+        margin-bottom: 16px;
+      }
+      a {
+        color: var(--primary);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      ul,
+      ol {
+        padding-left: 24px;
+        margin-bottom: 16px;
+      }
+      li {
+        margin: 4px 0;
+      }
+      code {
+        font-family:
+          "JetBrains Mono", "Fira Code", "Cascadia Code", Consolas, monospace;
+        font-size: 0.85rem;
+        background: var(--code-bg);
+        color: var(--code-text);
+        padding: 1px 6px;
+        border-radius: 4px;
+      }
+      pre {
+        background: var(--code-bg);
+        color: var(--code-text);
+        border-radius: 8px;
+        padding: 16px 20px;
+        overflow-x: auto;
+        margin-bottom: 24px;
+        font-size: 0.85rem;
+        line-height: 1.5;
+      }
+      pre code {
+        background: none;
+        padding: 0;
+        border-radius: 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 24px;
+        font-size: 0.9rem;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 10px 14px;
+        border: 1px solid var(--border);
+      }
+      th {
+        background: var(--table-bg);
+        font-weight: 600;
+        color: var(--text);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+      td {
+        color: var(--text);
+      }
+      tr:nth-child(even) td {
+        background: var(--table-stripe);
+      }
+      hr {
+        border: none;
+        border-top: 2px solid var(--border);
+        margin: 48px 0;
+      }
+      strong {
+        font-weight: 600;
+      }
+      blockquote {
+        border-left: 4px solid var(--primary);
+        background: var(--primary-light);
+        padding: 16px 20px;
+        margin: 0 0 24px;
+        border-radius: 0 8px 8px 0;
+      }
+      blockquote p {
+        margin: 0;
+      }
+      .tag {
+        display: inline-block;
+        font-size: 0.75rem;
+        padding: 2px 8px;
+        border-radius: 100px;
+        margin-right: 4px;
+      }
+      .tag-json {
+        background: #fef3c7;
+        color: #92400e;
+        font-family: monospace;
+      }
+      .tag-blue {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+      .tag-green {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      @media (max-width: 768px) {
+        header h1 {
+          font-size: 1.5rem;
+        }
+        th,
+        td {
+          padding: 8px 10px;
+          font-size: 0.8rem;
+        }
+        pre {
+          font-size: 0.8rem;
+          padding: 12px 16px;
+        }
+      }
+      .title-content-row {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 24px;
+        align-items: start;
+        padding: 16px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .title-content-row:last-child {
+        border-bottom: none;
+      }
+      .title-content-row .row-title {
+        font-weight: 600;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        line-height: 1.5;
+        padding-top: 2px;
+      }
+      .title-content-row .row-content {
+        color: var(--text);
+        font-size: 0.95rem;
+      }
+      @media (max-width: 768px) {
+        .title-content-row {
+          grid-template-columns: 1fr;
+          gap: 8px;
+        }
+      }
+
+      .doc-body {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 48px;
+        align-items: start;
+      }
+      .doc-sidebar {
+        position: sticky;
+        top: 24px;
+        align-self: start;
+        overflow-y: scroll;
+      }
+      .doc-main {
+        min-width: 0;
+      }
+      @media (max-width: 768px) {
+        .doc-body {
+          grid-template-columns: 1fr;
+          gap: 50px;
+        }
+        .doc-sidebar {
+          position: static;
+          width: 100%;
+        }
+      }
+
+      .col-index-content {
+        display: grid;
+        grid-template-columns: 180px 1fr;
+        gap: 24px;
+        align-items: start;
+        width: 100%;
+      }
+      .col-index-content .col-index {
+        font-weight: 600;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        line-height: 1.6;
+        padding-top: 2px;
+        word-break: break-word;
+      }
+      .col-index-content .col-content {
+        color: var(--text);
+        font-size: 0.95rem;
+        line-height: 1.7;
+        min-width: 0;
+      }
+      @media (max-width: 768px) {
+        .col-index-content {
+          grid-template-columns: 1fr;
+          gap: 8px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>WCommerce Catalogue — User Guide</h1>
+        <p>
+          Comprehensive reference for store owners (admins) and customers
+          (buyers) on the WCommerce multi-tenant e-commerce platform.
+        </p>
+      </div>
+    </header>
+    <div class="container">
+      <div class="doc-body">
+        <nav id="toc" class="doc-sidebar">
+          <h2>Table of Contents</h2>
+          <ul>
+            <li>
+              <a href="#for-store-owners">For Store Owners (Admins)</a>
+              <ul>
+                <li><a href="#admin-login">Logging In</a></li>
+                <li><a href="#dashboard">Dashboard</a></li>
+                <li><a href="#product-management">Product Management</a></li>
+                <li><a href="#category-management">Category Management</a></li>
+                <li>
+                  <a href="#b2b-enquiries-quotes"
+                    >B2B: Enquiries &amp; Quotes</a
+                  >
+                </li>
+                <li><a href="#company-management">Company Management</a></li>
+                <li><a href="#customer-management">Customer Management</a></li>
+                <li>
+                  <a href="#blog-content-pages">Blog &amp; Content Pages</a>
+                </li>
+                <li><a href="#media-library">Media Library</a></li>
+                <li><a href="#banners">Banners</a></li>
+                <li><a href="#settings">Settings</a></li>
+                <li>
+                  <a href="#multi-store-management">Multi-Store Management</a>
+                </li>
+                <li><a href="#backup-restore">Backup &amp; Restore</a></li>
+                <li><a href="#import-export">Import &amp; Export</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#for-customers">For Customers (Buyers)</a>
+              <ul>
+                <li><a href="#browsing-products">Browsing Products</a></li>
+                <li>
+                  <a href="#enquiries-quotes-buyer">Enquiries &amp; Quotes</a>
+                </li>
+                <li><a href="#contact-form">Contact Form</a></li>
+              </ul>
+            </li>
+            <li><a href="#faq">Frequently Asked Questions</a></li>
+            <li>
+              <a href="#blocks-reference">Blocks Reference</a>
+              <ul>
+                <li><a href="#layout-blocks">Layout Blocks</a></li>
+                <li><a href="#library-blocks">Library Blocks</a></li>
+                <li><a href="#page-content-blocks">Page Content Blocks</a></li>
+                <li><a href="#product-page-blocks">Product Page Blocks</a></li>
+                <li>
+                  <a href="#category-fields-reference"
+                    >Category Fields Reference</a
+                  >
+                </li>
+                <li><a href="#icon-name-reference">Icon Name Reference</a></li>
+                <li><a href="#json-editor-tips">JSON Editor Tips</a></li>
+                <li><a href="#platform-page-slugs">Platform Page Slugs</a></li>
+              </ul>
+            </li>
+          </ul>
+        </nav>
+
+        <div class="doc-main">
+          <section id="for-store-owners">
+            <h2>For Store Owners (Admins)</h2>
+
+            <h3 id="admin-login">
+              Admin Login
+              <a href="#admin-login" class="bookmark-link" title="Bookmark"
+                >#</a
+              >
+            </h3>
+            <ol>
+              <li>Navigate to <code>/admin</code></li>
+              <li>Enter your email and password</li>
+              <li>Click <strong>Login</strong></li>
+            </ol>
+            <p>The admin dashboard provides full control over your store.</p>
+
+            <h3 id="dashboard">
+              Dashboard
+              <a href="#dashboard" class="bookmark-link" title="Bookmark">#</a>
+            </h3>
+            <p>The dashboard shows:</p>
+            <div class="col-index-content">
+              <div class="col-index">Total Products</div>
+              <div class="col-content">Number of active products</div>
+              <div class="col-index">Total Orders</div>
+              <div class="col-content">Number of orders received</div>
+              <div class="col-index">Total Revenue</div>
+              <div class="col-content">Sum of all confirmed orders</div>
+              <div class="col-index">Enquiries</div>
+              <div class="col-content">New and total enquiry counts</div>
+              <div class="col-index">Quote Stats</div>
+              <div class="col-content">
+                Sent, accepted, and total quote values
+              </div>
+              <div class="col-index">Enquiry Trends</div>
+              <div class="col-content">30-day chart of daily enquiries</div>
+              <div class="col-index">Recent Activity</div>
+              <div class="col-content">
+                Latest actions performed in the admin
+              </div>
+            </div>
+
+            <h3 id="product-management">
+              Product Management
+              <a
+                href="#product-management"
+                class="bookmark-link"
+                title="Bookmark"
+                >#</a
+              >
+            </h3>
+            <h4>Adding a Product</h4>
+            <ol>
+              <li>Go to <strong>Products</strong> tab</li>
+              <li>Click <strong>Add Product</strong></li>
+              <li>
+                Fill in:
+                <ul>
+                  <li><strong>Name</strong> (required) — Product title</li>
+                  <li>
+                    <strong>Slug</strong> — Auto-generated from name, editable
+                  </li>
+                  <li>
+                    <strong>Description</strong> — Full product description
+                  </li>
+                  <li>
+                    <strong>Short Description</strong> — Brief summary for
+                    listings
+                  </li>
+                  <li>
+                    <strong>Price</strong> (required) — Regular selling price
+                  </li>
+                  <li>
+                    <strong>Compare Price</strong> — Original/struck-through
+                    price (optional)
+                  </li>
+                  <li>
+                    <strong>Wholesale Price</strong> — B2B pricing (optional)
+                  </li>
+                  <li><strong>SKU</strong> — Stock Keeping Unit identifier</li>
+                  <li><strong>Stock</strong> — Available quantity</li>
+                  <li>
+                    <strong>Low Stock Threshold</strong> — Alert level for low
+                    stock
+                  </li>
+                  <li><strong>Category</strong> — Assign to a category</li>
+                  <li><strong>Images</strong> — Upload product images</li>
+                  <li><strong>Specifications</strong> — Technical specs</li>
+                  <li>
+                    <strong>Min Order Qty</strong> — Minimum order quantity for
+                    B2B
+                  </li>
+                  <li>
+                    <strong>WhatsApp Number</strong> — For quick enquiry via
+                    WhatsApp
+                  </li>
+                </ul>
+              </li>
+              <li>Click <strong>Save</strong></li>
+            </ol>
+
+            <h4>Product Variants</h4>
+            <p>For products with options (size, color, etc.):</p>
+            <ol>
+              <li>Open a product</li>
+              <li>Go to <strong>Variants</strong> section</li>
+              <li>
+                Add variants with independent pricing, SKU, stock, and images
+              </li>
+            </ol>
+
+            <h4>Bulk Actions</h4>
+            <p>Select multiple products to:</p>
+            <ul>
+              <li>Publish / Unpublish</li>
+              <li>Delete (soft) / Restore</li>
+              <li>Permanent Delete</li>
+            </ul>
+
+            <h4>Trash &amp; Restore</h4>
+            <p>
+              Deleted products go to Trash. You can restore them or permanently
+              delete.
+            </p>
+
+            <h3 id="category-management">
+              Category Management
+              <a
+                href="#category-management"
+                class="bookmark-link"
+                title="Bookmark"
+                >#</a
+              >
+            </h3>
+            <ol>
+              <li>Go to <strong>Categories</strong> tab</li>
+              <li>Create categories with name, slug, description, and image</li>
+              <li>
+                Support <strong>hierarchical nesting</strong> (parent/child
+                categories)
+              </li>
+              <li>Categories with active products cannot be deleted</li>
+            </ol>
+
+            <h4>Category Landing Pages</h4>
+            <p>
+              Each category has a <strong>rich landing page</strong> with
+              dedicated builder sections:
+            </p>
+            <div class="title-content-list">
+              <div class="title-content-row">
+                <div class="row-title">Hero</div>
+                <div class="row-content">
+                  Large banner with heading, subtext, and optional buttons
+                </div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">Content Split</div>
+                <div class="row-content">Two-column text + image section</div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">Cards</div>
+                <div class="row-content">Feature / info cards grid</div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">CTA</div>
+                <div class="row-content">Call-to-action banner with button</div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">Process</div>
+                <div class="row-content">
+                  Step-by-step process flow (up to 4 steps)
+                </div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">Infographic</div>
+                <div class="row-content">Image-rich infographic section</div>
+              </div>
+            </div>
+            <p>
+              These fields render on the storefront at
+              <code>/product/&lt;slug&gt;</code> (e.g.
+              <code>/product/khakhra</code>). Use them to create branded,
+              content-rich category landing pages — no coding required.
+            </p>
+            <p>
+              Categories also support the full <strong>Page Builder</strong> via
+              the block editor for more complex layouts (26+ block types
+              available).
+            </p>
+
+            <h3 id="b2b-enquiries-quotes">
+              B2B: Enquiries &amp; Quotes
+              <a
+                href="#b2b-enquiries-quotes"
+                class="bookmark-link"
+                title="Bookmark"
+                >#</a
+              >
+            </h3>
+            <h4>Enquiries</h4>
+            <ul>
+              <li>View all product enquiries and contact form submissions</li>
+              <li>
+                Update status: New → Contacted → In Progress → Resolved → Closed
+              </li>
+              <li>Link enquiries to products and users</li>
+              <li>Bulk update status or delete</li>
+            </ul>
+
+            <h4>Quotes</h4>
+            <ol>
+              <li>Go to <strong>Quotes</strong> tab</li>
+              <li>
+                Create formal quotes for customers:
+                <ul>
+                  <li>Link to an enquiry</li>
+                  <li>Add line items with products, quantities, and prices</li>
+                  <li>Set validity date</li>
+                  <li>Add notes and admin notes</li>
+                </ul>
+              </li>
+              <li>Send quotes to customers</li>
+              <li>Track status: Draft → Sent → Accepted → Rejected</li>
+            </ol>
+
+            <h3 id="company-management">
+              Company Management
+              <a
+                href="#company-management"
+                class="bookmark-link"
+                title="Bookmark"
+                >#</a
+              >
+            </h3>
+            <ul>
+              <li>View all registered B2B companies</li>
+              <li>
+                Verify companies (grants verified status to all company users)
+              </li>
+              <li>Assign pricing tiers: Standard, Silver, Gold, Platinum</li>
+              <li>View company users, enquiries, and quotes</li>
+            </ul>
+
+            <h3 id="customer-management">
+              Customer Management
+              <a
+                href="#customer-management"
+                class="bookmark-link"
+                title="Bookmark"
+                >#</a
+              >
+            </h3>
+            <ol>
+              <li>Go to <strong>Users</strong> tab</li>
+              <li>View all registered users</li>
+              <li>Manage roles: Admin, Clerk, Buyer</li>
+              <li>Activate/deactivate users</li>
+              <li>Bulk operations: delete, activate, deactivate</li>
+              <li>Import users from CSV</li>
+            </ol>
+
+            <h3 id="blog-content-pages">
+              Blog &amp; Content Pages
+              <a
+                href="#blog-content-pages"
+                class="bookmark-link"
+                title="Bookmark"
+                >#</a
+              >
+            </h3>
+            <h4>Blog</h4>
+            <ol>
+              <li>Go to <strong>Blog</strong> tab</li>
+              <li>Create posts with WYSIWYG editor</li>
+              <li>Add block-based content (26 block types available)</li>
+              <li>Set SEO meta tags, cover image, tags</li>
+              <li>Publish/unpublish workflow</li>
+            </ol>
+
+            <h4>Content Pages</h4>
+            <ol>
+              <li>Go to <strong>Pages</strong> tab</li>
+              <li>
+                Build pages using the <strong>Page Builder</strong> with
+                drag-and-drop blocks:
+                <ul>
+                  <li>Hero sections</li>
+                  <li>Feature grids</li>
+                  <li>Testimonials</li>
+                  <li>FAQ sections</li>
+                  <li>Product carousels</li>
+                  <li>Pricing tables</li>
+                  <li>Partner logos</li>
+                  <li>And 18 more block types</li>
+                </ul>
+              </li>
+              <li>Set SEO fields (meta title, description, OG image)</li>
+              <li>Custom JSON schema for advanced SEO</li>
+            </ol>
+
+            <h3 id="media-library">
+              Media Library
+              <a href="#media-library" class="bookmark-link" title="Bookmark"
+                >#</a
+              >
+            </h3>
+            <ul>
+              <li>Upload images, PDFs, CSVs, Excel files</li>
+              <li>Organize into folders</li>
+              <li>Search and filter by type</li>
+              <li>Edit alt text</li>
+              <li>10MB per file, max 20 files per upload</li>
+            </ul>
+
+            <h3 id="banners">
+              Banners
+              <a href="#banners" class="bookmark-link" title="Bookmark">#</a>
+            </h3>
+            <ul>
+              <li>
+                Create homepage banners with title, subtitle, image, and link
+              </li>
+              <li>Set sort order for display priority</li>
+              <li>Activate/deactivate banners</li>
+            </ul>
+
+            <h3 id="settings">
+              Settings
+              <a href="#settings" class="bookmark-link" title="Bookmark">#</a>
+            </h3>
+            <p>Configure your store under the <strong>Settings</strong> tab:</p>
+            <div class="title-content-list">
+              <div class="title-content-row">
+                <div class="row-title">General</div>
+                <div class="row-content">
+                  Site name, description, logo, favicon
+                </div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">SMTP</div>
+                <div class="row-content">
+                  Email server configuration for notifications
+                </div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">B2B</div>
+                <div class="row-content">
+                  Enable/disable B2B features, set tier discounts
+                </div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">Tax</div>
+                <div class="row-content">Tax rate configuration</div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">SEO</div>
+                <div class="row-content">
+                  Default meta tags, schema.org settings
+                </div>
+              </div>
+            </div>
+
+            <h3 id="multi-store-management">
+              Multi-Store Management
+              <a
+                href="#multi-store-management"
+                class="bookmark-link"
+                title="Bookmark"
+                >#</a
+              >
+            </h3>
+            <p>If you operate multiple stores:</p>
+            <ol>
+              <li>Go to <strong>Stores</strong> in admin</li>
+              <li>Create new stores with unique slugs</li>
+              <li>Switch between stores from the admin</li>
+              <li>Each store has isolated data (products, orders, settings)</li>
+            </ol>
+
+            <h3 id="backup-restore">
+              Backup &amp; Restore
+              <a href="#backup-restore" class="bookmark-link" title="Bookmark"
+                >#</a
+              >
+            </h3>
+            <ul>
+              <li>
+                <strong>Backup</strong> — Export all data as JSON (products,
+                orders, users, settings, etc.)
+              </li>
+              <li><strong>Restore</strong> — Import from a JSON backup file</li>
+              <li>Settings and categories are upserted during restore</li>
+            </ul>
+
+            <h3 id="import-export">
+              Import &amp; Export
+              <a href="#import-export" class="bookmark-link" title="Bookmark"
+                >#</a
+              >
+            </h3>
+            <h4>CSV Import</h4>
+            <ul>
+              <li>Products, categories, blog posts, users, redirects</li>
+              <li>Shopify CSV import supported</li>
+              <li>WooCommerce CSV import supported</li>
+            </ul>
+            <h4>CSV Export</h4>
+            <ul>
+              <li>Export any entity type as CSV download</li>
+            </ul>
+          </section>
+
+          <hr />
+
+          <section id="for-customers">
+            <h2>For Customers (Buyers)</h2>
+
+            <h3 id="browsing-products">
+              Browsing Products
+              <a
+                href="#browsing-products"
+                class="bookmark-link"
+                title="Bookmark"
+                >#</a
+              >
+            </h3>
+            <ol>
+              <li>Visit the store homepage</li>
+              <li>
+                Browse <strong>Featured Products</strong> or navigate to
+                <strong>Catalogue</strong> (<code>/product</code>)
+              </li>
+              <li>
+                Use <strong>filters</strong> to narrow by:
+                <ul>
+                  <li>Category</li>
+                  <li>Price range</li>
+                  <li>In-stock availability</li>
+                </ul>
+              </li>
+              <li>
+                <strong>Search</strong> for products by name or description
+                (opens enquiry modal directly)
+              </li>
+              <li>
+                <strong>Sort</strong> by relevance, price, newest, or name
+              </li>
+              <li>
+                Click a <strong>category</strong> to view its landing page at
+                <code>/product/&lt;slug&gt;</code> with hero, cards, CTA, and
+                other sections
+              </li>
+              <li>
+                Click <strong>Enquire</strong> on any product card to open the
+                enquiry modal — fill in quantity and message to send a request
+                directly to the admin
+              </li>
+            </ol>
+
+            <h3 id="enquiries-quotes-buyer">
+              Enquiries &amp; Quotes (Buyer)
+              <a
+                href="#enquiries-quotes-buyer"
+                class="bookmark-link"
+                title="Bookmark"
+                >#</a
+              >
+            </h3>
+            <h4>Submitting an Enquiry</h4>
+            <ol>
+              <li>
+                On any <strong>product card</strong> (category pages, search
+                results, featured products), click <strong>Enquire</strong>
+              </li>
+              <li>Fill in name, email, phone, quantity, and message</li>
+              <li>Submit — admins will respond with a formal quote</li>
+            </ol>
+
+            <h4>Responding to Quotes</h4>
+            <ol>
+              <li>
+                Go to <strong>Portal</strong> &gt; <strong>Quotes</strong>
+              </li>
+              <li>View quote details with line items and totals</li>
+              <li>
+                <strong>Accept</strong> or <strong>Decline</strong> the quote
+              </li>
+              <li>Accepted quotes can proceed to order</li>
+            </ol>
+
+            <h3 id="contact-form">
+              Contact Form
+              <a href="#contact-form" class="bookmark-link" title="Bookmark"
+                >#</a
+              >
+            </h3>
+            <ul>
+              <li>Visit the <strong>Contact</strong> page</li>
+              <li>Fill in name, email, subject, and message</li>
+              <li>Submit — you'll receive a confirmation email</li>
+            </ul>
+          </section>
+
+          <hr />
+
+          <section id="faq">
+            <h2>Frequently Asked Questions</h2>
+
+            <h3>How do I reset my password?</h3>
+            <ol>
+              <li>Click <strong>Forgot Password</strong> on the login page</li>
+              <li>Enter your email address</li>
+              <li>Check your email for a reset link (valid for 1 hour)</li>
+              <li>Click the link and set a new password</li>
+            </ol>
+
+            <h3>How do I become a B2B buyer?</h3>
+            <ol>
+              <li>
+                Click <strong>Register</strong> and select B2B registration
+              </li>
+              <li>Provide your company details (name, tax ID, address)</li>
+              <li>Wait for admin verification</li>
+              <li>
+                Once verified, you'll have access to B2B pricing and the Buyer
+                Portal
+              </li>
+            </ol>
+
+            <h3>What pricing tiers are available?</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Tier</th>
+                  <th>Discount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Standard</td>
+                  <td>0%</td>
+                </tr>
+                <tr>
+                  <td>Silver</td>
+                  <td>5%</td>
+                </tr>
+                <tr>
+                  <td>Gold</td>
+                  <td>10%</td>
+                </tr>
+                <tr>
+                  <td>Platinum</td>
+                  <td>15%</td>
+                </tr>
+              </tbody>
+            </table>
+            <p>
+              Tiers are assigned by the admin based on your business
+              relationship.
+            </p>
+          </section>
+
+          <hr />
+
+          <section id="blocks-reference">
+            <h2>Blocks Reference</h2>
+            <p>
+              This section documents every block type available in the Page
+              Builder, their JSON data structures, and how content editors can
+              use them to build pages.
+            </p>
+
+            <h3>PageBuilder Overview</h3>
+            <p>
+              Located in the <strong>Pages</strong> tab of the admin dashboard,
+              the PageBuilder is a drag-and-drop interface for building content
+              pages and blog posts.
+            </p>
+
+            <h4>Adding a block</h4>
+            <ol>
+              <li>Open a page in the PageBuilder</li>
+              <li>Click <strong>Add Block</strong> from the sidebar</li>
+              <li>
+                Select a block type — it appends to the bottom of the block list
+              </li>
+              <li>Drag to reorder, or use the up/down arrows</li>
+            </ol>
+
+            <h4>Two editing modes</h4>
+            <ul>
+              <li>
+                <strong>UI Editor</strong> — dedicated form fields for each
+                block type (simpler blocks only; page content blocks show a
+                notice to use the JSON Editor)
+              </li>
+              <li>
+                <strong>JSON Editor</strong> — raw JSON textarea for direct
+                editing of the block's <code>data</code> object. Required for
+                Page Content Blocks and advanced customisation
+              </li>
+            </ul>
+
+            <h4>Block actions</h4>
+            <ul>
+              <li>
+                <strong>Drag handle</strong> (left side) — click and drag to
+                reorder
+              </li>
+              <li><strong>Move up/down</strong> — reorder by one position</li>
+              <li>
+                <strong>Duplicate</strong> — copies the block and its data
+              </li>
+              <li><strong>Edit</strong> — opens the editor dialog</li>
+              <li>
+                <strong>Delete</strong> — removes the block (confirm dialog)
+              </li>
+            </ul>
+
+            <h4>Preview mode</h4>
+            <p>
+              Toggle the eye icon to preview the page at desktop, tablet, or
+              mobile width.
+            </p>
+
+            <hr style="margin: 32px 0; border-top: 1px solid var(--border)" />
+
+            <h3 id="layout-blocks">
+              Layout Blocks
+              <a href="#layout-blocks" class="bookmark-link" title="Bookmark"
+                >#</a
+              >
+            </h3>
+            <p>Simple, flat JSON structures for basic page sections.</p>
+
+            <h4>Hero</h4>
+            <p>
+              Full-width banner section with background image, heading, and
+              optional button.
+            </p>
+            <pre>
+{
+  "title": "Welcome",
+  "subtitle": "",
+  "buttonText": "Learn More",
+  "buttonLink": "/products",
+  "backgroundImage": "",
+  "height": "medium",
+  "alignment": "center"
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>title</code></td>
+                  <td>string</td>
+                  <td>Main heading text</td>
+                </tr>
+                <tr>
+                  <td><code>subtitle</code></td>
+                  <td>string</td>
+                  <td>Sub-heading below the title</td>
+                </tr>
+                <tr>
+                  <td><code>buttonText</code></td>
+                  <td>string</td>
+                  <td>CTA button label (empty = no button)</td>
+                </tr>
+                <tr>
+                  <td><code>buttonLink</code></td>
+                  <td>string</td>
+                  <td>Button destination URL or page slug</td>
+                </tr>
+                <tr>
+                  <td><code>backgroundImage</code></td>
+                  <td>string</td>
+                  <td>Cloudinary image URL for the background</td>
+                </tr>
+                <tr>
+                  <td><code>height</code></td>
+                  <td>
+                    <code>"small"</code> <code>"medium"</code>
+                    <code>"large"</code>
+                  </td>
+                  <td>Section height preset</td>
+                </tr>
+                <tr>
+                  <td><code>alignment</code></td>
+                  <td>
+                    <code>"center"</code> <code>"left"</code>
+                    <code>"right"</code>
+                  </td>
+                  <td>Text alignment within the hero</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Hero Carousel</h4>
+            <p>Rotating slideshow of hero banners with autoplay.</p>
+            <pre>
+{
+  "slides": [
+    { "image": "", "title": "Slide 1", "subtitle": "Description for slide 1", "buttonText": "Shop Now", "buttonLink": "/distribution" },
+    { "image": "", "title": "Slide 2", "subtitle": "Description for slide 2", "buttonText": "Learn More", "buttonLink": "/about" }
+  ],
+  "autoplay": true,
+  "interval": 6000,
+  "height": "large",
+  "alignment": "center"
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>slides[].image</code></td>
+                  <td>string</td>
+                  <td>Slide background image URL</td>
+                </tr>
+                <tr>
+                  <td><code>slides[].title</code></td>
+                  <td>string</td>
+                  <td>Slide heading</td>
+                </tr>
+                <tr>
+                  <td><code>slides[].subtitle</code></td>
+                  <td>string</td>
+                  <td>Slide sub-heading</td>
+                </tr>
+                <tr>
+                  <td><code>slides[].buttonText</code></td>
+                  <td>string</td>
+                  <td>CTA button label</td>
+                </tr>
+                <tr>
+                  <td><code>slides[].buttonLink</code></td>
+                  <td>string</td>
+                  <td>CTA destination</td>
+                </tr>
+                <tr>
+                  <td><code>autoplay</code></td>
+                  <td>boolean</td>
+                  <td>Auto-advance slides</td>
+                </tr>
+                <tr>
+                  <td><code>interval</code></td>
+                  <td>number</td>
+                  <td>Milliseconds between slides</td>
+                </tr>
+                <tr>
+                  <td><code>height</code></td>
+                  <td>string</td>
+                  <td>Height preset</td>
+                </tr>
+                <tr>
+                  <td><code>alignment</code></td>
+                  <td>string</td>
+                  <td>Text alignment</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Text</h4>
+            <p>Simple rich-text block. Supports HTML content.</p>
+            <pre>
+{
+  "content": "&lt;p&gt;Enter your text here...&lt;/p&gt;"
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>content</code></td>
+                  <td>string</td>
+                  <td>
+                    HTML content. Supports <code>&lt;p&gt;</code>,
+                    <code>&lt;h1&gt;</code>–<code>&lt;h6&gt;</code>,
+                    <code>&lt;ul&gt;</code>, <code>&lt;ol&gt;</code>,
+                    <code>&lt;a&gt;</code>, <code>&lt;img&gt;</code>,
+                    <code>&lt;strong&gt;</code>, <code>&lt;em&gt;</code>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Image Gallery</h4>
+            <p>Grid of images with configurable column count.</p>
+            <pre>
+{
+  "title": "Gallery",
+  "columns": 3,
+  "images": [""]
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>title</code></td>
+                  <td>string</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td><code>columns</code></td>
+                  <td>number</td>
+                  <td>Number of columns (2, 3, or 4)</td>
+                </tr>
+                <tr>
+                  <td><code>images</code></td>
+                  <td>string[]</td>
+                  <td>Array of Cloudinary image URLs</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Features</h4>
+            <p>Grid of icon + title + description cards.</p>
+            <pre>
+{
+  "title": "Our Features",
+  "columns": 3,
+  "features": [
+    { "title": "Feature 1", "description": "Description text", "icon": "Star" }
+  ]
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>title</code></td>
+                  <td>string</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td><code>columns</code></td>
+                  <td>number</td>
+                  <td>Grid columns (2, 3, or 4)</td>
+                </tr>
+                <tr>
+                  <td><code>features[].title</code></td>
+                  <td>string</td>
+                  <td>Feature card heading</td>
+                </tr>
+                <tr>
+                  <td><code>features[].description</code></td>
+                  <td>string</td>
+                  <td>Feature description text</td>
+                </tr>
+                <tr>
+                  <td><code>features[].icon</code></td>
+                  <td>string</td>
+                  <td>Lucide icon name</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>CTA (Call to Action)</h4>
+            <p>Strip with heading, description, and a button.</p>
+            <pre>
+{
+  "title": "Get Started Today",
+  "description": "Contact us now",
+  "buttonText": "Get Quote",
+  "buttonLink": "/contact",
+  "backgroundColor": "primary"
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>title</code></td>
+                  <td>string</td>
+                  <td>CTA heading</td>
+                </tr>
+                <tr>
+                  <td><code>description</code></td>
+                  <td>string</td>
+                  <td>Supporting text</td>
+                </tr>
+                <tr>
+                  <td><code>buttonText</code></td>
+                  <td>string</td>
+                  <td>Button label</td>
+                </tr>
+                <tr>
+                  <td><code>buttonLink</code></td>
+                  <td>string</td>
+                  <td>Button destination</td>
+                </tr>
+                <tr>
+                  <td><code>backgroundColor</code></td>
+                  <td>
+                    <code>"primary"</code> <code>"dark"</code>
+                    <code>"light"</code>
+                  </td>
+                  <td>Section background colour</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Testimonials</h4>
+            <p>Quote cards from customers or partners.</p>
+            <pre>
+{
+  "title": "What Our Clients Say",
+  "testimonials": [
+    { "name": "John Doe", "role": "CEO", "quote": "Great service!", "avatar": "" }
+  ]
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>title</code></td>
+                  <td>string</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td><code>testimonials[].name</code></td>
+                  <td>string</td>
+                  <td>Person's name</td>
+                </tr>
+                <tr>
+                  <td><code>testimonials[].role</code></td>
+                  <td>string</td>
+                  <td>Person's title/role</td>
+                </tr>
+                <tr>
+                  <td><code>testimonials[].quote</code></td>
+                  <td>string</td>
+                  <td>Testimonial text</td>
+                </tr>
+                <tr>
+                  <td><code>testimonials[].avatar</code></td>
+                  <td>string</td>
+                  <td>Avatar image URL (optional)</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>FAQ</h4>
+            <p>Accordion-style questions and answers.</p>
+            <pre>
+{
+  "title": "Frequently Asked Questions",
+  "items": [
+    { "question": "Question?", "answer": "Answer text." }
+  ]
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>title</code></td>
+                  <td>string</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td><code>items[].question</code></td>
+                  <td>string</td>
+                  <td>The question</td>
+                </tr>
+                <tr>
+                  <td><code>items[].answer</code></td>
+                  <td>string</td>
+                  <td>The answer (HTML supported)</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Spacer</h4>
+            <p>Vertical spacing between blocks.</p>
+            <pre>{ "height": 64 }</pre>
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>height</code></td>
+                  <td>number</td>
+                  <td>Spacer height in pixels</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Divider</h4>
+            <p>Horizontal rule / separator line.</p>
+            <pre>{ "style": "solid" }</pre>
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>style</code></td>
+                  <td>
+                    <code>"solid"</code> <code>"dashed"</code>
+                    <code>"dotted"</code>
+                  </td>
+                  <td>Line style</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Products</h4>
+            <p>
+              Dynamic product showcase grid. Pulls products from the catalogue
+              automatically.
+            </p>
+            <pre>
+{
+  "title": "Featured Products",
+  "maxProducts": 6,
+  "layout": "grid"
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>title</code></td>
+                  <td>string</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td><code>maxProducts</code></td>
+                  <td>number</td>
+                  <td>Maximum products to display</td>
+                </tr>
+                <tr>
+                  <td><code>layout</code></td>
+                  <td>
+                    <code>"grid"</code> <code>"list"</code>
+                    <code>"carousel"</code>
+                  </td>
+                  <td>Display layout</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          <hr />
+
+          <section id="library-blocks">
+            <h2 id="library-blocks">
+              Library Blocks
+              <a href="#library-blocks" class="bookmark-link" title="Bookmark"
+                >#</a
+              >
+            </h2>
+            <p>Medium-complexity blocks for specific content patterns.</p>
+
+            <h4>Slider</h4>
+            <p>Full-width image slider with captions and optional CTA.</p>
+            <pre>
+{
+  "items": [
+    { "image": "", "title": "Slide 1", "subtitle": "Description 1", "link": "" }
+  ],
+  "autoplay": true,
+  "interval": 5000,
+  "ctaButtonColor": "var(--primary)",
+  "ctaTextColor": "#FFFFFF",
+  "showButton": true,
+  "fullWidth": true
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>items[].image</code></td>
+                  <td>string</td>
+                  <td>Image URL</td>
+                </tr>
+                <tr>
+                  <td><code>items[].title</code></td>
+                  <td>string</td>
+                  <td>Slide title</td>
+                </tr>
+                <tr>
+                  <td><code>items[].subtitle</code></td>
+                  <td>string</td>
+                  <td>Slide description</td>
+                </tr>
+                <tr>
+                  <td><code>items[].link</code></td>
+                  <td>string</td>
+                  <td>Optional link destination</td>
+                </tr>
+                <tr>
+                  <td><code>autoplay</code></td>
+                  <td>boolean</td>
+                  <td>Auto-advance</td>
+                </tr>
+                <tr>
+                  <td><code>interval</code></td>
+                  <td>number</td>
+                  <td>Millisecond interval</td>
+                </tr>
+                <tr>
+                  <td><code>ctaButtonColor</code></td>
+                  <td>string</td>
+                  <td>Button CSS colour</td>
+                </tr>
+                <tr>
+                  <td><code>ctaTextColor</code></td>
+                  <td>string</td>
+                  <td>Button text CSS colour</td>
+                </tr>
+                <tr>
+                  <td><code>showButton</code></td>
+                  <td>boolean</td>
+                  <td>Show/hide CTA button</td>
+                </tr>
+                <tr>
+                  <td><code>fullWidth</code></td>
+                  <td>boolean</td>
+                  <td>Full browser width vs contained</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Product Carousel</h4>
+            <p>Horizontal product carousel from a specific category.</p>
+            <pre>
+{
+  "title": "Our Products",
+  "maxProducts": 10,
+  "categoryId": ""
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>title</code></td>
+                  <td>string</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td><code>maxProducts</code></td>
+                  <td>number</td>
+                  <td>Max products to show</td>
+                </tr>
+                <tr>
+                  <td><code>categoryId</code></td>
+                  <td>string</td>
+                  <td>Filter by category ID (empty = all)</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>About Section</h4>
+            <p>Text + image split layout for company info.</p>
+            <pre>
+{
+  "title": "About Us",
+  "content": "&lt;p&gt;Tell your story here...&lt;/p&gt;",
+  "image": "",
+  "imagePosition": "left",
+  "buttonText": "Read More",
+  "buttonLink": ""
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>title</code></td>
+                  <td>string</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td><code>content</code></td>
+                  <td>string</td>
+                  <td>HTML content</td>
+                </tr>
+                <tr>
+                  <td><code>image</code></td>
+                  <td>string</td>
+                  <td>Image URL</td>
+                </tr>
+                <tr>
+                  <td><code>imagePosition</code></td>
+                  <td><code>"left"</code> <code>"right"</code></td>
+                  <td>Image side</td>
+                </tr>
+                <tr>
+                  <td><code>buttonText</code></td>
+                  <td>string</td>
+                  <td>CTA button label</td>
+                </tr>
+                <tr>
+                  <td><code>buttonLink</code></td>
+                  <td>string</td>
+                  <td>CTA button destination</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Trust Bar</h4>
+            <p>Highlight numbers / statistics row.</p>
+            <pre>
+{
+  "stats": [
+    { "value": 15, "suffix": "+", "label": "Years in manufacturing" },
+    { "value": 5000, "suffix": "+", "label": "MT annual capacity" },
+    { "value": 80, "suffix": "+", "label": "SKUs across categories" },
+    { "value": 12, "suffix": "+", "label": "States served" },
+    { "value": 100, "suffix": "%", "label": "Own manufacturing" }
+  ]
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>stats[].value</code></td>
+                  <td>number</td>
+                  <td>The number to display</td>
+                </tr>
+                <tr>
+                  <td><code>stats[].suffix</code></td>
+                  <td>string</td>
+                  <td>Text after the number (+, %, etc.)</td>
+                </tr>
+                <tr>
+                  <td><code>stats[].label</code></td>
+                  <td>string</td>
+                  <td>Description below the number</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Audience Cards</h4>
+            <p>
+              Cards targeting different B2B buyer types with individual CTAs.
+            </p>
+            <pre>
+{
+  "label": "Who we serve",
+  "heading": "We manufacture for",
+  "description": "From first batch to full-scale production",
+  "ctaButtonColor": "var(--primary)",
+  "ctaTextColor": "#FFFFFF",
+  "showButton": true,
+  "cards": [
+    { "title": "B2B brands", "description": "Bulk supply of finished goods under your brand", "cta": "Enquire now", "link": "/contact" },
+    { "title": "Private label", "description": "Custom packaging, your branding, our recipe", "cta": "Get details", "link": "/contact" },
+    { "title": "Distributors", "description": "Trade pricing, consistent supply, multi-SKU range", "cta": "Partner with us", "link": "/contact" },
+    { "title": "Institutional buyers", "description": "Canteens, airlines, hospitality, govt procurement", "cta": "Send requirement", "link": "/contact" }
+  ]
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>label</code></td>
+                  <td>string</td>
+                  <td>Small label above heading</td>
+                </tr>
+                <tr>
+                  <td><code>heading</code></td>
+                  <td>string</td>
+                  <td>Main section heading</td>
+                </tr>
+                <tr>
+                  <td><code>description</code></td>
+                  <td>string</td>
+                  <td>Section description paragraph</td>
+                </tr>
+                <tr>
+                  <td><code>ctaButtonColor</code></td>
+                  <td>string</td>
+                  <td>Button CSS colour</td>
+                </tr>
+                <tr>
+                  <td><code>ctaTextColor</code></td>
+                  <td>string</td>
+                  <td>Button text CSS colour</td>
+                </tr>
+                <tr>
+                  <td><code>showButton</code></td>
+                  <td>boolean</td>
+                  <td>Show shared CTA button</td>
+                </tr>
+                <tr>
+                  <td><code>cards[].title</code></td>
+                  <td>string</td>
+                  <td>Card heading</td>
+                </tr>
+                <tr>
+                  <td><code>cards[].description</code></td>
+                  <td>string</td>
+                  <td>Card text</td>
+                </tr>
+                <tr>
+                  <td><code>cards[].cta</code></td>
+                  <td>string</td>
+                  <td>Card button label</td>
+                </tr>
+                <tr>
+                  <td><code>cards[].link</code></td>
+                  <td>string</td>
+                  <td>Card button destination</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Capabilities</h4>
+            <p>Manufacturing capabilities with image gallery and CTA.</p>
+            <pre>
+{
+  "label": "Manufacturing capabilities",
+  "heading": "Why partner with us",
+  "items": ["Own factory &amp; machinery", "FSSAI &amp; ISO certified", "5 production lines", "Custom packaging ready", "Hygiene-first processes", "On-time delivery"],
+  "image": "",
+  "videoUrl": "",
+  "imageCaption": "Facility / production line image",
+  "galleryImages": ["", "", "", ""],
+  "ctaText": "View full capabilities",
+  "ctaLink": "/page/manufacturing"
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>label</code></td>
+                  <td>string</td>
+                  <td>Small label above heading</td>
+                </tr>
+                <tr>
+                  <td><code>heading</code></td>
+                  <td>string</td>
+                  <td>Main heading</td>
+                </tr>
+                <tr>
+                  <td><code>items</code></td>
+                  <td>string[]</td>
+                  <td>Bullet list of capabilities</td>
+                </tr>
+                <tr>
+                  <td><code>image</code></td>
+                  <td>string</td>
+                  <td>Main image URL</td>
+                </tr>
+                <tr>
+                  <td><code>videoUrl</code></td>
+                  <td>string</td>
+                  <td>Optional video URL</td>
+                </tr>
+                <tr>
+                  <td><code>imageCaption</code></td>
+                  <td>string</td>
+                  <td>Caption below image</td>
+                </tr>
+                <tr>
+                  <td><code>galleryImages</code></td>
+                  <td>string[]</td>
+                  <td>Additional gallery image URLs</td>
+                </tr>
+                <tr>
+                  <td><code>ctaText</code></td>
+                  <td>string</td>
+                  <td>CTA button label</td>
+                </tr>
+                <tr>
+                  <td><code>ctaLink</code></td>
+                  <td>string</td>
+                  <td>CTA button destination</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Product Categories</h4>
+            <p>Preview grid of product categories with CTAs.</p>
+            <pre>
+{
+  "label": "Our product range",
+  "heading": "Product categories",
+  "description": "Manufactured in-house...",
+  "categoryIds": [],
+  "categories": [
+    { "name": "Khakhra", "variants": "12+ variants" },
+    { "name": "Bhakhri", "variants": "8+ varieties" },
+    { "name": "Makhana", "variants": "6+ flavours" },
+    { "name": "Extruder", "variants": "10+ shapes" },
+    { "name": "Digestive", "variants": "5+ varieties" },
+    { "name": "Seeds &amp; Nuts", "variants": "10+ varieties" }
+  ],
+  "ctaText": "View all products &amp; packaging",
+  "ctaLink": "/distribution",
+  "ctaButtonColor": "var(--primary)",
+  "ctaTextColor": "#FFFFFF",
+  "showButton": true
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>label</code></td>
+                  <td>string</td>
+                  <td>Small label above heading</td>
+                </tr>
+                <tr>
+                  <td><code>heading</code></td>
+                  <td>string</td>
+                  <td>Main heading</td>
+                </tr>
+                <tr>
+                  <td><code>description</code></td>
+                  <td>string</td>
+                  <td>Description paragraph</td>
+                </tr>
+                <tr>
+                  <td><code>categoryIds</code></td>
+                  <td>string[]</td>
+                  <td>Filter by specific category IDs</td>
+                </tr>
+                <tr>
+                  <td><code>categories</code></td>
+                  <td>array</td>
+                  <td>Static category list (used when categoryIds is empty)</td>
+                </tr>
+                <tr>
+                  <td><code>categories[].name</code></td>
+                  <td>string</td>
+                  <td>Category display name</td>
+                </tr>
+                <tr>
+                  <td><code>categories[].variants</code></td>
+                  <td>string</td>
+                  <td>Variant count text</td>
+                </tr>
+                <tr>
+                  <td><code>ctaText</code></td>
+                  <td>string</td>
+                  <td>CTA button label</td>
+                </tr>
+                <tr>
+                  <td><code>ctaLink</code></td>
+                  <td>string</td>
+                  <td>CTA destination</td>
+                </tr>
+                <tr>
+                  <td><code>showButton</code></td>
+                  <td>boolean</td>
+                  <td>Show CTA button</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Factory Reel</h4>
+            <p>Video showcase for factory tour or facility walkthrough.</p>
+            <pre>
+{
+  "label": "Factory &amp; facility reel",
+  "heading": "See our facility in action",
+  "description": "Factory floor &middot; machinery &middot; warehouse ...",
+  "videoUrl": "",
+  "thumbnailUrl": "",
+  "ctaText": "Watch full factory tour",
+  "ctaLink": "/page/manufacturing"
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>label</code></td>
+                  <td>string</td>
+                  <td>Small label above heading</td>
+                </tr>
+                <tr>
+                  <td><code>heading</code></td>
+                  <td>string</td>
+                  <td>Main heading</td>
+                </tr>
+                <tr>
+                  <td><code>description</code></td>
+                  <td>string</td>
+                  <td>Description text</td>
+                </tr>
+                <tr>
+                  <td><code>videoUrl</code></td>
+                  <td>string</td>
+                  <td>Video URL (YouTube or direct)</td>
+                </tr>
+                <tr>
+                  <td><code>thumbnailUrl</code></td>
+                  <td>string</td>
+                  <td>Cover image before play</td>
+                </tr>
+                <tr>
+                  <td><code>ctaText</code></td>
+                  <td>string</td>
+                  <td>CTA button label</td>
+                </tr>
+                <tr>
+                  <td><code>ctaLink</code></td>
+                  <td>string</td>
+                  <td>CTA destination</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Certifications (Award)</h4>
+            <p>Certifications and compliance badges with optional gallery.</p>
+            <pre>
+{
+  "label": "Certifications &amp; compliance",
+  "heading": "Certified. Compliant. Trusted.",
+  "items": ["FSSAI", "ISO", "BIS", "HACCP", "GMP"],
+  "ctaText": "View all certifications",
+  "ctaLink": "/page/manufacturing",
+  "gallery": [
+    { "image": "", "caption": "" }
+  ]
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>label</code></td>
+                  <td>string</td>
+                  <td>Small label above heading</td>
+                </tr>
+                <tr>
+                  <td><code>heading</code></td>
+                  <td>string</td>
+                  <td>Main heading</td>
+                </tr>
+                <tr>
+                  <td><code>items</code></td>
+                  <td>string[]</td>
+                  <td>Certification names</td>
+                </tr>
+                <tr>
+                  <td><code>ctaText</code></td>
+                  <td>string</td>
+                  <td>CTA button label</td>
+                </tr>
+                <tr>
+                  <td><code>ctaLink</code></td>
+                  <td>string</td>
+                  <td>CTA destination</td>
+                </tr>
+                <tr>
+                  <td><code>gallery[].image</code></td>
+                  <td>string</td>
+                  <td>Certificate image URL</td>
+                </tr>
+                <tr>
+                  <td><code>gallery[].caption</code></td>
+                  <td>string</td>
+                  <td>Image caption</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Leadership</h4>
+            <p>Team/director profile cards.</p>
+            <pre>
+{
+  "label": "Leadership",
+  "heading": "Meet the leadership",
+  "ctaText": "Read full story",
+  "ctaLink": "/page/about-us",
+  "members": [
+    { "name": "Director name", "role": "Co-founder &amp; Director", "bio": "20+ yrs FMCG distribution...", "image": "" },
+    { "name": "Director name", "role": "Co-founder &amp; Director", "bio": "Operations &amp; manufacturing lead...", "image": "" }
+  ]
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>label</code></td>
+                  <td>string</td>
+                  <td>Small label above heading</td>
+                </tr>
+                <tr>
+                  <td><code>heading</code></td>
+                  <td>string</td>
+                  <td>Main heading</td>
+                </tr>
+                <tr>
+                  <td><code>ctaText</code></td>
+                  <td>string</td>
+                  <td>CTA button label</td>
+                </tr>
+                <tr>
+                  <td><code>ctaLink</code></td>
+                  <td>string</td>
+                  <td>CTA destination</td>
+                </tr>
+                <tr>
+                  <td><code>members[].name</code></td>
+                  <td>string</td>
+                  <td>Person's name</td>
+                </tr>
+                <tr>
+                  <td><code>members[].role</code></td>
+                  <td>string</td>
+                  <td>Their title</td>
+                </tr>
+                <tr>
+                  <td><code>members[].bio</code></td>
+                  <td>string</td>
+                  <td>Biography text</td>
+                </tr>
+                <tr>
+                  <td><code>members[].image</code></td>
+                  <td>string</td>
+                  <td>Profile photo URL</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Partner Logos</h4>
+            <p>Logo grid with optional testimonials.</p>
+            <pre>
+{
+  "heading": "Trusted by brands across India",
+  "logos": ["", "", ""],
+  "testimonials": [
+    { "quote": "\"Consistent quality, on-time delivery...\"", "author": "Brand name, City" },
+    { "quote": "\"Private label setup was smooth...\"", "author": "Distributor name, State" },
+    { "quote": "\"Scale, hygiene standards and response time...\"", "author": "Company name, State" }
+  ]
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>heading</code></td>
+                  <td>string</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td><code>logos</code></td>
+                  <td>string[]</td>
+                  <td>Logo image URLs</td>
+                </tr>
+                <tr>
+                  <td><code>testimonials[].quote</code></td>
+                  <td>string</td>
+                  <td>Testimonial text</td>
+                </tr>
+                <tr>
+                  <td><code>testimonials[].author</code></td>
+                  <td>string</td>
+                  <td>Attribution</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Lead Capture</h4>
+            <p>Customisable enquiry form with configurable fields.</p>
+            <pre>
+{
+  "label": "Looking for a manufacturing partner?",
+  "heading": "Let's talk manufacturing",
+  "description": "Fill in your details...",
+  "successMessage": "Enquiry submitted! We'll get back to you...",
+  "apiEndpoint": "/api/enquiries",
+  "submitText": "Submit enquiry &mdash; we'll call you back",
+  "disclaimer": "Data goes directly to CRM...",
+  "fields": [
+    { "name": "name", "label": "Your name", "type": "text", "required": true, "placeholder": "Your name *" },
+    { "name": "company", "label": "Company name", "type": "text", "required": true, "placeholder": "Company name *" },
+    { "name": "phone", "label": "Phone number", "type": "tel", "required": true, "placeholder": "Phone number *" },
+    { "name": "email", "label": "Email address", "type": "email", "required": false, "placeholder": "Email address" },
+    { "name": "requirement", "label": "Requirement type", "type": "select", "required": false, "placeholder": "Requirement type", "options": ["Bulk order", "Private label", "Distribution", "Investment", "Other"] },
+    { "name": "city", "label": "City / state", "type": "text", "required": false, "placeholder": "City / state" }
+  ],
+  "messageField": true,
+  "bgColor": "#016129"
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>label</code></td>
+                  <td>string</td>
+                  <td>Small label above form</td>
+                </tr>
+                <tr>
+                  <td><code>heading</code></td>
+                  <td>string</td>
+                  <td>Form heading</td>
+                </tr>
+                <tr>
+                  <td><code>description</code></td>
+                  <td>string</td>
+                  <td>Form description</td>
+                </tr>
+                <tr>
+                  <td><code>successMessage</code></td>
+                  <td>string</td>
+                  <td>Message shown after submit</td>
+                </tr>
+                <tr>
+                  <td><code>apiEndpoint</code></td>
+                  <td>string</td>
+                  <td>
+                    Backend endpoint (default: <code>/api/enquiries</code>)
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>submitText</code></td>
+                  <td>string</td>
+                  <td>Submit button label</td>
+                </tr>
+                <tr>
+                  <td><code>disclaimer</code></td>
+                  <td>string</td>
+                  <td>Small text below form</td>
+                </tr>
+                <tr>
+                  <td><code>fields[]</code></td>
+                  <td>array</td>
+                  <td>Form field definitions</td>
+                </tr>
+                <tr>
+                  <td><code>fields[].name</code></td>
+                  <td>string</td>
+                  <td>Field identifier (lowercase, no spaces)</td>
+                </tr>
+                <tr>
+                  <td><code>fields[].label</code></td>
+                  <td>string</td>
+                  <td>Field label</td>
+                </tr>
+                <tr>
+                  <td><code>fields[].type</code></td>
+                  <td>
+                    <code>"text"</code> <code>"tel"</code> <code>"email"</code>
+                    <code>"select"</code>
+                  </td>
+                  <td>Input type</td>
+                </tr>
+                <tr>
+                  <td><code>fields[].required</code></td>
+                  <td>boolean</td>
+                  <td>Whether the field is mandatory</td>
+                </tr>
+                <tr>
+                  <td><code>fields[].placeholder</code></td>
+                  <td>string</td>
+                  <td>Placeholder text</td>
+                </tr>
+                <tr>
+                  <td><code>fields[].options</code></td>
+                  <td>string[]</td>
+                  <td>Dropdown options (only for <code>select</code> type)</td>
+                </tr>
+                <tr>
+                  <td><code>messageField</code></td>
+                  <td>boolean</td>
+                  <td>Show a multi-line message textarea</td>
+                </tr>
+                <tr>
+                  <td><code>bgColor</code></td>
+                  <td>string</td>
+                  <td>Form background hex colour</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Blog Grid</h4>
+            <p>Recent blog posts grid/carousel.</p>
+            <pre>
+{
+  "title": "Latest from our blog",
+  "maxPosts": 6,
+  "layout": "grid",
+  "categoryId": "",
+  "showFeatured": true
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>title</code></td>
+                  <td>string</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td><code>maxPosts</code></td>
+                  <td>number</td>
+                  <td>Max posts to show</td>
+                </tr>
+                <tr>
+                  <td><code>layout</code></td>
+                  <td>
+                    <code>"grid"</code> <code>"list"</code>
+                    <code>"carousel"</code>
+                  </td>
+                  <td>Display layout</td>
+                </tr>
+                <tr>
+                  <td><code>categoryId</code></td>
+                  <td>string</td>
+                  <td>Filter by blog category</td>
+                </tr>
+                <tr>
+                  <td><code>showFeatured</code></td>
+                  <td>boolean</td>
+                  <td>Show featured post first</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Pricing Table</h4>
+            <p>Three-tier pricing comparison with features list.</p>
+            <pre>
+{
+  "title": "Our Pricing",
+  "description": "Choose the plan that suits your needs",
+  "tiers": [
+    { "name": "Basic", "price": "₹___", "description": "For small businesses", "features": ["Feature 1", "Feature 2", "Feature 3"], "ctaText": "Get started", "ctaLink": "/contact", "highlighted": false },
+    { "name": "Professional", "price": "₹___", "description": "For growing companies", "features": ["Feature 1", "Feature 2", "Feature 3", "Feature 4"], "ctaText": "Get started", "ctaLink": "/contact", "highlighted": true },
+    { "name": "Enterprise", "price": "Custom", "description": "For large organizations", "features": ["Feature 1", "Feature 2", "Feature 3", "Feature 4", "Feature 5"], "ctaText": "Contact us", "ctaLink": "/contact", "highlighted": false }
+  ]
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>title</code></td>
+                  <td>string</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td><code>description</code></td>
+                  <td>string</td>
+                  <td>Section description</td>
+                </tr>
+                <tr>
+                  <td><code>tiers[].name</code></td>
+                  <td>string</td>
+                  <td>Tier name</td>
+                </tr>
+                <tr>
+                  <td><code>tiers[].price</code></td>
+                  <td>string</td>
+                  <td>Price display text</td>
+                </tr>
+                <tr>
+                  <td><code>tiers[].description</code></td>
+                  <td>string</td>
+                  <td>Tier description</td>
+                </tr>
+                <tr>
+                  <td><code>tiers[].features</code></td>
+                  <td>string[]</td>
+                  <td>Feature bullet list</td>
+                </tr>
+                <tr>
+                  <td><code>tiers[].ctaText</code></td>
+                  <td>string</td>
+                  <td>Button label</td>
+                </tr>
+                <tr>
+                  <td><code>tiers[].ctaLink</code></td>
+                  <td>string</td>
+                  <td>Button destination</td>
+                </tr>
+                <tr>
+                  <td><code>tiers[].highlighted</code></td>
+                  <td>boolean</td>
+                  <td>Mark as featured/spotlight</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Sticky CTA</h4>
+            <p>
+              Fixed-position bar at the bottom of the viewport for quick
+              actions.
+            </p>
+            <pre>
+{
+  "visible": false,
+  "text": "Ready to manufacture at scale?",
+  "buttons": [
+    { "text": "Get bulk quote", "type": "primary", "action": "enquiry", "link": "#contact" },
+    { "text": "WhatsApp us", "type": "whatsapp", "action": "whatsapp", "link": "https://wa.me/91XXXXXXXXXX" },
+    { "text": "+91 XXXXX XXXXX", "type": "phone", "action": "phone", "link": "tel:+91XXXXXXXXXX" }
+  ]
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>visible</code></td>
+                  <td>boolean</td>
+                  <td>Show/hide the bar</td>
+                </tr>
+                <tr>
+                  <td><code>text</code></td>
+                  <td>string</td>
+                  <td>CTA message text</td>
+                </tr>
+                <tr>
+                  <td><code>buttons[].text</code></td>
+                  <td>string</td>
+                  <td>Button label</td>
+                </tr>
+                <tr>
+                  <td><code>buttons[].type</code></td>
+                  <td>
+                    <code>"primary"</code> <code>"whatsapp"</code>
+                    <code>"phone"</code>
+                  </td>
+                  <td>Button style variant</td>
+                </tr>
+                <tr>
+                  <td><code>buttons[].action</code></td>
+                  <td>
+                    <code>"enquiry"</code> <code>"whatsapp"</code>
+                    <code>"phone"</code> <code>"link"</code>
+                  </td>
+                  <td>Action type</td>
+                </tr>
+                <tr>
+                  <td><code>buttons[].link</code></td>
+                  <td>string</td>
+                  <td>Destination URL or page</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Hero Split</h4>
+            <p>Two-column hero with text on one side and optional media.</p>
+            <pre>
+{
+  "title": "Your headline here",
+  "subtitle": "Supporting text goes here",
+  "description": "",
+  "backgroundImage": "",
+  "height": "medium",
+  "alignment": "left",
+  "buttons": [
+    { "text": "Primary CTA", "link": "/contact", "variant": "primary" },
+    { "text": "Secondary CTA", "link": "/distribution", "variant": "outline" }
+  ],
+  "badges": [],
+  "ctaButtonColor": "var(--primary)",
+  "ctaTextColor": "#FFFFFF",
+  "showButton": true,
+  "fullWidth": true
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>title</code></td>
+                  <td>string</td>
+                  <td>Main heading</td>
+                </tr>
+                <tr>
+                  <td><code>subtitle</code></td>
+                  <td>string</td>
+                  <td>Sub-heading</td>
+                </tr>
+                <tr>
+                  <td><code>description</code></td>
+                  <td>string</td>
+                  <td>Additional text</td>
+                </tr>
+                <tr>
+                  <td><code>backgroundImage</code></td>
+                  <td>string</td>
+                  <td>Background image URL</td>
+                </tr>
+                <tr>
+                  <td><code>height</code></td>
+                  <td>string</td>
+                  <td>Height preset</td>
+                </tr>
+                <tr>
+                  <td><code>alignment</code></td>
+                  <td><code>"left"</code> <code>"center"</code></td>
+                  <td>Text alignment</td>
+                </tr>
+                <tr>
+                  <td><code>buttons[].text</code></td>
+                  <td>string</td>
+                  <td>Button label</td>
+                </tr>
+                <tr>
+                  <td><code>buttons[].link</code></td>
+                  <td>string</td>
+                  <td>Destination</td>
+                </tr>
+                <tr>
+                  <td><code>buttons[].variant</code></td>
+                  <td><code>"primary"</code> <code>"outline"</code></td>
+                  <td>Button style</td>
+                </tr>
+                <tr>
+                  <td><code>badges</code></td>
+                  <td>string[]</td>
+                  <td>Badge labels</td>
+                </tr>
+                <tr>
+                  <td><code>ctaButtonColor</code></td>
+                  <td>string</td>
+                  <td>Button colour</td>
+                </tr>
+                <tr>
+                  <td><code>ctaTextColor</code></td>
+                  <td>string</td>
+                  <td>Button text colour</td>
+                </tr>
+                <tr>
+                  <td><code>showButton</code></td>
+                  <td>boolean</td>
+                  <td>Show buttons</td>
+                </tr>
+                <tr>
+                  <td><code>fullWidth</code></td>
+                  <td>boolean</td>
+                  <td>Full browser width</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Timeline</h4>
+            <p>Company history / milestone timeline.</p>
+            <pre>
+{
+  "title": "Our Journey",
+  "subtitle": "How we got here",
+  "items": [
+    { "year": "2010", "title": "Founded", "description": "Company established." },
+    { "year": "2015", "title": "Expansion", "description": "New facility and production lines." },
+    { "year": "Today", "title": "Growing", "description": "Serving brands across India.", "current": true }
+  ]
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>title</code></td>
+                  <td>string</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td><code>subtitle</code></td>
+                  <td>string</td>
+                  <td>Section sub-heading</td>
+                </tr>
+                <tr>
+                  <td><code>items[].year</code></td>
+                  <td>string</td>
+                  <td>Year label</td>
+                </tr>
+                <tr>
+                  <td><code>items[].title</code></td>
+                  <td>string</td>
+                  <td>Milestone title</td>
+                </tr>
+                <tr>
+                  <td><code>items[].description</code></td>
+                  <td>string</td>
+                  <td>Detailed description</td>
+                </tr>
+                <tr>
+                  <td><code>items[].current</code></td>
+                  <td>boolean</td>
+                  <td>Mark as current/recent</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Metrics Bar</h4>
+            <p>Horizontal statistics bar (numbers with labels).</p>
+            <pre>
+{
+  "stats": [
+    { "value": "5", "label": "Production lines" },
+    { "value": "5,000+", "label": "MT / year capacity" },
+    { "value": "80+", "label": "Active SKUs" },
+    { "value": "15+", "label": "Years experience" }
+  ]
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>stats[].value</code></td>
+                  <td>string</td>
+                  <td>The statistic value</td>
+                </tr>
+                <tr>
+                  <td><code>stats[].label</code></td>
+                  <td>string</td>
+                  <td>Description label</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Process Flow</h4>
+            <p>Step-by-step process with optional trust items footer.</p>
+            <pre>
+{
+  "title": "Our Process",
+  "subtitle": "From start to finish",
+  "steps": [
+    { "title": "Step 1", "description": "Description of step 1", "icon": "ClipboardCheck" },
+    { "title": "Step 2", "description": "Description of step 2", "icon": "Settings" },
+    { "title": "Step 3", "description": "Description of step 3", "icon": "CheckCircle" }
+  ],
+  "trustItems": ["Quality assured", "Batch tracked", "Certified process"]
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>title</code></td>
+                  <td>string</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td><code>subtitle</code></td>
+                  <td>string</td>
+                  <td>Section sub-heading</td>
+                </tr>
+                <tr>
+                  <td><code>steps[].title</code></td>
+                  <td>string</td>
+                  <td>Step title</td>
+                </tr>
+                <tr>
+                  <td><code>steps[].description</code></td>
+                  <td>string</td>
+                  <td>Step description</td>
+                </tr>
+                <tr>
+                  <td><code>steps[].icon</code></td>
+                  <td>string</td>
+                  <td>Lucide icon name</td>
+                </tr>
+                <tr>
+                  <td><code>trustItems</code></td>
+                  <td>string[]</td>
+                  <td>Checkmark list below the steps</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Packaging Grid</h4>
+            <p>
+              Three-card packaging format comparison with highlight support.
+            </p>
+            <pre>
+{
+  "title": "Packaging formats",
+  "subtitle": "Choose what works for your business",
+  "items": [
+    { "title": "Branded retail", "description": "Ready-branded packs for distributors", "tag": "Distributor friendly", "highlight": false },
+    { "title": "Private label", "description": "Your brand, our manufacturing", "tag": "Most requested", "highlight": true },
+    { "title": "Bulk / institutional", "description": "5kg, 10kg, 25kg formats", "tag": "Bulk format", "highlight": false }
+  ]
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>title</code></td>
+                  <td>string</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td><code>subtitle</code></td>
+                  <td>string</td>
+                  <td>Section sub-heading</td>
+                </tr>
+                <tr>
+                  <td><code>items[].title</code></td>
+                  <td>string</td>
+                  <td>Card title</td>
+                </tr>
+                <tr>
+                  <td><code>items[].description</code></td>
+                  <td>string</td>
+                  <td>Card description</td>
+                </tr>
+                <tr>
+                  <td><code>items[].tag</code></td>
+                  <td>string</td>
+                  <td>Tag label</td>
+                </tr>
+                <tr>
+                  <td><code>items[].highlight</code></td>
+                  <td>boolean</td>
+                  <td>Highlight card with accent border</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Certification Cards</h4>
+            <p>Certification badges with footer text.</p>
+            <pre>
+{
+  "title": "Certified. Audited. Trusted.",
+  "certs": [
+    { "name": "FSSAI", "description": "Food safety &amp; standards authority" },
+    { "name": "ISO", "description": "Quality management systems" },
+    { "name": "BIS", "description": "Bureau of Indian standards" }
+  ],
+  "footerText": "All certifications are current and regularly renewed."
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>title</code></td>
+                  <td>string</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td><code>certs[].name</code></td>
+                  <td>string</td>
+                  <td>Certification name</td>
+                </tr>
+                <tr>
+                  <td><code>certs[].description</code></td>
+                  <td>string</td>
+                  <td>Description</td>
+                </tr>
+                <tr>
+                  <td><code>footerText</code></td>
+                  <td>string</td>
+                  <td>Text below the cards</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Address Cards</h4>
+            <p>Location cards for factory, office, and visit information.</p>
+            <pre>
+{
+  "title": "Our locations",
+  "cards": [
+    { "type": "factory", "title": "Manufacturing facility", "address": "[Factory address]", "badge": "Primary" },
+    { "type": "office", "title": "Corporate office", "address": "[Office address]", "badge": "" },
+    { "type": "visit", "title": "Planning a factory visit?", "description": "We welcome B2B buyers..." }
+  ]
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>title</code></td>
+                  <td>string</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td><code>cards[].type</code></td>
+                  <td>
+                    <code>"factory"</code> <code>"office"</code>
+                    <code>"visit"</code>
+                  </td>
+                  <td>Card type (affects icon)</td>
+                </tr>
+                <tr>
+                  <td><code>cards[].title</code></td>
+                  <td>string</td>
+                  <td>Card title</td>
+                </tr>
+                <tr>
+                  <td><code>cards[].address</code></td>
+                  <td>string</td>
+                  <td>Address text</td>
+                </tr>
+                <tr>
+                  <td><code>cards[].badge</code></td>
+                  <td>string</td>
+                  <td>Badge label</td>
+                </tr>
+                <tr>
+                  <td><code>cards[].description</code></td>
+                  <td>string</td>
+                  <td>Description text (for visit cards)</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Quick Connect</h4>
+            <p>Contact channel buttons (WhatsApp, phone, email, etc.).</p>
+            <pre>
+{
+  "title": "Prefer a quicker channel?",
+  "channels": [
+    { "type": "whatsapp", "title": "WhatsApp us", "description": "Quick questions, product photos", "value": "+91 XXXXX XXXXX" },
+    { "type": "phone", "title": "Call us directly", "description": "For urgent requirements", "value": "+91 XXXXX XXXXX" },
+    { "type": "email", "title": "Email us", "description": "For detailed enquiries", "value": "sales@purvabites.com" },
+    { "type": "distribution", "title": "View Distribution", "description": "Explore distribution options", "value": "Pan-India coverage" }
+  ]
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>title</code></td>
+                  <td>string</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td><code>channels[].type</code></td>
+                  <td>
+                    <code>"whatsapp"</code> <code>"phone"</code>
+                    <code>"email"</code> <code>"distribution"</code>
+                  </td>
+                  <td>Channel type</td>
+                </tr>
+                <tr>
+                  <td><code>channels[].title</code></td>
+                  <td>string</td>
+                  <td>Display title</td>
+                </tr>
+                <tr>
+                  <td><code>channels[].description</code></td>
+                  <td>string</td>
+                  <td>Description text</td>
+                </tr>
+                <tr>
+                  <td><code>channels[].value</code></td>
+                  <td>string</td>
+                  <td>The actual contact info</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>CRM Flow</h4>
+            <p>Visual step-by-step of the post-enquiry process.</p>
+            <pre>
+{
+  "title": "What happens after you get in touch",
+  "steps": [
+    { "num": 1, "title": "Enquiry received", "description": "Logged in CRM automatically" },
+    { "num": 2, "title": "Auto-acknowledgement", "description": "Email confirmation within minutes" },
+    { "num": 3, "title": "Sales team review", "description": "Routed to the right person" },
+    { "num": 4, "title": "First response", "description": "Call or WhatsApp within 4-24 hours" },
+    { "num": 5, "title": "Proposal / sample", "description": "Pricing or sample dispatch" }
+  ]
+}</pre
+            >
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>title</code></td>
+                  <td>string</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td><code>steps[].num</code></td>
+                  <td>number</td>
+                  <td>Step number</td>
+                </tr>
+                <tr>
+                  <td><code>steps[].title</code></td>
+                  <td>string</td>
+                  <td>Step title</td>
+                </tr>
+                <tr>
+                  <td><code>steps[].description</code></td>
+                  <td>string</td>
+                  <td>Step description</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          <hr />
+
+          <section id="page-content-blocks">
+            <h2 id="page-content-blocks">
+              Page Content Blocks
+              <a
+                href="#page-content-blocks"
+                class="bookmark-link"
+                title="Bookmark"
+                >#</a
+              >
+            </h2>
+            <p>
+              These are <strong>nested JSON payloads</strong> that control
+              entire page layouts. Each maps to a specific page in the
+              storefront. Unlike simple blocks, these contain the full page data
+              in one block.
+            </p>
+            <blockquote>
+              <p>
+                <strong>Important:</strong> Page Content Blocks must be edited
+                using the <strong>JSON Editor</strong> tab. The UI Editor will
+                show a notice indicating nested fields are only editable via
+                JSON.
+              </p>
+            </blockquote>
+
+            <hr />
+
+            <h3 id="content-manufacturing">
+              <code>manufacturing-content</code>
+              <a
+                href="#content-manufacturing"
+                class="bookmark-link"
+                title="Bookmark"
+                >#</a
+              >
+            </h3>
+            <p>
+              Controls the <strong>Manufacturing</strong> page
+              (<code>/manufacturing</code>). Renders: hero banner, intro +
+              metrics, production lines (interactive tabs), quality process,
+              private label section, certifications, and lead capture form.
+            </p>
+
+            <pre>
+{
+  "hero": {
+    "title": "State-of-the-art FMCG Food Contract Manufacturing",
+    "subtitle": "From raw material to finished, packaged goods - at scale, with precision, under one roof",
+    "badge": "FSSAI Certified &middot; ISO Compliant &middot; 100% Own Manufacturing",
+    "backgroundImage": "https://res.cloudinary.com/.../image/upload/...jpg"
+  },
+  "metrics": [
+    { "value": "7", "label": "Production lines" },
+    { "value": "1,000+", "label": "MT / year capacity" },
+    { "value": "55+", "label": "Active SKUs" },
+    { "value": "17+", "label": "Years experience" }
+  ],
+  "intro": {
+    "heading": "Built to Manufacture. Not to Outsource.",
+    "description": "Every product that leaves our facility is made in-house on our machinery..."
+  },
+  "productionLines": [
+    {
+      "id": "khakhra",
+      "name": "Roasted Khakhra",
+      "flagship": true,
+      "capacity": "1,000 kg",
+      "variants": "12+ flavours",
+      "packs": "200g &middot; Bulk",
+      "desc": "Made from fresh wheat, ground in-house...",
+      "tags": ["100% Roasted, Never Fried", "Fresh Wheat, Ground In-House"],
+      "ctaText": "View Products →",
+      "ctaLink": "/product/coin-khakhra-manufacturer-india",
+      "ctaEnabled": true,
+      "image": "https://res.cloudinary.com/...jpg"
+    }
+  ],
+  "qualitySteps": [
+    { "icon": "Leaf", "color": "bg-primary/10 text-primary", "title": "Raw material intake", "desc": "Supplier grading, moisture check, lab testing before acceptance" },
+    { "icon": "Filter", "color": "bg-emerald-50 text-emerald-600", "title": "Cleaning &amp; prep", "desc": "Sieving, washing, pre-treatment as per product spec" },
+    { "icon": "Flame", "color": "bg-amber-50 text-amber-600", "title": "Production", "desc": "Automated processing on dedicated line" },
+    { "icon": "Microscope", "color": "bg-orange-50 text-orange-600", "title": "In-line QC checks", "desc": "Colour, texture, weight, taste checks at every 30 min intervals" },
+    { "icon": "Package", "color": "bg-blue-50 text-blue-600", "title": "Packaging", "desc": "Auto-fill, seal, label" },
+    { "icon": "Truck", "color": "bg-green-50 text-green-700", "title": "Dispatch", "desc": "Lot-tagged, batch-coded, climate-appropriate loading &amp; dispatch" }
+  ],
+  "qualityFooterItems": [
+    "Batch traceability maintained",
+    "Staff in hygienic uniforms &amp; gloves",
+    "CCTV-monitored production areas",
+    "Third-party lab testing on request"
+  ],
+  "privateLabel": {
+    "heading": "Your brand. Our factory.",
+    "subtitle": "We handle the entire manufacturing and packaging process - you bring the brand identity",
+    "items": [
+      { "icon": "Package", "title": "Custom packaging", "desc": "Supply your artwork / brief - we print and pack under your brand" },
+      { "icon": "Settings", "title": "Custom formulation", "desc": "Adjust flavour, spice levels, ingredients" },
+      { "icon": "ShieldCheck", "title": "Regulatory compliance handled", "desc": "FSSAI declaration, nutritional labels, batch coding" }
+    ],
+    "details": [
+      { "label": "Minimum order qty (MOQ)", "value": "As per product - share requirement" },
+      { "label": "Lead time (first batch)", "value": "15-21 working days" },
+      { "label": "Pack size flexibility", "value": "10g to 1kg - all sizes" },
+      { "label": "NDA / confidentiality", "value": "Available on request" },
+      { "label": "Sample order", "value": "Available before bulk" }
+    ],
+    "ctaText": "Enquire for private label →",
+    "ctaLink": "#contact"
+  },
+  "certifications": [
+    { "name": "FSSAI licence", "desc": "Food safety &amp; standards authority" },
+    { "name": "ISO certification", "desc": "Quality management systems" },
+    { "name": "BIS certification", "desc": "Bureau of Indian standards" }
+  ],
+  "cta": {
+    "title": "Ready to see it for yourself?",
+    "subtitle": "Share your details - we'll get back within 24 hours",
+    "formBgColor": "#2639ED",
+    "formTextColor": "#FFFFFF"
+  }
+}</pre
+            >
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>hero.title</code></td>
+                  <td>string</td>
+                  <td>Main hero heading</td>
+                </tr>
+                <tr>
+                  <td><code>hero.subtitle</code></td>
+                  <td>string</td>
+                  <td>Hero sub-heading</td>
+                </tr>
+                <tr>
+                  <td><code>hero.badge</code></td>
+                  <td>string</td>
+                  <td>Badge text</td>
+                </tr>
+                <tr>
+                  <td><code>hero.backgroundImage</code></td>
+                  <td>string</td>
+                  <td>Hero background image URL</td>
+                </tr>
+                <tr>
+                  <td><code>metrics[].value</code></td>
+                  <td>string</td>
+                  <td>Statistic value</td>
+                </tr>
+                <tr>
+                  <td><code>metrics[].label</code></td>
+                  <td>string</td>
+                  <td>Statistic label</td>
+                </tr>
+                <tr>
+                  <td><code>intro.heading</code></td>
+                  <td>string</td>
+                  <td>Intro section heading</td>
+                </tr>
+                <tr>
+                  <td><code>intro.description</code></td>
+                  <td>string</td>
+                  <td>Intro paragraph</td>
+                </tr>
+                <tr>
+                  <td><code>productionLines[].id</code></td>
+                  <td>string</td>
+                  <td>Unique identifier (used as tab key)</td>
+                </tr>
+                <tr>
+                  <td><code>productionLines[].name</code></td>
+                  <td>string</td>
+                  <td>Display name on tab button</td>
+                </tr>
+                <tr>
+                  <td><code>productionLines[].flagship</code></td>
+                  <td>boolean</td>
+                  <td>Show "Flagship line" badge</td>
+                </tr>
+                <tr>
+                  <td><code>productionLines[].capacity</code></td>
+                  <td>string</td>
+                  <td>Daily capacity display</td>
+                </tr>
+                <tr>
+                  <td><code>productionLines[].variants</code></td>
+                  <td>string</td>
+                  <td>Variant count display</td>
+                </tr>
+                <tr>
+                  <td><code>productionLines[].packs</code></td>
+                  <td>string</td>
+                  <td>Pack size options</td>
+                </tr>
+                <tr>
+                  <td><code>productionLines[].desc</code></td>
+                  <td>string</td>
+                  <td>Detailed description</td>
+                </tr>
+                <tr>
+                  <td><code>productionLines[].tags</code></td>
+                  <td>string[]</td>
+                  <td>Tag badges</td>
+                </tr>
+                <tr>
+                  <td><code>productionLines[].ctaText</code></td>
+                  <td>string</td>
+                  <td>CTA button label (renders only if non-empty)</td>
+                </tr>
+                <tr>
+                  <td><code>productionLines[].ctaLink</code></td>
+                  <td>string</td>
+                  <td>Button destination</td>
+                </tr>
+                <tr>
+                  <td><code>productionLines[].ctaEnabled</code></td>
+                  <td>boolean</td>
+                  <td>Show/hide the CTA button</td>
+                </tr>
+                <tr>
+                  <td><code>productionLines[].image</code></td>
+                  <td>string</td>
+                  <td>Production line image</td>
+                </tr>
+                <tr>
+                  <td><code>qualitySteps[].icon</code></td>
+                  <td>string</td>
+                  <td>Lucide icon name</td>
+                </tr>
+                <tr>
+                  <td><code>qualitySteps[].color</code></td>
+                  <td>string</td>
+                  <td>Tailwind CSS colour classes</td>
+                </tr>
+                <tr>
+                  <td><code>qualitySteps[].title</code></td>
+                  <td>string</td>
+                  <td>Step heading</td>
+                </tr>
+                <tr>
+                  <td><code>qualitySteps[].desc</code></td>
+                  <td>string</td>
+                  <td>Step description</td>
+                </tr>
+                <tr>
+                  <td><code>qualityFooterItems</code></td>
+                  <td>string[]</td>
+                  <td>Checkmark items below quality section</td>
+                </tr>
+                <tr>
+                  <td><code>privateLabel.heading</code></td>
+                  <td>string</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td><code>privateLabel.subtitle</code></td>
+                  <td>string</td>
+                  <td>Section sub-heading</td>
+                </tr>
+                <tr>
+                  <td><code>privateLabel.items[].icon</code></td>
+                  <td>string</td>
+                  <td>Lucide icon</td>
+                </tr>
+                <tr>
+                  <td><code>privateLabel.items[].title</code></td>
+                  <td>string</td>
+                  <td>Item title</td>
+                </tr>
+                <tr>
+                  <td><code>privateLabel.items[].desc</code></td>
+                  <td>string</td>
+                  <td>Item description</td>
+                </tr>
+                <tr>
+                  <td><code>privateLabel.details[].label</code></td>
+                  <td>string</td>
+                  <td>Detail row label</td>
+                </tr>
+                <tr>
+                  <td><code>privateLabel.details[].value</code></td>
+                  <td>string</td>
+                  <td>Detail row value</td>
+                </tr>
+                <tr>
+                  <td><code>privateLabel.ctaText</code></td>
+                  <td>string</td>
+                  <td>CTA button label</td>
+                </tr>
+                <tr>
+                  <td><code>privateLabel.ctaLink</code></td>
+                  <td>string</td>
+                  <td>Button destination</td>
+                </tr>
+                <tr>
+                  <td><code>certifications[].name</code></td>
+                  <td>string</td>
+                  <td>Certification name</td>
+                </tr>
+                <tr>
+                  <td><code>certifications[].desc</code></td>
+                  <td>string</td>
+                  <td>Description</td>
+                </tr>
+                <tr>
+                  <td><code>cta.title</code></td>
+                  <td>string</td>
+                  <td>Lead capture form heading</td>
+                </tr>
+                <tr>
+                  <td><code>cta.subtitle</code></td>
+                  <td>string</td>
+                  <td>Form sub-heading</td>
+                </tr>
+                <tr>
+                  <td><code>cta.formBgColor</code></td>
+                  <td>string</td>
+                  <td>Form background colour</td>
+                </tr>
+                <tr>
+                  <td><code>cta.formTextColor</code></td>
+                  <td>string</td>
+                  <td>Form text colour</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <hr />
+
+            <h3 id="content-about">
+              <code>about-page-content</code>
+              <a href="#content-about" class="bookmark-link" title="Bookmark"
+                >#</a
+              >
+            </h3>
+            <p>
+              Controls the <strong>About</strong> page (<code>/about</code>).
+              Renders: hero, company story, stats, timeline, directors, quote,
+              mission/vision/values, factory location with logistics, and CTA
+              cards.
+            </p>
+
+            <pre>
+{
+  "hero": {
+    "title": "Built on trust. Driven by quality.",
+    "subtitle": "From a distribution background to a full-scale FMCG manufacturing company",
+    "estYear": "Est. 2010 &middot; Gujarat, India",
+    "backgroundImage": "",
+    "backgroundColor": "#3d6f08",
+    "pattern": "none",
+    "overlayColor": "#1c1917",
+    "overlayOpacity": "0.45",
+    "badge": ""
+  },
+  "stats": [
+    { "value": "15+", "label": "Years in business" },
+    { "value": "5", "label": "Production lines" },
+    { "value": "5,000+", "label": "MT / year" },
+    { "value": "80+", "label": "Active SKUs" }
+  ],
+  "story": {
+    "heading": "How we got here",
+    "subtitle": "A business built from the ground up...",
+    "narrative": [
+      "The founders began their journey in FMCG distribution...",
+      "That ground-level experience gave them a perspective...",
+      "Today, Purva Bites operates a state-of-the-art manufacturing facility..."
+    ],
+    "ctaText": "Meet the founders →",
+    "ctaPage": "manufacturing",
+    "timeline": [
+      { "year": "2010", "title": "Founded", "desc": "Purva Bites was established..." },
+      { "year": "2015", "title": "First manufacturing unit", "desc": "Opened own production facility..." },
+      { "year": "2018", "title": "Expansion", "desc": "Added new production lines..." },
+      { "year": "2020", "title": "Quality certification", "desc": "Achieved FSSAI certification..." },
+      { "year": "2023", "title": "Scale-up", "desc": "Expanded to multiple product categories..." },
+      { "year": "Today", "title": "Pan-India presence", "desc": "Serving brands and distributors across India...", "current": true }
+    ]
+  },
+  "directors": [
+    {
+      "name": "[Director name]",
+      "role": "Co-founder &amp; Managing Director",
+      "bio": "With 20+ years of experience in FMCG manufacturing and distribution...",
+      "imageUrl": "",
+      "socialUrl": ""
+    }
+  ],
+  "quote": {
+    "text": "\"The business was built on the belief that quality manufacturing should be accessible...\"",
+    "author": "[Director name], Co-founder"
+  },
+  "ctaCard": {
+    "title": "Direct access to leadership",
+    "desc": "We believe in building partnerships, not just fulfilling orders.",
+    "cta": "Speak to us directly →"
+  },
+  "missionVisionValues": [
+    { "icon": "Target", "color": "text-primary", "bg": "bg-primary/10", "label": "Mission", "title": "Deliver high-quality FMCG products", "desc": "We strive to make premium food products accessible..." },
+    { "icon": "Eye", "color": "text-emerald-600", "bg": "bg-emerald-50", "label": "Vision", "title": "India's most trusted partner", "desc": "Setting benchmarks in quality, innovation and reliability..." },
+    { "icon": "HeartHandshake", "color": "text-amber-600", "bg": "bg-amber-50", "label": "Values", "title": "Integrity. Quality. Partnership.", "desc": "Every decision is guided by these three principles..." }
+  ],
+  "location": {
+    "factoryAddress": "[Factory address line 1]\n[Area / Industrial estate]\n[City, District] - [PIN]\nGujarat, India",
+    "googleMapsEmbedUrl": "",
+    "logistics": [
+      { "icon": "Train", "label": "Nearest railway station", "value": "[Station] - X km" },
+      { "icon": "Plane", "label": "Nearest airport", "value": "[Airport] - X km" },
+      { "icon": "Route", "label": "National highway", "value": "NH-X - X km" },
+      { "icon": "Truck", "label": "Freight terminal", "value": "[Terminal] - X km" }
+    ],
+    "dispatchTags": ["Pan-India dispatch", "Road + rail", "Batch-tracked"],
+    "dispatchDesc": "We dispatch to all major markets across India via road and rail freight."
+  },
+  "cta": {
+    "title": "Ready to work with us?",
+    "cards": [
+      { "icon": "Factory", "title": "See our manufacturing", "desc": "Explore our production lines.", "cta": "View manufacturing →", "page": "manufacturing", "useForm": false },
+      { "icon": "Target", "title": "Distribution enquiry", "desc": "Looking to stock Purva Bites?", "cta": "Send enquiry →", "page": "contact", "useForm": true },
+      { "icon": "Linkedin", "title": "Partner with us", "desc": "Institutional buyers, private label partners.", "cta": "Send enquiry →", "page": "contact", "useForm": true }
+    ]
+  }
+}</pre
+            >
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>hero.title</code></td>
+                  <td>string</td>
+                  <td>Hero heading</td>
+                </tr>
+                <tr>
+                  <td><code>hero.subtitle</code></td>
+                  <td>string</td>
+                  <td>Hero sub-heading</td>
+                </tr>
+                <tr>
+                  <td><code>hero.estYear</code></td>
+                  <td>string</td>
+                  <td>Est. year display</td>
+                </tr>
+                <tr>
+                  <td><code>hero.backgroundImage</code></td>
+                  <td>string</td>
+                  <td>Background image URL</td>
+                </tr>
+                <tr>
+                  <td><code>hero.backgroundColor</code></td>
+                  <td>string</td>
+                  <td>Fallback background colour</td>
+                </tr>
+                <tr>
+                  <td><code>hero.pattern</code></td>
+                  <td>
+                    <code>"none"</code> <code>"dots"</code>
+                    <code>"diagonal"</code> <code>"waves"</code>
+                  </td>
+                  <td>Overlay pattern</td>
+                </tr>
+                <tr>
+                  <td><code>hero.overlayColor</code></td>
+                  <td>string</td>
+                  <td>Overlay tint colour</td>
+                </tr>
+                <tr>
+                  <td><code>hero.overlayOpacity</code></td>
+                  <td>string</td>
+                  <td>Overlay opacity</td>
+                </tr>
+                <tr>
+                  <td><code>hero.badge</code></td>
+                  <td>string</td>
+                  <td>Badge text</td>
+                </tr>
+                <tr>
+                  <td><code>stats[].value</code></td>
+                  <td>string</td>
+                  <td>Statistic</td>
+                </tr>
+                <tr>
+                  <td><code>stats[].label</code></td>
+                  <td>string</td>
+                  <td>Statistic label</td>
+                </tr>
+                <tr>
+                  <td><code>story.heading</code></td>
+                  <td>string</td>
+                  <td>Story section heading</td>
+                </tr>
+                <tr>
+                  <td><code>story.subtitle</code></td>
+                  <td>string</td>
+                  <td>Story section sub-heading</td>
+                </tr>
+                <tr>
+                  <td><code>story.narrative</code></td>
+                  <td>string[]</td>
+                  <td>Paragraphs of the company story</td>
+                </tr>
+                <tr>
+                  <td><code>story.ctaText</code></td>
+                  <td>string</td>
+                  <td>CTA button text</td>
+                </tr>
+                <tr>
+                  <td><code>story.ctaPage</code></td>
+                  <td>string</td>
+                  <td>CTA destination page type</td>
+                </tr>
+                <tr>
+                  <td><code>story.timeline[].year</code></td>
+                  <td>string</td>
+                  <td>Year label</td>
+                </tr>
+                <tr>
+                  <td><code>story.timeline[].title</code></td>
+                  <td>string</td>
+                  <td>Milestone title</td>
+                </tr>
+                <tr>
+                  <td><code>story.timeline[].desc</code></td>
+                  <td>string</td>
+                  <td>Milestone description</td>
+                </tr>
+                <tr>
+                  <td><code>story.timeline[].current</code></td>
+                  <td>boolean</td>
+                  <td>Mark as most recent</td>
+                </tr>
+                <tr>
+                  <td><code>directors[].name</code></td>
+                  <td>string</td>
+                  <td>Director name</td>
+                </tr>
+                <tr>
+                  <td><code>directors[].role</code></td>
+                  <td>string</td>
+                  <td>Director role</td>
+                </tr>
+                <tr>
+                  <td><code>directors[].bio</code></td>
+                  <td>string</td>
+                  <td>Biography</td>
+                </tr>
+                <tr>
+                  <td><code>directors[].imageUrl</code></td>
+                  <td>string</td>
+                  <td>Photo URL</td>
+                </tr>
+                <tr>
+                  <td><code>directors[].socialUrl</code></td>
+                  <td>string</td>
+                  <td>LinkedIn or social URL</td>
+                </tr>
+                <tr>
+                  <td><code>quote.text</code></td>
+                  <td>string</td>
+                  <td>Quote text</td>
+                </tr>
+                <tr>
+                  <td><code>quote.author</code></td>
+                  <td>string</td>
+                  <td>Quote attribution</td>
+                </tr>
+                <tr>
+                  <td><code>quote.authorImage</code></td>
+                  <td>string</td>
+                  <td>Author photo URL</td>
+                </tr>
+                <tr>
+                  <td><code>ctaCard.title</code></td>
+                  <td>string</td>
+                  <td>CTA card heading</td>
+                </tr>
+                <tr>
+                  <td><code>ctaCard.desc</code></td>
+                  <td>string</td>
+                  <td>CTA card description</td>
+                </tr>
+                <tr>
+                  <td><code>ctaCard.cta</code></td>
+                  <td>string</td>
+                  <td>CTA card button text</td>
+                </tr>
+                <tr>
+                  <td><code>missionVisionValues[].icon</code></td>
+                  <td>string</td>
+                  <td>Lucide icon name</td>
+                </tr>
+                <tr>
+                  <td><code>missionVisionValues[].color</code></td>
+                  <td>string</td>
+                  <td>Tailwind text colour</td>
+                </tr>
+                <tr>
+                  <td><code>missionVisionValues[].bg</code></td>
+                  <td>string</td>
+                  <td>Tailwind background colour</td>
+                </tr>
+                <tr>
+                  <td><code>missionVisionValues[].label</code></td>
+                  <td>string</td>
+                  <td>Card label</td>
+                </tr>
+                <tr>
+                  <td><code>missionVisionValues[].title</code></td>
+                  <td>string</td>
+                  <td>Card heading</td>
+                </tr>
+                <tr>
+                  <td><code>missionVisionValues[].desc</code></td>
+                  <td>string</td>
+                  <td>Card description</td>
+                </tr>
+                <tr>
+                  <td><code>location.factoryAddress</code></td>
+                  <td>string</td>
+                  <td>Factory address</td>
+                </tr>
+                <tr>
+                  <td><code>location.googleMapsEmbedUrl</code></td>
+                  <td>string</td>
+                  <td>Google Maps embed URL</td>
+                </tr>
+                <tr>
+                  <td><code>location.logistics[].icon</code></td>
+                  <td>string</td>
+                  <td>Lucide icon name</td>
+                </tr>
+                <tr>
+                  <td><code>location.logistics[].label</code></td>
+                  <td>string</td>
+                  <td>Logistics label</td>
+                </tr>
+                <tr>
+                  <td><code>location.logistics[].value</code></td>
+                  <td>string</td>
+                  <td>Value (e.g. distance)</td>
+                </tr>
+                <tr>
+                  <td><code>location.dispatchTags</code></td>
+                  <td>string[]</td>
+                  <td>Dispatch capability tags</td>
+                </tr>
+                <tr>
+                  <td><code>location.dispatchDesc</code></td>
+                  <td>string</td>
+                  <td>Dispatch description paragraph</td>
+                </tr>
+                <tr>
+                  <td><code>cta.title</code></td>
+                  <td>string</td>
+                  <td>CTA section heading</td>
+                </tr>
+                <tr>
+                  <td><code>cta.cards[].icon</code></td>
+                  <td>string</td>
+                  <td>Lucide icon name</td>
+                </tr>
+                <tr>
+                  <td><code>cta.cards[].title</code></td>
+                  <td>string</td>
+                  <td>Card title</td>
+                </tr>
+                <tr>
+                  <td><code>cta.cards[].desc</code></td>
+                  <td>string</td>
+                  <td>Card description</td>
+                </tr>
+                <tr>
+                  <td><code>cta.cards[].cta</code></td>
+                  <td>string</td>
+                  <td>Card button text</td>
+                </tr>
+                <tr>
+                  <td><code>cta.cards[].page</code></td>
+                  <td>string</td>
+                  <td>Card button destination page</td>
+                </tr>
+                <tr>
+                  <td><code>cta.cards[].useForm</code></td>
+                  <td>boolean</td>
+                  <td>Open enquiry form instead of navigating</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <hr />
+
+            <h3 id="content-contact">
+              <code>contact-page-content</code>
+              <a href="#content-contact" class="bookmark-link" title="Bookmark"
+                >#</a
+              >
+            </h3>
+            <p>
+              Controls the <strong>Contact</strong> page
+              (<code>/contact</code>). Renders: hero with requirement type
+              pills, contact form, response promise table, and location cards.
+            </p>
+
+            <pre>
+{
+  "hero": {
+    "title": "Let's talk about your requirement",
+    "subtitle": "Whether you're looking for bulk supply, private label manufacturing or a distribution partnership - share your requirement and we'll respond within 24 hours",
+    "backgroundImage": "https://res.cloudinary.com/.../image/upload/...jpg"
+  },
+  "formSection": {
+    "title": "Send us your requirement",
+    "subtitle": "Fields marked * are required. We respond within 24 working hours."
+  },
+  "responsePromise": {
+    "title": "Our response commitment",
+    "items": [
+      { "label": "Bulk / PL enquiries", "time": "Within 4 hours" },
+      { "label": "Distribution enquiries", "time": "Within 24 hours" },
+      { "label": "All other enquiries", "time": "Within 24 hours" }
+    ],
+    "footer": "Mon-Sat, 9am-6pm IST"
+  },
+  "locations": {
+    "title": "Our locations",
+    "cards": [
+      {
+        "type": "factory",
+        "title": "Manufacturing &amp; Registered Unit",
+        "subtitle": "Primary",
+        "address": "[Full address with PIN]",
+        "accessibility": "[Station] X km &middot; [Airport] X km",
+        "buttons": [
+          { "text": "Get directions", "icon": "MapPin", "link": "https://maps.google.com/..." },
+          { "text": "Book visit", "icon": "Factory", "link": "" }
+        ]
+      },
+      {
+        "type": "office",
+        "title": "Corporate office",
+        "subtitle": "",
+        "address": "[Office address with PIN]",
+        "accessibility": "Mon-Sat &middot; 10am - 7pm IST",
+        "buttons": [
+          { "text": "Get directions", "icon": "MapPin", "link": "https://maps.google.com/..." }
+        ]
+      },
+      {
+        "type": "visit",
+        "title": "Planning a factory visit?",
+        "description": "We welcome B2B buyers, private and white label partners and distributors...",
+        "highlights": [
+          "Full production line walkthrough",
+          "Warehouse &amp; dispatch area tour",
+          "Meet the directors in person",
+          "Product sampling on request"
+        ],
+        "cta": "Schedule a factory visit →",
+        "link": "#contact-form"
+      }
+    ]
+  }
+}</pre
+            >
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>hero.title</code></td>
+                  <td>string</td>
+                  <td>Hero heading</td>
+                </tr>
+                <tr>
+                  <td><code>hero.subtitle</code></td>
+                  <td>string</td>
+                  <td>Hero sub-heading</td>
+                </tr>
+                <tr>
+                  <td><code>hero.backgroundImage</code></td>
+                  <td>string</td>
+                  <td>Hero background image</td>
+                </tr>
+                <tr>
+                  <td><code>formSection.title</code></td>
+                  <td>string</td>
+                  <td>Contact form heading</td>
+                </tr>
+                <tr>
+                  <td><code>formSection.subtitle</code></td>
+                  <td>string</td>
+                  <td>Contact form description</td>
+                </tr>
+                <tr>
+                  <td><code>responsePromise.title</code></td>
+                  <td>string</td>
+                  <td>Response commitment heading</td>
+                </tr>
+                <tr>
+                  <td><code>responsePromise.items[].label</code></td>
+                  <td>string</td>
+                  <td>Enquiry type label</td>
+                </tr>
+                <tr>
+                  <td><code>responsePromise.items[].time</code></td>
+                  <td>string</td>
+                  <td>Response time</td>
+                </tr>
+                <tr>
+                  <td><code>responsePromise.footer</code></td>
+                  <td>string</td>
+                  <td>Footer text</td>
+                </tr>
+                <tr>
+                  <td><code>locations.title</code></td>
+                  <td>string</td>
+                  <td>Locations section heading</td>
+                </tr>
+                <tr>
+                  <td><code>locations.cards[].type</code></td>
+                  <td>
+                    <code>"factory"</code> <code>"office"</code>
+                    <code>"visit"</code>
+                  </td>
+                  <td>Card type</td>
+                </tr>
+                <tr>
+                  <td><code>locations.cards[].title</code></td>
+                  <td>string</td>
+                  <td>Card title</td>
+                </tr>
+                <tr>
+                  <td><code>locations.cards[].subtitle</code></td>
+                  <td>string</td>
+                  <td>Badge/subtitle</td>
+                </tr>
+                <tr>
+                  <td><code>locations.cards[].address</code></td>
+                  <td>string</td>
+                  <td>Full address</td>
+                </tr>
+                <tr>
+                  <td><code>locations.cards[].accessibility</code></td>
+                  <td>string</td>
+                  <td>Accessibility info</td>
+                </tr>
+                <tr>
+                  <td><code>locations.cards[].description</code></td>
+                  <td>string</td>
+                  <td>Description (visit cards)</td>
+                </tr>
+                <tr>
+                  <td><code>locations.cards[].highlights</code></td>
+                  <td>string[]</td>
+                  <td>Highlight bullets (visit cards)</td>
+                </tr>
+                <tr>
+                  <td><code>locations.cards[].cta</code></td>
+                  <td>string</td>
+                  <td>CTA button text</td>
+                </tr>
+                <tr>
+                  <td><code>locations.cards[].link</code></td>
+                  <td>string</td>
+                  <td>CTA button link</td>
+                </tr>
+                <tr>
+                  <td><code>locations.cards[].buttons[].text</code></td>
+                  <td>string</td>
+                  <td>Button label</td>
+                </tr>
+                <tr>
+                  <td><code>locations.cards[].buttons[].icon</code></td>
+                  <td>string</td>
+                  <td>Lucide icon name</td>
+                </tr>
+                <tr>
+                  <td><code>locations.cards[].buttons[].link</code></td>
+                  <td>string</td>
+                  <td>Button destination</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <hr />
+
+            <h3 id="content-distribution">
+              <code>distribution-content</code>
+              <a
+                href="#content-distribution"
+                class="bookmark-link"
+                title="Bookmark"
+                >#</a
+              >
+            </h3>
+            <p>
+              Controls the <strong>Distribution</strong> page
+              (<code>/distribution</code>). Renders: hero, stats bar,
+              alternating two-column sections, CTA strip, promo banner grid, and
+              lead capture form.
+            </p>
+
+            <pre>
+{
+  "hero": {
+    "title": "Purva Bites Distribution",
+    "subtitle": "Your trusted FMCG distribution partner - pan-India coverage, quality assured supply chain.",
+    "backgroundImage": "https://res.cloudinary.com/...jpg",
+    "ctaText": "Become a Distributor"
+  },
+  "stats": [
+    { "label": "Cities Covered", "value": "500+", "icon": "MapPin" },
+    { "label": "Retail Touch Points", "value": "50K+", "icon": "Package" },
+    { "label": "Years of Excellence", "value": "25+", "icon": "Clock" },
+    { "label": "Product Variants", "value": "100+", "icon": "TrendingUp" }
+  ],
+  "sections": [
+    { "title": "Nationwide Reach", "description": "Our distribution network covers over 500 cities across India...", "imageUrl": "", "imageSide": "left", "icon": "Globe" },
+    { "title": "Quality Assured Supply Chain", "description": "Every product is batch-tracked and quality-checked...", "imageUrl": "", "imageSide": "right", "icon": "Shield" },
+    { "title": "Timely Delivery Commitment", "description": "We maintain a consistent supply chain with on-time delivery...", "imageUrl": "", "imageSide": "left", "icon": "Truck" }
+  ],
+  "promoTitle": "Our Product Range",
+  "promoBanners": [
+    { "image": "", "headline": "Khakhra Range", "description": "Thin, crispy roasted flatbreads in 12+ flavours", "buttonText": "Inquiry" },
+    { "image": "", "headline": "Makhana Range", "description": "Premium roasted fox nuts in 6+ flavours", "buttonText": "Inquiry" },
+    { "image": "", "headline": "Bhakhri Range", "description": "Traditional thick roasted flatbreads", "buttonText": "Inquiry" },
+    { "image": "", "headline": "Extruder Range", "description": "Puffed snacks and shaped novelties", "buttonText": "Inquiry" }
+  ],
+  "cta": {
+    "title": "Ready to partner with us?",
+    "description": "Join our growing network of distributors across India.",
+    "buttonText": "Enquire Now"
+  }
+}</pre
+            >
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>hero.title</code></td>
+                  <td>string</td>
+                  <td>Hero heading</td>
+                </tr>
+                <tr>
+                  <td><code>hero.subtitle</code></td>
+                  <td>string</td>
+                  <td>Hero sub-heading</td>
+                </tr>
+                <tr>
+                  <td><code>hero.backgroundImage</code></td>
+                  <td>string</td>
+                  <td>Hero background image URL</td>
+                </tr>
+                <tr>
+                  <td><code>hero.ctaText</code></td>
+                  <td>string</td>
+                  <td>Hero CTA button text</td>
+                </tr>
+                <tr>
+                  <td><code>stats[].label</code></td>
+                  <td>string</td>
+                  <td>Statistic label</td>
+                </tr>
+                <tr>
+                  <td><code>stats[].value</code></td>
+                  <td>string</td>
+                  <td>Statistic value</td>
+                </tr>
+                <tr>
+                  <td><code>stats[].icon</code></td>
+                  <td>string</td>
+                  <td>Lucide icon name</td>
+                </tr>
+                <tr>
+                  <td><code>sections[].title</code></td>
+                  <td>string</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td><code>sections[].description</code></td>
+                  <td>string</td>
+                  <td>Section text</td>
+                </tr>
+                <tr>
+                  <td><code>sections[].imageUrl</code></td>
+                  <td>string</td>
+                  <td>Section image URL</td>
+                </tr>
+                <tr>
+                  <td><code>sections[].imageSide</code></td>
+                  <td><code>"left"</code> <code>"right"</code></td>
+                  <td>Image placement</td>
+                </tr>
+                <tr>
+                  <td><code>sections[].icon</code></td>
+                  <td>string</td>
+                  <td>Lucide icon name</td>
+                </tr>
+                <tr>
+                  <td><code>promoTitle</code></td>
+                  <td>string</td>
+                  <td>Promo banners section heading</td>
+                </tr>
+                <tr>
+                  <td><code>promoBanners[].image</code></td>
+                  <td>string</td>
+                  <td>Banner image URL</td>
+                </tr>
+                <tr>
+                  <td><code>promoBanners[].headline</code></td>
+                  <td>string</td>
+                  <td>Banner title</td>
+                </tr>
+                <tr>
+                  <td><code>promoBanners[].description</code></td>
+                  <td>string</td>
+                  <td>Banner description</td>
+                </tr>
+                <tr>
+                  <td><code>promoBanners[].buttonText</code></td>
+                  <td>string</td>
+                  <td>Inquiry button label</td>
+                </tr>
+                <tr>
+                  <td><code>cta.title</code></td>
+                  <td>string</td>
+                  <td>CTA section heading</td>
+                </tr>
+                <tr>
+                  <td><code>cta.description</code></td>
+                  <td>string</td>
+                  <td>CTA description</td>
+                </tr>
+                <tr>
+                  <td><code>cta.buttonText</code></td>
+                  <td>string</td>
+                  <td>CTA button text</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          <hr />
+
+          <section id="product-page-blocks">
+            <h2>Product Page Blocks</h2>
+            <p>
+              Six block types available for
+              <strong>product page content</strong> (used in the product admin,
+              not the PageBuilder). These are added to individual products via
+              the product editor.
+            </p>
+
+            <h4>product-hero</h4>
+            <pre>
+{
+  "title": "Product Name",
+  "subtitle": "Bulk Manufacturer &middot; Private Label Ready",
+  "description": "Premium quality product manufactured in-house..."
+}</pre
+            >
+
+            <h4>product-content-split</h4>
+            <pre>
+{
+  "image": "",
+  "heading": "Sourced direct. Made in-house. Built for bulk.",
+  "paragraph": "Our product is sourced directly...",
+  "bullets": ["Direct sourcing, no middlemen", "In-house processing", "FSSAI certified, hygienic packaging"]
+}</pre
+            >
+
+            <h4>product-cards</h4>
+            <pre>
+{
+  "title": "Our range",
+  "productIds": [],
+  "maxCards": 8,
+  "columns": 4
+}</pre
+            >
+
+            <h4>product-cta</h4>
+            <pre>
+{
+  "heading": "Looking for bulk supply or private label?",
+  "description": "Share your requirement...",
+  "showBulkCta": true,
+  "bulkCtaText": "Enquire for Bulk Order →",
+  "bulkCtaLink": "/contact",
+  "showPrivateLabelCta": true,
+  "privateLabelCtaText": "Start Private Label →",
+  "privateLabelCtaLink": "/contact",
+  "backgroundColor": "dark"
+}</pre
+            >
+
+            <h4>product-process</h4>
+            <pre>
+{
+  "title": "From raw material to dispatch",
+  "subtitle": "Every batch follows the same controlled process",
+  "steps": [
+    { "title": "Raw material intake", "description": "Sourced direct from growers" },
+    { "title": "Grading &amp; cleaning", "description": "Sorted by size and quality" },
+    { "title": "Processing", "description": "Controlled heat and time" },
+    { "title": "Quality check", "description": "Batch-level inspection" },
+    { "title": "Packing &amp; dispatch", "description": "Sealed, labelled, shipped" }
+  ]
+}</pre
+            >
+
+            <h4>product-infographic</h4>
+            <pre>
+{
+  "image": "",
+  "caption": "",
+  "altText": "Infographic"
+}</pre
+            >
+          </section>
+
+          <hr />
+
+          <section id="category-fields-reference">
+            <h2>Category Fields Reference</h2>
+            <p>
+              Categories in the admin have their own field system (separate from
+              the PageBuilder). These fields render on the category landing page
+              at <code>/product/&lt;slug&gt;</code>.
+            </p>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Admin Field</th>
+                  <th>JSON Key</th>
+                  <th>Storefront Section</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Hero Title</td>
+                  <td><code>heroTitle</code></td>
+                  <td>Hero Banner</td>
+                  <td>Large heading at top of page</td>
+                </tr>
+                <tr>
+                  <td>Hero Subtitle</td>
+                  <td><code>heroSubtitle</code></td>
+                  <td>Hero Banner</td>
+                  <td>Sub-heading below title</td>
+                </tr>
+                <tr>
+                  <td>Hero Description</td>
+                  <td><code>heroDescription</code></td>
+                  <td>Hero Banner</td>
+                  <td>Additional text</td>
+                </tr>
+                <tr>
+                  <td>Hero BG Color</td>
+                  <td><code>heroBackgroundColor</code></td>
+                  <td>Hero Banner</td>
+                  <td>Background colour style</td>
+                </tr>
+                <tr>
+                  <td>Hero BG Image</td>
+                  <td><code>heroBackgroundImage</code></td>
+                  <td>Hero Banner</td>
+                  <td>Background image</td>
+                </tr>
+                <tr>
+                  <td>Content Split Image</td>
+                  <td><code>contentSplitImage</code></td>
+                  <td>Content Split</td>
+                  <td>Two-column section image</td>
+                </tr>
+                <tr>
+                  <td>Content Split Heading</td>
+                  <td><code>contentSplitHeading</code></td>
+                  <td>Content Split</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td>Content Split Paragraph</td>
+                  <td><code>contentSplitParagraph</code></td>
+                  <td>Content Split</td>
+                  <td>Section text</td>
+                </tr>
+                <tr>
+                  <td>Content Split Bullets</td>
+                  <td><code>contentSplitBullets</code></td>
+                  <td>Content Split</td>
+                  <td>JSON array of bullet points</td>
+                </tr>
+                <tr>
+                  <td>Cards Title</td>
+                  <td><code>cardsTitle</code></td>
+                  <td>Product Cards</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td>Card Product IDs</td>
+                  <td><code>cardsProductIds</code></td>
+                  <td>Product Cards</td>
+                  <td>Comma-separated product IDs</td>
+                </tr>
+                <tr>
+                  <td>Cards Max Count</td>
+                  <td><code>cardsMaxCount</code></td>
+                  <td>Product Cards</td>
+                  <td>Maximum cards to show</td>
+                </tr>
+                <tr>
+                  <td>Cards Columns</td>
+                  <td><code>cardsColumns</code></td>
+                  <td>Product Cards</td>
+                  <td>Grid columns (2/3/4)</td>
+                </tr>
+                <tr>
+                  <td>CTA Heading</td>
+                  <td><code>ctaHeading</code></td>
+                  <td>CTA Strip</td>
+                  <td>CTA section heading</td>
+                </tr>
+                <tr>
+                  <td>CTA Description</td>
+                  <td><code>ctaDescription</code></td>
+                  <td>CTA Strip</td>
+                  <td>CTA supporting text</td>
+                </tr>
+                <tr>
+                  <td>CTA Bulk Text</td>
+                  <td><code>ctaBulkText</code></td>
+                  <td>CTA Strip</td>
+                  <td>Bulk order button label</td>
+                </tr>
+                <tr>
+                  <td>CTA Bulk Link</td>
+                  <td><code>ctaBulkLink</code></td>
+                  <td>CTA Strip</td>
+                  <td>Bulk order destination</td>
+                </tr>
+                <tr>
+                  <td>CTA Private Label Text</td>
+                  <td><code>ctaPrivateLabelText</code></td>
+                  <td>CTA Strip</td>
+                  <td>Private label button label</td>
+                </tr>
+                <tr>
+                  <td>CTA Private Label Link</td>
+                  <td><code>ctaPrivateLabelLink</code></td>
+                  <td>CTA Strip</td>
+                  <td>Private label destination</td>
+                </tr>
+                <tr>
+                  <td>CTA BG Color</td>
+                  <td><code>ctaBackgroundColor</code></td>
+                  <td>CTA Strip</td>
+                  <td>Background style</td>
+                </tr>
+                <tr>
+                  <td>Process Title</td>
+                  <td><code>processTitle</code></td>
+                  <td>Process Flow</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td>Process Subtitle</td>
+                  <td><code>processSubtitle</code></td>
+                  <td>Process Flow</td>
+                  <td>Section sub-heading</td>
+                </tr>
+                <tr>
+                  <td>Process Steps</td>
+                  <td><code>processSteps</code></td>
+                  <td>Process Flow</td>
+                  <td>JSON array of <code>{title, description}</code></td>
+                </tr>
+                <tr>
+                  <td>Infographic Image</td>
+                  <td><code>infographicImage</code></td>
+                  <td>Infographic</td>
+                  <td>Main image</td>
+                </tr>
+                <tr>
+                  <td>Infographic Video URL</td>
+                  <td><code>infographicVideoUrl</code></td>
+                  <td>Infographic</td>
+                  <td>YouTube URL (replaces image)</td>
+                </tr>
+                <tr>
+                  <td>Infographic Caption</td>
+                  <td><code>infographicCaption</code></td>
+                  <td>Infographic</td>
+                  <td>Image caption</td>
+                </tr>
+                <tr>
+                  <td>Infographic Alt Text</td>
+                  <td><code>infographicAltText</code></td>
+                  <td>Infographic</td>
+                  <td>Image alt text</td>
+                </tr>
+                <tr>
+                  <td>Gallery Title</td>
+                  <td><code>galleryTitle</code></td>
+                  <td>Gallery</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td>Gallery Images</td>
+                  <td><code>galleryImages</code></td>
+                  <td>Gallery</td>
+                  <td>JSON array of image URLs</td>
+                </tr>
+                <tr>
+                  <td>FAQ Title</td>
+                  <td><code>faqTitle</code></td>
+                  <td>FAQ</td>
+                  <td>Section heading</td>
+                </tr>
+                <tr>
+                  <td>FAQ Items</td>
+                  <td><code>faqItems</code></td>
+                  <td>FAQ</td>
+                  <td>JSON array of <code>{question, answer}</code></td>
+                </tr>
+                <tr>
+                  <td>Lead Capture Enabled</td>
+                  <td><code>leadCaptureEnabled</code></td>
+                  <td>Lead Capture</td>
+                  <td>Show/hide enquiry form</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <blockquote>
+              <p>
+                <strong>Note:</strong> The category hero section also supports a
+                <strong>YouTube video URL</strong> field for the infographic. If
+                set, the video embeds as a 16:9 responsive iframe instead of the
+                static infographic image.
+              </p>
+            </blockquote>
+          </section>
+
+          <hr />
+
+          <section id="icon-name-reference">
+            <h2>Icon Name Reference</h2>
+            <p>
+              Many blocks use Lucide icon names for visual elements. Use any of
+              these valid names:
+            </p>
+
+            <div class="title-content-list">
+              <div class="title-content-row">
+                <div class="row-title">General</div>
+                <div class="row-content">
+                  <code>Star</code>, <code>Heart</code>, <code>Shield</code>,
+                  <code>Award</code>, <code>Target</code>, <code>Eye</code>,
+                  <code>Flag</code>, <code>Home</code>, <code>Search</code>,
+                  <code>Bell</code>, <code>Settings</code>, <code>User</code>,
+                  <code>Users</code>, <code>UserCircle</code>
+                </div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">Business</div>
+                <div class="row-content">
+                  <code>Building</code>, <code>Factory</code>,
+                  <code>Warehouse</code>, <code>Store</code>,
+                  <code>Briefcase</code>, <code>Globe</code>,
+                  <code>TrendingUp</code>, <code>BarChart3</code>,
+                  <code>LineChart</code>, <code>PieChart</code>
+                </div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">Commerce</div>
+                <div class="row-content">
+                  <code>Package</code>, <code>Box</code>,
+                  <code>ShoppingBag</code>, <code>ShoppingCart</code>,
+                  <code>Tag</code>, <code>CreditCard</code>, <code>Truck</code>,
+                  <code>Ship</code>, <code>Plane</code>, <code>Train</code>
+                </div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">Communication</div>
+                <div class="row-content">
+                  <code>Mail</code>, <code>Phone</code>,
+                  <code>MessageSquare</code>, <code>Send</code>,
+                  <code>Headphones</code>, <code>Voicemail</code>,
+                  <code>MapPin</code>, <code>Navigation</code>
+                </div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">Media</div>
+                <div class="row-content">
+                  <code>Image</code>, <code>Images</code>, <code>Camera</code>,
+                  <code>Video</code>, <code>Film</code>, <code>Music</code>,
+                  <code>Play</code>
+                </div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">Arrows</div>
+                <div class="row-content">
+                  <code>ArrowRight</code>, <code>ArrowLeft</code>,
+                  <code>ArrowUp</code>, <code>ArrowDown</code>,
+                  <code>ChevronRight</code>, <code>ChevronLeft</code>,
+                  <code>MoveRight</code>, <code>ExternalLink</code>
+                </div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">Actions</div>
+                <div class="row-content">
+                  <code>Download</code>, <code>Upload</code>,
+                  <code>Share</code>, <code>Link</code>, <code>Trash</code>,
+                  <code>Edit</code>, <code>Copy</code>, <code>Check</code>,
+                  <code>X</code>, <code>Plus</code>, <code>Minus</code>
+                </div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">UI</div>
+                <div class="row-content">
+                  <code>LayoutGrid</code>, <code>Columns</code>,
+                  <code>Rows</code>, <code>Table</code>, <code>List</code>,
+                  <code>Grid3X3</code>, <code>Sidebar</code>,
+                  <code>PanelRight</code>
+                </div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">Content</div>
+                <div class="row-content">
+                  <code>FileText</code>, <code>Newspaper</code>,
+                  <code>BookOpen</code>, <code>Quote</code>,
+                  <code>HelpCircle</code>, <code>Info</code>,
+                  <code>AlertCircle</code>, <code>ClipboardCheck</code>,
+                  <code>CheckCircle</code>
+                </div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">Status</div>
+                <div class="row-content">
+                  <code>ShieldCheck</code>, <code>ShieldAlert</code>,
+                  <code>ShieldOff</code>, <code>Verified</code>,
+                  <code>BadgeCheck</code>, <code>BadgePercent</code>
+                </div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">Process</div>
+                <div class="row-content">
+                  <code>GitBranch</code>, <code>GitMerge</code>,
+                  <code>GitCommit</code>, <code>Workflow</code>,
+                  <code>Route</code>, <code>Map</code>, <code>Compass</code>
+                </div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">Nature</div>
+                <div class="row-content">
+                  <code>Leaf</code>, <code>Flame</code>,
+                  <code>Microscope</code>, <code>Sun</code>, <code>Moon</code>,
+                  <code>Cloud</code>, <code>Droplet</code>
+                </div>
+              </div>
+            </div>
+            <p>
+              Usage: set the <code>icon</code> field to the exact PascalCase
+              name (e.g. <code>"ShieldCheck"</code>). The component will render
+              the matching Lucide icon or nothing if the name is invalid.
+            </p>
+          </section>
+
+          <hr />
+
+          <section id="json-editor-tips">
+            <h2>JSON Editor Tips</h2>
+
+            <h4>Validating JSON</h4>
+            <ul>
+              <li>
+                Use <strong>double quotes</strong> for strings, never single
+                quotes
+              </li>
+              <li>
+                No <strong>trailing commas</strong> after the last item in
+                arrays or objects
+              </li>
+              <li>
+                Boolean values: <code>true</code> / <code>false</code> (no
+                quotes)
+              </li>
+              <li>Numbers: no quotes</li>
+              <li>Null: use <code>null</code> (not <code>"null"</code>)</li>
+            </ul>
+
+            <h4>Example of valid JSON</h4>
+            <pre>
+{
+  "title": "Correct",
+  "count": 42,
+  "enabled": true,
+  "items": ["one", "two"],
+  "metadata": null
+}</pre
+            >
+
+            <h4>Example of invalid JSON (will error)</h4>
+            <pre>
+{
+  'title': 'Wrong',       // &larr; single quotes
+  "count": 42,
+  "enabled": true,
+  "items": ["one", "two",],  // &larr; trailing comma
+}</pre
+            >
+
+            <h4>Getting image URLs</h4>
+            <ol>
+              <li>
+                Upload images via the <strong>Media Library</strong> tab in
+                admin
+              </li>
+              <li>Copy the Cloudinary URL from the media item</li>
+              <li>Paste into the image field</li>
+            </ol>
+
+            <h4>HTML in text fields</h4>
+            <p>
+              The <code>content</code> field in the <strong>Text</strong> block
+              supports HTML. Safe tags: <code>&lt;p&gt;</code>,
+              <code>&lt;h1&gt;</code>–<code>&lt;h6&gt;</code>,
+              <code>&lt;ul&gt;</code>, <code>&lt;ol&gt;</code>,
+              <code>&lt;li&gt;</code>, <code>&lt;a&gt;</code>,
+              <code>&lt;img&gt;</code>, <code>&lt;strong&gt;</code>,
+              <code>&lt;em&gt;</code>, <code>&lt;br&gt;</code>,
+              <code>&lt;blockquote&gt;</code>, <code>&lt;span&gt;</code>.
+            </p>
+
+            <h4>Page content blocks must use JSON Editor</h4>
+            <p>
+              The UI Editor shows a notice for nested blocks. Always use the
+              <strong>JSON Editor</strong> tab for
+              <code>manufacturing-content</code>,
+              <code>about-page-content</code>,
+              <code>contact-page-content</code>, and
+              <code>distribution-content</code> blocks.
+            </p>
+
+            <h4>Copy-paste defaults</h4>
+            <p>
+              Use the default JSON shown in this reference as a starting point.
+              Paste it into the JSON Editor, then customise the fields you need.
+              Fields you leave as empty strings <code>""</code> will not render
+              a default value.
+            </p>
+
+            <h4>Two-Column Layout Pattern</h4>
+            <p>
+              For index/value reference lists, use the
+              <strong>two-column layout</strong> instead of a table:
+            </p>
+            <pre>
+&lt;div class="col-index-content"&gt;
+  &lt;div class="col-index"&gt;Left label / index&lt;/div&gt;
+  &lt;div class="col-content"&gt;Right-side content&lt;/div&gt;
+&lt;/div&gt;</pre
+            >
+            <p>
+              The left column is fixed at <code>180px</code> and the right
+              column fills the remaining space. On mobile
+              (<code>&lt;768px</code>), columns stack vertically.
+            </p>
+          </section>
+
+          <hr />
+
+          <section id="platform-page-slugs">
+            <h2>Platform Page Slugs</h2>
+            <p>
+              These page slugs are reserved for the core platform pages and
+              cannot be used for custom content pages:
+            </p>
+
+            <div class="title-content-list">
+              <div class="title-content-row">
+                <div class="row-title">homepage</div>
+                <div class="row-content"><code>/</code></div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">about-us</div>
+                <div class="row-content"><code>/about</code></div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">manufacturing</div>
+                <div class="row-content"><code>/manufacturing</code></div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">contact</div>
+                <div class="row-content"><code>/contact</code></div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">distribution</div>
+                <div class="row-content"><code>/distribution</code></div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">products</div>
+                <div class="row-content">
+                  <code>/products</code> (redirects to distribution)
+                </div>
+              </div>
+              <div class="title-content-row">
+                <div class="row-title">blog</div>
+                <div class="row-content"><code>/blog</code></div>
+              </div>
+            </div>
+            <p>
+              Content pages use the <strong>Pages</strong> tab in admin and can
+              have any custom slug not in this reserved list.
+            </p>
+          </section>
+        </div>
+      </div>
+    </div>
+    <a href="#" class="back-to-top" title="Back to top">&#8679;</a>
+  </body>
+</html>

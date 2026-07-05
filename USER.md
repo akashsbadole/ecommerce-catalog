@@ -11,23 +11,18 @@ WCommerce Catalogue is a multi-tenant e-commerce platform that lets businesses c
   - [Dashboard](#dashboard)
   - [Product Management](#product-management)
   - [Category Management](#category-management)
-  - [Order Management](#order-management)
   - [B2B: Enquiries & Quotes](#b2b-enquiries--quotes)
   - [Company Management](#company-management)
   - [Customer Management](#customer-management)
   - [Blog & Content Pages](#blog--content-pages)
   - [Media Library](#media-library)
   - [Banners](#banners)
-  - [Coupons & Discounts](#coupons--discounts)
   - [Settings](#settings)
   - [Multi-Store Management](#multi-store-management)
   - [Backup & Restore](#backup--restore)
   - [Import & Export](#import--export)
 - [For Customers (Buyers)](#for-customers-buyers)
   - [Browsing Products](#browsing-products)
-  - [Shopping Cart & Checkout](#shopping-cart--checkout)
-  - [Account & Orders](#account--orders)
-  - [B2B Buyer Portal](#b2b-buyer-portal)
   - [Enquiries & Quotes](#enquiries--quotes-buyer)
   - [Contact Form](#contact-form)
 
@@ -46,6 +41,7 @@ The admin dashboard provides full control over your store.
 ### Dashboard
 
 The dashboard shows:
+
 - **Total Products** - Number of active products
 - **Total Orders** - Number of orders received
 - **Total Revenue** - Sum of all confirmed orders
@@ -81,6 +77,7 @@ The dashboard shows:
 #### Product Variants
 
 For products with options (size, color, etc.):
+
 1. Open a product
 2. Go to **Variants** section
 3. Add variants with independent pricing, SKU, stock, and images
@@ -88,6 +85,7 @@ For products with options (size, color, etc.):
 #### Bulk Actions
 
 Select multiple products to:
+
 - Publish / Unpublish
 - Delete (soft) / Restore
 - Permanent Delete
@@ -119,16 +117,6 @@ Each category has a **rich landing page** with dedicated builder sections:
 These fields render on the storefront at `/product/<slug>` (e.g. `/product/khakhra`). Use them to create branded, content-rich category landing pages — no coding required.
 
 Categories also support the full **Page Builder** via the block editor for more complex layouts (26+ block types available).
-
-### Order Management
-
-1. Go to **Orders** tab
-2. View all orders with status, customer details, and totals
-3. Update order status:
-   - Pending > Confirmed > Processing > Shipped > Delivered
-   - Or Cancelled
-4. Add notes to orders
-5. Filter by status or search by order number
 
 ### B2B: Enquiries & Quotes
 
@@ -205,16 +193,6 @@ Categories also support the full **Page Builder** via the block editor for more 
 - Set sort order for display priority
 - Activate/deactivate banners
 
-### Coupons & Discounts
-
-1. Create discount codes:
-   - **Percentage** or **Fixed** amount
-   - Minimum order value
-   - Usage limits (max uses)
-   - Date range (start/expiry)
-2. Validate coupons at checkout
-3. Bulk operations available
-
 ### Settings
 
 Configure your store under the **Settings** tab:
@@ -222,15 +200,13 @@ Configure your store under the **Settings** tab:
 - **General**: Site name, description, logo, favicon
 - **SMTP**: Email server configuration for notifications
 - **B2B**: Enable/disable B2B features, set tier discounts
-- **Shipping**: Free, flat rate, or flat-rate-free-above-threshold
 - **Tax**: Tax rate configuration
-- **Payment**: Razorpay API keys
 - **SEO**: Default meta tags, schema.org settings
-- **Theme**: Colors, fonts, layout customization
 
 ### Multi-Store Management
 
 If you operate multiple stores:
+
 1. Go to **Stores** in admin
 2. Create new stores with unique slugs
 3. Switch between stores from the admin
@@ -245,11 +221,13 @@ If you operate multiple stores:
 ### Import & Export
 
 #### CSV Import
+
 - Products, categories, blog posts, users, redirects
 - Shopify CSV import supported
 - WooCommerce CSV import supported
 
 #### CSV Export
+
 - Export any entity type as CSV download
 
 ---
@@ -268,37 +246,6 @@ If you operate multiple stores:
 5. **Sort** by relevance, price, newest, or name
 6. Click a **category** to view its landing page at `/product/<slug>` with hero, cards, CTA, and other sections
 7. Click **Enquire** on any product card to open the enquiry modal — fill in quantity and message to send a request directly to the admin
-
-### Shopping Cart & Checkout
-
-1. Click **Add to Cart** on any product
-2. View cart from the cart icon in the header
-3. Adjust quantities or remove items
-4. Click **Checkout**
-5. Enter shipping details
-6. Apply a **coupon code** if available
-7. Choose payment method:
-   - Razorpay (online payment)
-   - Other configured methods
-8. Place order
-
-### Account & Orders
-
-- **Register/Login** to track orders
-- View **Order History** with status updates
-- Cancel pending orders
-- Manage **Saved Addresses**
-- Update profile information
-- Change password
-
-### B2B Buyer Portal
-
-Navigate to `/portal` after logging in as a B2B buyer:
-
-- **Account Status**: View verification status and pricing tier
-- **Active Quotes**: See all received quotes with amounts
-- **Inquiry History**: Track submitted enquiries
-- **Business Information**: View company details
 
 ### Enquiries & Quotes (Buyer)
 
@@ -341,31 +288,14 @@ Navigate to `/portal` after logging in as a B2B buyer:
 
 ### What pricing tiers are available?
 
-| Tier | Discount |
-|---|---|
-| Standard | 0% |
-| Silver | 5% |
-| Gold | 10% |
-| Platinum | 15% |
+| Tier     | Discount |
+| -------- | -------- |
+| Standard | 0%       |
+| Silver   | 5%       |
+| Gold     | 10%      |
+| Platinum | 15%      |
 
 Tiers are assigned by the admin based on your business relationship.
-
-### How do I track my order?
-
-1. Log in to your account
-2. Go to **Orders**
-3. Click on an order to see its status and details
-
-### Can I compare products?
-
-Yes. Click the **Compare** icon on up to 4 products to see them side-by-side with specifications and pricing.
-
-### How do I use a coupon code?
-
-1. Add products to your cart
-2. Go to Checkout
-3. Enter the coupon code in the **Coupon** field
-4. Click **Apply** - the discount will be reflected in your total
 
 ---
 
@@ -378,16 +308,19 @@ This section documents every block type available in the Page Builder, their JSO
 Located in the **Pages** tab of the admin dashboard, the PageBuilder is a drag-and-drop interface for building content pages and blog posts.
 
 **Adding a block:**
+
 1. Open a page in the PageBuilder
 2. Click **Add Block** from the sidebar
 3. Select a block type — it appends to the bottom of the block list
 4. Drag to reorder, or use the up/down arrows
 
 **Two editing modes:**
+
 - **UI Editor** — dedicated form fields for each block type (simpler blocks only; page content blocks show a notice to use the JSON Editor)
 - **JSON Editor** — raw JSON textarea for direct editing of the block's `data` object. Required for Page Content Blocks and advanced customisation
 
 **Block actions:**
+
 - **Drag handle** (left side) — click and drag to reorder
 - **Move up/down** — reorder by one position
 - **Duplicate** — copies the block and its data
@@ -418,15 +351,15 @@ Full-width banner section with background image, heading, and optional button.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `title` | string | Main heading text |
-| `subtitle` | string | Sub-heading below the title |
-| `buttonText` | string | CTA button label (empty = no button) |
-| `buttonLink` | string | Button destination URL or page slug |
-| `backgroundImage` | string | Cloudinary image URL for the background |
-| `height` | `"small"` `"medium"` `"large"` | Section height preset |
-| `alignment` | `"center"` `"left"` `"right"` | Text alignment within the hero |
+| Field             | Type                           | Description                             |
+| ----------------- | ------------------------------ | --------------------------------------- |
+| `title`           | string                         | Main heading text                       |
+| `subtitle`        | string                         | Sub-heading below the title             |
+| `buttonText`      | string                         | CTA button label (empty = no button)    |
+| `buttonLink`      | string                         | Button destination URL or page slug     |
+| `backgroundImage` | string                         | Cloudinary image URL for the background |
+| `height`          | `"small"` `"medium"` `"large"` | Section height preset                   |
+| `alignment`       | `"center"` `"left"` `"right"`  | Text alignment within the hero          |
 
 #### Hero Carousel
 
@@ -435,8 +368,20 @@ Rotating slideshow of hero banners with autoplay.
 ```json
 {
   "slides": [
-    { "image": "", "title": "Slide 1", "subtitle": "Description for slide 1", "buttonText": "Shop Now", "buttonLink": "/distribution" },
-    { "image": "", "title": "Slide 2", "subtitle": "Description for slide 2", "buttonText": "Learn More", "buttonLink": "/about" }
+    {
+      "image": "",
+      "title": "Slide 1",
+      "subtitle": "Description for slide 1",
+      "buttonText": "Shop Now",
+      "buttonLink": "/distribution"
+    },
+    {
+      "image": "",
+      "title": "Slide 2",
+      "subtitle": "Description for slide 2",
+      "buttonText": "Learn More",
+      "buttonLink": "/about"
+    }
   ],
   "autoplay": true,
   "interval": 6000,
@@ -445,17 +390,17 @@ Rotating slideshow of hero banners with autoplay.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `slides[].image` | string | Slide background image URL |
-| `slides[].title` | string | Slide heading |
-| `slides[].subtitle` | string | Slide sub-heading |
-| `slides[].buttonText` | string | CTA button label |
-| `slides[].buttonLink` | string | CTA destination |
-| `autoplay` | boolean | Auto-advance slides |
-| `interval` | number | Milliseconds between slides (e.g. 6000 = 6s) |
-| `height` | string | Height preset |
-| `alignment` | string | Text alignment |
+| Field                 | Type    | Description                                  |
+| --------------------- | ------- | -------------------------------------------- |
+| `slides[].image`      | string  | Slide background image URL                   |
+| `slides[].title`      | string  | Slide heading                                |
+| `slides[].subtitle`   | string  | Slide sub-heading                            |
+| `slides[].buttonText` | string  | CTA button label                             |
+| `slides[].buttonLink` | string  | CTA destination                              |
+| `autoplay`            | boolean | Auto-advance slides                          |
+| `interval`            | number  | Milliseconds between slides (e.g. 6000 = 6s) |
+| `height`              | string  | Height preset                                |
+| `alignment`           | string  | Text alignment                               |
 
 #### Text
 
@@ -467,8 +412,8 @@ Simple rich-text block. Supports HTML content.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
+| Field     | Type   | Description                                                                                     |
+| --------- | ------ | ----------------------------------------------------------------------------------------------- |
 | `content` | string | HTML content. Supports `<p>`, `<h1>`-`<h6>`, `<ul>`, `<ol>`, `<a>`, `<img>`, `<strong>`, `<em>` |
 
 #### Image Gallery
@@ -483,11 +428,11 @@ Grid of images with configurable column count.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `title` | string | Section heading |
-| `columns` | number | Number of columns (2, 3, or 4) |
-| `images` | string[] | Array of Cloudinary image URLs |
+| Field     | Type     | Description                    |
+| --------- | -------- | ------------------------------ |
+| `title`   | string   | Section heading                |
+| `columns` | number   | Number of columns (2, 3, or 4) |
+| `images`  | string[] | Array of Cloudinary image URLs |
 
 #### Features
 
@@ -503,13 +448,13 @@ Grid of icon + title + description cards.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `title` | string | Section heading |
-| `columns` | number | Grid columns (2, 3, or 4) |
-| `features[].title` | string | Feature card heading |
-| `features[].description` | string | Feature description text |
-| `features[].icon` | string | Lucide icon name (see Icon Reference below) |
+| Field                    | Type   | Description                                 |
+| ------------------------ | ------ | ------------------------------------------- |
+| `title`                  | string | Section heading                             |
+| `columns`                | number | Grid columns (2, 3, or 4)                   |
+| `features[].title`       | string | Feature card heading                        |
+| `features[].description` | string | Feature description text                    |
+| `features[].icon`        | string | Lucide icon name (see Icon Reference below) |
 
 #### CTA (Call to Action)
 
@@ -525,12 +470,12 @@ Strip with heading, description, and a button.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `title` | string | CTA heading |
-| `description` | string | Supporting text |
-| `buttonText` | string | Button label |
-| `buttonLink` | string | Button destination |
+| Field             | Type                           | Description               |
+| ----------------- | ------------------------------ | ------------------------- |
+| `title`           | string                         | CTA heading               |
+| `description`     | string                         | Supporting text           |
+| `buttonText`      | string                         | Button label              |
+| `buttonLink`      | string                         | Button destination        |
 | `backgroundColor` | `"primary"` `"dark"` `"light"` | Section background colour |
 
 #### Testimonials
@@ -541,17 +486,22 @@ Quote cards from customers or partners.
 {
   "title": "What Our Clients Say",
   "testimonials": [
-    { "name": "John Doe", "role": "CEO", "quote": "Great service!", "avatar": "" }
+    {
+      "name": "John Doe",
+      "role": "CEO",
+      "quote": "Great service!",
+      "avatar": ""
+    }
   ]
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `title` | string | Section heading |
-| `testimonials[].name` | string | Person's name |
-| `testimonials[].role` | string | Person's title/role |
-| `testimonials[].quote` | string | Testimonial text |
+| Field                   | Type   | Description                 |
+| ----------------------- | ------ | --------------------------- |
+| `title`                 | string | Section heading             |
+| `testimonials[].name`   | string | Person's name               |
+| `testimonials[].role`   | string | Person's title/role         |
+| `testimonials[].quote`  | string | Testimonial text            |
 | `testimonials[].avatar` | string | Avatar image URL (optional) |
 
 #### FAQ
@@ -561,17 +511,15 @@ Accordion-style questions and answers.
 ```json
 {
   "title": "Frequently Asked Questions",
-  "items": [
-    { "question": "Question?", "answer": "Answer text." }
-  ]
+  "items": [{ "question": "Question?", "answer": "Answer text." }]
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `title` | string | Section heading |
-| `items[].question` | string | The question |
-| `items[].answer` | string | The answer (HTML supported) |
+| Field              | Type   | Description                 |
+| ------------------ | ------ | --------------------------- |
+| `title`            | string | Section heading             |
+| `items[].question` | string | The question                |
+| `items[].answer`   | string | The answer (HTML supported) |
 
 #### Spacer
 
@@ -581,8 +529,8 @@ Vertical spacing between blocks.
 { "height": 64 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
+| Field    | Type   | Description             |
+| -------- | ------ | ----------------------- |
 | `height` | number | Spacer height in pixels |
 
 #### Divider
@@ -593,9 +541,9 @@ Horizontal rule / separator line.
 { "style": "solid" }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `style` | `"solid"` `"dashed"` `"dotted"` | Line style |
+| Field   | Type                            | Description |
+| ------- | ------------------------------- | ----------- |
+| `style` | `"solid"` `"dashed"` `"dotted"` | Line style  |
 
 #### Products
 
@@ -609,11 +557,11 @@ Dynamic product showcase grid. Pulls products from the catalogue automatically.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `title` | string | Section heading |
-| `maxProducts` | number | Maximum products to display |
-| `layout` | `"grid"` `"list"` `"carousel"` | Display layout |
+| Field         | Type                           | Description                 |
+| ------------- | ------------------------------ | --------------------------- |
+| `title`       | string                         | Section heading             |
+| `maxProducts` | number                         | Maximum products to display |
+| `layout`      | `"grid"` `"list"` `"carousel"` | Display layout              |
 
 ---
 
@@ -639,18 +587,18 @@ Full-width image slider with captions and optional CTA.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `items[].image` | string | Image URL |
-| `items[].title` | string | Slide title |
-| `items[].subtitle` | string | Slide description |
-| `items[].link` | string | Optional link destination |
-| `autoplay` | boolean | Auto-advance |
-| `interval` | number | Millisecond interval |
-| `ctaButtonColor` | string | Button CSS colour |
-| `ctaTextColor` | string | Button text CSS colour |
-| `showButton` | boolean | Show/hide CTA button |
-| `fullWidth` | boolean | Full browser width vs contained |
+| Field              | Type    | Description                     |
+| ------------------ | ------- | ------------------------------- |
+| `items[].image`    | string  | Image URL                       |
+| `items[].title`    | string  | Slide title                     |
+| `items[].subtitle` | string  | Slide description               |
+| `items[].link`     | string  | Optional link destination       |
+| `autoplay`         | boolean | Auto-advance                    |
+| `interval`         | number  | Millisecond interval            |
+| `ctaButtonColor`   | string  | Button CSS colour               |
+| `ctaTextColor`     | string  | Button text CSS colour          |
+| `showButton`       | boolean | Show/hide CTA button            |
+| `fullWidth`        | boolean | Full browser width vs contained |
 
 #### Product Carousel
 
@@ -664,11 +612,11 @@ Horizontal product carousel from a specific category.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `title` | string | Section heading |
-| `maxProducts` | number | Max products to show |
-| `categoryId` | string | Filter by category ID (empty = all) |
+| Field         | Type   | Description                         |
+| ------------- | ------ | ----------------------------------- |
+| `title`       | string | Section heading                     |
+| `maxProducts` | number | Max products to show                |
+| `categoryId`  | string | Filter by category ID (empty = all) |
 
 #### About Section
 
@@ -685,14 +633,14 @@ Text + image split layout for company info.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `title` | string | Section heading |
-| `content` | string | HTML content |
-| `image` | string | Image URL |
-| `imagePosition` | `"left"` `"right"` | Image side |
-| `buttonText` | string | CTA button label |
-| `buttonLink` | string | CTA button destination |
+| Field           | Type               | Description            |
+| --------------- | ------------------ | ---------------------- |
+| `title`         | string             | Section heading        |
+| `content`       | string             | HTML content           |
+| `image`         | string             | Image URL              |
+| `imagePosition` | `"left"` `"right"` | Image side             |
+| `buttonText`    | string             | CTA button label       |
+| `buttonLink`    | string             | CTA button destination |
 
 #### Trust Bar
 
@@ -710,11 +658,11 @@ Highlight numbers / statistics row.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `stats[].value` | number | The number to display |
+| Field            | Type   | Description                        |
+| ---------------- | ------ | ---------------------------------- |
+| `stats[].value`  | number | The number to display              |
 | `stats[].suffix` | string | Text after the number (+, %, etc.) |
-| `stats[].label` | string | Description below the number |
+| `stats[].label`  | string | Description below the number       |
 
 #### Audience Cards
 
@@ -729,26 +677,46 @@ Cards targeting different B2B buyer types with individual CTAs.
   "ctaTextColor": "#FFFFFF",
   "showButton": true,
   "cards": [
-    { "title": "B2B brands", "description": "Bulk supply of finished goods under your brand", "cta": "Enquire now", "link": "/contact" },
-    { "title": "Private label", "description": "Custom packaging, your branding, our recipe", "cta": "Get details", "link": "/contact" },
-    { "title": "Distributors", "description": "Trade pricing, consistent supply, multi-SKU range", "cta": "Partner with us", "link": "/contact" },
-    { "title": "Institutional buyers", "description": "Canteens, airlines, hospitality, govt procurement", "cta": "Send requirement", "link": "/contact" }
+    {
+      "title": "B2B brands",
+      "description": "Bulk supply of finished goods under your brand",
+      "cta": "Enquire now",
+      "link": "/contact"
+    },
+    {
+      "title": "Private label",
+      "description": "Custom packaging, your branding, our recipe",
+      "cta": "Get details",
+      "link": "/contact"
+    },
+    {
+      "title": "Distributors",
+      "description": "Trade pricing, consistent supply, multi-SKU range",
+      "cta": "Partner with us",
+      "link": "/contact"
+    },
+    {
+      "title": "Institutional buyers",
+      "description": "Canteens, airlines, hospitality, govt procurement",
+      "cta": "Send requirement",
+      "link": "/contact"
+    }
   ]
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `label` | string | Small label above heading |
-| `heading` | string | Main section heading |
-| `description` | string | Section description paragraph |
-| `ctaButtonColor` | string | Button CSS colour |
-| `ctaTextColor` | string | Button text CSS colour |
-| `showButton` | boolean | Show shared CTA button |
-| `cards[].title` | string | Card heading |
-| `cards[].description` | string | Card text |
-| `cards[].cta` | string | Card button label |
-| `cards[].link` | string | Card button destination |
+| Field                 | Type    | Description                   |
+| --------------------- | ------- | ----------------------------- |
+| `label`               | string  | Small label above heading     |
+| `heading`             | string  | Main section heading          |
+| `description`         | string  | Section description paragraph |
+| `ctaButtonColor`      | string  | Button CSS colour             |
+| `ctaTextColor`        | string  | Button text CSS colour        |
+| `showButton`          | boolean | Show shared CTA button        |
+| `cards[].title`       | string  | Card heading                  |
+| `cards[].description` | string  | Card text                     |
+| `cards[].cta`         | string  | Card button label             |
+| `cards[].link`        | string  | Card button destination       |
 
 #### Capabilities
 
@@ -758,7 +726,14 @@ Manufacturing capabilities with image gallery and CTA.
 {
   "label": "Manufacturing capabilities",
   "heading": "Why partner with us",
-  "items": ["Own factory & machinery", "FSSAI & ISO certified", "5 production lines", "Custom packaging ready", "Hygiene-first processes", "On-time delivery"],
+  "items": [
+    "Own factory & machinery",
+    "FSSAI & ISO certified",
+    "5 production lines",
+    "Custom packaging ready",
+    "Hygiene-first processes",
+    "On-time delivery"
+  ],
   "image": "",
   "videoUrl": "",
   "imageCaption": "Facility / production line image",
@@ -768,17 +743,17 @@ Manufacturing capabilities with image gallery and CTA.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `label` | string | Small label above heading |
-| `heading` | string | Main heading |
-| `items` | string[] | Bullet list of capabilities |
-| `image` | string | Main image URL |
-| `videoUrl` | string | Optional video URL |
-| `imageCaption` | string | Caption below image |
+| Field           | Type     | Description                   |
+| --------------- | -------- | ----------------------------- |
+| `label`         | string   | Small label above heading     |
+| `heading`       | string   | Main heading                  |
+| `items`         | string[] | Bullet list of capabilities   |
+| `image`         | string   | Main image URL                |
+| `videoUrl`      | string   | Optional video URL            |
+| `imageCaption`  | string   | Caption below image           |
 | `galleryImages` | string[] | Additional gallery image URLs |
-| `ctaText` | string | CTA button label |
-| `ctaLink` | string | CTA button destination |
+| `ctaText`       | string   | CTA button label              |
+| `ctaLink`       | string   | CTA button destination        |
 
 #### Product Categories
 
@@ -806,18 +781,18 @@ Preview grid of product categories with CTAs.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `label` | string | Small label above heading |
-| `heading` | string | Main heading |
-| `description` | string | Description paragraph |
-| `categoryIds` | string[] | Filter by specific category IDs |
-| `categories` | array | Static category list (used when categoryIds is empty) |
-| `categories[].name` | string | Category display name |
-| `categories[].variants` | string | Variant count text |
-| `ctaText` | string | CTA button label |
-| `ctaLink` | string | CTA destination |
-| `showButton` | boolean | Show CTA button |
+| Field                   | Type     | Description                                           |
+| ----------------------- | -------- | ----------------------------------------------------- |
+| `label`                 | string   | Small label above heading                             |
+| `heading`               | string   | Main heading                                          |
+| `description`           | string   | Description paragraph                                 |
+| `categoryIds`           | string[] | Filter by specific category IDs                       |
+| `categories`            | array    | Static category list (used when categoryIds is empty) |
+| `categories[].name`     | string   | Category display name                                 |
+| `categories[].variants` | string   | Variant count text                                    |
+| `ctaText`               | string   | CTA button label                                      |
+| `ctaLink`               | string   | CTA destination                                       |
+| `showButton`            | boolean  | Show CTA button                                       |
 
 #### Factory Reel
 
@@ -835,15 +810,15 @@ Video showcase for factory tour or facility walkthrough.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `label` | string | Small label above heading |
-| `heading` | string | Main heading |
-| `description` | string | Description text |
-| `videoUrl` | string | Video URL (YouTube or direct) |
-| `thumbnailUrl` | string | Cover image before play |
-| `ctaText` | string | CTA button label |
-| `ctaLink` | string | CTA destination |
+| Field          | Type   | Description                   |
+| -------------- | ------ | ----------------------------- |
+| `label`        | string | Small label above heading     |
+| `heading`      | string | Main heading                  |
+| `description`  | string | Description text              |
+| `videoUrl`     | string | Video URL (YouTube or direct) |
+| `thumbnailUrl` | string | Cover image before play       |
+| `ctaText`      | string | CTA button label              |
+| `ctaLink`      | string | CTA destination               |
 
 #### Certifications (Award)
 
@@ -856,21 +831,19 @@ Certifications and compliance badges with optional gallery.
   "items": ["FSSAI", "ISO", "BIS", "HACCP", "GMP"],
   "ctaText": "View all certifications",
   "ctaLink": "/page/manufacturing",
-  "gallery": [
-    { "image": "", "caption": "" }
-  ]
+  "gallery": [{ "image": "", "caption": "" }]
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `label` | string | Small label above heading |
-| `heading` | string | Main heading |
-| `items` | string[] | Certification names |
-| `ctaText` | string | CTA button label |
-| `ctaLink` | string | CTA destination |
-| `gallery[].image` | string | Certificate image URL |
-| `gallery[].caption` | string | Image caption |
+| Field               | Type     | Description               |
+| ------------------- | -------- | ------------------------- |
+| `label`             | string   | Small label above heading |
+| `heading`           | string   | Main heading              |
+| `items`             | string[] | Certification names       |
+| `ctaText`           | string   | CTA button label          |
+| `ctaLink`           | string   | CTA destination           |
+| `gallery[].image`   | string   | Certificate image URL     |
+| `gallery[].caption` | string   | Image caption             |
 
 #### Leadership
 
@@ -883,22 +856,32 @@ Team/director profile cards.
   "ctaText": "Read full story",
   "ctaLink": "/page/about-us",
   "members": [
-    { "name": "Director name", "role": "Co-founder & Director", "bio": "20+ yrs FMCG distribution...", "image": "" },
-    { "name": "Director name", "role": "Co-founder & Director", "bio": "Operations & manufacturing lead...", "image": "" }
+    {
+      "name": "Director name",
+      "role": "Co-founder & Director",
+      "bio": "20+ yrs FMCG distribution...",
+      "image": ""
+    },
+    {
+      "name": "Director name",
+      "role": "Co-founder & Director",
+      "bio": "Operations & manufacturing lead...",
+      "image": ""
+    }
   ]
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `label` | string | Small label above heading |
-| `heading` | string | Main heading |
-| `ctaText` | string | CTA button label |
-| `ctaLink` | string | CTA destination |
-| `members[].name` | string | Person's name |
-| `members[].role` | string | Their title |
-| `members[].bio` | string | Biography text |
-| `members[].image` | string | Profile photo URL |
+| Field             | Type   | Description               |
+| ----------------- | ------ | ------------------------- |
+| `label`           | string | Small label above heading |
+| `heading`         | string | Main heading              |
+| `ctaText`         | string | CTA button label          |
+| `ctaLink`         | string | CTA destination           |
+| `members[].name`  | string | Person's name             |
+| `members[].role`  | string | Their title               |
+| `members[].bio`   | string | Biography text            |
+| `members[].image` | string | Profile photo URL         |
 
 #### Partner Logos
 
@@ -909,19 +892,28 @@ Logo grid with optional testimonials.
   "heading": "Trusted by brands across India",
   "logos": ["", "", ""],
   "testimonials": [
-    { "quote": "\"Consistent quality, on-time delivery...\"", "author": "Brand name, City" },
-    { "quote": "\"Private label setup was smooth...\"", "author": "Distributor name, State" },
-    { "quote": "\"Scale, hygiene standards and response time...\"", "author": "Company name, State" }
+    {
+      "quote": "\"Consistent quality, on-time delivery...\"",
+      "author": "Brand name, City"
+    },
+    {
+      "quote": "\"Private label setup was smooth...\"",
+      "author": "Distributor name, State"
+    },
+    {
+      "quote": "\"Scale, hygiene standards and response time...\"",
+      "author": "Company name, State"
+    }
   ]
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `heading` | string | Section heading |
-| `logos` | string[] | Logo image URLs |
-| `testimonials[].quote` | string | Testimonial text |
-| `testimonials[].author` | string | Attribution |
+| Field                   | Type     | Description      |
+| ----------------------- | -------- | ---------------- |
+| `heading`               | string   | Section heading  |
+| `logos`                 | string[] | Logo image URLs  |
+| `testimonials[].quote`  | string   | Testimonial text |
+| `testimonials[].author` | string   | Attribution      |
 
 #### Lead Capture
 
@@ -937,36 +929,79 @@ Customisable enquiry form with configurable fields.
   "submitText": "Submit enquiry — we'll call you back",
   "disclaimer": "Data goes directly to CRM...",
   "fields": [
-    { "name": "name", "label": "Your name", "type": "text", "required": true, "placeholder": "Your name *" },
-    { "name": "company", "label": "Company name", "type": "text", "required": true, "placeholder": "Company name *" },
-    { "name": "phone", "label": "Phone number", "type": "tel", "required": true, "placeholder": "Phone number *" },
-    { "name": "email", "label": "Email address", "type": "email", "required": false, "placeholder": "Email address" },
-    { "name": "requirement", "label": "Requirement type", "type": "select", "required": false, "placeholder": "Requirement type", "options": ["Bulk order", "Private label", "Distribution", "Investment", "Other"] },
-    { "name": "city", "label": "City / state", "type": "text", "required": false, "placeholder": "City / state" }
+    {
+      "name": "name",
+      "label": "Your name",
+      "type": "text",
+      "required": true,
+      "placeholder": "Your name *"
+    },
+    {
+      "name": "company",
+      "label": "Company name",
+      "type": "text",
+      "required": true,
+      "placeholder": "Company name *"
+    },
+    {
+      "name": "phone",
+      "label": "Phone number",
+      "type": "tel",
+      "required": true,
+      "placeholder": "Phone number *"
+    },
+    {
+      "name": "email",
+      "label": "Email address",
+      "type": "email",
+      "required": false,
+      "placeholder": "Email address"
+    },
+    {
+      "name": "requirement",
+      "label": "Requirement type",
+      "type": "select",
+      "required": false,
+      "placeholder": "Requirement type",
+      "options": [
+        "Bulk order",
+        "Private label",
+        "Distribution",
+        "Investment",
+        "Other"
+      ]
+    },
+    {
+      "name": "city",
+      "label": "City / state",
+      "type": "text",
+      "required": false,
+      "placeholder": "City / state"
+    }
   ],
   "messageField": true,
   "bgColor": "#016129"
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `label` | string | Small label above form |
-| `heading` | string | Form heading |
-| `description` | string | Form description |
-| `successMessage` | string | Message shown after submit |
-| `apiEndpoint` | string | Backend endpoint (default: `/api/enquiries`) |
-| `submitText` | string | Submit button label |
-| `disclaimer` | string | Small text below form |
-| `fields[]` | array | Form field definitions |
-| `fields[].name` | string | Field identifier (lowercase, no spaces) |
-| `fields[].label` | string | Field label |
-| `fields[].type` | `"text"` `"tel"` `"email"` `"select"` | Input type |
-| `fields[].required` | boolean | Whether the field is mandatory |
-| `fields[].placeholder` | string | Placeholder text |
-| `fields[].options` | string[] | Dropdown options (only for `select` type) |
-| `messageField` | boolean | Show a multi-line message textarea |
-| `bgColor` | string | Form background hex colour |
+| Field                  | Type                                  | Description                                  |
+| ---------------------- | ------------------------------------- | -------------------------------------------- |
+| `label`                | string                                | Small label above form                       |
+| `heading`              | string                                | Form heading                                 |
+| `description`          | string                                | Form description                             |
+| `successMessage`       | string                                | Message shown after submit                   |
+| `apiEndpoint`          | string                                | Backend endpoint (default: `/api/enquiries`) |
+| `submitText`           | string                                | Submit button label                          |
+| `disclaimer`           | string                                | Small text below form                        |
+| `fields[]`             | array                                 | Form field definitions                       |
+| `fields[].name`        | string                                | Field identifier (lowercase, no spaces)      |
+| `fields[].label`       | string                                | Field label                                  |
+| `fields[].type`        | `"text"` `"tel"` `"email"` `"select"` | Input type                                   |
+| `fields[].required`    | boolean                               | Whether the field is mandatory               |
+| `fields[].placeholder` | string                                | Placeholder text                             |
+| `fields[].options`     | string[]                              | Dropdown options (only for `select` type)    |
+| `messageField`         | boolean                               | Show a multi-line message textarea           |
+| `bgColor`              | string                                | Form background hex colour                   |
 
 #### Blog Grid
 
@@ -982,13 +1017,13 @@ Recent blog posts grid/carousel.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `title` | string | Section heading |
-| `maxPosts` | number | Max posts to show |
-| `layout` | `"grid"` `"list"` `"carousel"` | Display layout |
-| `categoryId` | string | Filter by blog category |
-| `showFeatured` | boolean | Show featured post first |
+| Field          | Type                           | Description              |
+| -------------- | ------------------------------ | ------------------------ |
+| `title`        | string                         | Section heading          |
+| `maxPosts`     | number                         | Max posts to show        |
+| `layout`       | `"grid"` `"list"` `"carousel"` | Display layout           |
+| `categoryId`   | string                         | Filter by blog category  |
+| `showFeatured` | boolean                        | Show featured post first |
 
 #### Pricing Table
 
@@ -999,24 +1034,54 @@ Three-tier pricing comparison with features list.
   "title": "Our Pricing",
   "description": "Choose the plan that suits your needs",
   "tiers": [
-    { "name": "Basic", "price": "₹___", "description": "For small businesses", "features": ["Feature 1", "Feature 2", "Feature 3"], "ctaText": "Get started", "ctaLink": "/contact", "highlighted": false },
-    { "name": "Professional", "price": "₹___", "description": "For growing companies", "features": ["Feature 1", "Feature 2", "Feature 3", "Feature 4"], "ctaText": "Get started", "ctaLink": "/contact", "highlighted": true },
-    { "name": "Enterprise", "price": "Custom", "description": "For large organizations", "features": ["Feature 1", "Feature 2", "Feature 3", "Feature 4", "Feature 5"], "ctaText": "Contact us", "ctaLink": "/contact", "highlighted": false }
+    {
+      "name": "Basic",
+      "price": "₹___",
+      "description": "For small businesses",
+      "features": ["Feature 1", "Feature 2", "Feature 3"],
+      "ctaText": "Get started",
+      "ctaLink": "/contact",
+      "highlighted": false
+    },
+    {
+      "name": "Professional",
+      "price": "₹___",
+      "description": "For growing companies",
+      "features": ["Feature 1", "Feature 2", "Feature 3", "Feature 4"],
+      "ctaText": "Get started",
+      "ctaLink": "/contact",
+      "highlighted": true
+    },
+    {
+      "name": "Enterprise",
+      "price": "Custom",
+      "description": "For large organizations",
+      "features": [
+        "Feature 1",
+        "Feature 2",
+        "Feature 3",
+        "Feature 4",
+        "Feature 5"
+      ],
+      "ctaText": "Contact us",
+      "ctaLink": "/contact",
+      "highlighted": false
+    }
   ]
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `title` | string | Section heading |
-| `description` | string | Section description |
-| `tiers[].name` | string | Tier name |
-| `tiers[].price` | string | Price display text |
-| `tiers[].description` | string | Tier description |
-| `tiers[].features` | string[] | Feature bullet list |
-| `tiers[].ctaText` | string | Button label |
-| `tiers[].ctaLink` | string | Button destination |
-| `tiers[].highlighted` | boolean | Mark as featured/spotlight |
+| Field                 | Type     | Description                |
+| --------------------- | -------- | -------------------------- |
+| `title`               | string   | Section heading            |
+| `description`         | string   | Section description        |
+| `tiers[].name`        | string   | Tier name                  |
+| `tiers[].price`       | string   | Price display text         |
+| `tiers[].description` | string   | Tier description           |
+| `tiers[].features`    | string[] | Feature bullet list        |
+| `tiers[].ctaText`     | string   | Button label               |
+| `tiers[].ctaLink`     | string   | Button destination         |
+| `tiers[].highlighted` | boolean  | Mark as featured/spotlight |
 
 #### Sticky CTA
 
@@ -1027,21 +1092,36 @@ Fixed-position bar at the bottom of the viewport for quick actions.
   "visible": false,
   "text": "Ready to manufacture at scale?",
   "buttons": [
-    { "text": "Get bulk quote", "type": "primary", "action": "enquiry", "link": "#contact" },
-    { "text": "WhatsApp us", "type": "whatsapp", "action": "whatsapp", "link": "https://wa.me/91XXXXXXXXXX" },
-    { "text": "+91 XXXXX XXXXX", "type": "phone", "action": "phone", "link": "tel:+91XXXXXXXXXX" }
+    {
+      "text": "Get bulk quote",
+      "type": "primary",
+      "action": "enquiry",
+      "link": "#contact"
+    },
+    {
+      "text": "WhatsApp us",
+      "type": "whatsapp",
+      "action": "whatsapp",
+      "link": "https://wa.me/91XXXXXXXXXX"
+    },
+    {
+      "text": "+91 XXXXX XXXXX",
+      "type": "phone",
+      "action": "phone",
+      "link": "tel:+91XXXXXXXXXX"
+    }
   ]
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `visible` | boolean | Show/hide the bar |
-| `text` | string | CTA message text |
-| `buttons[].text` | string | Button label |
-| `buttons[].type` | `"primary"` `"whatsapp"` `"phone"` | Button style variant |
-| `buttons[].action` | `"enquiry"` `"whatsapp"` `"phone"` `"link"` | Action type |
-| `buttons[].link` | string | Destination URL or page |
+| Field              | Type                                        | Description             |
+| ------------------ | ------------------------------------------- | ----------------------- |
+| `visible`          | boolean                                     | Show/hide the bar       |
+| `text`             | string                                      | CTA message text        |
+| `buttons[].text`   | string                                      | Button label            |
+| `buttons[].type`   | `"primary"` `"whatsapp"` `"phone"`          | Button style variant    |
+| `buttons[].action` | `"enquiry"` `"whatsapp"` `"phone"` `"link"` | Action type             |
+| `buttons[].link`   | string                                      | Destination URL or page |
 
 #### Hero Split
 
@@ -1067,22 +1147,22 @@ Two-column hero with text on one side and optional media.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `title` | string | Main heading |
-| `subtitle` | string | Sub-heading |
-| `description` | string | Additional text |
-| `backgroundImage` | string | Background image URL |
-| `height` | string | Height preset |
-| `alignment` | `"left"` `"center"` | Text alignment |
-| `buttons[].text` | string | Button label |
-| `buttons[].link` | string | Destination |
-| `buttons[].variant` | `"primary"` `"outline"` | Button style |
-| `badges` | string[] | Badge labels (e.g. ["New", "Popular"]) |
-| `ctaButtonColor` | string | Button colour |
-| `ctaTextColor` | string | Button text colour |
-| `showButton` | boolean | Show buttons |
-| `fullWidth` | boolean | Full browser width |
+| Field               | Type                    | Description                            |
+| ------------------- | ----------------------- | -------------------------------------- |
+| `title`             | string                  | Main heading                           |
+| `subtitle`          | string                  | Sub-heading                            |
+| `description`       | string                  | Additional text                        |
+| `backgroundImage`   | string                  | Background image URL                   |
+| `height`            | string                  | Height preset                          |
+| `alignment`         | `"left"` `"center"`     | Text alignment                         |
+| `buttons[].text`    | string                  | Button label                           |
+| `buttons[].link`    | string                  | Destination                            |
+| `buttons[].variant` | `"primary"` `"outline"` | Button style                           |
+| `badges`            | string[]                | Badge labels (e.g. ["New", "Popular"]) |
+| `ctaButtonColor`    | string                  | Button colour                          |
+| `ctaTextColor`      | string                  | Button text colour                     |
+| `showButton`        | boolean                 | Show buttons                           |
+| `fullWidth`         | boolean                 | Full browser width                     |
 
 #### Timeline
 
@@ -1093,21 +1173,34 @@ Company history / milestone timeline.
   "title": "Our Journey",
   "subtitle": "How we got here",
   "items": [
-    { "year": "2010", "title": "Founded", "description": "Company established." },
-    { "year": "2015", "title": "Expansion", "description": "New facility and production lines." },
-    { "year": "Today", "title": "Growing", "description": "Serving brands across India.", "current": true }
+    {
+      "year": "2010",
+      "title": "Founded",
+      "description": "Company established."
+    },
+    {
+      "year": "2015",
+      "title": "Expansion",
+      "description": "New facility and production lines."
+    },
+    {
+      "year": "Today",
+      "title": "Growing",
+      "description": "Serving brands across India.",
+      "current": true
+    }
   ]
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `title` | string | Section heading |
-| `subtitle` | string | Section sub-heading |
-| `items[].year` | string | Year label |
-| `items[].title` | string | Milestone title |
-| `items[].description` | string | Detailed description |
-| `items[].current` | boolean | Mark as current/recent |
+| Field                 | Type    | Description            |
+| --------------------- | ------- | ---------------------- |
+| `title`               | string  | Section heading        |
+| `subtitle`            | string  | Section sub-heading    |
+| `items[].year`        | string  | Year label             |
+| `items[].title`       | string  | Milestone title        |
+| `items[].description` | string  | Detailed description   |
+| `items[].current`     | boolean | Mark as current/recent |
 
 #### Metrics Bar
 
@@ -1124,10 +1217,10 @@ Horizontal statistics bar (numbers with labels).
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
+| Field           | Type   | Description         |
+| --------------- | ------ | ------------------- |
 | `stats[].value` | string | The statistic value |
-| `stats[].label` | string | Description label |
+| `stats[].label` | string | Description label   |
 
 #### Process Flow
 
@@ -1138,22 +1231,34 @@ Step-by-step process with optional trust items footer.
   "title": "Our Process",
   "subtitle": "From start to finish",
   "steps": [
-    { "title": "Step 1", "description": "Description of step 1", "icon": "ClipboardCheck" },
-    { "title": "Step 2", "description": "Description of step 2", "icon": "Settings" },
-    { "title": "Step 3", "description": "Description of step 3", "icon": "CheckCircle" }
+    {
+      "title": "Step 1",
+      "description": "Description of step 1",
+      "icon": "ClipboardCheck"
+    },
+    {
+      "title": "Step 2",
+      "description": "Description of step 2",
+      "icon": "Settings"
+    },
+    {
+      "title": "Step 3",
+      "description": "Description of step 3",
+      "icon": "CheckCircle"
+    }
   ],
   "trustItems": ["Quality assured", "Batch tracked", "Certified process"]
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `title` | string | Section heading |
-| `subtitle` | string | Section sub-heading |
-| `steps[].title` | string | Step title |
-| `steps[].description` | string | Step description |
-| `steps[].icon` | string | Lucide icon name |
-| `trustItems` | string[] | Checkmark list below the steps |
+| Field                 | Type     | Description                    |
+| --------------------- | -------- | ------------------------------ |
+| `title`               | string   | Section heading                |
+| `subtitle`            | string   | Section sub-heading            |
+| `steps[].title`       | string   | Step title                     |
+| `steps[].description` | string   | Step description               |
+| `steps[].icon`        | string   | Lucide icon name               |
+| `trustItems`          | string[] | Checkmark list below the steps |
 
 #### Packaging Grid
 
@@ -1164,21 +1269,36 @@ Three-card packaging format comparison with highlight support.
   "title": "Packaging formats",
   "subtitle": "Choose what works for your business",
   "items": [
-    { "title": "Branded retail", "description": "Ready-branded packs for distributors", "tag": "Distributor friendly", "highlight": false },
-    { "title": "Private label", "description": "Your brand, our manufacturing", "tag": "Most requested", "highlight": true },
-    { "title": "Bulk / institutional", "description": "5kg, 10kg, 25kg formats", "tag": "Bulk format", "highlight": false }
+    {
+      "title": "Branded retail",
+      "description": "Ready-branded packs for distributors",
+      "tag": "Distributor friendly",
+      "highlight": false
+    },
+    {
+      "title": "Private label",
+      "description": "Your brand, our manufacturing",
+      "tag": "Most requested",
+      "highlight": true
+    },
+    {
+      "title": "Bulk / institutional",
+      "description": "5kg, 10kg, 25kg formats",
+      "tag": "Bulk format",
+      "highlight": false
+    }
   ]
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `title` | string | Section heading |
-| `subtitle` | string | Section sub-heading |
-| `items[].title` | string | Card title |
-| `items[].description` | string | Card description |
-| `items[].tag` | string | Tag label |
-| `items[].highlight` | boolean | Highlight card with accent border |
+| Field                 | Type    | Description                       |
+| --------------------- | ------- | --------------------------------- |
+| `title`               | string  | Section heading                   |
+| `subtitle`            | string  | Section sub-heading               |
+| `items[].title`       | string  | Card title                        |
+| `items[].description` | string  | Card description                  |
+| `items[].tag`         | string  | Tag label                         |
+| `items[].highlight`   | boolean | Highlight card with accent border |
 
 #### Certification Cards
 
@@ -1196,12 +1316,12 @@ Certification badges with footer text.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `title` | string | Section heading |
-| `certs[].name` | string | Certification name |
-| `certs[].description` | string | Description |
-| `footerText` | string | Text below the cards |
+| Field                 | Type   | Description          |
+| --------------------- | ------ | -------------------- |
+| `title`               | string | Section heading      |
+| `certs[].name`        | string | Certification name   |
+| `certs[].description` | string | Description          |
+| `footerText`          | string | Text below the cards |
 
 #### Address Cards
 
@@ -1211,21 +1331,35 @@ Location cards for factory, office, and visit information.
 {
   "title": "Our locations",
   "cards": [
-    { "type": "factory", "title": "Manufacturing facility", "address": "[Factory address]", "badge": "Primary" },
-    { "type": "office", "title": "Corporate office", "address": "[Office address]", "badge": "" },
-    { "type": "visit", "title": "Planning a factory visit?", "description": "We welcome B2B buyers..." }
+    {
+      "type": "factory",
+      "title": "Manufacturing facility",
+      "address": "[Factory address]",
+      "badge": "Primary"
+    },
+    {
+      "type": "office",
+      "title": "Corporate office",
+      "address": "[Office address]",
+      "badge": ""
+    },
+    {
+      "type": "visit",
+      "title": "Planning a factory visit?",
+      "description": "We welcome B2B buyers..."
+    }
   ]
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `title` | string | Section heading |
-| `cards[].type` | `"factory"` `"office"` `"visit"` | Card type (affects icon) |
-| `cards[].title` | string | Card title |
-| `cards[].address` | string | Address text |
-| `cards[].badge` | string | Badge label |
-| `cards[].description` | string | Description text (for visit cards) |
+| Field                 | Type                             | Description                        |
+| --------------------- | -------------------------------- | ---------------------------------- |
+| `title`               | string                           | Section heading                    |
+| `cards[].type`        | `"factory"` `"office"` `"visit"` | Card type (affects icon)           |
+| `cards[].title`       | string                           | Card title                         |
+| `cards[].address`     | string                           | Address text                       |
+| `cards[].badge`       | string                           | Badge label                        |
+| `cards[].description` | string                           | Description text (for visit cards) |
 
 #### Quick Connect
 
@@ -1235,21 +1369,41 @@ Contact channel buttons (WhatsApp, phone, email, etc.).
 {
   "title": "Prefer a quicker channel?",
   "channels": [
-    { "type": "whatsapp", "title": "WhatsApp us", "description": "Quick questions, product photos", "value": "+91 XXXXX XXXXX" },
-    { "type": "phone", "title": "Call us directly", "description": "For urgent requirements", "value": "+91 XXXXX XXXXX" },
-    { "type": "email", "title": "Email us", "description": "For detailed enquiries", "value": "sales@purvabites.com" },
-    { "type": "distribution", "title": "View Distribution", "description": "Explore distribution options", "value": "Pan-India coverage" }
+    {
+      "type": "whatsapp",
+      "title": "WhatsApp us",
+      "description": "Quick questions, product photos",
+      "value": "+91 XXXXX XXXXX"
+    },
+    {
+      "type": "phone",
+      "title": "Call us directly",
+      "description": "For urgent requirements",
+      "value": "+91 XXXXX XXXXX"
+    },
+    {
+      "type": "email",
+      "title": "Email us",
+      "description": "For detailed enquiries",
+      "value": "sales@purvabites.com"
+    },
+    {
+      "type": "distribution",
+      "title": "View Distribution",
+      "description": "Explore distribution options",
+      "value": "Pan-India coverage"
+    }
   ]
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `title` | string | Section heading |
-| `channels[].type` | `"whatsapp"` `"phone"` `"email"` `"distribution"` | Channel type |
-| `channels[].title` | string | Display title |
-| `channels[].description` | string | Description text |
-| `channels[].value` | string | The actual contact info |
+| Field                    | Type                                              | Description             |
+| ------------------------ | ------------------------------------------------- | ----------------------- |
+| `title`                  | string                                            | Section heading         |
+| `channels[].type`        | `"whatsapp"` `"phone"` `"email"` `"distribution"` | Channel type            |
+| `channels[].title`       | string                                            | Display title           |
+| `channels[].description` | string                                            | Description text        |
+| `channels[].value`       | string                                            | The actual contact info |
 
 #### CRM Flow
 
@@ -1259,20 +1413,40 @@ Visual step-by-step of the post-enquiry process.
 {
   "title": "What happens after you get in touch",
   "steps": [
-    { "num": 1, "title": "Enquiry received", "description": "Logged in CRM automatically" },
-    { "num": 2, "title": "Auto-acknowledgement", "description": "Email confirmation within minutes" },
-    { "num": 3, "title": "Sales team review", "description": "Routed to the right person" },
-    { "num": 4, "title": "First response", "description": "Call or WhatsApp within 4-24 hours" },
-    { "num": 5, "title": "Proposal / sample", "description": "Pricing or sample dispatch" }
+    {
+      "num": 1,
+      "title": "Enquiry received",
+      "description": "Logged in CRM automatically"
+    },
+    {
+      "num": 2,
+      "title": "Auto-acknowledgement",
+      "description": "Email confirmation within minutes"
+    },
+    {
+      "num": 3,
+      "title": "Sales team review",
+      "description": "Routed to the right person"
+    },
+    {
+      "num": 4,
+      "title": "First response",
+      "description": "Call or WhatsApp within 4-24 hours"
+    },
+    {
+      "num": 5,
+      "title": "Proposal / sample",
+      "description": "Pricing or sample dispatch"
+    }
   ]
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `title` | string | Section heading |
-| `steps[].num` | number | Step number |
-| `steps[].title` | string | Step title |
+| Field                 | Type   | Description      |
+| --------------------- | ------ | ---------------- |
+| `title`               | string | Section heading  |
+| `steps[].num`         | number | Step number      |
+| `steps[].title`       | string | Step title       |
 | `steps[].description` | string | Step description |
 
 ---
@@ -1371,12 +1545,27 @@ Controls the **Manufacturing** page (`/manufacturing`). Renders: hero banner, in
     "heading": "Your brand. Our factory.",
     "subtitle": "We handle the entire manufacturing and packaging process - you bring the brand identity",
     "items": [
-      { "icon": "Package", "title": "Custom packaging", "desc": "Supply your artwork / brief - we print and pack under your brand" },
-      { "icon": "Settings", "title": "Custom formulation", "desc": "Adjust flavour, spice levels, ingredients" },
-      { "icon": "ShieldCheck", "title": "Regulatory compliance handled", "desc": "FSSAI declaration, nutritional labels, batch coding" }
+      {
+        "icon": "Package",
+        "title": "Custom packaging",
+        "desc": "Supply your artwork / brief - we print and pack under your brand"
+      },
+      {
+        "icon": "Settings",
+        "title": "Custom formulation",
+        "desc": "Adjust flavour, spice levels, ingredients"
+      },
+      {
+        "icon": "ShieldCheck",
+        "title": "Regulatory compliance handled",
+        "desc": "FSSAI declaration, nutritional labels, batch coding"
+      }
     ],
     "details": [
-      { "label": "Minimum order qty (MOQ)", "value": "As per product - share requirement" },
+      {
+        "label": "Minimum order qty (MOQ)",
+        "value": "As per product - share requirement"
+      },
       { "label": "Lead time (first batch)", "value": "15-21 working days" },
       { "label": "Pack size flexibility", "value": "10g to 1kg - all sizes" },
       { "label": "NDA / confidentiality", "value": "Available on request" },
@@ -1400,48 +1589,48 @@ Controls the **Manufacturing** page (`/manufacturing`). Renders: hero banner, in
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `hero.title` | string | Main hero heading |
-| `hero.subtitle` | string | Hero sub-heading |
-| `hero.badge` | string | Badge text (e.g. certifications) |
-| `hero.backgroundImage` | string | Hero background image URL |
-| `metrics[].value` | string | Statistic value |
-| `metrics[].label` | string | Statistic label |
-| `intro.heading` | string | Intro section heading |
-| `intro.description` | string | Intro paragraph |
-| `productionLines[].id` | string | Unique identifier (used as tab key) |
-| `productionLines[].name` | string | Display name on tab button |
-| `productionLines[].flagship` | boolean | Show "Flagship line" badge |
-| `productionLines[].capacity` | string | Daily capacity display |
-| `productionLines[].variants` | string | Variant count display |
-| `productionLines[].packs` | string | Pack size options |
-| `productionLines[].desc` | string | Detailed description |
-| `productionLines[].tags` | string[] | Tag badges |
-| `productionLines[].ctaText` | string | CTA button label (renders only if non-empty) |
-| `productionLines[].ctaLink` | string | Button destination (`/path`, `http://`, `#hash`, or page type) |
-| `productionLines[].ctaEnabled` | boolean | Show/hide the CTA button |
-| `productionLines[].image` | string | Production line image |
-| `qualitySteps[].icon` | string | Lucide icon name |
-| `qualitySteps[].color` | string | Tailwind CSS colour classes |
-| `qualitySteps[].title` | string | Step heading |
-| `qualitySteps[].desc` | string | Step description |
-| `qualityFooterItems` | string[] | Checkmark items below quality section |
-| `privateLabel.heading` | string | Section heading |
-| `privateLabel.subtitle` | string | Section sub-heading |
-| `privateLabel.items[].icon` | string | Lucide icon | |
-| `privateLabel.items[].title` | string | Item title |
-| `privateLabel.items[].desc` | string | Item description |
-| `privateLabel.details[].label` | string | Detail row label |
-| `privateLabel.details[].value` | string | Detail row value |
-| `privateLabel.ctaText` | string | CTA button label |
-| `privateLabel.ctaLink` | string | Button destination (renders button only if both text and link exist) |
-| `certifications[].name` | string | Certification name |
-| `certifications[].desc` | string | Description |
-| `cta.title` | string | Lead capture form heading |
-| `cta.subtitle` | string | Form sub-heading |
-| `cta.formBgColor` | string | Form background colour |
-| `cta.formTextColor` | string | Form text colour |
+| Field                          | Type     | Description                                                          |
+| ------------------------------ | -------- | -------------------------------------------------------------------- | --- |
+| `hero.title`                   | string   | Main hero heading                                                    |
+| `hero.subtitle`                | string   | Hero sub-heading                                                     |
+| `hero.badge`                   | string   | Badge text (e.g. certifications)                                     |
+| `hero.backgroundImage`         | string   | Hero background image URL                                            |
+| `metrics[].value`              | string   | Statistic value                                                      |
+| `metrics[].label`              | string   | Statistic label                                                      |
+| `intro.heading`                | string   | Intro section heading                                                |
+| `intro.description`            | string   | Intro paragraph                                                      |
+| `productionLines[].id`         | string   | Unique identifier (used as tab key)                                  |
+| `productionLines[].name`       | string   | Display name on tab button                                           |
+| `productionLines[].flagship`   | boolean  | Show "Flagship line" badge                                           |
+| `productionLines[].capacity`   | string   | Daily capacity display                                               |
+| `productionLines[].variants`   | string   | Variant count display                                                |
+| `productionLines[].packs`      | string   | Pack size options                                                    |
+| `productionLines[].desc`       | string   | Detailed description                                                 |
+| `productionLines[].tags`       | string[] | Tag badges                                                           |
+| `productionLines[].ctaText`    | string   | CTA button label (renders only if non-empty)                         |
+| `productionLines[].ctaLink`    | string   | Button destination (`/path`, `http://`, `#hash`, or page type)       |
+| `productionLines[].ctaEnabled` | boolean  | Show/hide the CTA button                                             |
+| `productionLines[].image`      | string   | Production line image                                                |
+| `qualitySteps[].icon`          | string   | Lucide icon name                                                     |
+| `qualitySteps[].color`         | string   | Tailwind CSS colour classes                                          |
+| `qualitySteps[].title`         | string   | Step heading                                                         |
+| `qualitySteps[].desc`          | string   | Step description                                                     |
+| `qualityFooterItems`           | string[] | Checkmark items below quality section                                |
+| `privateLabel.heading`         | string   | Section heading                                                      |
+| `privateLabel.subtitle`        | string   | Section sub-heading                                                  |
+| `privateLabel.items[].icon`    | string   | Lucide icon                                                          |     |
+| `privateLabel.items[].title`   | string   | Item title                                                           |
+| `privateLabel.items[].desc`    | string   | Item description                                                     |
+| `privateLabel.details[].label` | string   | Detail row label                                                     |
+| `privateLabel.details[].value` | string   | Detail row value                                                     |
+| `privateLabel.ctaText`         | string   | CTA button label                                                     |
+| `privateLabel.ctaLink`         | string   | Button destination (renders button only if both text and link exist) |
+| `certifications[].name`        | string   | Certification name                                                   |
+| `certifications[].desc`        | string   | Description                                                          |
+| `cta.title`                    | string   | Lead capture form heading                                            |
+| `cta.subtitle`                 | string   | Form sub-heading                                                     |
+| `cta.formBgColor`              | string   | Form background colour                                               |
+| `cta.formTextColor`            | string   | Form text colour                                                     |
 
 ---
 
@@ -1479,12 +1668,37 @@ Controls the **About** page (`/about`). Renders: hero, company story, stats, tim
     "ctaText": "Meet the founders →",
     "ctaPage": "manufacturing",
     "timeline": [
-      { "year": "2010", "title": "Founded", "desc": "Purva Bites was established..." },
-      { "year": "2015", "title": "First manufacturing unit", "desc": "Opened own production facility..." },
-      { "year": "2018", "title": "Expansion", "desc": "Added new production lines..." },
-      { "year": "2020", "title": "Quality certification", "desc": "Achieved FSSAI certification..." },
-      { "year": "2023", "title": "Scale-up", "desc": "Expanded to multiple product categories..." },
-      { "year": "Today", "title": "Pan-India presence", "desc": "Serving brands and distributors across India...", "current": true }
+      {
+        "year": "2010",
+        "title": "Founded",
+        "desc": "Purva Bites was established..."
+      },
+      {
+        "year": "2015",
+        "title": "First manufacturing unit",
+        "desc": "Opened own production facility..."
+      },
+      {
+        "year": "2018",
+        "title": "Expansion",
+        "desc": "Added new production lines..."
+      },
+      {
+        "year": "2020",
+        "title": "Quality certification",
+        "desc": "Achieved FSSAI certification..."
+      },
+      {
+        "year": "2023",
+        "title": "Scale-up",
+        "desc": "Expanded to multiple product categories..."
+      },
+      {
+        "year": "Today",
+        "title": "Pan-India presence",
+        "desc": "Serving brands and distributors across India...",
+        "current": true
+      }
     ]
   },
   "directors": [
@@ -1506,18 +1720,51 @@ Controls the **About** page (`/about`). Renders: hero, company story, stats, tim
     "cta": "Speak to us directly →"
   },
   "missionVisionValues": [
-    { "icon": "Target", "color": "text-primary", "bg": "bg-primary/10", "label": "Mission", "title": "To deliver high-quality FMCG products...", "desc": "We strive to make premium food products accessible..." },
-    { "icon": "Eye", "color": "text-emerald-600", "bg": "bg-emerald-50", "label": "Vision", "title": "To be India's most trusted FMCG manufacturing partner...", "desc": "Setting benchmarks in quality, innovation and reliability..." },
-    { "icon": "HeartHandshake", "color": "text-amber-600", "bg": "bg-amber-50", "label": "Values", "title": "Integrity. Quality. Partnership.", "desc": "Every decision we make is guided by these three principles..." }
+    {
+      "icon": "Target",
+      "color": "text-primary",
+      "bg": "bg-primary/10",
+      "label": "Mission",
+      "title": "To deliver high-quality FMCG products...",
+      "desc": "We strive to make premium food products accessible..."
+    },
+    {
+      "icon": "Eye",
+      "color": "text-emerald-600",
+      "bg": "bg-emerald-50",
+      "label": "Vision",
+      "title": "To be India's most trusted FMCG manufacturing partner...",
+      "desc": "Setting benchmarks in quality, innovation and reliability..."
+    },
+    {
+      "icon": "HeartHandshake",
+      "color": "text-amber-600",
+      "bg": "bg-amber-50",
+      "label": "Values",
+      "title": "Integrity. Quality. Partnership.",
+      "desc": "Every decision we make is guided by these three principles..."
+    }
   ],
   "location": {
     "factoryAddress": "[Factory address line 1]\n[Area / Industrial estate]\n[City, District] - [PIN]\nGujarat, India",
     "googleMapsEmbedUrl": "",
     "logistics": [
-      { "icon": "Train", "label": "Nearest railway station", "value": "[Station] - X km" },
-      { "icon": "Plane", "label": "Nearest airport", "value": "[Airport] - X km" },
+      {
+        "icon": "Train",
+        "label": "Nearest railway station",
+        "value": "[Station] - X km"
+      },
+      {
+        "icon": "Plane",
+        "label": "Nearest airport",
+        "value": "[Airport] - X km"
+      },
       { "icon": "Route", "label": "National highway", "value": "NH-X - X km" },
-      { "icon": "Truck", "label": "Freight terminal", "value": "[Terminal] - X km" }
+      {
+        "icon": "Truck",
+        "label": "Freight terminal",
+        "value": "[Terminal] - X km"
+      }
     ],
     "dispatchTags": ["Pan-India dispatch", "Road + rail", "Batch-tracked"],
     "dispatchDesc": "We dispatch to all major markets across India via road and rail freight."
@@ -1525,67 +1772,88 @@ Controls the **About** page (`/about`). Renders: hero, company story, stats, tim
   "cta": {
     "title": "Ready to work with us?",
     "cards": [
-      { "icon": "Factory", "title": "See our manufacturing", "desc": "Explore our production lines, quality processes and certifications.", "cta": "View manufacturing →", "page": "manufacturing", "useForm": false },
-      { "icon": "Target", "title": "Distribution enquiry", "desc": "Looking to stock Purva Bites products in your region?", "cta": "Send enquiry →", "page": "contact", "useForm": true },
-      { "icon": "Linkedin", "title": "Partner with us", "desc": "Institutional buyers, private label partners, suppliers.", "cta": "Send enquiry →", "page": "contact", "useForm": true }
+      {
+        "icon": "Factory",
+        "title": "See our manufacturing",
+        "desc": "Explore our production lines, quality processes and certifications.",
+        "cta": "View manufacturing →",
+        "page": "manufacturing",
+        "useForm": false
+      },
+      {
+        "icon": "Target",
+        "title": "Distribution enquiry",
+        "desc": "Looking to stock Purva Bites products in your region?",
+        "cta": "Send enquiry →",
+        "page": "contact",
+        "useForm": true
+      },
+      {
+        "icon": "Linkedin",
+        "title": "Partner with us",
+        "desc": "Institutional buyers, private label partners, suppliers.",
+        "cta": "Send enquiry →",
+        "page": "contact",
+        "useForm": true
+      }
     ]
   }
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `hero.title` | string | Hero heading |
-| `hero.subtitle` | string | Hero sub-heading |
-| `hero.estYear` | string | Est. year display |
-| `hero.backgroundImage` | string | Background image URL |
-| `hero.backgroundColor` | string | Fallback background colour |
-| `hero.pattern` | `"none"` `"dots"` `"diagonal"` `"waves"` | Overlay pattern |
-| `hero.overlayColor` | string | Overlay tint colour |
-| `hero.overlayOpacity` | string | Overlay opacity (e.g. `"0.45"`) |
-| `hero.badge` | string | Badge text |
-| `stats[].value` | string | Statistic |
-| `stats[].label` | string | Statistic label |
-| `story.heading` | string | Story section heading |
-| `story.subtitle` | string | Story section sub-heading |
-| `story.narrative` | string[] | Paragraphs of the company story |
-| `story.ctaText` | string | CTA button text (renders only if non-empty) |
-| `story.ctaPage` | string | CTA destination page type |
-| `story.timeline[].year` | string | Year label |
-| `story.timeline[].title` | string | Milestone title |
-| `story.timeline[].desc` | string | Milestone description |
-| `story.timeline[].current` | boolean | Mark as most recent |
-| `directors[].name` | string | Director name |
-| `directors[].role` | string | Director role |
-| `directors[].bio` | string | Biography |
-| `directors[].imageUrl` | string | Photo URL |
-| `directors[].socialUrl` | string | LinkedIn or social URL |
-| `quote.text` | string | Quote text |
-| `quote.author` | string | Quote attribution |
-| `quote.authorImage` | string | Author photo URL |
-| `ctaCard.title` | string | CTA card heading |
-| `ctaCard.desc` | string | CTA card description |
-| `ctaCard.cta` | string | CTA card button text |
-| `missionVisionValues[].icon` | string | Lucide icon name |
-| `missionVisionValues[].color` | string | Tailwind text colour |
-| `missionVisionValues[].bg` | string | Tailwind background colour |
-| `missionVisionValues[].label` | string | Card label (Mission/Vision/Values) |
-| `missionVisionValues[].title` | string | Card heading |
-| `missionVisionValues[].desc` | string | Card description |
-| `location.factoryAddress` | string | Factory address (support `\n` for line breaks) |
-| `location.googleMapsEmbedUrl` | string | Google Maps embed URL |
-| `location.logistics[].icon` | string | Lucide icon name |
-| `location.logistics[].label` | string | Logistics label |
-| `location.logistics[].value` | string | Value (e.g. distance) |
-| `location.dispatchTags` | string[] | Dispatch capability tags |
-| `location.dispatchDesc` | string | Dispatch description paragraph |
-| `cta.title` | string | CTA section heading |
-| `cta.cards[].icon` | string | Lucide icon name |
-| `cta.cards[].title` | string | Card title |
-| `cta.cards[].desc` | string | Card description |
-| `cta.cards[].cta` | string | Card button text |
-| `cta.cards[].page` | string | Card button destination page |
-| `cta.cards[].useForm` | boolean | Open enquiry form instead of navigating |
+| Field                         | Type                                     | Description                                    |
+| ----------------------------- | ---------------------------------------- | ---------------------------------------------- |
+| `hero.title`                  | string                                   | Hero heading                                   |
+| `hero.subtitle`               | string                                   | Hero sub-heading                               |
+| `hero.estYear`                | string                                   | Est. year display                              |
+| `hero.backgroundImage`        | string                                   | Background image URL                           |
+| `hero.backgroundColor`        | string                                   | Fallback background colour                     |
+| `hero.pattern`                | `"none"` `"dots"` `"diagonal"` `"waves"` | Overlay pattern                                |
+| `hero.overlayColor`           | string                                   | Overlay tint colour                            |
+| `hero.overlayOpacity`         | string                                   | Overlay opacity (e.g. `"0.45"`)                |
+| `hero.badge`                  | string                                   | Badge text                                     |
+| `stats[].value`               | string                                   | Statistic                                      |
+| `stats[].label`               | string                                   | Statistic label                                |
+| `story.heading`               | string                                   | Story section heading                          |
+| `story.subtitle`              | string                                   | Story section sub-heading                      |
+| `story.narrative`             | string[]                                 | Paragraphs of the company story                |
+| `story.ctaText`               | string                                   | CTA button text (renders only if non-empty)    |
+| `story.ctaPage`               | string                                   | CTA destination page type                      |
+| `story.timeline[].year`       | string                                   | Year label                                     |
+| `story.timeline[].title`      | string                                   | Milestone title                                |
+| `story.timeline[].desc`       | string                                   | Milestone description                          |
+| `story.timeline[].current`    | boolean                                  | Mark as most recent                            |
+| `directors[].name`            | string                                   | Director name                                  |
+| `directors[].role`            | string                                   | Director role                                  |
+| `directors[].bio`             | string                                   | Biography                                      |
+| `directors[].imageUrl`        | string                                   | Photo URL                                      |
+| `directors[].socialUrl`       | string                                   | LinkedIn or social URL                         |
+| `quote.text`                  | string                                   | Quote text                                     |
+| `quote.author`                | string                                   | Quote attribution                              |
+| `quote.authorImage`           | string                                   | Author photo URL                               |
+| `ctaCard.title`               | string                                   | CTA card heading                               |
+| `ctaCard.desc`                | string                                   | CTA card description                           |
+| `ctaCard.cta`                 | string                                   | CTA card button text                           |
+| `missionVisionValues[].icon`  | string                                   | Lucide icon name                               |
+| `missionVisionValues[].color` | string                                   | Tailwind text colour                           |
+| `missionVisionValues[].bg`    | string                                   | Tailwind background colour                     |
+| `missionVisionValues[].label` | string                                   | Card label (Mission/Vision/Values)             |
+| `missionVisionValues[].title` | string                                   | Card heading                                   |
+| `missionVisionValues[].desc`  | string                                   | Card description                               |
+| `location.factoryAddress`     | string                                   | Factory address (support `\n` for line breaks) |
+| `location.googleMapsEmbedUrl` | string                                   | Google Maps embed URL                          |
+| `location.logistics[].icon`   | string                                   | Lucide icon name                               |
+| `location.logistics[].label`  | string                                   | Logistics label                                |
+| `location.logistics[].value`  | string                                   | Value (e.g. distance)                          |
+| `location.dispatchTags`       | string[]                                 | Dispatch capability tags                       |
+| `location.dispatchDesc`       | string                                   | Dispatch description paragraph                 |
+| `cta.title`                   | string                                   | CTA section heading                            |
+| `cta.cards[].icon`            | string                                   | Lucide icon name                               |
+| `cta.cards[].title`           | string                                   | Card title                                     |
+| `cta.cards[].desc`            | string                                   | Card description                               |
+| `cta.cards[].cta`             | string                                   | Card button text                               |
+| `cta.cards[].page`            | string                                   | Card button destination page                   |
+| `cta.cards[].useForm`         | boolean                                  | Open enquiry form instead of navigating        |
 
 ---
 
@@ -1623,7 +1891,11 @@ Controls the **Contact** page (`/contact`). Renders: hero with requirement type 
         "address": "[Full address with PIN]",
         "accessibility": "[Station] X km · [Airport] X km",
         "buttons": [
-          { "text": "Get directions", "icon": "MapPin", "link": "https://maps.google.com/..." },
+          {
+            "text": "Get directions",
+            "icon": "MapPin",
+            "link": "https://maps.google.com/..."
+          },
           { "text": "Book visit", "icon": "Factory", "link": "" }
         ]
       },
@@ -1634,7 +1906,11 @@ Controls the **Contact** page (`/contact`). Renders: hero with requirement type 
         "address": "[Office address with PIN]",
         "accessibility": "Mon-Sat · 10am - 7pm IST",
         "buttons": [
-          { "text": "Get directions", "icon": "MapPin", "link": "https://maps.google.com/..." }
+          {
+            "text": "Get directions",
+            "icon": "MapPin",
+            "link": "https://maps.google.com/..."
+          }
         ]
       },
       {
@@ -1656,30 +1932,30 @@ Controls the **Contact** page (`/contact`). Renders: hero with requirement type 
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `hero.title` | string | Hero heading |
-| `hero.subtitle` | string | Hero sub-heading |
-| `hero.backgroundImage` | string | Hero background image |
-| `formSection.title` | string | Contact form heading |
-| `formSection.subtitle` | string | Contact form description |
-| `responsePromise.title` | string | Response commitment heading |
-| `responsePromise.items[].label` | string | Enquiry type label |
-| `responsePromise.items[].time` | string | Response time |
-| `responsePromise.footer` | string | Footer text |
-| `locations.title` | string | Locations section heading |
-| `locations.cards[].type` | `"factory"` `"office"` `"visit"` | Card type |
-| `locations.cards[].title` | string | Card title |
-| `locations.cards[].subtitle` | string | Badge/subtitle |
-| `locations.cards[].address` | string | Full address |
-| `locations.cards[].accessibility` | string | Accessibility info |
-| `locations.cards[].description` | string | Description (visit cards) |
-| `locations.cards[].highlights` | string[] | Highlight bullets (visit cards) |
-| `locations.cards[].cta` | string | CTA button text |
-| `locations.cards[].link` | string | CTA button link |
-| `locations.cards[].buttons[].text` | string | Button label |
-| `locations.cards[].buttons[].icon` | string | Lucide icon name |
-| `locations.cards[].buttons[].link` | string | Button destination |
+| Field                              | Type                             | Description                     |
+| ---------------------------------- | -------------------------------- | ------------------------------- |
+| `hero.title`                       | string                           | Hero heading                    |
+| `hero.subtitle`                    | string                           | Hero sub-heading                |
+| `hero.backgroundImage`             | string                           | Hero background image           |
+| `formSection.title`                | string                           | Contact form heading            |
+| `formSection.subtitle`             | string                           | Contact form description        |
+| `responsePromise.title`            | string                           | Response commitment heading     |
+| `responsePromise.items[].label`    | string                           | Enquiry type label              |
+| `responsePromise.items[].time`     | string                           | Response time                   |
+| `responsePromise.footer`           | string                           | Footer text                     |
+| `locations.title`                  | string                           | Locations section heading       |
+| `locations.cards[].type`           | `"factory"` `"office"` `"visit"` | Card type                       |
+| `locations.cards[].title`          | string                           | Card title                      |
+| `locations.cards[].subtitle`       | string                           | Badge/subtitle                  |
+| `locations.cards[].address`        | string                           | Full address                    |
+| `locations.cards[].accessibility`  | string                           | Accessibility info              |
+| `locations.cards[].description`    | string                           | Description (visit cards)       |
+| `locations.cards[].highlights`     | string[]                         | Highlight bullets (visit cards) |
+| `locations.cards[].cta`            | string                           | CTA button text                 |
+| `locations.cards[].link`           | string                           | CTA button link                 |
+| `locations.cards[].buttons[].text` | string                           | Button label                    |
+| `locations.cards[].buttons[].icon` | string                           | Lucide icon name                |
+| `locations.cards[].buttons[].link` | string                           | Button destination              |
 
 ---
 
@@ -1726,10 +2002,30 @@ Controls the **Distribution** page (`/distribution`). Renders: hero, stats bar, 
   ],
   "promoTitle": "Our Product Range",
   "promoBanners": [
-    { "image": "", "headline": "Khakhra Range", "description": "Thin, crispy roasted flatbreads in 12+ flavours", "buttonText": "Inquiry" },
-    { "image": "", "headline": "Makhana Range", "description": "Premium roasted fox nuts in 6+ flavours", "buttonText": "Inquiry" },
-    { "image": "", "headline": "Bhakhri Range", "description": "Traditional thick roasted flatbreads", "buttonText": "Inquiry" },
-    { "image": "", "headline": "Extruder Range", "description": "Puffed snacks and shaped novelties", "buttonText": "Inquiry" }
+    {
+      "image": "",
+      "headline": "Khakhra Range",
+      "description": "Thin, crispy roasted flatbreads in 12+ flavours",
+      "buttonText": "Inquiry"
+    },
+    {
+      "image": "",
+      "headline": "Makhana Range",
+      "description": "Premium roasted fox nuts in 6+ flavours",
+      "buttonText": "Inquiry"
+    },
+    {
+      "image": "",
+      "headline": "Bhakhri Range",
+      "description": "Traditional thick roasted flatbreads",
+      "buttonText": "Inquiry"
+    },
+    {
+      "image": "",
+      "headline": "Extruder Range",
+      "description": "Puffed snacks and shaped novelties",
+      "buttonText": "Inquiry"
+    }
   ],
   "cta": {
     "title": "Ready to partner with us?",
@@ -1739,28 +2035,28 @@ Controls the **Distribution** page (`/distribution`). Renders: hero, stats bar, 
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `hero.title` | string | Hero heading |
-| `hero.subtitle` | string | Hero sub-heading |
-| `hero.backgroundImage` | string | Hero background image URL |
-| `hero.ctaText` | string | Hero CTA button text (renders only if non-empty) |
-| `stats[].label` | string | Statistic label |
-| `stats[].value` | string | Statistic value |
-| `stats[].icon` | string | Lucide icon name |
-| `sections[].title` | string | Section heading |
-| `sections[].description` | string | Section text |
-| `sections[].imageUrl` | string | Section image URL |
-| `sections[].imageSide` | `"left"` `"right"` | Image placement |
-| `sections[].icon` | string | Lucide icon name |
-| `promoTitle` | string | Promo banners section heading |
-| `promoBanners[].image` | string | Banner image URL |
-| `promoBanners[].headline` | string | Banner title |
-| `promoBanners[].description` | string | Banner description |
-| `promoBanners[].buttonText` | string | Inquiry button label |
-| `cta.title` | string | CTA section heading |
-| `cta.description` | string | CTA description |
-| `cta.buttonText` | string | CTA button text |
+| Field                        | Type               | Description                                      |
+| ---------------------------- | ------------------ | ------------------------------------------------ |
+| `hero.title`                 | string             | Hero heading                                     |
+| `hero.subtitle`              | string             | Hero sub-heading                                 |
+| `hero.backgroundImage`       | string             | Hero background image URL                        |
+| `hero.ctaText`               | string             | Hero CTA button text (renders only if non-empty) |
+| `stats[].label`              | string             | Statistic label                                  |
+| `stats[].value`              | string             | Statistic value                                  |
+| `stats[].icon`               | string             | Lucide icon name                                 |
+| `sections[].title`           | string             | Section heading                                  |
+| `sections[].description`     | string             | Section text                                     |
+| `sections[].imageUrl`        | string             | Section image URL                                |
+| `sections[].imageSide`       | `"left"` `"right"` | Image placement                                  |
+| `sections[].icon`            | string             | Lucide icon name                                 |
+| `promoTitle`                 | string             | Promo banners section heading                    |
+| `promoBanners[].image`       | string             | Banner image URL                                 |
+| `promoBanners[].headline`    | string             | Banner title                                     |
+| `promoBanners[].description` | string             | Banner description                               |
+| `promoBanners[].buttonText`  | string             | Inquiry button label                             |
+| `cta.title`                  | string             | CTA section heading                              |
+| `cta.description`            | string             | CTA description                                  |
+| `cta.buttonText`             | string             | CTA button text                                  |
 
 ---
 
@@ -1785,7 +2081,11 @@ Six block types available for **product page content** (used in the product admi
   "image": "",
   "heading": "Sourced direct. Made in-house. Built for bulk.",
   "paragraph": "Our product is sourced directly...",
-  "bullets": ["Direct sourcing, no middlemen", "In-house processing", "FSSAI certified, hygienic packaging"]
+  "bullets": [
+    "Direct sourcing, no middlemen",
+    "In-house processing",
+    "FSSAI certified, hygienic packaging"
+  ]
 }
 ```
 
@@ -1823,11 +2123,20 @@ Six block types available for **product page content** (used in the product admi
   "title": "From raw material to dispatch",
   "subtitle": "Every batch follows the same controlled process",
   "steps": [
-    { "title": "Raw material intake", "description": "Sourced direct from growers" },
-    { "title": "Grading & cleaning", "description": "Sorted by size and quality" },
+    {
+      "title": "Raw material intake",
+      "description": "Sourced direct from growers"
+    },
+    {
+      "title": "Grading & cleaning",
+      "description": "Sorted by size and quality"
+    },
     { "title": "Processing", "description": "Controlled heat and time" },
     { "title": "Quality check", "description": "Batch-level inspection" },
-    { "title": "Packing & dispatch", "description": "Sealed, labelled, shipped" }
+    {
+      "title": "Packing & dispatch",
+      "description": "Sealed, labelled, shipped"
+    }
   ]
 }
 ```
@@ -1848,40 +2157,40 @@ Six block types available for **product page content** (used in the product admi
 
 Categories in the admin have their own field system (separate from the PageBuilder). These fields render on the category landing page at `/product/<slug>`.
 
-| Admin Field | JSON Key | Storefront Section | Description |
-|-------------|----------|-------------------|-------------|
-| Hero Title | `heroTitle` | Hero Banner | Large heading at top of page |
-| Hero Subtitle | `heroSubtitle` | Hero Banner | Sub-heading below title |
-| Hero Description | `heroDescription` | Hero Banner | Additional text |
-| Hero BG Color | `heroBackgroundColor` | Hero Banner | Background colour style (dark/light/brand) |
-| Hero BG Image | `heroBackgroundImage` | Hero Banner | Background image (displayed over colour) |
-| Content Split Image | `contentSplitImage` | Content Split | Two-column section image |
-| Content Split Heading | `contentSplitHeading` | Content Split | Section heading |
-| Content Split Paragraph | `contentSplitParagraph` | Content Split | Section text |
-| Content Split Bullets | `contentSplitBullets` | Content Split | JSON array of bullet points |
-| Cards Title | `cardsTitle` | Product Cards | Section heading |
-| Card Product IDs | `cardsProductIds` | Product Cards | Comma-separated product IDs |
-| Cards Max Count | `cardsMaxCount` | Product Cards | Maximum cards to show |
-| Cards Columns | `cardsColumns` | Product Cards | Grid columns (2/3/4) |
-| CTA Heading | `ctaHeading` | CTA Strip | CTA section heading |
-| CTA Description | `ctaDescription` | CTA Strip | CTA supporting text |
-| CTA Bulk Text | `ctaBulkText` | CTA Strip | Bulk order button label |
-| CTA Bulk Link | `ctaBulkLink` | CTA Strip | Bulk order destination |
-| CTA Private Label Text | `ctaPrivateLabelText` | CTA Strip | Private label button label |
-| CTA Private Label Link | `ctaPrivateLabelLink` | CTA Strip | Private label destination |
-| CTA BG Color | `ctaBackgroundColor` | CTA Strip | Background style (dark/light/brand) |
-| Process Title | `processTitle` | Process Flow | Section heading |
-| Process Subtitle | `processSubtitle` | Process Flow | Section sub-heading |
-| Process Steps | `processSteps` | Process Flow | JSON array of `{title, description}` objects |
-| Infographic Image | `infographicImage` | Infographic | Main image |
-| Infographic Video URL | `infographicVideoUrl` | Infographic | YouTube video URL (replaces image if set) |
-| Infographic Caption | `infographicCaption` | Infographic | Image caption |
-| Infographic Alt Text | `infographicAltText` | Infographic | Image alt text |
-| Gallery Title | `galleryTitle` | Gallery | Section heading |
-| Gallery Images | `galleryImages` | Gallery | JSON array of image URLs |
-| FAQ Title | `faqTitle` | FAQ | Section heading |
-| FAQ Items | `faqItems` | FAQ | JSON array of `{question, answer}` objects |
-| Lead Capture Enabled | `leadCaptureEnabled` | Lead Capture | Show/hide enquiry form |
+| Admin Field             | JSON Key                | Storefront Section | Description                                  |
+| ----------------------- | ----------------------- | ------------------ | -------------------------------------------- |
+| Hero Title              | `heroTitle`             | Hero Banner        | Large heading at top of page                 |
+| Hero Subtitle           | `heroSubtitle`          | Hero Banner        | Sub-heading below title                      |
+| Hero Description        | `heroDescription`       | Hero Banner        | Additional text                              |
+| Hero BG Color           | `heroBackgroundColor`   | Hero Banner        | Background colour style (dark/light/brand)   |
+| Hero BG Image           | `heroBackgroundImage`   | Hero Banner        | Background image (displayed over colour)     |
+| Content Split Image     | `contentSplitImage`     | Content Split      | Two-column section image                     |
+| Content Split Heading   | `contentSplitHeading`   | Content Split      | Section heading                              |
+| Content Split Paragraph | `contentSplitParagraph` | Content Split      | Section text                                 |
+| Content Split Bullets   | `contentSplitBullets`   | Content Split      | JSON array of bullet points                  |
+| Cards Title             | `cardsTitle`            | Product Cards      | Section heading                              |
+| Card Product IDs        | `cardsProductIds`       | Product Cards      | Comma-separated product IDs                  |
+| Cards Max Count         | `cardsMaxCount`         | Product Cards      | Maximum cards to show                        |
+| Cards Columns           | `cardsColumns`          | Product Cards      | Grid columns (2/3/4)                         |
+| CTA Heading             | `ctaHeading`            | CTA Strip          | CTA section heading                          |
+| CTA Description         | `ctaDescription`        | CTA Strip          | CTA supporting text                          |
+| CTA Bulk Text           | `ctaBulkText`           | CTA Strip          | Bulk order button label                      |
+| CTA Bulk Link           | `ctaBulkLink`           | CTA Strip          | Bulk order destination                       |
+| CTA Private Label Text  | `ctaPrivateLabelText`   | CTA Strip          | Private label button label                   |
+| CTA Private Label Link  | `ctaPrivateLabelLink`   | CTA Strip          | Private label destination                    |
+| CTA BG Color            | `ctaBackgroundColor`    | CTA Strip          | Background style (dark/light/brand)          |
+| Process Title           | `processTitle`          | Process Flow       | Section heading                              |
+| Process Subtitle        | `processSubtitle`       | Process Flow       | Section sub-heading                          |
+| Process Steps           | `processSteps`          | Process Flow       | JSON array of `{title, description}` objects |
+| Infographic Image       | `infographicImage`      | Infographic        | Main image                                   |
+| Infographic Video URL   | `infographicVideoUrl`   | Infographic        | YouTube video URL (replaces image if set)    |
+| Infographic Caption     | `infographicCaption`    | Infographic        | Image caption                                |
+| Infographic Alt Text    | `infographicAltText`    | Infographic        | Image alt text                               |
+| Gallery Title           | `galleryTitle`          | Gallery            | Section heading                              |
+| Gallery Images          | `galleryImages`         | Gallery            | JSON array of image URLs                     |
+| FAQ Title               | `faqTitle`              | FAQ                | Section heading                              |
+| FAQ Items               | `faqItems`              | FAQ                | JSON array of `{question, answer}` objects   |
+| Lead Capture Enabled    | `leadCaptureEnabled`    | Lead Capture       | Show/hide enquiry form                       |
 
 > **Note:** The category hero section also supports a **YouTube video URL** field for the infographic. If set, the video embeds as a 16:9 responsive iframe instead of the static infographic image.
 
@@ -1891,20 +2200,20 @@ Categories in the admin have their own field system (separate from the PageBuild
 
 Many blocks use Lucide icon names for visual elements. Use any of these valid names:
 
-| Category | Icon Names |
-|----------|------------|
-| **General** | `Star`, `Heart`, `Shield`, `Award`, `Target`, `Eye`, `Flag`, `Home`, `Search`, `Bell`, `Settings`, `User`, `Users`, `UserCircle` |
-| **Business** | `Building`, `Factory`, `Warehouse`, `Store`, `Briefcase`, `Globe`, `TrendingUp`, `BarChart3`, `LineChart`, `PieChart` |
-| **Commerce** | `Package`, `Box`, `ShoppingBag`, `ShoppingCart`, `Tag`, `CreditCard`, `Truck`, `Ship`, `Plane`, `Train` |
-| **Communication** | `Mail`, `Phone`, `MessageSquare`, `Send`, `Headphones`, `Voicemail`, `MapPin`, `Navigation` |
-| **Media** | `Image`, `Images`, `Camera`, `Video`, `Film`, `Music`, `Play` |
-| **Arrows** | `ArrowRight`, `ArrowLeft`, `ArrowUp`, `ArrowDown`, `ChevronRight`, `ChevronLeft`, `MoveRight`, `ExternalLink` |
-| **Actions** | `Download`, `Upload`, `Share`, `Link`, `Trash`, `Edit`, `Copy`, `Check`, `X`, `Plus`, `Minus` |
-| **UI** | `LayoutGrid`, `Columns`, `Rows`, `Table`, `List`, `Grid3X3`, `Sidebar`, `PanelRight` |
-| **Content** | `FileText`, `Newspaper`, `BookOpen`, `Quote`, `HelpCircle`, `Info`, `AlertCircle`, `ClipboardCheck`, `CheckCircle` |
-| **Status** | `ShieldCheck`, `ShieldAlert`, `ShieldOff`, `Verified`, `BadgeCheck`, `BadgePercent` |
-| **Process** | `GitBranch`, `GitMerge`, `GitCommit`, `Workflow`, `Route`, `Map`, `Compass` |
-| **Nature** | `Leaf`, `Flame`, `Microscope`, `Sun`, `Moon`, `Cloud`, `Droplet` |
+| Category          | Icon Names                                                                                                                       |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| **General**       | `Star`, `Heart`, `Shield`, `Award`, `Target`, `Eye`, `Flag`, `Home`, `Search`, `Bell`, `Settings`, `User`, `Users`, `UserCircle` |
+| **Business**      | `Building`, `Factory`, `Warehouse`, `Store`, `Briefcase`, `Globe`, `TrendingUp`, `BarChart3`, `LineChart`, `PieChart`            |
+| **Commerce**      | `Package`, `Box`, `ShoppingBag`, `ShoppingCart`, `Tag`, `CreditCard`, `Truck`, `Ship`, `Plane`, `Train`                          |
+| **Communication** | `Mail`, `Phone`, `MessageSquare`, `Send`, `Headphones`, `Voicemail`, `MapPin`, `Navigation`                                      |
+| **Media**         | `Image`, `Images`, `Camera`, `Video`, `Film`, `Music`, `Play`                                                                    |
+| **Arrows**        | `ArrowRight`, `ArrowLeft`, `ArrowUp`, `ArrowDown`, `ChevronRight`, `ChevronLeft`, `MoveRight`, `ExternalLink`                    |
+| **Actions**       | `Download`, `Upload`, `Share`, `Link`, `Trash`, `Edit`, `Copy`, `Check`, `X`, `Plus`, `Minus`                                    |
+| **UI**            | `LayoutGrid`, `Columns`, `Rows`, `Table`, `List`, `Grid3X3`, `Sidebar`, `PanelRight`                                             |
+| **Content**       | `FileText`, `Newspaper`, `BookOpen`, `Quote`, `HelpCircle`, `Info`, `AlertCircle`, `ClipboardCheck`, `CheckCircle`               |
+| **Status**        | `ShieldCheck`, `ShieldAlert`, `ShieldOff`, `Verified`, `BadgeCheck`, `BadgePercent`                                              |
+| **Process**       | `GitBranch`, `GitMerge`, `GitCommit`, `Workflow`, `Route`, `Map`, `Compass`                                                      |
+| **Nature**        | `Leaf`, `Flame`, `Microscope`, `Sun`, `Moon`, `Cloud`, `Droplet`                                                                 |
 
 Usage: set the `icon` field to the exact PascalCase name (e.g. `"ShieldCheck"`). The component will render the matching Lucide icon or nothing if the name is invalid.
 
@@ -1913,6 +2222,7 @@ Usage: set the `icon` field to the exact PascalCase name (e.g. `"ShieldCheck"`).
 ### JSON Editor Tips
 
 **Validating JSON:**
+
 - Use **double quotes** for strings, never single quotes
 - No **trailing commas** after the last item in arrays or objects
 - Boolean values: `true` / `false` (no quotes)
@@ -1920,6 +2230,7 @@ Usage: set the `icon` field to the exact PascalCase name (e.g. `"ShieldCheck"`).
 - Null: use `null` (not `"null"`)
 
 **Example of valid JSON:**
+
 ```json
 {
   "title": "Correct",
@@ -1931,16 +2242,18 @@ Usage: set the `icon` field to the exact PascalCase name (e.g. `"ShieldCheck"`).
 ```
 
 **Example of invalid JSON (will error):**
+
 ```json
 {
-  'title': 'Wrong',       // ← single quotes
+  "title": "Wrong", // ← single quotes
   "count": 42,
   "enabled": true,
-  "items": ["one", "two",],  // ← trailing comma
+  "items": ["one", "two"] // ← trailing comma
 }
 ```
 
 **Getting image URLs:**
+
 1. Upload images via the **Media Library** tab in admin
 2. Copy the Cloudinary URL from the media item
 3. Paste into the image field
@@ -1960,14 +2273,14 @@ Use the default JSON shown in this reference as a starting point. Paste it into 
 
 These page slugs are reserved for the core platform pages and cannot be used for custom content pages:
 
-| Slug | Route |
-|------|-------|
-| `homepage` | `/` |
-| `about-us` | `/about` |
-| `manufacturing` | `/manufacturing` |
-| `contact` | `/contact` |
-| `distribution` | `/distribution` |
-| `products` | `/products` (redirects to distribution) |
-| `blog` | `/blog` |
+| Slug            | Route                                   |
+| --------------- | --------------------------------------- |
+| `homepage`      | `/`                                     |
+| `about-us`      | `/about`                                |
+| `manufacturing` | `/manufacturing`                        |
+| `contact`       | `/contact`                              |
+| `distribution`  | `/distribution`                         |
+| `products`      | `/products` (redirects to distribution) |
+| `blog`          | `/blog`                                 |
 
 Content pages use the **Pages** tab in admin and can have any custom slug not in this reserved list.
