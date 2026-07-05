@@ -43,6 +43,8 @@ export const categorySchema = z.object({
   heroTitle: z.string().optional().nullable(),
   heroSubtitle: z.string().optional().nullable(),
   heroDescription: z.string().optional().nullable(),
+  heroBackgroundColor: z.string().optional().nullable(),
+  heroBackgroundImage: z.string().optional().nullable(),
   contentSplitImage: z.string().optional().nullable(),
   contentSplitHeading: z.string().optional().nullable(),
   contentSplitParagraph: z.string().optional().nullable(),
@@ -62,6 +64,7 @@ export const categorySchema = z.object({
   processSubtitle: z.string().optional().nullable(),
   processSteps: z.string().optional().nullable().default('[]'),
   infographicImage: z.string().optional().nullable(),
+  infographicVideoUrl: z.string().optional().nullable(),
   infographicCaption: z.string().optional().nullable(),
   infographicAltText: z.string().optional().nullable(),
 

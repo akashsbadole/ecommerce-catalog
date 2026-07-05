@@ -47,18 +47,16 @@ function ResolvedIcon({
   return null;
 }
 
-export function ContactPage({
-  onNavigate,
-  data: _data,
-}: ContactPageProps) {
+export function ContactPage({ onNavigate, data: _data }: ContactPageProps) {
   useSeo("contact", {
     title: "Contact Us | Purva Bites",
-    description: "Looking for bulk supply, private label manufacturing or a distribution partnership? Share your requirement and we'll respond within 24 hours.",
+    description:
+      "Looking for bulk supply, private label manufacturing or a distribution partnership? Share your requirement and we'll respond within 24 hours.",
   });
 
   const [selectedType, setSelectedType] = useState<string>("bulk");
 
-  const { data: contactPageData, isLoading } = useCmsPageData("contact-page-content");
+  const { data: contactPageData, isLoading } = useCmsPageData("contact");
   const contactBlocks = contactPageData?.blocks ?? null;
   const cmsContactData = getPageContentData(
     contactBlocks,
@@ -74,7 +72,8 @@ export function ContactPage({
       icon: string;
     }>) || [];
 
-  const formSection = (cmsContactData.formSection as Record<string, string>) || {};
+  const formSection =
+    (cmsContactData.formSection as Record<string, string>) || {};
   const responsePromise =
     (cmsContactData.responsePromise as Record<string, unknown>) || {};
   const promiseItems =
@@ -111,15 +110,62 @@ export function ContactPage({
       {/* CT1: Contact Form */}
       <LeadCaptureSection
         heading={(formSection.title as string) || "Send us your requirement"}
-        description={(formSection.subtitle as string) || "Fields marked * are required. We respond within 24 working hours."}
+        description={
+          (formSection.subtitle as string) ||
+          "Fields marked * are required. We respond within 24 working hours."
+        }
         submitText="Send Enquiry"
         fields={[
-          { name: "name", label: "Your name", type: "text", required: true, placeholder: "Your name *" },
-          { name: "company", label: "Company name", type: "text", required: true, placeholder: "Company name *" },
-          { name: "phone", label: "Phone number", type: "tel", required: true, placeholder: "Phone number *" },
-          { name: "email", label: "Email address", type: "email", required: false, placeholder: "Email address" },
-          { name: "requirement", label: "Requirement type", type: "select", required: true, placeholder: "Inquiry type", options: ["Bulk Order", "Private Label", "White Label", "Distribution", "Institutional Order", "Other"] },
-          { name: "city", label: "City / state", type: "text", required: false, placeholder: "City / state" },
+          {
+            name: "name",
+            label: "Your name",
+            type: "text",
+            required: true,
+            placeholder: "Your name *",
+          },
+          {
+            name: "company",
+            label: "Company name",
+            type: "text",
+            required: true,
+            placeholder: "Company name *",
+          },
+          {
+            name: "phone",
+            label: "Phone number",
+            type: "tel",
+            required: true,
+            placeholder: "Phone number *",
+          },
+          {
+            name: "email",
+            label: "Email address",
+            type: "email",
+            required: false,
+            placeholder: "Email address",
+          },
+          {
+            name: "requirement",
+            label: "Requirement type",
+            type: "select",
+            required: true,
+            placeholder: "Inquiry type",
+            options: [
+              "Bulk Order",
+              "Private Label",
+              "White Label",
+              "Distribution",
+              "Institutional Order",
+              "Other",
+            ],
+          },
+          {
+            name: "city",
+            label: "City / state",
+            type: "text",
+            required: false,
+            placeholder: "City / state",
+          },
         ]}
         messageField
         successMessage="Thank You For Showing an Interest. We will get in touch with you soon."
@@ -171,7 +217,7 @@ export function ContactPage({
               {locationCards.map((card) => (
                 <div
                   key={card.title}
-                  className={`bg-background border rounded-xl p-5 border-t-4 ${card.type === "visit" ? "border-t-primary bg-primary/5 border-primary/20" : card.type === "factory" ? "border-t-primary" : "border-t-muted"}`}
+                  className={`bg-background border rounded-xl p-5 border-t-4 ${card.type === "visit" ? "border-t-primary bg-primary/5 border-primary/20" : card.type === "factory" ? "border-t-primary" : "border-t-primary"}`}
                 >
                   <div className="flex items-center gap-2 mb-4">
                     <ResolvedIcon
@@ -215,8 +261,9 @@ export function ContactPage({
                   {card.buttons && (
                     <div className="flex gap-2">
                       {card.buttons.map((btn) => {
-                        const isVisitButton =
-                          /book|schedule|visit/i.test(btn.text || "");
+                        const isVisitButton = /book|schedule|visit/i.test(
+                          btn.text || "",
+                        );
                         const fallbackLink =
                           btn.text === "Get directions"
                             ? card.address
@@ -233,10 +280,15 @@ export function ContactPage({
                               key={btn.text}
                               href={href}
                               target={isExternal ? "_blank" : undefined}
-                              rel={isExternal ? "noopener noreferrer" : undefined}
+                              rel={
+                                isExternal ? "noopener noreferrer" : undefined
+                              }
                               className="text-[10px] border rounded px-2 py-1 flex items-center gap-1 hover:bg-muted"
                             >
-                              <ResolvedIcon name={btn.icon} className="h-3 w-3" />{" "}
+                              <ResolvedIcon
+                                name={btn.icon}
+                                className="h-3 w-3"
+                              />{" "}
                               {btn.text}
                             </a>
                           );
@@ -265,8 +317,10 @@ export function ContactPage({
                       ) : (
                         <button
                           onClick={() => {
-                            const form = document.getElementById("contact-form");
-                            if (form) form.scrollIntoView({ behavior: "smooth" });
+                            const form =
+                              document.getElementById("contact-form");
+                            if (form)
+                              form.scrollIntoView({ behavior: "smooth" });
                           }}
                           className="w-full bg-primary text-primary-foreground text-xs font-medium rounded py-2.5 hover:bg-primary/90 transition-colors"
                         >

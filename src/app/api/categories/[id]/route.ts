@@ -84,6 +84,8 @@ export async function PUT(
         ...(body.heroTitle !== undefined && { heroTitle: body.heroTitle || null }),
         ...(body.heroSubtitle !== undefined && { heroSubtitle: body.heroSubtitle || null }),
         ...(body.heroDescription !== undefined && { heroDescription: body.heroDescription || null }),
+        ...(body.heroBackgroundColor !== undefined && { heroBackgroundColor: body.heroBackgroundColor || null }),
+        ...(body.heroBackgroundImage !== undefined && { heroBackgroundImage: body.heroBackgroundImage || null }),
         ...(body.contentSplitImage !== undefined && { contentSplitImage: body.contentSplitImage || null }),
         ...(body.contentSplitHeading !== undefined && { contentSplitHeading: body.contentSplitHeading || null }),
         ...(body.contentSplitParagraph !== undefined && { contentSplitParagraph: body.contentSplitParagraph || null }),
@@ -105,6 +107,7 @@ export async function PUT(
         ...(body.infographicImage !== undefined && { infographicImage: body.infographicImage || null }),
         ...(body.infographicCaption !== undefined && { infographicCaption: body.infographicCaption || null }),
         ...(body.infographicAltText !== undefined && { infographicAltText: body.infographicAltText || null }),
+        ...(body.infographicVideoUrl !== undefined && { infographicVideoUrl: body.infographicVideoUrl || null }),
 
         // Gallery fields
         ...(body.galleryTitle !== undefined && { galleryTitle: body.galleryTitle || null }),

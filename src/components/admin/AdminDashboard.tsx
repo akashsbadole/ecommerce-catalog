@@ -222,10 +222,12 @@ export function AdminDashboard({
   const handleTabChange = (tab: string) => {
     setCurrentTab(tab);
     setMobileOpen(false);
+    onNavigate?.('admin', tab);
   };
 
   const handleQuickNav = (tab: string) => {
     setCurrentTab(tab);
+    onNavigate?.('admin', tab);
   };
 
   const handleSearchNavigate = (tab: string, data?: unknown) => {

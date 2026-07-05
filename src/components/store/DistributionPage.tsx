@@ -53,9 +53,10 @@ export function DistributionPage({
     description: "Become a distributor for Purva Bites. Pan-India FMCG distribution network for khakhra, bhakhri, makhana, extruder snacks and digestive biscuits.",
   });
 
-  const { data: distPageData, isLoading } = useCmsPageData("distribution");
-  const distBlocks = distPageData?.blocks ?? null;
-  const cmsData = externalData ?? getPageContentData(distBlocks, "distribution", {});
+  const { data: distPageData, isLoading } = useCmsPageData("distribution-content");
+  const { data: fallbackData } = useCmsPageData("distribution");
+  const effectiveBlocks = (distPageData?.blocks ?? fallbackData?.blocks) ?? null;
+  const cmsData = externalData ?? getPageContentData(effectiveBlocks, "distribution-content", {});
 
   const hero = (cmsData.hero as Record<string, unknown>) || {};
   const sections = (cmsData.sections as Array<{

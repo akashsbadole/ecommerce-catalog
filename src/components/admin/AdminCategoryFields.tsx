@@ -38,6 +38,8 @@ export interface CategoryFieldValues {
   heroTitle: string;
   heroSubtitle: string;
   heroDescription: string;
+  heroBackgroundColor: string;
+  heroBackgroundImage: string;
   contentSplitImage: string;
   contentSplitHeading: string;
   contentSplitParagraph: string;
@@ -59,6 +61,7 @@ export interface CategoryFieldValues {
   infographicImage: string;
   infographicCaption: string;
   infographicAltText: string;
+  infographicVideoUrl: string;
   galleryTitle: string;
   galleryImages: string;
   faqTitle: string;
@@ -214,6 +217,35 @@ export function AdminCategoryFields({
                 onChange={(e) => update("heroDescription", e.target.value)}
                 rows={3}
               />
+            </div>
+
+            <Separator />
+            <div className="flex items-center gap-2">
+              <Label className="text-base font-semibold">
+                Background
+              </Label>
+            </div>
+            <MediaPickerField
+              label="Background Image"
+              value={values.heroBackgroundImage}
+              onChange={(url) => update("heroBackgroundImage", url)}
+              placeholder="https://example.com/hero-bg.jpg"
+            />
+            <div className="space-y-2">
+              <Label htmlFor="cat-hero-bg-color">Background Color Style</Label>
+              <Select
+                value={values.heroBackgroundColor || "dark"}
+                onValueChange={(v) => update("heroBackgroundColor", v)}
+              >
+                <SelectTrigger id="cat-hero-bg-color">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="dark">Dark (brand gradient)</SelectItem>
+                  <SelectItem value="light">Light / Muted</SelectItem>
+                  <SelectItem value="brand">Solid brand color</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </Card>
         </TabsContent>
@@ -523,11 +555,23 @@ export function AdminCategoryFields({
               </Label>
             </div>
             <MediaPickerField
-              label="Image"
+              label="Image (fallback if no video)"
               value={values.infographicImage}
               onChange={(url) => update("infographicImage", url)}
               placeholder="https://example.com/infographic.jpg"
             />
+            <div className="space-y-2">
+              <Label htmlFor="cat-info-video">YouTube Video URL (optional)</Label>
+              <Input
+                id="cat-info-video"
+                placeholder="https://www.youtube.com/watch?v=..."
+                value={values.infographicVideoUrl}
+                onChange={(e) => update("infographicVideoUrl", e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                If set, the video embed replaces the image above.
+              </p>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="cat-info-caption">Caption (optional)</Label>
               <Input

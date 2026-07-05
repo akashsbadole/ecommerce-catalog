@@ -52,7 +52,10 @@ export type BlockType =
   | "product-cards"
   | "product-cta"
   | "product-process"
-  | "product-infographic";
+  | "product-infographic"
+
+  // Platform page content blocks
+  | "distribution-content";
 
 export interface PageBlock {
   id: string;
@@ -1382,6 +1385,52 @@ export const BLOCK_DEFAULTS: Record<
       image: "",
       caption: "",
       altText: "Infographic",
+    },
+  },
+  "distribution-content": {
+    label: "Distribution Page Content",
+    icon: "Truck",
+    defaultData: {
+      hero: {
+        title: "Purva Bites Distribution",
+        subtitle: "Your trusted FMCG distribution partner — pan-India coverage, quality assured supply chain.",
+        backgroundImage: "/placeholder-hero.jpg",
+        ctaText: "Become a Distributor",
+      },
+      stats: [
+        { label: "Cities Covered", value: "500+", icon: "MapPin" },
+        { label: "Retail Touch Points", value: "50K+", icon: "Package" },
+        { label: "Years of Excellence", value: "25+", icon: "Clock" },
+        { label: "Product Variants", value: "100+", icon: "TrendingUp" },
+      ],
+      sections: [
+        {
+          title: "Nationwide Reach",
+          description: "Our distribution network spans across 500+ cities with 50,000+ retail touch points, ensuring your products reach every corner of the country.",
+          imageUrl: "",
+          imageSide: "left",
+          icon: "Globe",
+        },
+        {
+          title: "Quality Assured Supply Chain",
+          description: "Every product is manufactured in our ISO-certified facilities and transported through our temperature-controlled logistics network.",
+          imageUrl: "",
+          imageSide: "right",
+          icon: "Shield",
+        },
+        {
+          title: "Timely Delivery Commitment",
+          description: "With our optimized logistics and multiple warehouse locations, we ensure on-time delivery with real-time tracking for all orders.",
+          imageUrl: "",
+          imageSide: "left",
+          icon: "Truck",
+        },
+      ],
+      cta: {
+        title: "Ready to partner with us?",
+        description: "Join our growing network of distributors across India.",
+        buttonText: "Enquire Now",
+      },
     },
   },
 };

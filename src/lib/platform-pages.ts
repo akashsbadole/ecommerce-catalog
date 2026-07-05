@@ -9,6 +9,8 @@ export const PLATFORM_PAGE_SLUGS = new Set([
   'contact-page-content',
   'products',
   'products-page-content',
+  'distribution',
+  'distribution-content',
 ]);
 
 export function isPlatformPage(slug: string): boolean {

@@ -141,6 +141,8 @@ model Category {
   heroTitle        String?
   heroSubtitle     String?
   heroDescription  String?
+  heroBackgroundColor String?
+  heroBackgroundImage String?
   contentSplitImage      String?
   contentSplitHeading    String?
   contentSplitParagraph  String?
@@ -159,9 +161,10 @@ model Category {
   processTitle      String?
   processSubtitle   String?
   processSteps      String             @default("[]")
-  infographicImage    String?
-  infographicCaption  String?
-  infographicAltText  String?
+  infographicImage      String?
+  infographicCaption    String?
+  infographicAltText    String?
+  infographicVideoUrl   String?
   galleryTitle    String?
   galleryImages   String             @default("[]")
   faqTitle        String?

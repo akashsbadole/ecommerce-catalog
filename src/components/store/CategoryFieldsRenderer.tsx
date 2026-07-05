@@ -19,6 +19,8 @@ export interface CategoryFieldData {
   heroTitle: string | null;
   heroSubtitle: string | null;
   heroDescription: string | null;
+  heroBackgroundColor: string | null;
+  heroBackgroundImage: string | null;
   contentSplitImage: string | null;
   contentSplitHeading: string | null;
   contentSplitParagraph: string | null;
@@ -40,6 +42,7 @@ export interface CategoryFieldData {
   infographicImage: string | null;
   infographicCaption: string | null;
   infographicAltText: string | null;
+  infographicVideoUrl: string | null;
   galleryTitle: string | null;
   galleryImages: string;
   faqTitle: string | null;
@@ -60,15 +63,37 @@ function HeroSection({
   title,
   subtitle,
   description,
+  backgroundImage,
+  backgroundColor,
 }: {
   title: string;
   subtitle: string;
   description: string;
+  backgroundImage?: string;
+  backgroundColor?: string;
 }) {
   if (!title && !subtitle && !description) return null;
+
+  const gradientMap: Record<string, string> = {
+    dark: "bg-gradient-to-br from-primary via-primary/90 to-primary/80",
+    light: "bg-gradient-to-br from-muted to-muted/80",
+    brand: "bg-primary",
+  };
+
+  const bgClass = gradientMap[backgroundColor || ""] || gradientMap.dark;
+
   return (
-    <section className="relative flex items-center justify-center overflow-hidden w-full bg-gradient-to-br from-primary via-primary/90 to-primary/80 min-h-[280px] md:min-h-[350px]">
-      <div className="absolute inset-0 bg-black/20" />
+    <section className="relative flex items-center justify-center overflow-hidden w-full min-h-[280px] md:min-h-[350px]">
+      {backgroundImage ? (
+        <img
+          src={backgroundImage}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      ) : (
+        <div className={`absolute inset-0 ${bgClass}`} />
+      )}
+      <div className="absolute inset-0 bg-black/30" />
       <div className="relative z-10 w-full px-6 py-12 md:py-16 text-center">
         {subtitle && (
           <p className="text-xs sm:text-sm font-medium text-white/80 uppercase tracking-wider mb-3">
@@ -105,7 +130,7 @@ function ContentSplitSection({
   return (
     <section className="container mx-auto max-w-5xl px-4 py-12 md:py-16">
       <div className="grid md:grid-cols-2 gap-6 md:gap-10 items-center">
-        <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-muted order-1 md:order-none">
+        <div className="relative  rounded-xl overflow-hidden bg-muted order-0 md:order-none">
           {image ? (
             <img
               src={image}
@@ -118,7 +143,7 @@ function ContentSplitSection({
             </div>
           )}
         </div>
-        <div>
+        <div className="md:-mt-10">
           {heading && (
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 md:mb-4">
               {heading}
@@ -246,7 +271,7 @@ function CardsSection({
               key={product.id}
               className="rounded-xl border bg-card overflow-hidden transition-shadow hover:shadow-md"
             >
-              <div className="relative h-36 sm:h-65 md:h-65 bg-muted overflow-hidden">
+              <div className="relative sm:h-65 md:h-65 bg-muted overflow-hidden">
                 {image ? (
                   <img
                     src={image}
@@ -336,13 +361,16 @@ function CtaSection({
               size="default"
               className="w-full sm:w-auto text-sm sm:text-base text-white"
               onClick={() => {
-                const [page, slug] = (bulkLink || "/contact")
-                  .replace(/^\//, "")
-                  .split("/");
-                if (page === "contact") {
-                  useAppStore.getState().openEnquiryModal(heading);
-                } else {
-                  onNavigate?.("content-page", slug || page);
+                const link = bulkLink || "/contact";
+                if (link.startsWith("http")) {
+                  window.open(link, "_blank");
+                } else if (link.startsWith("#")) {
+                  const el = document.getElementById(link.slice(1));
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                } else if (link.startsWith("/")) {
+                  window.location.assign(link);
+                } else if (link) {
+                  onNavigate?.(link);
                 }
               }}
             >
@@ -355,13 +383,16 @@ function CtaSection({
               className="w-full sm:w-auto text-sm sm:text-base text-white"
               variant={isDark ? "secondary" : "outline"}
               onClick={() => {
-                const [page, slug] = (privateLabelLink || "/contact")
-                  .replace(/^\//, "")
-                  .split("/");
-                if (page === "contact") {
-                  useAppStore.getState().openEnquiryModal(heading);
-                } else {
-                  onNavigate?.("content-page", slug || page);
+                const link = privateLabelLink || "/contact";
+                if (link.startsWith("http")) {
+                  window.open(link, "_blank");
+                } else if (link.startsWith("#")) {
+                  const el = document.getElementById(link.slice(1));
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                } else if (link.startsWith("/")) {
+                  window.location.assign(link);
+                } else if (link) {
+                  onNavigate?.(link);
                 }
               }}
             >
@@ -424,7 +455,7 @@ function FaqSection({
   title: string;
   items: Array<{ question: string; answer: string }>;
 }) {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
   if (items.length === 0) return null;
   return (
     <section className="container mx-auto max-w-3xl px-4 py-12 md:py-16">
@@ -463,16 +494,31 @@ function InfographicSection({
   image,
   caption,
   altText,
+  videoUrl,
 }: {
   image: string;
   caption: string;
   altText: string;
+  videoUrl: string;
 }) {
-  if (!image && !caption) return null;
+  if (!image && !caption && !videoUrl) return null;
+
+  const youtubeId = extractYoutubeId(videoUrl);
+
   return (
-    <section className="container mx-auto max-w-5xl px-4 py-12 md:py-16">
+    <section className="container mx-auto max-w-5xl px-4 py-12 md:py-8">
       <div className="rounded-xl overflow-hidden bg-muted">
-        {image ? (
+        {videoUrl && youtubeId ? (
+          <div className="relative w-full aspect-video">
+            <iframe
+              src={`https://www.youtube.com/embed/${youtubeId}`}
+              title={altText || "YouTube video"}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="absolute inset-0 w-full h-full"
+            />
+          </div>
+        ) : image ? (
           <img
             src={image}
             alt={altText || "Infographic"}
@@ -499,6 +545,19 @@ function InfographicSection({
       )}
     </section>
   );
+}
+
+function extractYoutubeId(url: string): string | null {
+  if (!url) return null;
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    /^([a-zA-Z0-9_-]{11})$/,
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
 }
 
 function GallerySection({
@@ -677,6 +736,8 @@ export function CategoryFieldsRenderer({
         title={fields.heroTitle || ""}
         subtitle={fields.heroSubtitle || ""}
         description={fields.heroDescription || ""}
+        backgroundImage={fields.heroBackgroundImage || undefined}
+        backgroundColor={fields.heroBackgroundColor || undefined}
       />
 
       <ContentSplitSection
@@ -715,6 +776,7 @@ export function CategoryFieldsRenderer({
         image={fields.infographicImage || ""}
         caption={fields.infographicCaption || ""}
         altText={fields.infographicAltText || ""}
+        videoUrl={fields.infographicVideoUrl || ""}
       />
 
       <GallerySection

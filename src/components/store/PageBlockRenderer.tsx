@@ -123,6 +123,7 @@ import { AboutPage } from "./AboutPage";
 import { ManufacturingPage } from "./ManufacturingPage";
 import { ContactPage } from "./ContactPage";
 import { ProductsPage } from "./ProductsPage";
+import { DistributionPage } from "./DistributionPage";
 
 // Allowed HTML tags and attributes for sanitized content
 const SANITIZE_OPTIONS = {
@@ -3253,6 +3254,10 @@ export function PageBlockRenderer({
       case "products-page-content":
         return (
           <ProductsPage data={data} onNavigate={onNavigate || (() => {})} />
+        );
+      case "distribution-content":
+        return (
+          <DistributionPage data={data} onNavigate={onNavigate || (() => {})} />
         );
 
       // Product page blocks

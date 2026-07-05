@@ -95,6 +95,8 @@ export async function POST(request: NextRequest) {
         heroTitle: validatedData.heroTitle || null,
         heroSubtitle: validatedData.heroSubtitle || null,
         heroDescription: validatedData.heroDescription || null,
+        heroBackgroundColor: validatedData.heroBackgroundColor || null,
+        heroBackgroundImage: validatedData.heroBackgroundImage || null,
         contentSplitImage: validatedData.contentSplitImage || null,
         contentSplitHeading: validatedData.contentSplitHeading || null,
         contentSplitParagraph: validatedData.contentSplitParagraph || null,
@@ -116,6 +118,7 @@ export async function POST(request: NextRequest) {
         infographicImage: validatedData.infographicImage || null,
         infographicCaption: validatedData.infographicCaption || null,
         infographicAltText: validatedData.infographicAltText || null,
+        infographicVideoUrl: validatedData.infographicVideoUrl || null,
 
         // Gallery fields
         galleryTitle: validatedData.galleryTitle || null,

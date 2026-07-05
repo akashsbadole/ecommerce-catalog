@@ -123,12 +123,9 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
           const pages = (data.contentPages || []).filter(
             (p: any) =>
               p.isActive &&
-              ![
-                "home",
-                "about-us",
-                "manufacturing",
-                "contact",
-              ].includes(p.slug),
+              !["home", "about-us", "manufacturing", "contact"].includes(
+                p.slug,
+              ),
           );
           if (pages.length > 0) {
             const links: NavItem[] = pages.map((p: any) => ({
@@ -472,7 +469,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
             <Button
               size="sm"
               className="hidden md:flex text-sm bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 px-4"
-              onClick={() => onNavigate("purva-bites-distribution")}
+              onClick={() => onNavigate("content-page", "purva-bites-distribution")}
             >
               <FileText className="h-4 w-4" />
               Purva Bites Distribution

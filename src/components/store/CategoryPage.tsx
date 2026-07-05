@@ -13,10 +13,12 @@ interface CategoryPageProps {
   onNavigate: (page: string, data?: unknown) => void;
 }
 
-  const emptyFields: CategoryFieldData = {
+const emptyFields: CategoryFieldData = {
   heroTitle: null,
   heroSubtitle: null,
   heroDescription: null,
+  heroBackgroundColor: null,
+  heroBackgroundImage: null,
   contentSplitImage: null,
   contentSplitHeading: null,
   contentSplitParagraph: null,
@@ -38,6 +40,7 @@ interface CategoryPageProps {
   infographicImage: null,
   infographicCaption: null,
   infographicAltText: null,
+  infographicVideoUrl: null,
   galleryTitle: null,
   galleryImages: "[]",
   faqTitle: null,
@@ -83,6 +86,8 @@ export function CategoryPage({ slug, onNavigate }: CategoryPageProps) {
               heroTitle: cat.heroTitle || null,
               heroSubtitle: cat.heroSubtitle || null,
               heroDescription: cat.heroDescription || null,
+              heroBackgroundColor: cat.heroBackgroundColor || null,
+              heroBackgroundImage: cat.heroBackgroundImage || null,
               contentSplitImage: cat.contentSplitImage || null,
               contentSplitHeading: cat.contentSplitHeading || null,
               contentSplitParagraph: cat.contentSplitParagraph || null,
@@ -104,11 +109,12 @@ export function CategoryPage({ slug, onNavigate }: CategoryPageProps) {
               infographicImage: cat.infographicImage || null,
               infographicCaption: cat.infographicCaption || null,
               infographicAltText: cat.infographicAltText || null,
-               galleryTitle: cat.galleryTitle || null,
-               galleryImages: cat.galleryImages || "[]",
-               faqTitle: cat.faqTitle || null,
-               faqItems: cat.faqItems || "[]",
-               leadCaptureEnabled: cat.leadCaptureEnabled ?? false,
+              infographicVideoUrl: cat.infographicVideoUrl || null,
+              galleryTitle: cat.galleryTitle || null,
+              galleryImages: cat.galleryImages || "[]",
+              faqTitle: cat.faqTitle || null,
+              faqItems: cat.faqItems || "[]",
+              leadCaptureEnabled: cat.leadCaptureEnabled ?? false,
             });
             const prodRes = await fetch(`/api/products?categoryId=${cat.id}`);
             if (prodRes.ok) {
@@ -144,7 +150,7 @@ export function CategoryPage({ slug, onNavigate }: CategoryPageProps) {
         <p className="text-sm text-muted-foreground mb-4">
           The category you're looking for doesn't exist.
         </p>
-        <Button onClick={() => onNavigate("distribution")}>
+        <Button onClick={() => onNavigate("purva-bites-distribution")}>
           Back to Distribution
         </Button>
       </div>

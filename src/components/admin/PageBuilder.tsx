@@ -52,6 +52,7 @@ import {
   Eye,
   Loader2,
   GalleryHorizontal,
+  Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -127,6 +128,7 @@ const BLOCK_ICONS: Record<
   "manufacturing-content": Factory,
   "contact-page-content": Phone,
   "products-page-content": Package,
+  "distribution-content": Truck,
 };
 
 const PAGE_CONTENT_BLOCK_TYPES = new Set<BlockType>([
@@ -135,6 +137,7 @@ const PAGE_CONTENT_BLOCK_TYPES = new Set<BlockType>([
   "manufacturing-content",
   "contact-page-content",
   "products-page-content",
+  "distribution-content",
 ]);
 
 function getTopLevelKeys(data: Record<string, unknown>): string[] {
