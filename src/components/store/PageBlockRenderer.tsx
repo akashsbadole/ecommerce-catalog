@@ -201,7 +201,7 @@ function HeroBlock({
   const title = (data.title as string) || "Welcome";
   const subtitle = (data.subtitle as string) || "";
   const buttonText = (data.buttonText as string) || "";
-  const buttonLink = (data.buttonLink as string) || "/catalogue";
+  const buttonLink = (data.buttonLink as string) || "/distribution";
   const height = (data.height as string) || "medium";
   const alignment = (data.alignment as string) || "center";
 
@@ -248,10 +248,10 @@ function HeroBlock({
               onClick={() =>
                 onNavigate &&
                 buttonLink &&
-                onNavigate(
-                  buttonLink.startsWith("/") ? "content-page" : "catalogue",
-                  buttonLink.replace("/page/", ""),
-                )
+                  onNavigate(
+                    buttonLink.startsWith("/") ? "content-page" : "distribution",
+                    buttonLink.replace("/page/", ""),
+                  )
               }
             >
               {buttonText}
@@ -385,10 +385,10 @@ function HeroCarouselBlock({
                       onNavigate &&
                       slides[activeIndex].buttonLink &&
                       onNavigate(
-                        slides[activeIndex].buttonLink.startsWith("/")
-                          ? "content-page"
-                          : "catalogue",
-                        slides[activeIndex].buttonLink.replace("/page/", ""),
+                          slides[activeIndex].buttonLink.startsWith("/")
+                            ? "content-page"
+                            : "distribution",
+                          slides[activeIndex].buttonLink.replace("/page/", ""),
                       )
                     }
                   >
@@ -1004,7 +1004,7 @@ function AudienceCardsBlock({
                             ? "content-page"
                             : card.link === "/contact"
                               ? "contact"
-                              : "catalogue",
+                              : "distribution",
                           card.link.replace("/page/", ""),
                         );
                       } else {
@@ -1179,7 +1179,7 @@ function CapabilitiesBlock({
                     if (ctaLink) {
                       routeFromPath(ctaLink, onNavigate || (() => {}));
                     } else if (onNavigate) {
-                      onNavigate("catalogue");
+                      onNavigate("distribution");
                     }
                   }}
                 >
@@ -1355,7 +1355,7 @@ function ProductCategoriesBlock({
                     window.open(ctaLink, "_blank");
                   }
                 } else if (onNavigate) {
-                  onNavigate("catalogue");
+                  onNavigate("distribution");
                 }
               }}
             >
@@ -2227,8 +2227,8 @@ function HeroSplitBlock({
                     const page =
                       btn.link === "/contact"
                         ? "contact"
-                        : btn.link === "/catalogue"
-                          ? "catalogue"
+                        : btn.link === "/distribution"
+                          ? "distribution"
                           : "content-page";
                     onNavigate?.(
                       page,
@@ -2575,7 +2575,7 @@ function QuickConnectBlock({
               </p>
               <button
                 onClick={() => {
-                  if (ch.type === "catalogue") onNavigate?.("catalogue");
+                  if (ch.type === "catalogue") onNavigate?.("distribution");
                   else if (
                     ch.type === "whatsapp" ||
                     ch.type === "phone" ||
@@ -2591,7 +2591,7 @@ function QuickConnectBlock({
                     ? "Tap to call"
                     : ch.type === "email"
                       ? "Copy email"
-                      : "Get catalogue"}
+                      : "View Distribution"}
               </button>
             </div>
           ))}
@@ -2695,7 +2695,7 @@ function SliderBlock({
               <Button
                 style={{ backgroundColor: ctaButtonColor, color: ctaTextColor }}
                 className="hover:opacity-90"
-                onClick={() => onNavigate && onNavigate("catalogue")}
+                onClick={() => onNavigate && onNavigate("distribution")}
               >
                 View Collection
               </Button>
@@ -2764,7 +2764,7 @@ function AboutBlock({
                       ? "content-page"
                       : buttonLink === "/contact"
                         ? "contact"
-                        : "catalogue",
+                        : "distribution",
                     buttonLink.replace("/page/", ""),
                   );
                 } else if (onNavigate) {

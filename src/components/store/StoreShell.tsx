@@ -4,10 +4,9 @@ import { useEffect, useCallback, useState, ReactNode } from "react";
 import { useAppStore } from "@/lib/store";
 import { StoreLayout } from "./StoreLayout";
 import { HomePage } from "./HomePage";
-import { CataloguePage } from "./CataloguePage";
 import { CategoryPage } from "./CategoryPage";
 import { ProductPage } from "./ProductPage";
-import { ProductsOverviewPage } from "./ProductsOverviewPage";
+import { DistributionPage } from "./DistributionPage";
 import { BlogPage } from "./BlogPage";
 import { BlogPostView } from "./BlogPostView";
 import { CmsPage } from "./CmsPage";
@@ -82,16 +81,14 @@ export function StoreShell({ initialPage, children }: StoreShellProps) {
     switch (page.type) {
       case "home":
         return <HomePage onNavigate={navigate} />;
-      case "catalogue":
-        return <CataloguePage onNavigate={navigate} />;
+      case "distribution":
+        return <DistributionPage onNavigate={navigate} />;
       case "category":
         return <CategoryPage slug={page.slug!} onNavigate={navigate} />;
       case "content-page":
         return <CmsPage slug={page.slug!} onNavigate={navigate} />;
       case "product-page":
         return <ProductPage slug={page.slug!} onNavigate={navigate} />;
-      case "products":
-        return <ProductsOverviewPage onNavigate={navigate} />;
       case "blog":
         return <BlogPage onNavigate={navigate} />;
       case "blog-post":
@@ -124,10 +121,10 @@ export function StoreShell({ initialPage, children }: StoreShellProps) {
                 Back to Home
               </button>
               <button
-                onClick={() => navigate("catalogue")}
+                onClick={() => navigate("distribution")}
                 className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
               >
-                Browse Catalogue
+                Browse Distribution
               </button>
             </div>
           </div>

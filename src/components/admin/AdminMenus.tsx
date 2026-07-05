@@ -82,8 +82,7 @@ const MENU_LOCATIONS = [
 
 const INTERNAL_PAGES = [
   { label: 'Home', value: 'home' },
-  { label: 'Catalogue', value: 'catalogue' },
-  { label: 'All Products', value: 'products' },
+  { label: 'Distribution', value: 'distribution' },
   { label: 'Product Category', value: 'category' },
   { label: 'About Us', value: 'about' },
   { label: 'Manufacturing', value: 'manufacturing' },

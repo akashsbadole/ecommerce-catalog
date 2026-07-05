@@ -161,10 +161,10 @@ export function ProductsPage({
               Enquire for bulk / private label
             </button>
             <button
-              onClick={() => onNavigate("catalogue")}
+              onClick={() => onNavigate("distribution")}
               className="bg-white/10 text-gray-300 text-sm font-medium rounded-full px-6 py-2.5 hover:bg-white/20 transition-colors"
             >
-              Download catalogue
+              View Distribution
             </button>
           </div>
         </div>
@@ -439,10 +439,10 @@ export function ProductsPage({
           </p>
           <div className="flex gap-3">
             <button
-              onClick={() => onNavigate("catalogue")}
+              onClick={() => onNavigate("distribution")}
               className="text-xs bg-primary text-primary-foreground rounded-full px-4 py-2 flex items-center gap-1.5 hover:bg-primary/90 transition-colors"
             >
-              <Download className="h-3 w-3" /> Download full catalogue
+              <Download className="h-3 w-3" /> View Distribution
             </button>
             <button
               onClick={() => onNavigate("manufacturing")}

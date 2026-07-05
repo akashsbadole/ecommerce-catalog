@@ -9,9 +9,9 @@ test.describe('Platform Demo Walkthrough', () => {
     await page.goto("/");
     await page.waitForTimeout(5000);
 
-    // 2. Explore Catalogue
-    console.log("Exploring Catalogue...");
-    await page.goto("/catalogue");
+    // 2. Explore distribution
+    console.log("Exploring distribution...");
+    await page.goto("/distribution");
     await page.waitForTimeout(5000);
 
     // 3. Admin Dashboard

@@ -9,17 +9,17 @@ test.describe("Platform Production Readiness", () => {
     await page.goto("/");
     await expect(page).toHaveTitle(/Purva Bites/i);
 
-    // 2. Catalogue Browsing
-    console.log("Navigating to Catalogue...");
+    // 2. distribution Browsing
+    console.log("Navigating to distribution...");
     // Attempt navigation via button if it exists
     const browseBtn = page
-      .locator('button:has-text("Browse Catalogue")')
+      .locator('button:has-text("Browse distribution")')
       .first();
     if (await browseBtn.isVisible()) {
       await browseBtn.click();
-      await expect(page.getByText(/Product Catalogue/i)).toBeVisible();
+      await expect(page.getByText(/Product distribution/i)).toBeVisible();
     } else {
-      await page.goto("/catalogue");
+      await page.goto("/distribution");
     }
   });
 

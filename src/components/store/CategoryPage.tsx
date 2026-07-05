@@ -142,8 +142,8 @@ export function CategoryPage({ slug, onNavigate }: CategoryPageProps) {
         <p className="text-sm text-muted-foreground mb-4">
           The category you're looking for doesn't exist.
         </p>
-        <Button onClick={() => onNavigate("catalogue")}>
-          Back to catalogue
+        <Button onClick={() => onNavigate("distribution")}>
+          Back to Distribution
         </Button>
       </div>
     );

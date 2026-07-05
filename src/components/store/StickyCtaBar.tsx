@@ -36,7 +36,7 @@ export function StickyCtaBar({ onNavigate, settings }: StickyCtaBarProps) {
             <Button
               size="sm"
               className="bg-primary text-white hover:bg-primary/90"
-              onClick={() => onNavigate('products')}
+              onClick={() => onNavigate('distribution')}
             >
               Get bulk quote
               <ArrowRight className="ml-1 h-3 w-3" />

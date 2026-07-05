@@ -90,8 +90,8 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
         <p className="text-sm text-muted-foreground mb-4">
           The product you&apos;re looking for doesn&apos;t exist.
         </p>
-        <Button onClick={() => onNavigate("catalogue")}>
-          Back to catalogue
+        <Button onClick={() => onNavigate("distribution")}>
+          Back to Distribution
         </Button>
       </div>
     );

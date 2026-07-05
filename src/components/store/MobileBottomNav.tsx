@@ -19,10 +19,10 @@ export function MobileBottomNav({ onNavigate }: MobileBottomNavProps) {
       active: currentPage.type === "home",
     },
     {
-      label: "Catalogue",
+      label: "Distribution",
       icon: Search,
-      page: "catalogue",
-      active: currentPage.type === "catalogue",
+      page: "distribution",
+      active: currentPage.type === "distribution",
     },
   ];
 

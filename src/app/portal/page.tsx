@@ -133,11 +133,11 @@ export default function BuyerPortalPage() {
           <p className="text-muted-foreground">Welcome back, {auth.user.name}. Manage your business account, quotes, and enquiries.</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => navigate('catalogue')}>
+          <Button variant="outline" onClick={() => navigate('distribution')}>
             <Package className="mr-2 h-4 w-4" />
             Browse Products
           </Button>
-          <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => navigate('catalogue')}>
+          <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => navigate('distribution')}>
             <FileText className="mr-2 h-4 w-4" />
             New Quote
           </Button>

@@ -125,7 +125,6 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
               p.isActive &&
               ![
                 "home",
-                "catalogue",
                 "about-us",
                 "manufacturing",
                 "contact",
@@ -268,10 +267,9 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
     contact: "contact",
     "contact-us": "contact",
     blog: "blog",
-    catalogue: "catalogue",
-    catalog: "catalogue",
-    products: "products",
-    product: "products",
+    distribution: "distribution",
+    products: "distribution",
+    product: "distribution",
     home: "home",
     homepage: "home",
   };
@@ -289,10 +287,8 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
           const p = segments.join("/");
           if (segments[0] === "product" && segments[1])
             onNavigate("category", segments[1]);
-          else if (segments[0] === "product") onNavigate("products");
-          else if (segments[0] === "catalogue" && segments[1])
-            onNavigate("category", segments[1]);
-          else if (segments[0] === "catalogue") onNavigate("catalogue");
+          else if (segments[0] === "product") onNavigate("distribution");
+          else if (segments[0] === "distribution") onNavigate("distribution");
           else if (segments[0] === "blog" && segments[1])
             onNavigate("blog-post", segments[1]);
           else if (segments[0] === "blog") onNavigate("blog");
@@ -303,7 +299,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
             segments[0] === "products" ||
             (segments[0] === "product" && !segments[1])
           )
-            onNavigate("products");
+            onNavigate("distribution");
           else onNavigate("content-page", p);
         } else {
           window.open(item.url, item.openInNewTab ? "_blank" : "_self");
@@ -319,7 +315,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
           onNavigate(dedicatedPage);
         } else if (item.page === "category" && !item.slug) {
           // Top-level "Product Category" item without a specific slug
-          onNavigate("catalogue");
+          onNavigate("distribution");
         } else {
           onNavigate(item.page, item.slug ?? undefined);
         }
@@ -590,7 +586,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                   <SheetClose asChild>
                     <Button
                       className="justify-start text-sm h-9 bg-primary text-primary-foreground"
-                      onClick={() => onNavigate("products")}
+                      onClick={() => onNavigate("distribution")}
                     >
                       <FileText className="mr-2 h-4 w-4" />
                       Get Bulk Quote

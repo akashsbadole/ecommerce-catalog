@@ -52,8 +52,8 @@ export async function GET(request: NextRequest) {
     // Homepage
     urls.push(`  <url>\n    <loc>${baseUrl}</loc>\n    <lastmod>${siteLastmod}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>`);
 
-    // Catalogue
-    urls.push(`  <url>\n    <loc>${baseUrl}/catalogue</loc>\n    <lastmod>${siteLastmod}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.9</priority>\n  </url>`);
+    // Distribution
+    urls.push(`  <url>\n    <loc>${baseUrl}/distribution</loc>\n    <lastmod>${siteLastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`);
 
     // Products
     for (const product of products) {

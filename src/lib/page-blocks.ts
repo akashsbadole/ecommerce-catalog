@@ -45,7 +45,6 @@ export type BlockType =
   | "quick-connect"
   | "crm-flow"
   | "mfg-page-content"
-  | "catalogue-page-content"
 
   // Product page blocks
   | "product-hero"
@@ -89,7 +88,7 @@ export const BLOCK_DEFAULTS: Record<
           title: "Slide 1",
           subtitle: "Description for slide 1",
           buttonText: "Shop Now",
-          buttonLink: "/catalogue",
+          buttonLink: "/distribution",
         },
         {
           image: "",
@@ -405,7 +404,7 @@ export const BLOCK_DEFAULTS: Record<
         { name: "Namkeen", variants: "8+ variants" },
       ],
       ctaText: "View all products & packaging",
-      ctaLink: "/catalogue",
+      ctaLink: "/distribution",
       ctaButtonColor: "var(--primary)",
       ctaTextColor: "#FFFFFF",
       showButton: true,
@@ -647,7 +646,7 @@ export const BLOCK_DEFAULTS: Record<
       alignment: "left",
       buttons: [
         { text: "Primary CTA", link: "/contact", variant: "primary" },
-        { text: "Secondary CTA", link: "/catalogue", variant: "outline" },
+        { text: "Secondary CTA", link: "/distribution", variant: "outline" },
       ],
       badges: [],
       ctaButtonColor: "var(--primary)",
@@ -808,10 +807,10 @@ export const BLOCK_DEFAULTS: Record<
           value: "sales@purvabites.com",
         },
         {
-          type: "catalogue",
-          title: "Download catalogue",
-          description: "Review at your own pace",
-          value: "PDF · 24 pages · free",
+          type: "distribution",
+          title: "View Distribution",
+          description: "Explore distribution options",
+          value: "Pan-India coverage",
         },
       ],
     },
@@ -1002,8 +1001,8 @@ export const BLOCK_DEFAULTS: Record<
           },
           {
             icon: "Target",
-            title: "Get our catalogue",
-            desc: "80+ SKUs, capacity details and packaging formats — send enquiry",
+            title: "Distribution enquiry",
+            desc: "Coverage areas, MOQ, logistics and partnership terms — send enquiry",
             cta: "Send enquiry →",
             page: "contact",
             useForm: true,
@@ -1298,66 +1297,6 @@ export const BLOCK_DEFAULTS: Record<
           },
         ],
       },
-    },
-  },
-  "catalogue-page-content": {
-    label: "Catalogue Page Content",
-    icon: "Package",
-    defaultData: {
-      pageTitle: "Product Catalogue",
-      pageDescription:
-        "Browse our complete product catalogue with pricing, bulk orders, and wholesale options.",
-      heroBadge: "Catalogue",
-      categoryInfo: {
-        khakhra: {
-          tags: ["12+ variants", "Private label"],
-          desc: "Thin, crispy, roasted flatbreads available in a wide range of flavours and spice levels. One of our flagship lines — highest daily output capacity. Ideal for B2B, retail brands and private label.",
-        },
-        bhakhri: {
-          tags: ["8+ varieties"],
-          desc: "Traditional recipes with modern automation. Consistent thickness and crunch across batches. Available in multiple grain compositions.",
-        },
-        makhana: {
-          tags: ["6+ flavours", "PL ready"],
-          desc: "Specialised roasting and flavouring line for fox nuts. Light, crispy finish with even coating across all flavour variants.",
-        },
-        extruder: {
-          tags: ["10+ shapes"],
-          desc: "High-speed extrusion for puffed and shaped snacks. Custom shapes and textures achievable for private label clients.",
-        },
-        digestive: {
-          tags: ["5+ varieties"],
-          desc: "Baked digestive biscuits and health-focused snacks. Formulations customisable for target nutrition profiles.",
-        },
-      },
-      packagingOptions: [
-        {
-          title: "Purva Bites branded",
-          desc: "Ready-branded packs for distributors, modern trade and institutional buyers",
-          tag: "Distributor friendly",
-          highlight: false,
-        },
-        {
-          title: "Your brand / private label",
-          desc: "Send your artwork — we print, pack and ship under your brand identity. No minimums disclosed publicly.",
-          tag: "Private label",
-          highlight: true,
-        },
-        {
-          title: "Bulk / institutional",
-          desc: "5kg, 10kg, 25kg formats for canteens, hotels, airlines and govt procurement",
-          tag: "Bulk format",
-          highlight: false,
-        },
-      ],
-      categoryTabs: [
-        { id: "all", label: "All products" },
-        { id: "khakhra", label: "Khakhra" },
-        { id: "bhakhri", label: "Bhakhri" },
-        { id: "makhana", label: "Makhana" },
-        { id: "extruder", label: "Extruder" },
-        { id: "digestive", label: "Digestive" },
-      ],
     },
   },
   "product-hero": {

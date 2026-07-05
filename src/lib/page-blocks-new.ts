@@ -22,8 +22,7 @@ export type BlockType =
     | "homepage-content"
     | "about-page-content"
     | "manufacturing-content"
-    | "contact-page-content"
-    | "catalogue-content";
+    | "contact-page-content";
 
 export interface PageBlock {
     id: string;
@@ -43,7 +42,7 @@ export const BLOCK_DEFAULTS: Record<
             title: "Welcome",
             subtitle: "",
             buttonText: "Learn More",
-            buttonLink: "/catalogue",
+            buttonLink: "/distribution",
             backgroundImage: "",
             height: "medium",
             alignment: "center",
@@ -242,23 +241,7 @@ export const BLOCK_DEFAULTS: Record<
             }
         },
     },
-    "catalogue-content": {
-        label: "Catalogue Template",
-        icon: "Grid3X3",
-        defaultData: {
-            hero: {
-                title: "Product Catalogue",
-                subtitle: "Browse our complete range",
-            },
-            categories: [],
-            filters: [],
-            display: {
-                itemsPerPage: 12,
-                layout: "grid",
-                sortOptions: []
-            }
-        },
-    },
+
 };
 // Utility functions for block management
 export function createBlock(type: BlockType): PageBlock {

@@ -807,7 +807,7 @@ export function AdminProducts() {
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Products</h2>
           <p className="text-muted-foreground mt-1">
-            Manage your product catalogue
+            Manage your products
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">

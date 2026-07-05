@@ -3,10 +3,9 @@ import { persist } from "zustand/middleware";
 
 export type Page =
   | { type: "home" }
-  | { type: "catalogue" }
   | { type: "category"; slug: string }
   | { type: "product"; productId: string }
-  | { type: "products" }
+  | { type: "distribution" }
   | { type: "contact" }
   | { type: "about" }
   | { type: "manufacturing" }
@@ -77,20 +76,15 @@ export const useAppStore = create<AppState>()(
             if (typeof window !== "undefined")
               window.history.pushState({}, "", "/");
             break;
-          case "catalogue":
-            set({ currentPage: { type: "catalogue" } });
+          case "distribution":
+            set({ currentPage: { type: "distribution" } });
             if (typeof window !== "undefined")
-              window.history.pushState({}, "", "/catalogue");
+              window.history.pushState({}, "", "/distribution");
             break;
           case "category":
             set({ currentPage: { type: "category", slug: data as string } });
             if (typeof window !== "undefined")
               window.history.pushState({}, "", `/product/${data as string}`);
-            break;
-          case "products":
-            set({ currentPage: { type: "products" } });
-            if (typeof window !== "undefined")
-              window.history.pushState({}, "", "/product");
             break;
           case "product":
             {
@@ -102,10 +96,10 @@ export const useAppStore = create<AppState>()(
                   if (catSlug) {
                     get().navigate("category", catSlug);
                   } else {
-                    get().navigate("catalogue");
+                    get().navigate("distribution");
                   }
                 })
-                .catch(() => get().navigate("catalogue"));
+                .catch(() => get().navigate("distribution"));
             }
             break;
           case "contact":
@@ -144,9 +138,7 @@ export const useAppStore = create<AppState>()(
             if (!slug) break;
             // Redirect known dedicated-page slugs to their proper page type
             const SLUG_REDIRECTS: Record<string, string> = {
-              "blog": "blog",
-              "products": "products",
-              "product": "products",
+              "distribution": "distribution",
               "about": "about",
               "about-us": "about",
               "about-page-content": "about",
@@ -154,8 +146,6 @@ export const useAppStore = create<AppState>()(
               "mfg-page-content": "manufacturing",
               "contact": "contact",
               "contact-us": "contact",
-              "catalogue": "catalogue",
-              "catalog": "catalogue",
               "home": "home",
               "homepage": "home",
             };

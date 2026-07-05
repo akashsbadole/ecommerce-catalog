@@ -35,9 +35,9 @@ export default function NotFoundPage() {
             </Link>
           </Button>
           <Button asChild variant="outline" className="gap-2">
-            <Link href="/?view=catalogue">
+            <Link href="/distribution">
               <ShoppingBag className="h-4 w-4" />
-              Browse Catalogue
+              Distribution
             </Link>
           </Button>
         </div>

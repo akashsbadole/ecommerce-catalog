@@ -86,7 +86,7 @@ export function HomePage({
             "@type": "SearchAction",
             target: {
               "@type": "EntryPoint",
-              urlTemplate: `${siteOrigin}/catalogue?search={search_term_string}`,
+              urlTemplate: `${siteOrigin}/search?q={search_term_string}`,
             },
             "query-input": "required name=search_term_string",
           },
