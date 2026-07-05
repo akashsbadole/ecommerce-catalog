@@ -124,6 +124,10 @@ export async function POST(request: NextRequest) {
         // FAQ fields
         faqTitle: validatedData.faqTitle || null,
         faqItems: validatedData.faqItems || '[]',
+
+        // Lead capture fields
+        leadCaptureEnabled: validatedData.leadCaptureEnabled ?? false,
+
         parentId: body.parentId || null,
         ...(storeId ? { storeId } : {}),
       },

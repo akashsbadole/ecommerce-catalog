@@ -42,6 +42,7 @@ interface CategoryPageProps {
   galleryImages: "[]",
   faqTitle: null,
   faqItems: "[]",
+  leadCaptureEnabled: false,
 };
 
 export function CategoryPage({ slug, onNavigate }: CategoryPageProps) {
@@ -107,6 +108,7 @@ export function CategoryPage({ slug, onNavigate }: CategoryPageProps) {
                galleryImages: cat.galleryImages || "[]",
                faqTitle: cat.faqTitle || null,
                faqItems: cat.faqItems || "[]",
+               leadCaptureEnabled: cat.leadCaptureEnabled ?? false,
             });
             const prodRes = await fetch(`/api/products?categoryId=${cat.id}`);
             if (prodRes.ok) {

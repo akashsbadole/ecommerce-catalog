@@ -72,6 +72,9 @@ export const categorySchema = z.object({
   // FAQ fields
   faqTitle: z.string().optional().nullable(),
   faqItems: z.string().optional().nullable().default('[]'),
+
+  // Lead capture fields
+  leadCaptureEnabled: z.boolean().optional().nullable().default(false),
 });
 
 export const enquirySchema = z.object({

@@ -113,6 +113,10 @@ export async function PUT(
         // FAQ fields
         ...(body.faqTitle !== undefined && { faqTitle: body.faqTitle || null }),
         ...(body.faqItems !== undefined && { faqItems: body.faqItems || '[]' }),
+
+        // Lead capture fields
+        ...(body.leadCaptureEnabled !== undefined && { leadCaptureEnabled: body.leadCaptureEnabled ?? false }),
+
         ...(body.parentId !== undefined && {
           parentId: body.parentId || null,
         }),

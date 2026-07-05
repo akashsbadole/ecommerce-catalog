@@ -13,6 +13,7 @@ import {
   Images,
   Save,
   HelpCircle,
+  Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { MediaPickerField } from "./MediaPickerField";
 import { ProductSelector } from "./ProductSelector";
@@ -61,6 +63,7 @@ export interface CategoryFieldValues {
   galleryImages: string;
   faqTitle: string;
   faqItems: string;
+  leadCaptureEnabled: boolean;
 }
 
 interface AdminCategoryFieldsProps {
@@ -79,6 +82,7 @@ const sectionIcons: Record<string, React.ReactNode> = {
   infographic: <Image className="h-4 w-4" />,
   gallery: <Images className="h-4 w-4" />,
   faq: <HelpCircle className="h-4 w-4" />,
+  "lead-capture": <Mail className="h-4 w-4" />,
 };
 
 export function AdminCategoryFields({
@@ -144,9 +148,7 @@ export function AdminCategoryFields({
     }
   })();
 
-  const setFaqItems = (
-    newItems: { question: string; answer: string }[],
-  ) => {
+  const setFaqItems = (newItems: { question: string; answer: string }[]) => {
     update("faqItems", JSON.stringify(newItems));
   };
 
@@ -173,6 +175,7 @@ export function AdminCategoryFields({
           <TabsTrigger value="process">Process</TabsTrigger>
           <TabsTrigger value="infographic">Info</TabsTrigger>
           <TabsTrigger value="gallery">Gallery</TabsTrigger>
+          <TabsTrigger value="lead-capture">Lead Capture</TabsTrigger>
           <TabsTrigger value="faq">FAQ</TabsTrigger>
         </TabsList>
 
@@ -266,7 +269,9 @@ export function AdminCategoryFields({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setBullets(bullets.filter((_, j) => j !== i))}
+                    onClick={() =>
+                      setBullets(bullets.filter((_, j) => j !== i))
+                    }
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -346,9 +351,7 @@ export function AdminCategoryFields({
           <Card className="p-4 space-y-4">
             <div className="flex items-center gap-2">
               {sectionIcons.cta}
-              <Label className="text-base font-semibold">
-                Call to Action
-              </Label>
+              <Label className="text-base font-semibold">Call to Action</Label>
             </div>
             <div className="space-y-2">
               <Label htmlFor="cat-cta-heading">Heading</Label>
@@ -387,7 +390,9 @@ export function AdminCategoryFields({
             <Separator />
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="cat-cta-bulk-text">Bulk Order Button Text</Label>
+                <Label htmlFor="cat-cta-bulk-text">
+                  Bulk Order Button Text
+                </Label>
                 <Input
                   id="cat-cta-bulk-text"
                   placeholder="Enquire for Bulk Order →"
@@ -438,9 +443,7 @@ export function AdminCategoryFields({
           <Card className="p-4 space-y-4">
             <div className="flex items-center gap-2">
               {sectionIcons.process}
-              <Label className="text-base font-semibold">
-                Process Flow
-              </Label>
+              <Label className="text-base font-semibold">Process Flow</Label>
             </div>
             <div className="space-y-2">
               <Label htmlFor="cat-process-title">Title</Label>
@@ -472,9 +475,7 @@ export function AdminCategoryFields({
                       variant="ghost"
                       size="icon"
                       className="h-6 w-6"
-                      onClick={() =>
-                        setSteps(steps.filter((_, j) => j !== i))
-                      }
+                      onClick={() => setSteps(steps.filter((_, j) => j !== i))}
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>
@@ -552,9 +553,7 @@ export function AdminCategoryFields({
           <Card className="p-4 space-y-4">
             <div className="flex items-center gap-2">
               {sectionIcons.gallery}
-              <Label className="text-base font-semibold">
-                Gallery Section
-              </Label>
+              <Label className="text-base font-semibold">Gallery Section</Label>
             </div>
             <div className="space-y-2">
               <Label htmlFor="cat-gallery-title">Section Title</Label>
@@ -583,7 +582,9 @@ export function AdminCategoryFields({
                     variant="ghost"
                     size="icon"
                     onClick={() =>
-                      setGalleryImages(galleryImageList.filter((_, j) => j !== i))
+                      setGalleryImages(
+                        galleryImageList.filter((_, j) => j !== i),
+                      )
                     }
                   >
                     <Trash2 className="h-4 w-4" />
@@ -606,9 +607,7 @@ export function AdminCategoryFields({
           <Card className="p-4 space-y-4">
             <div className="flex items-center gap-2">
               {sectionIcons.faq}
-              <Label className="text-base font-semibold">
-                FAQ Section
-              </Label>
+              <Label className="text-base font-semibold">FAQ Section</Label>
             </div>
             <div className="space-y-2">
               <Label htmlFor="cat-faq-title">Section Title</Label>
@@ -673,6 +672,27 @@ export function AdminCategoryFields({
           </Card>
         </TabsContent>
 
+        <TabsContent value="lead-capture" className="space-y-4 pt-4">
+          <Card className="p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              {sectionIcons["lead-capture"]}
+              <Label className="text-base font-semibold">
+                Lead Capture Form
+              </Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="cat-lc-enabled"
+                checked={values.leadCaptureEnabled}
+                onCheckedChange={(v) => update("leadCaptureEnabled", v)}
+              />
+              <Label htmlFor="cat-lc-enabled">
+                Enable lead capture form (renders the contact form from
+                homepage)
+              </Label>
+            </div>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );

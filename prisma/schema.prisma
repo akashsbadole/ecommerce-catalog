@@ -166,6 +166,7 @@ model Category {
   galleryImages   String             @default("[]")
   faqTitle        String?
   faqItems        String             @default("[]")
+  leadCaptureEnabled        Boolean  @default(false)
   deletedAt       DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @default(now())

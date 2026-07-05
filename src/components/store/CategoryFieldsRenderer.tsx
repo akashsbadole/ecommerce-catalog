@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
 import { getFirstImage } from "@/lib/utils";
+import { LeadCaptureSection } from "./LeadCaptureSection";
 
 export interface CategoryFieldData {
   heroTitle: string | null;
@@ -43,6 +44,7 @@ export interface CategoryFieldData {
   galleryImages: string;
   faqTitle: string | null;
   faqItems: string;
+  leadCaptureEnabled: boolean;
 }
 
 function parseJsonArray<T>(val: string): T[] {
@@ -65,22 +67,25 @@ function HeroSection({
 }) {
   if (!title && !subtitle && !description) return null;
   return (
-    <section className="container mx-auto max-w-3xl px-4 py-10 md:py-12 text-center">
-      {subtitle && (
-        <p className="text-xs sm:text-sm font-medium text-primary uppercase tracking-wider mb-3">
-          {subtitle}
-        </p>
-      )}
-      {title && (
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
-          {title}
-        </h1>
-      )}
-      {description && (
-        <p className="text-muted-foreground text-sm sm:text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
-          {description}
-        </p>
-      )}
+    <section className="relative flex items-center justify-center overflow-hidden w-full bg-gradient-to-br from-primary via-primary/90 to-primary/80 min-h-[280px] md:min-h-[350px]">
+      <div className="absolute inset-0 bg-black/20" />
+      <div className="relative z-10 w-full px-6 py-12 md:py-16 text-center">
+        {subtitle && (
+          <p className="text-xs sm:text-sm font-medium text-white/80 uppercase tracking-wider mb-3">
+            {subtitle}
+          </p>
+        )}
+        {title && (
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 max-w-4xl mx-auto">
+            {title}
+          </h1>
+        )}
+        {description && (
+          <p className="text-white/80 text-sm sm:text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
+            {description}
+          </p>
+        )}
+      </div>
     </section>
   );
 }
@@ -716,6 +721,67 @@ export function CategoryFieldsRenderer({
         title={fields.galleryTitle || ""}
         images={galleryImages}
       />
+
+      {fields.leadCaptureEnabled ? (
+        <LeadCaptureSection
+          heading="Get in Touch"
+          description="Fill in your details and we'll get back to you"
+          submitText="Submit Enquiry"
+          fields={[
+            {
+              name: "name",
+              label: "Your name",
+              type: "text",
+              required: true,
+              placeholder: "Your name *",
+            },
+            {
+              name: "company",
+              label: "Company name",
+              type: "text",
+              required: true,
+              placeholder: "Company name *",
+            },
+            {
+              name: "phone",
+              label: "Phone number",
+              type: "tel",
+              required: true,
+              placeholder: "Phone number *",
+            },
+            {
+              name: "email",
+              label: "Email address",
+              type: "email",
+              required: false,
+              placeholder: "Email address",
+            },
+            {
+              name: "requirement",
+              label: "Requirement type",
+              type: "select",
+              required: true,
+              placeholder: "Inquiry type",
+              options: [
+                "Bulk Order",
+                "Private Label",
+                "White Label",
+                "Distribution",
+                "Institutional Order",
+                "Other",
+              ],
+            },
+            {
+              name: "city",
+              label: "City / state",
+              type: "text",
+              required: false,
+              placeholder: "City / state",
+            },
+          ]}
+          messageField
+        />
+      ) : null}
 
       <FaqSection title={fields.faqTitle || ""} items={faqItems} />
     </>

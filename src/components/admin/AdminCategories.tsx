@@ -177,6 +177,7 @@ export function AdminCategories() {
     galleryImages: "[]",
     faqTitle: "",
     faqItems: "[]",
+    leadCaptureEnabled: false,
   });
   const [savingSections, setSavingSections] = useState(false);
   const [activeSectionTab, setActiveSectionTab] = useState("details");
@@ -248,6 +249,7 @@ export function AdminCategories() {
       galleryImages: "[]",
       faqTitle: "",
       faqItems: "[]",
+      leadCaptureEnabled: false,
     });
   };
 
@@ -333,6 +335,7 @@ export function AdminCategories() {
             galleryImages: c.galleryImages || "[]",
             faqTitle: c.faqTitle || "",
             faqItems: c.faqItems || "[]",
+            leadCaptureEnabled: c.leadCaptureEnabled ?? false,
           });
         }
         if (data.products) {
@@ -405,6 +408,7 @@ export function AdminCategories() {
         galleryImages: categoryFields.galleryImages || "[]",
         faqTitle: categoryFields.faqTitle || null,
         faqItems: categoryFields.faqItems || "[]",
+        leadCaptureEnabled: categoryFields.leadCaptureEnabled,
       };
 
       const url = editingCategory
