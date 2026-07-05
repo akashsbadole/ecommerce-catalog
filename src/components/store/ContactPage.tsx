@@ -12,11 +12,12 @@ import {
   Factory,
   Clock,
 } from "lucide-react";
-import { BLOCK_DEFAULTS, deepMerge } from "@/lib/page-blocks";
 import { useSeo } from "@/lib/use-seo";
 import { StoreHeroBanner } from "@/components/store/StoreHeroBanner";
-import { useContentPage, getPageContentData } from "@/lib/use-page-content";
+import { getPageContentData } from "@/lib/use-page-content";
+import { useCmsPageData } from "@/lib/use-cms-data";
 import { LeadCaptureSection } from "@/components/store/LeadCaptureSection";
+import { StoreLoading } from "./StoreLoading";
 
 interface ContactPageProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -57,29 +58,15 @@ export function ContactPage({
 
   const [selectedType, setSelectedType] = useState<string>("bulk");
 
-  const slugMap: Record<string, string> = {
-    "about-page-content": "about-us",
-    "mfg-page-content": "manufacturing",
-    "contact-page-content": "contact-us",
-    home: "homepage",
-  };
-
-  const cmsSlug =
-    (slugMap["contact-page-content"] as string | undefined) ||
-    "contact-page-content";
-
-  const { blocks: contactBlocks } = useContentPage("contact-page-content");
-  const { blocks: fallbackBlocks } = useContentPage(cmsSlug);
-  const effectiveBlocks = contactBlocks ?? fallbackBlocks;
+  const { data: contactPageData, isLoading } = useCmsPageData("contact-page-content");
+  const contactBlocks = contactPageData?.blocks ?? null;
   const cmsContactData = getPageContentData(
-    effectiveBlocks,
+    contactBlocks,
     "contact-page-content",
-    BLOCK_DEFAULTS["contact-page-content"].defaultData,
+    {},
   );
-  const fallbackContact = BLOCK_DEFAULTS["contact-page-content"].defaultData;
-  const data = deepMerge(fallbackContact, cmsContactData);
 
-  const hero = (data.hero as Record<string, unknown>) || {};
+  const hero = (cmsContactData.hero as Record<string, unknown>) || {};
   const requirementTypes =
     (hero.requirementTypes as Array<{
       id: string;
@@ -87,25 +74,29 @@ export function ContactPage({
       icon: string;
     }>) || [];
 
-  const formSection = (data.formSection as Record<string, string>) || {};
+  const formSection = (cmsContactData.formSection as Record<string, string>) || {};
   const responsePromise =
-    (data.responsePromise as Record<string, unknown>) || {};
+    (cmsContactData.responsePromise as Record<string, unknown>) || {};
   const promiseItems =
     (responsePromise.items as Array<{ label: string; time: string }>) || [];
-  const locations = (data.locations as Record<string, unknown>) || {};
-      const locationCards =
-        (locations.cards as Array<{
-          type: string;
-          title: string;
-          subtitle?: string;
-          address?: string;
-          accessibility?: string;
-          description?: string;
-          highlights?: string[];
-          cta?: string;
-          link?: string;
-          buttons?: Array<{ text: string; icon: string; link?: string }>;
-        }>) || [];
+  const locations = (cmsContactData.locations as Record<string, unknown>) || {};
+  const locationCards =
+    (locations.cards as Array<{
+      type: string;
+      title: string;
+      subtitle?: string;
+      address?: string;
+      accessibility?: string;
+      description?: string;
+      highlights?: string[];
+      cta?: string;
+      link?: string;
+      buttons?: Array<{ text: string; icon: string; link?: string }>;
+    }>) || [];
+
+  if (isLoading) {
+    return <StoreLoading />;
+  }
 
   return (
     <div className="flex flex-col">

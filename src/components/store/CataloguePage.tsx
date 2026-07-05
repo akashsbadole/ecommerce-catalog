@@ -21,8 +21,8 @@ import {
   formatPrice as libFormatPrice,
 } from "@/lib/pricing";
 import { getFirstImage } from "@/lib/utils";
-import { useContentPage, getPageContentData } from "@/lib/use-page-content";
-import { BLOCK_DEFAULTS } from "@/lib/page-blocks";
+import { getPageContentData } from "@/lib/use-page-content";
+import { useCmsPageData } from "@/lib/use-cms-data";
 import { useSeo } from "@/lib/use-seo";
 
 interface Category {
@@ -59,15 +59,11 @@ export function CataloguePage({
   data: externalData,
 }: CataloguePageProps) {
   const { auth, settings } = useAppStore();
-  const { blocks, loading: cmsLoading } = useContentPage("catalogue-page-content");
-  const rawData = blocks ? getPageContentData(
-    blocks,
-    "catalogue-page-content",
-    BLOCK_DEFAULTS["catalogue-page-content"].defaultData,
-  ) : null;
-  const cmsData = externalData ?? (cmsLoading ? null : rawData ?? BLOCK_DEFAULTS["catalogue-page-content"].defaultData);
-  const cmsPageTitle = cmsData ? (cmsData.pageTitle as string) || "Product Catalogue" : "";
-  const cmsPageDescription = cmsData ? (cmsData.pageDescription as string) || "" : "";
+  const { data: cataloguePageData } = useCmsPageData("catalogue-page-content");
+  const catalogueBlocks = cataloguePageData?.blocks ?? null;
+  const cmsData = externalData ?? getPageContentData(catalogueBlocks, "catalogue-page-content", {});
+  const cmsPageTitle = (cmsData.pageTitle as string) || "Product Catalogue";
+  const cmsPageDescription = (cmsData.pageDescription as string) || "";
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);

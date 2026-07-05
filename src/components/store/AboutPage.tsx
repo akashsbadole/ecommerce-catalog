@@ -14,13 +14,14 @@ import {
   MapPin,
   Linkedin,
 } from "lucide-react";
-import { BLOCK_DEFAULTS, deepMerge } from "@/lib/page-blocks";
 import { useAppStore } from "@/lib/store";
 import { useSeo } from "@/lib/use-seo";
 import { StoreHeroBanner } from "@/components/store/StoreHeroBanner";
-import { useContentPage, getPageContentData } from "@/lib/use-page-content";
+import { getPageContentData } from "@/lib/use-page-content";
+import { useCmsPageData } from "@/lib/use-cms-data";
 import { LeadCaptureSection } from "@/components/store/LeadCaptureSection";
 import { getGoogleMapsEmbedUrl } from "@/lib/utils";
+import { StoreLoading } from "./StoreLoading";
 
 interface AboutPageProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -60,31 +61,15 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
       "Built on trust. Driven by quality. From a distribution background to a full-scale FMCG manufacturing company — the Purva Bites story is one of conviction and craft.",
   });
 
-  const slugMap: Record<string, string> = {
-    "about-page-content": "about-us",
-    "mfg-page-content": "manufacturing",
-    "contact-page-content": "contact",
-    home: "homepage",
-  };
+  const { data: aboutPageData, isLoading: aboutLoading } = useCmsPageData("about-page-content");
+  const { data: fallbackPageData, isLoading: fallbackLoading } = useCmsPageData("about-us");
+  const isLoading = aboutLoading || fallbackLoading;
+  const effectiveBlocks = (aboutPageData?.blocks ?? fallbackPageData?.blocks) ?? null;
+  const cmsAboutData = getPageContentData(effectiveBlocks, "about-page-content", {});
 
-  const cmsSlug =
-    (slugMap["about-page-content"] as string | undefined) ||
-    "about-page-content";
-
-  const { blocks: aboutBlocks } = useContentPage("about-page-content");
-  const { blocks: fallbackBlocks } = useContentPage(cmsSlug);
-  const effectiveBlocks = aboutBlocks ?? fallbackBlocks;
-  const cmsAboutData = getPageContentData(
-    effectiveBlocks,
-    "about-page-content",
-    BLOCK_DEFAULTS["about-page-content"].defaultData,
-  );
-  const fallbackAbout = BLOCK_DEFAULTS["about-page-content"].defaultData;
-  const data = deepMerge(fallbackAbout, cmsAboutData);
-
-  const hero = (data.hero as Record<string, unknown>) || {};
-  const stats = (data.stats as Array<{ value: string; label: string }>) || [];
-  const story = (data.story as Record<string, unknown>) || {};
+  const hero = (cmsAboutData?.hero as Record<string, unknown>) || {};
+  const stats = (cmsAboutData?.stats as Array<{ value: string; label: string }>) || [];
+  const story = (cmsAboutData?.story as Record<string, unknown>) || {};
   const narrative = (story.narrative as string[]) || [];
   const timeline =
     (story.timeline as Array<{
@@ -94,17 +79,17 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
       current?: boolean;
     }>) || [];
   const directors =
-    (data.directors as Array<{
+    (cmsAboutData?.directors as Array<{
       name: string;
       role: string;
       bio: string;
       imageUrl?: string;
       socialUrl?: string;
     }>) || [];
-  const quoteData = (data.quote as Record<string, string>) || {};
-  const ctaCard = (data.ctaCard as Record<string, string>) || {};
+  const quoteData = (cmsAboutData?.quote as Record<string, string>) || {};
+  const ctaCard = (cmsAboutData?.ctaCard as Record<string, string>) || {};
   const missionVisionValues =
-    (data.missionVisionValues as Array<{
+    (cmsAboutData?.missionVisionValues as Array<{
       icon: string;
       color: string;
       bg: string;
@@ -112,7 +97,7 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
       title: string;
       desc: string;
     }>) || [];
-  const location = (data.location as Record<string, unknown>) || {};
+  const location = (cmsAboutData?.location as Record<string, unknown>) || {};
   const logistics =
     (location.logistics as Array<{
       icon: string;
@@ -120,7 +105,7 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
       value: string;
     }>) || [];
   const dispatchTags = (location.dispatchTags as string[]) || [];
-  const ctaData = (data.cta as Record<string, unknown>) || {};
+  const ctaData = (cmsAboutData?.cta as Record<string, unknown>) || {};
   const ctaCards =
     (ctaData.cards as Array<{
       icon: string;
@@ -131,12 +116,15 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
       useForm?: boolean;
     }>) || [];
 
+  if (isLoading) return <StoreLoading />;
+
   return (
     <div className="flex flex-col">
       {/* A1: Hero */}
       <StoreHeroBanner hero={hero} />
 
       {/* A2: Who we are */}
+      {(story.heading || story.subtitle || stats.length > 0) && (
       <section className="bg-muted/40 py-16 px-4">
         <div className="container mx-auto max-w-5xl">
           <div className="flex flex-col md:flex-row gap-10 items-center">
@@ -169,8 +157,10 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
           </div>
         </div>
       </section>
+      )}
 
       {/* A3: Company Story / Timeline */}
+      {(narrative.length > 0 || timeline.length > 0) ? (
       <section className="py-16 px-4">
         <div className="container mx-auto max-w-5xl">
           <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
@@ -179,14 +169,17 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
           <h2 className="text-2xl font-bold mb-10">How we got here</h2>
           <div className="flex flex-col md:flex-row gap-10">
             <div className="flex-1 md:pr-10 md:border-r">
-              {narrative.map((p, i) => (
-                <p
-                  key={i}
-                  className="text-muted-foreground leading-relaxed mb-5"
-                >
-                  {p}
-                </p>
-              ))}
+              {narrative.map((p, i) => {
+                const text: string = p;
+                return (
+                  <p
+                    key={i}
+                    className="text-muted-foreground leading-relaxed mb-5"
+                  >
+                    {text}
+                  </p>
+                );
+              })}
               {(story.ctaText as string) ? (
                 <button
                   onClick={() =>
@@ -230,8 +223,10 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
           </div>
         </div>
       </section>
+      ) : null}
 
       {/* A4: Director Profiles */}
+      {directors.length > 0 && (
       <section className="bg-muted/40 py-16 px-4">
         <div className="container mx-auto max-w-5xl">
           <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
@@ -286,29 +281,29 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
               </div>
             ))}
             <div className="flex flex-col gap-4 justify-start">
-              {cmsAboutData.quote ? (
+              {!!cmsAboutData.quote ? (
                 <div className="bg-primary/5 border border-primary/20 rounded-xl p-5">
                   <Quote className="h-5 w-5 text-primary mb-3" />
                   <p className="text-sm text-primary italic leading-relaxed">
                     {quoteData.text as string}
                   </p>
                   <div className="flex items-center mt-3">
-                    {(quoteData.authorImage as string) && (
+                    {!!quoteData.authorImage && (
                       <img
                         src={quoteData.authorImage as string}
                         alt={(quoteData.author as string) || "author"}
                         className="w-8 h-8 rounded-full object-cover mr-2"
                       />
                     )}
-                    {(quoteData.author as string) && (
+                    {(quoteData.author as string) ? (
                       <p className="text-xs text-primary/70 font-medium">
                         — {quoteData.author as string}
                       </p>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               ) : null}
-              {cmsAboutData.ctaCard ? (
+              {!!cmsAboutData.ctaCard ? (
                 <div className="bg-background border rounded-xl p-5">
                   <h4 className="text-sm font-semibold mb-2">
                     {ctaCard.title || "Direct access to leadership"}
@@ -328,8 +323,10 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
           </div>
         </div>
       </section>
+      )}
 
       {/* A5: Mission, Vision, Values */}
+      {missionVisionValues.length > 0 && (
       <section className="py-16 px-4">
         <div className="container mx-auto max-w-5xl">
           <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
@@ -359,8 +356,10 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
           </div>
         </div>
       </section>
+      )}
 
       {/* A6: Factory Location */}
+      {(!!location.factoryAddress || logistics.length > 0 || dispatchTags.length > 0 || !!location.googleMapsEmbedUrl) && (
       <section className="bg-muted/40 py-16 px-4">
         <div className="container mx-auto max-w-5xl">
           <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
@@ -427,7 +426,7 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
               </div>
             </div>
             <div className="flex-[1.4]">
-              {location.googleMapsEmbedUrl ? (
+              {(location.googleMapsEmbedUrl as string) ? (
                 <iframe
                   src={getGoogleMapsEmbedUrl(
                     location.googleMapsEmbedUrl as string,
@@ -454,9 +453,10 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
           </div>
         </div>
       </section>
+      )}
 
       {/* A8: CTA Strip */}
-      {cmsAboutData.cta ? (
+      {!!cmsAboutData.cta ? (
         <section className="bg-muted/40 py-16 px-4">
           <div className="container mx-auto max-w-5xl">
             <h2 className="text-2xl font-bold text-center mb-10 text-foreground">

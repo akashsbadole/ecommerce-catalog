@@ -13,11 +13,12 @@ import {
   Settings,
   ShieldCheck,
 } from "lucide-react";
-import { BLOCK_DEFAULTS, deepMerge } from "@/lib/page-blocks";
 import { useSeo } from "@/lib/use-seo";
 import { StoreHeroBanner } from "@/components/store/StoreHeroBanner";
-import { useContentPage, getPageContentData } from "@/lib/use-page-content";
+import { getPageContentData } from "@/lib/use-page-content";
+import { useCmsPageData } from "@/lib/use-cms-data";
 import { LeadCaptureSection } from "@/components/store/LeadCaptureSection";
+import { StoreLoading } from "./StoreLoading";
 
 interface ManufacturingPageProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -59,85 +60,38 @@ export function ManufacturingPage({
   const [activeLine, setActiveLine] = useState("khakhra");
   const [imgErrors, setImgErrors] = useState<Set<string>>(new Set());
 
-  const slugMap: Record<string, string> = {
-    "about-page-content": "about-us",
-    "mfg-page-content": "manufacturing",
-    "contact-page-content": "contact",
-    home: "homepage",
-  };
+  const { data: mfgPageData, isLoading: mfgLoading } = useCmsPageData("mfg-page-content");
+  const { data: fallbackPageData, isLoading: fallbackLoading } = useCmsPageData("manufacturing");
+  const isLoading = mfgLoading || fallbackLoading;
+  const effectiveBlocks = (mfgPageData?.blocks ?? fallbackPageData?.blocks) ?? null;
+  const cmsMfgData = getPageContentData(effectiveBlocks, "manufacturing-content", {});
 
-  const cmsSlug =
-    (slugMap["mfg-page-content"] as string | undefined) ||
-    "mfg-page-content";
+  const hero = (cmsMfgData?.hero as Record<string, unknown>) || {};
+  const metrics = (cmsMfgData?.metrics as Array<{ value: string; label: string }>) || [];
+  const intro = (cmsMfgData?.intro as Record<string, string>) || {};
+  const productionLines = (cmsMfgData?.productionLines as Array<{
+    id: string;
+    name: string;
+    flagship: boolean;
+    capacity: string;
+    variants: string;
+    packs: string;
+    desc: string;
+    tags: string[];
+    ctaText?: string;
+    ctaLink?: string;
+    ctaEnabled?: boolean;
+    image?: string;
+  }>) || [];
+  const qualitySteps = (cmsMfgData?.qualitySteps as Array<{ icon: string; color: string; title: string; desc: string }>) || [];
+  const qualityFooterItems = (cmsMfgData?.qualityFooterItems as string[]) || [];
+  const privateLabel = (cmsMfgData?.privateLabel as Record<string, unknown>) || {};
+  const plItems = (privateLabel.items as Array<{ icon: string; title: string; desc: string }>) || [];
+  const plDetails = (privateLabel.details as Array<{ label: string; value: string }>) || [];
+  const certifications = (cmsMfgData?.certifications as Array<{ name: string; desc: string }>) || [];
+  const ctaData = (cmsMfgData?.cta as Record<string, string>) || {};
 
-  const { blocks: mfgBlocks } = useContentPage("mfg-page-content");
-  const { blocks: fallbackBlocks } = useContentPage(cmsSlug);
-  const effectiveBlocks = mfgBlocks ?? fallbackBlocks;
-  const cmsMfgData = getPageContentData(
-    effectiveBlocks,
-    "manufacturing-content",
-    BLOCK_DEFAULTS["mfg-page-content"].defaultData,
-  );
-  const fallbackMfg = BLOCK_DEFAULTS["mfg-page-content"].defaultData;
-  const data = deepMerge(fallbackMfg, cmsMfgData);
-  const rawHero = (cmsMfgData?.hero as Record<string, unknown>) || {};
-  const hero = rawHero.title ? rawHero : (data.hero as Record<string, unknown>) || {};
-  const metrics = cmsMfgData?.metrics
-    ? (cmsMfgData.metrics as Array<{ value: string; label: string }>)
-    : (data.metrics as Array<{ value: string; label: string }>) || [];
-  const intro = (data.intro as Record<string, string>) || {};
-  const productionLines = cmsMfgData?.productionLines
-    ? (cmsMfgData.productionLines as Array<{
-        id: string;
-        name: string;
-        flagship: boolean;
-        capacity: string;
-        variants: string;
-        packs: string;
-        desc: string;
-        tags: string[];
-        ctaText?: string;
-        ctaLink?: string;
-        ctaEnabled?: boolean;
-        image?: string;
-      }>)
-    : (data.productionLines as Array<{
-        id: string;
-        name: string;
-        flagship: boolean;
-        capacity: string;
-        variants: string;
-        packs: string;
-        desc: string;
-        tags: string[];
-        ctaText?: string;
-        ctaLink?: string;
-        ctaEnabled?: boolean;
-        image?: string;
-      }>) || [];
-  const qualitySteps = cmsMfgData?.qualitySteps
-    ? (cmsMfgData.qualitySteps as Array<{ icon: string; color: string; title: string; desc: string }>)
-    : (data.qualitySteps as Array<{ icon: string; color: string; title: string; desc: string }>) || [];
-  const qualityFooterItems = cmsMfgData?.qualityFooterItems
-    ? (cmsMfgData.qualityFooterItems as string[])
-    : (data.qualityFooterItems as string[]) || [];
-  const privateLabel = cmsMfgData?.privateLabel
-    ? (cmsMfgData.privateLabel as Record<string, unknown>)
-    : (data.privateLabel as Record<string, unknown>) || {};
-  const plItems =
-    (privateLabel.items as Array<{
-      icon: string;
-      title: string;
-      desc: string;
-    }>) || [];
-  const plDetails =
-    (privateLabel.details as Array<{ label: string; value: string }>) || [];
-  const certifications = cmsMfgData?.certifications
-    ? (cmsMfgData.certifications as Array<{ name: string; desc: string }>)
-    : (data.certifications as Array<{ name: string; desc: string }>) || [];
-  const ctaData = cmsMfgData?.cta
-    ? (cmsMfgData.cta as Record<string, string>)
-    : (data.cta as Record<string, string>) || {};
+  if (isLoading) return <StoreLoading />;
 
   const activeLineData =
     productionLines.find((l) => l.id === activeLine) || productionLines[0];
@@ -148,6 +102,7 @@ export function ManufacturingPage({
       <StoreHeroBanner hero={hero} onNavigate={onNavigate} />
 
       {/* Intro + Metrics */}
+      {(intro.heading || intro.description || metrics.length > 0) && (
       <section className="bg-muted/40 py-12 px-4">
         <div className="container mx-auto max-w-5xl">
           <p className="text-xs text-muted-foreground mb-4">
@@ -182,8 +137,10 @@ export function ManufacturingPage({
           </div>
         </div>
       </section>
+      )}
 
       {/* M2: Production Lines */}
+      {productionLines.length > 0 && (
       <section className="py-16 px-4">
         <div className="container mx-auto max-w-5xl">
           <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
@@ -291,8 +248,10 @@ export function ManufacturingPage({
           </div>
         </div>
       </section>
+      )}
 
       {/* M4: Quality Process */}
+      {qualitySteps.length > 0 && (
       <section className="py-16 px-4">
         <div className="container mx-auto max-w-5xl">
           <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
@@ -341,8 +300,10 @@ export function ManufacturingPage({
           )}
         </div>
       </section>
+      )}
 
       {/* M5: Private Label */}
+      {(privateLabel.heading || plItems.length > 0) && (
       <section className="bg-muted/40 py-16 px-4">
         <div className="container mx-auto max-w-5xl">
           {(privateLabel.heading as string) && (
@@ -405,6 +366,7 @@ export function ManufacturingPage({
           </div>
         </div>
       </section>
+      )}
 
       {/* M6: Certifications */}
       {certifications.length > 0 && (

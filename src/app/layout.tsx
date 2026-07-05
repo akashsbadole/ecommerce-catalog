@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Providers } from "./providers";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -91,8 +92,10 @@ export default function RootLayout({
       >
         <ClerkProvider>
           <ThemeProvider>
-            {children}
-            <Toaster position="top-right" richColors closeButton />
+            <Providers>
+              {children}
+              <Toaster position="top-right" richColors closeButton />
+            </Providers>
           </ThemeProvider>
         </ClerkProvider>
       </body>
