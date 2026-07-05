@@ -49,22 +49,24 @@ export function StoreHeroBanner({
   requirementTypes,
   backgroundImage: propBackgroundImage,
 }: StoreHeroBannerProps) {
-  const backgroundColor = (hero.backgroundColor as string) || "#78350f";
-  const overlayColor = (hero.overlayColor as string) || "#1c1917";
-  const overlayOpacity = (hero.overlayOpacity as string) || "0.45";
-  const pattern = (hero.pattern as string) || "none";
-
-  const title = (hero.title as string) || "";
-  const subtitle = (hero.subtitle as string) || "";
-  const estYear = (hero.estYear as string) || "";
-  const heroBgImage = (hero.backgroundImage as string) || "";
+  const title = (hero.title as string) ?? "";
+  const subtitle = (hero.subtitle as string) ?? "";
+  const estYear = (hero.estYear as string) ?? "";
+  const heroBgImage = (hero.backgroundImage as string) ?? "";
   const resolvedBackgroundImage = heroBgImage || propBackgroundImage || "";
-  const badge = (hero.badge as string) || "";
-  const topLabel = (hero.topLabel as string) || "";
+  const badge = (hero.badge as string) ?? "";
+  const topLabel = (hero.topLabel as string) ?? "";
   const buttons =
-    (hero.buttons as Array<{ text: string; page?: string; variant?: string }>) ||
+    (hero.buttons as Array<{ text: string; page?: string; variant?: string }>) ??
     [];
 
+  const hasContent = !!(title || resolvedBackgroundImage || buttons.length > 0 || badge || topLabel || estYear || (requirementTypes && requirementTypes.length > 0));
+  if (!hasContent) return null;
+
+  const backgroundColor = (hero.backgroundColor as string) ?? "#78350f";
+  const overlayColor = (hero.overlayColor as string) ?? "#1c1917";
+  const overlayOpacity = (hero.overlayOpacity as string) ?? "0.45";
+  const pattern = (hero.pattern as string) ?? "none";
   const patternStyle = getPatternStyle(pattern);
 
   return (

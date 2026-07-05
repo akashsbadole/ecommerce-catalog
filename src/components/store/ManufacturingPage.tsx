@@ -227,7 +227,7 @@ export function ManufacturingPage({
                       {tag}
                     </span>
                   ))}
-                  {activeLineData?.ctaEnabled !== false && (
+                  {activeLineData?.ctaEnabled !== false && activeLineData?.ctaText && (
                     <button
                       onClick={() => {
                         const link = (activeLineData?.ctaLink as string) || "";
@@ -239,7 +239,7 @@ export function ManufacturingPage({
                       }}
                       className="text-xs bg-primary text-primary-foreground rounded px-3 py-1.5 hover:bg-primary/90 transition-colors ml-auto"
                     >
-                      {activeLineData?.ctaText || "View Products →"}
+                      {activeLineData?.ctaText ?? ""}
                     </button>
                   )}
                 </div>
@@ -354,7 +354,7 @@ export function ManufacturingPage({
                     </span>
                   </div>
                 ))}
-                {(privateLabel.ctaLink as string) ? (
+                {(privateLabel.ctaLink as string) && (privateLabel.ctaText as string) ? (
                   <button
                     onClick={() => {
                       const link = (privateLabel.ctaLink as string);
@@ -371,8 +371,7 @@ export function ManufacturingPage({
                     }}
                     className="w-full mt-5 bg-primary text-primary-foreground text-sm font-medium rounded-md py-2.5 hover:bg-primary/90 transition-colors"
                   >
-                    {(privateLabel.ctaText as string) ||
-                      "Enquire for private label →"}
+                    {(privateLabel.ctaText as string) ?? ""}
                   </button>
                 ) : null}
               </div>
@@ -412,7 +411,7 @@ export function ManufacturingPage({
 
       {/* M7: Contact Form */}
       <LeadCaptureSection
-        heading={(ctaData.title as string) || "Ready to see it for yourself?"}
+        heading={(ctaData.title as string) ?? ""}
         description={ctaData.subtitle as string}
         submitText="Send Enquiry"
         fields={[

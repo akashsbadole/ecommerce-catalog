@@ -116,11 +116,10 @@ export function ProductsPage({
       <div className="flex flex-col">
         <div className="p-8 text-center">
           <h1 className="text-4xl font-bold mb-4">
-            {(externalData.hero as any)?.title || "Our Product Catalog"}
+            {(externalData.hero as any)?.title ?? ""}
           </h1>
           <p className="text-xl text-muted-foreground mb-6">
-            {(externalData.hero as any)?.subtitle ||
-              "Discover our complete range of quality products"}
+            {(externalData.hero as any)?.subtitle ?? ""}
           </p>
           <div className="space-y-8">
             <pre className="text-left text-sm bg-muted p-4 rounded-lg overflow-auto max-h-96">
@@ -229,9 +228,7 @@ export function ProductsPage({
       {activeCategory !== "all" && currentCat && (
         <section className="bg-muted/40 py-6 px-4">
           <div className="container mx-auto max-w-5xl flex flex-col md:flex-row gap-6 items-center">
-            <div className="w-full md:w-32 h-24 bg-muted rounded-lg flex items-center justify-center text-xs text-muted-foreground flex-shrink-0">
-              Category photo
-            </div>
+            <div className="w-full md:w-32 h-24 bg-muted rounded-lg flex-shrink-0" />
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <h2 className="text-xl font-bold">{currentCat.name}</h2>
@@ -267,9 +264,7 @@ export function ProductsPage({
                 key={product.name}
                 className="border rounded-xl overflow-hidden bg-background"
               >
-                <div className="h-32 bg-muted flex items-center justify-center text-xs text-muted-foreground">
-                  Product photo
-                </div>
+                <div className="h-32 bg-muted" />
                 <div className="p-3">
                   <div className="flex gap-1.5 mb-2 flex-wrap">
                     {product.tags.map((tag) => (
@@ -345,9 +340,7 @@ export function ProductsPage({
                     Most requested
                   </span>
                 )}
-                <div className="h-24 bg-muted rounded-lg mb-4 flex items-center justify-center text-xs text-muted-foreground">
-                  {item.title} pack photo
-                </div>
+                <div className="h-24 bg-muted rounded-lg mb-4" />
                 <h3 className="text-sm font-semibold mb-2">{item.title}</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed mb-3">
                   {item.desc}

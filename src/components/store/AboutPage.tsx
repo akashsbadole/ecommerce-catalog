@@ -180,11 +180,9 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
                   </p>
                 );
               })}
-              {(story.ctaText as string) ? (
+              {(story.ctaText as string) && (story.ctaPage as string) ? (
                 <button
-                  onClick={() =>
-                    onNavigate((story.ctaPage as string) || "manufacturing")
-                  }
+                  onClick={() => onNavigate(story.ctaPage as string)}
                   className="text-sm font-medium text-primary hover:underline"
                 >
                   {story.ctaText as string}
@@ -306,16 +304,16 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
               {!!cmsAboutData.ctaCard ? (
                 <div className="bg-background border rounded-xl p-5">
                   <h4 className="text-sm font-semibold mb-2">
-                    {ctaCard.title || "Direct access to leadership"}
+                    {(ctaCard.title as string) ?? ""}
                   </h4>
                   <p className="text-xs text-muted-foreground leading-relaxed mb-4">
-                    {ctaCard.desc || ""}
+                    {(ctaCard.desc as string) ?? ""}
                   </p>
                   <button
                     onClick={() => onNavigate("contact")}
                     className="w-full text-xs font-medium bg-primary text-primary-foreground rounded-md py-2 hover:bg-primary/90 transition-colors"
                   >
-                    {ctaCard.cta || "Speak to us directly →"}
+                    {(ctaCard.cta as string) ?? ""}
                   </button>
                 </div>
               ) : null}
@@ -376,8 +374,7 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
                       Factory address
                     </p>
                     <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
-                      {(location.factoryAddress as string) ||
-                        "[Factory address]"}
+                      {(location.factoryAddress as string) ?? ""}
                     </p>
                   </div>
                 </div>
@@ -410,8 +407,7 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
                   <Truck className="h-4 w-4 text-emerald-600" /> Dispatch reach
                 </p>
                 <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-                  {(location.dispatchDesc as string) ||
-                    "We dispatch to all major markets across India via road and rail freight."}
+                  {(location.dispatchDesc as string) ?? ""}
                 </p>
                 <div className="flex gap-2 flex-wrap">
                   {dispatchTags.map((tag) => (
@@ -460,7 +456,7 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
         <section className="bg-muted/40 py-16 px-4">
           <div className="container mx-auto max-w-5xl">
             <h2 className="text-2xl font-bold text-center mb-10 text-foreground">
-              {(ctaData.title as string) || "Ready to work with us?"}
+              {(ctaData.title as string) ?? ""}
             </h2>
             <div className="grid md:grid-cols-3 gap-6">
               {ctaCards.map((item, idx) => (

@@ -109,11 +109,8 @@ export function ContactPage({ onNavigate, data: _data }: ContactPageProps) {
 
       {/* CT1: Contact Form */}
       <LeadCaptureSection
-        heading={(formSection.title as string) || "Send us your requirement"}
-        description={
-          (formSection.subtitle as string) ||
-          "Fields marked * are required. We respond within 24 working hours."
-        }
+        heading={(formSection.title as string) ?? ""}
+        description={(formSection.subtitle as string) ?? ""}
         submitText="Send Enquiry"
         fields={[
           {
@@ -179,7 +176,7 @@ export function ContactPage({ onNavigate, data: _data }: ContactPageProps) {
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 max-w-md mx-auto">
               <p className="text-sm font-semibold text-primary mb-4 flex items-center gap-2">
                 <Clock className="h-4 w-4" />{" "}
-                {(responsePromise.title as string) || "Our response commitment"}
+                {(responsePromise.title as string) ?? ""}
               </p>
               <div className="space-y-3">
                 {promiseItems.map((item) => (

@@ -96,32 +96,38 @@ export function DistributionPage({
     <div className="flex flex-col">
       {/* Hero */}
       <section className="relative h-[50vh] min-h-[400px] flex items-center justify-center overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `url(${(hero.backgroundImage as string) || "/placeholder-hero.jpg"})`,
-          }}
-        >
-          <div className="absolute inset-0 bg-black/50" />
-        </div>
+        {(hero.backgroundImage as string) && (
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage: `url(${hero.backgroundImage as string})`,
+            }}
+          >
+            <div className="absolute inset-0 bg-black/50" />
+          </div>
+        )}
+        {!(hero.backgroundImage as string) && (
+          <div className="absolute inset-0 bg-gray-900" />
+        )}
         <div className="relative z-10 text-center px-4 max-w-3xl">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            {(hero.title as string) || "Purva Bites Distribution"}
+            {(hero.title as string) ?? ""}
           </h1>
           <p className="text-lg text-white/80 mb-8 max-w-xl mx-auto">
-            {(hero.subtitle as string) ||
-              "Your trusted FMCG distribution partner — pan-India coverage, quality assured supply chain."}
+            {(hero.subtitle as string) ?? ""}
           </p>
-          <div className="flex gap-3 justify-center">
-            <Button
-              size="lg"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
-              onClick={() => onNavigate("contact")}
-            >
-              {(hero.ctaText as string) || "Become a Distributor"}{" "}
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
+          {(hero.ctaText as string) && (
+            <div className="flex gap-3 justify-center">
+              <Button
+                size="lg"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                onClick={() => onNavigate("contact")}
+              >
+                {(hero.ctaText as string)}{" "}
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -202,7 +208,7 @@ export function DistributionPage({
               {(cta.description as string) || ""}
             </p>
             <Button size="lg" onClick={() => onNavigate("contact")}>
-              {(cta.buttonText as string) || "Enquire Now"}{" "}
+              {(cta.buttonText as string) ?? ""}{" "}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
@@ -234,7 +240,7 @@ export function DistributionPage({
                     </div>
                   ) : (
                     <div className="aspect-video bg-muted flex items-center justify-center text-muted-foreground text-sm">
-                      {banner.headline || "Product image"}
+                      {(banner.headline as string) ?? ""}
                     </div>
                   )}
                   <div className="p-5 space-y-3">
@@ -251,7 +257,7 @@ export function DistributionPage({
                         if (form) form.scrollIntoView({ behavior: "smooth" });
                       }}
                     >
-                      {banner.buttonText || "Inquiry"}
+                      {(banner.buttonText as string) ?? ""}
                     </Button>
                   </div>
                 </div>
