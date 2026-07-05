@@ -469,7 +469,9 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
             <Button
               size="sm"
               className="hidden md:flex text-sm bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 px-4"
-              onClick={() => onNavigate("content-page", "purva-bites-distribution")}
+              onClick={() =>
+                onNavigate("content-page", "purva-bites-distribution")
+              }
             >
               <FileText className="h-4 w-4" />
               Purva Bites Distribution

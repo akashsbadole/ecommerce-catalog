@@ -50,28 +50,43 @@ export function DistributionPage({
 }: DistributionPageProps) {
   useSeo("distribution", {
     title: "Purva Bites Distribution | Pan-India FMCG Distribution Network",
-    description: "Become a distributor for Purva Bites. Pan-India FMCG distribution network for khakhra, bhakhri, makhana, extruder snacks and digestive biscuits.",
+    description:
+      "Become a distributor for Purva Bites. Pan-India FMCG distribution network for khakhra, bhakhri, makhana, extruder snacks and digestive biscuits.",
   });
 
-  const { data: distPageData, isLoading } = useCmsPageData("distribution-content");
+  const { data: distPageData, isLoading } = useCmsPageData(
+    "distribution-content",
+  );
   const { data: fallbackData } = useCmsPageData("distribution");
-  const effectiveBlocks = (distPageData?.blocks ?? fallbackData?.blocks) ?? null;
-  const cmsData = externalData ?? getPageContentData(effectiveBlocks, "distribution-content", {});
+  const effectiveBlocks = distPageData?.blocks ?? fallbackData?.blocks ?? null;
+  const cmsData =
+    externalData ??
+    getPageContentData(effectiveBlocks, "distribution-content", {});
 
   const hero = (cmsData.hero as Record<string, unknown>) || {};
-  const sections = (cmsData.sections as Array<{
-    title: string;
-    description: string;
-    imageUrl: string;
-    imageSide: "left" | "right";
-    icon: string;
-  }>) || [];
-  const stats = (cmsData.stats as Array<{
-    label: string;
-    value: string;
-    icon: string;
-  }>) || [];
+  const sections =
+    (cmsData.sections as Array<{
+      title: string;
+      description: string;
+      imageUrl: string;
+      imageSide: "left" | "right";
+      icon: string;
+    }>) || [];
+  const stats =
+    (cmsData.stats as Array<{
+      label: string;
+      value: string;
+      icon: string;
+    }>) || [];
   const cta = (cmsData.cta as Record<string, string>) || {};
+  const promoTitle = (cmsData.promoTitle as string) || "";
+  const promoBanners =
+    (cmsData.promoBanners as Array<{
+      image: string;
+      headline: string;
+      description: string;
+      buttonText: string;
+    }>) || [];
 
   if (isLoading) {
     return <StoreLoading />;
@@ -94,7 +109,8 @@ export function DistributionPage({
             {(hero.title as string) || "Purva Bites Distribution"}
           </h1>
           <p className="text-lg text-white/80 mb-8 max-w-xl mx-auto">
-            {(hero.subtitle as string) || "Your trusted FMCG distribution partner — pan-India coverage, quality assured supply chain."}
+            {(hero.subtitle as string) ||
+              "Your trusted FMCG distribution partner — pan-India coverage, quality assured supply chain."}
           </p>
           <div className="flex gap-3 justify-center">
             <Button
@@ -102,7 +118,8 @@ export function DistributionPage({
               className="bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={() => onNavigate("contact")}
             >
-              {(hero.ctaText as string) || "Become a Distributor"} <ArrowRight className="ml-2 h-4 w-4" />
+              {(hero.ctaText as string) || "Become a Distributor"}{" "}
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -114,10 +131,18 @@ export function DistributionPage({
           <div className="container mx-auto max-w-5xl">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {stats.map((stat) => (
-                <div key={stat.label} className="text-center text-primary-foreground">
-                  <ResolvedIcon name={stat.icon} className="h-6 w-6 mx-auto mb-2" />
+                <div
+                  key={stat.label}
+                  className="text-center text-primary-foreground"
+                >
+                  <ResolvedIcon
+                    name={stat.icon}
+                    className="h-6 w-6 mx-auto mb-2"
+                  />
                   <p className="text-2xl font-bold">{stat.value}</p>
-                  <p className="text-xs text-primary-foreground/70">{stat.label}</p>
+                  <p className="text-xs text-primary-foreground/70">
+                    {stat.label}
+                  </p>
                 </div>
               ))}
             </div>
@@ -144,13 +169,19 @@ export function DistributionPage({
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                        <ResolvedIcon name={section.icon || "Package"} className="h-12 w-12" />
+                        <ResolvedIcon
+                          name={section.icon || "Package"}
+                          className="h-12 w-12"
+                        />
                       </div>
                     )}
                   </div>
                 </div>
                 <div className="flex-1 space-y-4">
-                  <ResolvedIcon name={section.icon} className="h-6 w-6 text-primary" />
+                  <ResolvedIcon
+                    name={section.icon}
+                    className="h-6 w-6 text-primary"
+                  />
                   <h2 className="text-2xl font-bold">{section.title}</h2>
                   <p className="text-muted-foreground leading-relaxed">
                     {section.description}
@@ -170,33 +201,129 @@ export function DistributionPage({
             <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
               {(cta.description as string) || ""}
             </p>
-            <Button
-              size="lg"
-              onClick={() => onNavigate("contact")}
-            >
-              {(cta.buttonText as string) || "Enquire Now"} <ArrowRight className="ml-2 h-4 w-4" />
+            <Button size="lg" onClick={() => onNavigate("contact")}>
+              {(cta.buttonText as string) || "Enquire Now"}{" "}
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
         </section>
       )}
 
+      {/* Promo banner grid */}
+      {promoBanners.length > 0 && (
+        <section className="py-16 px-4">
+          <div className="container mx-auto max-w-5xl">
+            {promoTitle && (
+              <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">
+                {promoTitle}
+              </h2>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {promoBanners.map((banner, i) => (
+                <div
+                  key={i}
+                  className="rounded-xl overflow-hidden border bg-card shadow-sm"
+                >
+                  {banner.image ? (
+                    <div className="aspect-video overflow-hidden">
+                      <img
+                        src={banner.image}
+                        alt={banner.headline}
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  ) : (
+                    <div className="aspect-video bg-muted flex items-center justify-center text-muted-foreground text-sm">
+                      {banner.headline || "Product image"}
+                    </div>
+                  )}
+                  <div className="p-5 space-y-3">
+                    <h3 className="text-lg font-semibold">{banner.headline}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {banner.description}
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        const form = document.getElementById(
+                          "distribution-contact-form",
+                        );
+                        if (form) form.scrollIntoView({ behavior: "smooth" });
+                      }}
+                    >
+                      {banner.buttonText || "Inquiry"}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Lead capture */}
-      <LeadCaptureSection
-        heading="Interested in distribution?"
-        description="Fill in your details and our distribution team will get back to you within 24 hours."
-        submitText="Submit Enquiry"
-        fields={[
-          { name: "name", label: "Your name", type: "text", required: true, placeholder: "Your name *" },
-          { name: "company", label: "Company / Business name", type: "text", required: true, placeholder: "Company name *" },
-          { name: "phone", label: "Phone number", type: "tel", required: true, placeholder: "Phone number *" },
-          { name: "email", label: "Email address", type: "email", required: false, placeholder: "Email address" },
-          { name: "city", label: "City / state", type: "text", required: true, placeholder: "City / state *" },
-          { name: "requirement", label: "Type of enquiry", type: "select", required: true, placeholder: "Select type", options: ["Bulk Order", "Distribution Partnership", "Private Label", "White Label", "Institutional Order", "Other"] },
-        ]}
-        messageField
-        successMessage="Thank you for showing interest. Our distribution team will get in touch with you soon."
-        bgColor="#85AA64"
-      />
+      <div id="distribution-contact-form">
+        <LeadCaptureSection
+          heading="Interested in distribution?"
+          description="Fill in your details and our distribution team will get back to you within 24 hours."
+          submitText="Submit Enquiry"
+          fields={[
+            {
+              name: "name",
+              label: "Your name",
+              type: "text",
+              required: true,
+              placeholder: "Your name *",
+            },
+            {
+              name: "company",
+              label: "Company / Business name",
+              type: "text",
+              required: true,
+              placeholder: "Company name *",
+            },
+            {
+              name: "phone",
+              label: "Phone number",
+              type: "tel",
+              required: true,
+              placeholder: "Phone number *",
+            },
+            {
+              name: "email",
+              label: "Email address",
+              type: "email",
+              required: false,
+              placeholder: "Email address",
+            },
+            {
+              name: "requirement",
+              label: "Type of enquiry",
+              type: "select",
+              required: true,
+              placeholder: "Select type",
+              options: [
+                "Bulk Order",
+                "Distribution Partnership",
+                "Private Label",
+                "White Label",
+                "Institutional Order",
+                "Other",
+              ],
+            },
+            {
+              name: "city",
+              label: "City / state",
+              type: "text",
+              required: true,
+              placeholder: "City / state *",
+            },
+          ]}
+          messageField
+          successMessage="Thank you for showing interest. Our distribution team will get in touch with you soon."
+          bgColor="#85AA64"
+        />
+      </div>
     </div>
   );
 }

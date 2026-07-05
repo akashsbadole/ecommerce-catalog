@@ -1426,6 +1426,13 @@ export const BLOCK_DEFAULTS: Record<
           icon: "Truck",
         },
       ],
+      promoTitle: "Our Product Range",
+      promoBanners: [
+        { image: "", headline: "Product 1", description: "Product description here", buttonText: "Inquiry" },
+        { image: "", headline: "Product 2", description: "Product description here", buttonText: "Inquiry" },
+        { image: "", headline: "Product 3", description: "Product description here", buttonText: "Inquiry" },
+        { image: "", headline: "Product 4", description: "Product description here", buttonText: "Inquiry" },
+      ],
       cta: {
         title: "Ready to partner with us?",
         description: "Join our growing network of distributors across India.",

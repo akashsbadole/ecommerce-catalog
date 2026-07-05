@@ -95,7 +95,7 @@ function SidebarContent({
           <img
             src={settings.site_logo}
             alt={settings.site_name || "Logo"}
-            className="h-6 w-auto object-contain"
+            className="h-10 w-auto object-contain"
           />
         ) : (
           <ShoppingBag className="h-5 w-5 text-emerald-600" />
@@ -193,7 +193,14 @@ export function AdminDashboard({
 }: AdminDashboardProps) {
   const isMobile = useIsMobile();
   const { settings } = useAppStore();
+  const fetchSettings = useAppStore((s) => s.fetchSettings);
   const [currentTab, setCurrentTab] = useState(activeTab);
+
+  useEffect(() => {
+    if (!settings) {
+      fetchSettings();
+    }
+  }, [settings, fetchSettings]);
 
   // Sync activeTab prop changes
   useEffect(() => {
@@ -222,12 +229,12 @@ export function AdminDashboard({
   const handleTabChange = (tab: string) => {
     setCurrentTab(tab);
     setMobileOpen(false);
-    onNavigate?.('admin', tab);
+    onNavigate?.("admin", tab);
   };
 
   const handleQuickNav = (tab: string) => {
     setCurrentTab(tab);
-    onNavigate?.('admin', tab);
+    onNavigate?.("admin", tab);
   };
 
   const handleSearchNavigate = (tab: string, data?: unknown) => {
