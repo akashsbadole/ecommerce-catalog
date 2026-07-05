@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Ticket, Plus, Trash2, Search, Loader2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,10 +27,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { adminFetch } from "@/lib/admin-fetch";
 
 export function AdminCoupons() {
-  const [coupons, setCoupons] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     code: "",
     discountType: "percentage",
@@ -37,47 +36,36 @@ export function AdminCoupons() {
     minOrderAmount: "0",
   });
 
-  const fetchCoupons = async () => {
-    try {
-      const res = await adminFetch("/api/admin/coupons");
-      if (res.ok) {
-        const data = await res.json();
-        setCoupons(data.coupons || []);
-      }
-    } catch {
-      toast.error("Failed to load coupons");
-    } finally {
-      setLoading(false);
+  const { data: coupons = [], isLoading: loading } = useQuery({
+    queryKey: ["admin-coupons"],
+    queryFn: async () => {
+        const res = await adminFetch("/api/admin/coupons");
+        return (await res.json()).coupons || [];
     }
-  };
+  });
 
-  useEffect(() => {
-    fetchCoupons();
-  }, []);
-
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      const res = await adminFetch("/api/admin/coupons", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      if (res.ok) {
+  const createMutation = useMutation({
+    mutationFn: async (data: any) => {
+        const res = await adminFetch("/api/admin/coupons", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error((await res.json()).error || "Failed");
+        return res.json();
+    },
+    onSuccess: () => {
         toast.success("Coupon created");
         setOpen(false);
         setFormData({ code: "", discountType: "percentage", discountValue: "", minOrderAmount: "0" });
-        fetchCoupons();
-      } else {
-        const err = await res.json();
-        toast.error(err.error || "Failed to create coupon");
-      }
-    } catch {
-      toast.error("An error occurred");
-    } finally {
-      setSaving(false);
-    }
+        queryClient.invalidateQueries({ queryKey: ["admin-coupons"] });
+    },
+    onError: (err: any) => toast.error(err.message)
+  });
+
+  const handleCreate = (e: React.FormEvent) => {
+    e.preventDefault();
+    createMutation.mutate(formData);
   };
 
   return (
@@ -185,8 +173,8 @@ export function AdminCoupons() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={saving}>
-                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" disabled={createMutation.isPending}>
+                {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Coupon
               </Button>
             </DialogFooter>

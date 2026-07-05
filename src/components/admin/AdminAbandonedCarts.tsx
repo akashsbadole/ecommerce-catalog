@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ShoppingCart, Mail, Search, Clock } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ShoppingCart, Mail, Search, Clock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,28 +19,31 @@ import { formatPrice } from "@/lib/pricing";
 import { useAppStore } from "@/lib/store";
 
 export function AdminAbandonedCarts() {
-  const [carts, setCarts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const { settings } = useAppStore();
   const currency = settings?.currency || "INR";
 
-  const [sending, setSending] = useState<string | null>(null);
-
-  const fetchCarts = async () => {
-    try {
-      const res = await adminFetch("/api/admin/abandoned-carts");
-      if (res.ok) {
-        const data = await res.json();
-        setCarts(data.carts || []);
-      }
-    } finally {
-      setLoading(false);
+  const { data: carts = [], isLoading: loading } = useQuery({
+    queryKey: ["admin-abandoned-carts"],
+    queryFn: async () => {
+        const res = await adminFetch("/api/admin/abandoned-carts");
+        return (await res.json()).carts || [];
     }
-  };
+  });
 
-  useEffect(() => {
-    fetchCarts();
-  }, []);
+  const remindMutation = useMutation({
+    mutationFn: async ({ email, userName, cartId }: { email: string, userName: string, cartId: string }) => {
+        const res = await adminFetch("/api/admin/abandoned-carts", {
+            method: 'POST',
+            body: JSON.stringify({ email, userName, cartId })
+        });
+        if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: () => {
+        toast.success("Reminder sent!");
+        queryClient.invalidateQueries({ queryKey: ["admin-abandoned-carts"] });
+    }
+  });
 
   return (
     <div className="space-y-6">
@@ -86,19 +90,10 @@ export function AdminAbandonedCarts() {
                         <Button
                             variant="outline"
                             size="sm"
-                            disabled={!cart.User?.email || sending === cart.id}
-                            onClick={async () => {
-                                setSending(cart.id);
-                                try {
-                                    const res = await adminFetch("/api/admin/abandoned-carts", {
-                                        method: 'POST',
-                                        body: JSON.stringify({ email: cart.User.email, userName: cart.User.name, cartId: cart.id })
-                                    });
-                                    if (res.ok) toast.success("Reminder sent!");
-                                } finally { setSending(null); }
-                            }}
+                            disabled={!cart.User?.email || remindMutation.isPending}
+                            onClick={() => remindMutation.mutate({ email: cart.User.email, userName: cart.User.name, cartId: cart.id })}
                         >
-                            {sending === cart.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Mail className="mr-2 h-3 w-3" />}
+                            {remindMutation.isPending && remindMutation.variables?.cartId === cart.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Mail className="mr-2 h-3 w-3" />}
                             Remind
                         </Button>
                     </TableCell>

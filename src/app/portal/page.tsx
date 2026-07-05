@@ -367,7 +367,99 @@ export default function BuyerPortalPage() {
 
       <TabsContent value="quotes">
         <div className="space-y-8">
-            {/* Move Quotes and Enquiries here for B2B */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-emerald-600" />
+                Formal Quotes
+              </CardTitle>
+              <CardDescription>All formal price offers sent to your business.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                </div>
+              ) : quotes.length === 0 ? (
+                <div className="text-center py-12 border-2 border-dashed rounded-xl">
+                  <FileText className="mx-auto h-12 w-12 text-muted-foreground/20 mb-4" />
+                  <p className="text-muted-foreground">No formal quotes received yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {quotes.map((quote) => (
+                    <div key={quote.id} className="p-4 border rounded-xl hover:shadow-md transition-all bg-card">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-lg">Quote #{quote.id.substring(quote.id.length - 6).toUpperCase()}</span>
+                            <Badge className={
+                              quote.status === 'accepted' ? 'bg-emerald-500' :
+                              quote.status === 'sent' ? 'bg-blue-500' : 'bg-slate-500'
+                            }>
+                              {quote.status}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Created: {new Date(quote.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-6">
+                          <div className="text-right">
+                            <p className="text-xs text-muted-foreground uppercase font-semibold">Total</p>
+                            <p className="text-xl font-bold text-emerald-600">{formatPrice(quote.total, quote.currency)}</p>
+                          </div>
+                          <div className="flex gap-2">
+                             <Button variant="outline" size="sm" onClick={() => setSelectedQuote(quote)}>
+                              View
+                            </Button>
+                            {quote.status === 'sent' && (
+                              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => handleAcceptQuote(quote.id)}>
+                                Accept
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Inquiry History</CardTitle>
+              <CardDescription>All your product and bulk enquiries.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-12 w-full" />
+                </div>
+              ) : enquiries.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>No enquiries found.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {enquiries.map((e) => (
+                    <div key={e.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">{e.subject}</p>
+                        <p className="text-xs text-muted-foreground">{new Date(e.createdAt).toLocaleString()}</p>
+                      </div>
+                      <Badge variant={e.status === 'new' ? 'secondary' : 'default'} className="capitalize">
+                        {e.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </TabsContent>
       </Tabs>

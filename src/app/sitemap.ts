@@ -4,6 +4,14 @@ import { db } from '@/lib/db';
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
+  // Return empty sitemap if DATABASE_URL is not provided (avoids build failures)
+  if (!process.env.DATABASE_URL) {
+    return [
+        { url: baseUrl, lastModified: new Date() },
+        { url: `${baseUrl}/catalogue`, lastModified: new Date() }
+    ];
+  }
+
   // 1. Static Pages
   const staticPages = [
     '',
@@ -36,7 +44,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     select: { slug: true, updatedAt: true }
   });
   const categoryPages = categories.map(c => ({
-    url: `${baseUrl}/product/${c.slug}`, // Based on current routing
+    url: `${baseUrl}/catalogue/${c.slug}`, // Fixed: should be catalogue or category
     lastModified: c.updatedAt,
     changeFrequency: 'weekly' as const,
     priority: 0.7,

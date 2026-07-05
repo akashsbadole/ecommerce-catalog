@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Factory,
   Leaf,
@@ -13,7 +14,7 @@ import {
   Settings,
   ShieldCheck,
 } from "lucide-react";
-import { BLOCK_DEFAULTS, deepMerge } from "@/lib/page-blocks";
+import { BLOCK_DEFAULTS, deepMerge, normalizePageBlocks } from "@/lib/page-blocks";
 import { useSeo } from "@/lib/use-seo";
 import { StoreHeroBanner } from "@/components/store/StoreHeroBanner";
 import { useContentPage, getPageContentData } from "@/lib/use-page-content";
@@ -50,7 +51,7 @@ function ResolvedIcon({
 
 export function ManufacturingPage({
   onNavigate,
-  data: _data,
+  data: externalData,
 }: ManufacturingPageProps) {
   useSeo("manufacturing", {
     title: "State-of-the-art FMCG contract manufacturing | Purva Bites",
@@ -59,27 +60,27 @@ export function ManufacturingPage({
   const [activeLine, setActiveLine] = useState("khakhra");
   const [imgErrors, setImgErrors] = useState<Set<string>>(new Set());
 
-  const slugMap: Record<string, string> = {
-    "about-page-content": "about-us",
-    "mfg-page-content": "manufacturing",
-    "contact-page-content": "contact",
-    home: "homepage",
-  };
+  const { data: cmsData } = useQuery({
+    queryKey: ["manufacturing-cms"],
+    enabled: !externalData,
+    queryFn: async () => {
+        const res = await fetch("/api/content-pages?slug=manufacturing");
+        const json = await res.json();
+        const page = (json.contentPages || [])[0];
+        if (page?.blocks) {
+            const blocks = normalizePageBlocks(page.blocks);
+            return getPageContentData(
+                blocks,
+                "manufacturing-content",
+                BLOCK_DEFAULTS["mfg-page-content"].defaultData
+            );
+        }
+        return null;
+    }
+  });
 
-  const cmsSlug =
-    (slugMap["mfg-page-content"] as string | undefined) ||
-    "mfg-page-content";
-
-  const { blocks: mfgBlocks } = useContentPage("mfg-page-content");
-  const { blocks: fallbackBlocks } = useContentPage(cmsSlug);
-  const effectiveBlocks = mfgBlocks ?? fallbackBlocks;
-  const cmsMfgData = getPageContentData(
-    effectiveBlocks,
-    "manufacturing-content",
-    BLOCK_DEFAULTS["mfg-page-content"].defaultData,
-  );
   const fallbackMfg = BLOCK_DEFAULTS["mfg-page-content"].defaultData;
-  const data = deepMerge(fallbackMfg, cmsMfgData);
+  const data = externalData || deepMerge(fallbackMfg, cmsData || {});
   const hero = (data.hero as Record<string, unknown>) || {};
   const metrics =
     (data.metrics as Array<{ value: string; label: string }>) || [];

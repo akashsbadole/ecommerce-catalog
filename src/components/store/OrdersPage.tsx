@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Package, Calendar, CheckCircle2, Clock, Truck, ChevronRight, ShoppingBag, FileText } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { formatPrice } from "@/lib/pricing";
@@ -10,9 +11,16 @@ import { Button } from "@/components/ui/button";
 
 export function OrdersPage() {
   const { auth, settings, navigate } = useAppStore();
-  const [orders, setOrders] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const currency = settings?.currency || "INR";
+
+  const { data: orders = [], isLoading: loading } = useQuery({
+    queryKey: ["orders-user"],
+    enabled: !!auth.user?.email,
+    queryFn: async () => {
+        const res = await fetch(`/api/orders?email=${auth.user?.email}`);
+        return (await res.json()).orders || [];
+    }
+  });
 
   const getStepStatus = (status: string) => {
     const steps = ["pending", "processing", "shipped", "delivered"];
@@ -24,23 +32,6 @@ export function OrdersPage() {
     }));
   };
 
-  useEffect(() => {
-    async function fetchOrders() {
-      if (!auth.user?.email) return;
-      try {
-        const res = await fetch(`/api/orders?email=${auth.user.email}`);
-        if (res.ok) {
-          const data = await res.json();
-          setOrders(data.orders || []);
-        }
-      } catch (error) {
-        console.error("Fetch orders error:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchOrders();
-  }, [auth.user?.email]);
 
   if (!auth.user) {
     return (
@@ -87,7 +78,7 @@ export function OrdersPage() {
                   </div>
                 </div>
                 <div className="text-right flex items-center gap-4">
-                    <Button variant="ghost" size="sm" className="text-xs h-8" onClick={() => window.print()}>
+                    <Button variant="ghost" size="sm" className="text-xs h-8 hide-print" onClick={() => window.print()}>
                         <FileText className="mr-1 h-3 w-3" /> Invoice
                     </Button>
                     <div>

@@ -23,15 +23,16 @@ import { QuickViewModal } from "./QuickViewModal";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { StoreLoading } from "./StoreLoading";
 
-export function CataloguePage() {
-  const { auth, settings, navigate, addToCart, addToCompare } = useAppStore();
+export function CataloguePage({ onNavigate: _onNavigate }: { onNavigate?: any }) {
+  const { auth, settings, navigate, addToCart, addToCompare, wishlistIds, toggleWishlistId } = useAppStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
     categoryId: "all",
     brandId: "all",
     minPrice: "",
     maxPrice: "",
-    sortBy: "featured"
+    sortBy: "featured",
+    stockStatus: "all"
   });
   const [quickViewProduct, setQuickViewProduct] = useState<any>(null);
   const [visibleCount, setVisibleCount] = useState(12);
@@ -65,6 +66,7 @@ export function CataloguePage() {
         if (filters.minPrice) params.set("minPrice", filters.minPrice);
         if (filters.maxPrice) params.set("maxPrice", filters.maxPrice);
         if (filters.sortBy !== "featured") params.set("sort", filters.sortBy);
+        if (filters.stockStatus !== "all") params.set("stockStatus", filters.stockStatus);
 
         const res = await fetch(`/api/products?${params.toString()}`);
         return (await res.json()).products || [];
@@ -91,17 +93,21 @@ export function CataloguePage() {
         toast.error("Please log in to use wishlist");
         return;
     }
+    const isAdded = wishlistIds.includes(productId);
     try {
         const res = await fetch("/api/wishlist", {
-            method: "POST",
+            method: isAdded ? "DELETE" : "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ productId }),
         });
-        if (res.ok) toast.success("Added to wishlist");
+        if (res.ok) {
+            toggleWishlistId(productId);
+            toast.success(isAdded ? "Removed from wishlist" : "Added to wishlist");
+        }
     } catch { /* ignore */ }
   };
 
-  const FilterSidebar = () => (
+  const renderFilterSidebar = () => (
     <div className="space-y-8">
       <div className="space-y-4">
         <h3 className="text-sm font-bold uppercase tracking-wider">Categories</h3>
@@ -112,7 +118,7 @@ export function CataloguePage() {
             >
                 All Products
             </button>
-            {categories.map(cat => (
+            {categories.map((cat: any) => (
                 <button
                     key={cat.id}
                     onClick={() => setFilters({ ...filters, categoryId: cat.id })}
@@ -134,7 +140,23 @@ export function CataloguePage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Brands</SelectItem>
-            {brands.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+            {brands.map((b: any) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Separator />
+
+      <div className="space-y-4">
+        <h3 className="text-sm font-bold uppercase tracking-wider">Availability</h3>
+        <Select value={filters.stockStatus} onValueChange={(v) => setFilters({ ...filters, stockStatus: v })}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Items</SelectItem>
+            <SelectItem value="in_stock">In Stock</SelectItem>
+            <SelectItem value="out_of_stock">Out of Stock</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -165,7 +187,7 @@ export function CataloguePage() {
         variant="outline"
         className="w-full text-xs uppercase font-bold"
         onClick={() => {
-            setFilters({ categoryId: "all", brandId: "all", minPrice: "", maxPrice: "", sortBy: "featured" });
+            setFilters({ categoryId: "all", brandId: "all", minPrice: "", maxPrice: "", sortBy: "featured", stockStatus: "all" });
             setSearchQuery("");
         }}
       >
@@ -183,7 +205,7 @@ export function CataloguePage() {
           {/* Desktop Sidebar */}
           <aside className="hidden lg:block w-64 shrink-0">
             <div className="sticky top-24">
-                <FilterSidebar />
+                {renderFilterSidebar()}
             </div>
           </aside>
 
@@ -211,7 +233,7 @@ export function CataloguePage() {
                         <SheetHeader className="mb-6">
                             <SheetTitle>Filter Products</SheetTitle>
                         </SheetHeader>
-                        <FilterSidebar />
+                        {renderFilterSidebar()}
                     </SheetContent>
                 </Sheet>
 
@@ -266,9 +288,9 @@ export function CataloguePage() {
                         <div className="absolute top-3 right-3 flex flex-col gap-2 translate-x-12 group-hover:translate-x-0 transition-transform duration-300">
                             <button
                                 onClick={(e) => { e.stopPropagation(); handleWishlist(product.id); }}
-                                className="h-9 w-9 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-rose-50 hover:text-rose-500 transition-colors"
+                                className={`h-9 w-9 rounded-full flex items-center justify-center shadow-lg transition-colors ${wishlistIds.includes(product.id) ? 'bg-rose-50 text-rose-500' : 'bg-white hover:bg-rose-50 hover:text-rose-500'}`}
                             >
-                                <Heart className="h-4 w-4" />
+                                <Heart className={`h-4 w-4 ${wishlistIds.includes(product.id) ? 'fill-current' : ''}`} />
                             </button>
                             <button
                                 onClick={(e) => { e.stopPropagation(); setQuickViewProduct(product); }}

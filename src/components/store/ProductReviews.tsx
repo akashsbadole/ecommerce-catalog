@@ -20,7 +20,7 @@ interface Review {
 }
 
 export function ProductReviews({ productId }: { productId: string }) {
-  const { auth } = useAppStore();
+  const { auth, navigate } = useAppStore();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);

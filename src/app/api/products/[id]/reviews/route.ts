@@ -5,10 +5,10 @@ import { requireAuth } from '@/lib/admin-auth';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const reviews = await db.review.findMany({
       where: { productId: id, isActive: true },
       include: {
@@ -27,13 +27,13 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const auth = await requireAuth(request);
     if (!auth.success) return auth.response;
 
-    const { id } = params;
+    const { id } = await params;
     const storeId = getStoreId(request);
     const body = await request.json();
     const { rating, comment } = body;

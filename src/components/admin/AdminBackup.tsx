@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { Download, Upload, Loader2, Database, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -10,17 +11,16 @@ import { Badge } from '@/components/ui/badge';
 import { adminFetch } from '@/lib/admin-fetch';
 
 export function AdminBackup() {
-  const [exporting, setExporting] = useState(false);
-  const [restoring, setRestoring] = useState(false);
   const [restoreResult, setRestoreResult] = useState<Record<string, number> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleExport = async () => {
-    setExporting(true);
-    try {
-      const res = await adminFetch('/api/admin/backup');
-      if (res.ok) {
-        const blob = await res.blob();
+  const exportMutation = useMutation({
+    mutationFn: async () => {
+        const res = await adminFetch('/api/admin/backup');
+        if (!res.ok) throw new Error('Failed');
+        return res.blob();
+    },
+    onSuccess: (blob) => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -28,47 +28,38 @@ export function AdminBackup() {
         a.click();
         URL.revokeObjectURL(url);
         toast.success('Backup downloaded');
-      } else {
-        toast.error('Backup failed');
-      }
-    } catch {
-      toast.error('Backup failed');
-    } finally {
-      setExporting(false);
-    }
-  };
+    },
+    onError: () => toast.error('Backup failed')
+  });
 
-  const handleRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setRestoring(true);
-    setRestoreResult(null);
-
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const res = await adminFetch('/api/admin/backup', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
+  const restoreMutation = useMutation({
+    mutationFn: async (file: File) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await adminFetch('/api/admin/backup', { method: 'POST', body: formData });
+        if (!res.ok) throw new Error((await res.json()).error || 'Failed');
+        return res.json();
+    },
+    onSuccess: (data) => {
         setRestoreResult(data.restored);
         toast.success('Backup restored successfully');
-      } else {
-        toast.error(data.error || 'Restore failed');
-      }
-    } catch {
-      toast.error('Restore failed');
-    } finally {
-      setRestoring(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+    },
+    onError: (err: any) => toast.error(err.message)
+  });
+
+  const handleExport = () => exportMutation.mutate();
+
+  const handleRestore = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+        setRestoreResult(null);
+        restoreMutation.mutate(file);
     }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
+
+  const exporting = exportMutation.isPending;
+  const restoring = restoreMutation.isPending;
 
   return (
     <div className="space-y-6">

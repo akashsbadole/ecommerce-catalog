@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ShoppingBag,
   Search,
@@ -17,6 +18,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -64,8 +66,7 @@ interface Order {
 }
 
 export function AdminOrders() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -76,41 +77,35 @@ export function AdminOrders() {
     window.print();
   };
 
-  const fetchOrders = async () => {
-    try {
-      const res = await adminFetch("/api/admin/orders");
-      if (res.ok) {
-        const data = await res.json();
-        setOrders(data.orders || []);
-      }
-    } catch {
-      toast.error("Failed to fetch orders");
-    } finally {
-      setLoading(false);
+  const { data: orders = [], isLoading: loading } = useQuery({
+    queryKey: ["admin-orders"],
+    queryFn: async () => {
+        const res = await adminFetch("/api/admin/orders");
+        return (await res.json()).orders || [];
     }
-  };
+  });
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  const updateOrderStatus = async (orderId: string, status: string) => {
-    try {
-      const res = await adminFetch(`/api/admin/orders/${orderId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
-      if (res.ok) {
-        toast.success(`Order status updated to ${status}`);
-        fetchOrders();
-        if (selectedOrder?.id === orderId) {
-          setSelectedOrder({ ...selectedOrder, status });
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string, data: any }) => {
+        const res = await adminFetch(`/api/admin/orders/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error("Failed");
+        return res.json();
+    },
+    onSuccess: (updated) => {
+        toast.success("Order updated");
+        queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+        if (selectedOrder?.id === updated.order.id) {
+            setSelectedOrder(updated.order);
         }
-      }
-    } catch {
-      toast.error("Failed to update status");
     }
+  });
+
+  const updateOrderStatus = (orderId: string, status: string) => {
+    updateMutation.mutate({ id: orderId, data: { status } });
   };
 
   const filteredOrders = orders.filter(
@@ -234,14 +229,14 @@ export function AdminOrders() {
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => {
                             const track = prompt("Enter tracking number:");
-                            if (track !== null) adminFetch(`/api/admin/orders/${order.id}`, { method: 'PUT', body: JSON.stringify({ trackingNumber: track }) }).then(() => fetchOrders());
+                            if (track !== null) updateMutation.mutate({ id: order.id, data: { trackingNumber: track } });
                         }}>
                             Add Tracking
                         </DropdownMenuItem>
                         <Separator />
                         <DropdownMenuItem onClick={() => {
                             const amt = prompt("Enter refund amount:");
-                            if (amt) adminFetch(`/api/admin/orders/${order.id}`, { method: 'PUT', body: JSON.stringify({ returnStatus: 'completed', refundAmount: amt }) }).then(() => fetchOrders());
+                            if (amt) updateMutation.mutate({ id: order.id, data: { returnStatus: 'completed', refundAmount: amt } });
                         }}>
                             Issue Refund
                         </DropdownMenuItem>

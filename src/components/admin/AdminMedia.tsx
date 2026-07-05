@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -109,12 +110,9 @@ function getMediumUrl(item: MediaItem): string {
 }
 
 export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
-  const [media, setMedia] = useState<MediaItem[]>([]);
-  const [total, setTotal] = useState(0);
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MediaItem | null>(null);
   const [deleteConfirmItem, setDeleteConfirmItem] = useState<MediaItem | null>(
     null,
@@ -129,7 +127,6 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
   const limit = 30;
 
   // Folder state
-  const [folders, setFolders] = useState<string[]>([]);
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
   const [createFolderOpen, setCreateFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
@@ -137,177 +134,131 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
   const [moveFileId, setMoveFileId] = useState<string | null>(null);
   const [moveTargetFolder, setMoveTargetFolder] = useState("");
 
-  const fetchMedia = useCallback(
-    async (pageNum: number, searchQuery: string) => {
-      setLoading(true);
-      try {
+  const { data: mediaData, isLoading: loading } = useQuery({
+    queryKey: ["admin-media", page, search, activeFolder],
+    queryFn: async () => {
         const params = new URLSearchParams({
-          page: String(pageNum),
-          limit: String(limit),
+            page: String(page),
+            limit: String(limit),
         });
-        if (searchQuery) params.set("search", searchQuery);
+        if (search) params.set("search", search);
         if (activeFolder) params.set("folder", activeFolder);
         const res = await adminFetch(`/api/media?${params}`);
-        if (res.ok) {
-          const data: MediaResponse = await res.json();
-          setMedia(data.media);
-          setTotal(data.total);
-          setPage(data.page);
-        }
-      } catch (error) {
-        console.error("Failed to load media:", error);
-        toast.error("Failed to load media");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [activeFolder],
-  );
+        if (!res.ok) throw new Error("Failed");
+        return await res.json();
+    }
+  });
 
-  useEffect(() => {
-    fetchMedia(page, search);
-  }, [page, fetchMedia, search]);
+  const media = mediaData?.media || [];
+  const total = mediaData?.total || 0;
+
+  const { data: folders = [] } = useQuery({
+    queryKey: ["admin-media-folders"],
+    queryFn: async () => {
+        const res = await adminFetch("/api/media/folders");
+        const data = await res.json();
+        return data.folders || [];
+    }
+  });
 
   const handleSearch = (value: string) => {
     setSearch(value);
     setPage(1);
-    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-    searchTimeoutRef.current = setTimeout(() => {
-      fetchMedia(1, value);
-    }, 300);
   };
-
-  const fetchFolders = useCallback(async () => {
-    try {
-      const res = await adminFetch("/api/media/folders");
-      if (res.ok) {
-        const data = await res.json();
-        setFolders(data.folders || []);
-      }
-    } catch (error) {
-      console.error("Failed to load folders:", error);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchFolders();
-  }, [fetchFolders]);
 
   const handleSelectFolder = (folder: string | null) => {
     setActiveFolder(folder);
     setPage(1);
   };
 
-  const handleCreateFolder = async () => {
+  const createFolderMutation = useMutation({
+    mutationFn: async (folder: string) => {
+        const res = await adminFetch("/api/media/folders", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ folder }),
+        });
+        if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: () => {
+        toast.success("Folder created");
+        setCreateFolderOpen(false);
+        setNewFolderName("");
+        queryClient.invalidateQueries({ queryKey: ["admin-media-folders"] });
+    }
+  });
+
+  const handleCreateFolder = () => {
     if (!newFolderName.trim()) return;
     const folderPath = newFolderName.trim().startsWith("/")
       ? newFolderName.trim()
       : `/${newFolderName.trim()}`;
-    try {
-      const res = await adminFetch("/api/media/folders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ folder: folderPath }),
-      });
-      if (res.ok) {
-        toast.success("Folder created");
-        setCreateFolderOpen(false);
-        setNewFolderName("");
-        fetchFolders();
-      } else {
-        toast.error("Failed to create folder");
-      }
-    } catch (error) {
-      console.error("Failed to create folder:", error);
-      toast.error("Failed to create folder");
-    }
+    createFolderMutation.mutate(folderPath);
   };
 
-  const handleMoveFile = async () => {
-    if (!moveFileId || !moveTargetFolder) return;
-    try {
-      const res = await adminFetch("/api/media", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: moveFileId, folder: moveTargetFolder }),
-      });
-      if (res.ok) {
+  const moveMutation = useMutation({
+    mutationFn: async ({ id, folder }: { id: string, folder: string }) => {
+        const res = await adminFetch("/api/media", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id, folder }),
+        });
+        if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: () => {
         toast.success("File moved");
         setMoveDialogOpen(false);
         setMoveFileId(null);
-        fetchMedia(page, search);
-        fetchFolders();
-      } else {
-        toast.error("Failed to move file");
-      }
-    } catch (error) {
-      console.error("Failed to move file:", error);
-      toast.error("Failed to move file");
+        queryClient.invalidateQueries({ queryKey: ["admin-media"] });
+        queryClient.invalidateQueries({ queryKey: ["admin-media-folders"] });
+    }
+  });
+
+  const handleMoveFile = () => {
+    if (moveFileId && moveTargetFolder) {
+        moveMutation.mutate({ id: moveFileId, folder: moveTargetFolder });
     }
   };
 
   const totalPages = Math.ceil(total / limit);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      Array.from(files).forEach((f) => formData.append("files", f));
-      const res = await adminFetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const successCount = data.files.filter(
-          (f: { error?: string }) => !f.error,
-        ).length;
-        const errorCount = data.files.filter(
-          (f: { error?: string }) => f.error,
-        ).length;
-        if (successCount > 0) {
-          toast.success(
-            `${successCount} file${successCount > 1 ? "s" : ""} uploaded`,
-          );
-        }
-        if (errorCount > 0) {
-          toast.error(`${errorCount} file${errorCount > 1 ? "s" : ""} failed`);
-        }
-        fetchMedia(1, search);
-      } else {
-        toast.error("Upload failed");
-      }
-    } catch (error) {
-      console.error("Upload failed:", error);
-      toast.error("Upload failed");
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+  const uploadMutation = useMutation({
+    mutationFn: async (files: FileList) => {
+        const formData = new FormData();
+        Array.from(files).forEach((f) => formData.append("files", f));
+        const res = await adminFetch("/api/upload", { method: "POST", body: formData });
+        if (!res.ok) throw new Error("Failed");
+        return await res.json();
+    },
+    onSuccess: (data) => {
+        const successCount = data.files.filter((f: any) => !f.error).length;
+        if (successCount > 0) toast.success(`${successCount} file(s) uploaded`);
+        queryClient.invalidateQueries({ queryKey: ["admin-media"] });
+    }
+  });
+
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.length) {
+        uploadMutation.mutate(e.target.files);
     }
   };
 
-  const handleDelete = async (item: MediaItem) => {
-    setDeleteConfirmItem(null);
-    try {
-      const res = await adminFetch(`/api/media/${item.id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+        const res = await adminFetch(`/api/media/${id}`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: () => {
         toast.success("Deleted");
-        fetchMedia(page, search);
-        if (selectedItem?.id === item.id) {
-          setSelectedItem(null);
-          setPreviewOpen(false);
-        }
-      } else {
-        toast.error("Delete failed");
-      }
-    } catch (error) {
-      console.error("Delete failed:", error);
-      toast.error("Delete failed");
+        queryClient.invalidateQueries({ queryKey: ["admin-media"] });
+        setDeleteConfirmItem(null);
+        setSelectedItem(null);
+        setPreviewOpen(false);
     }
+  });
+
+  const handleDelete = (item: MediaItem) => {
+    deleteMutation.mutate(item.id);
   };
 
   const handleCopyUrl = async (url: string, id: string) => {
@@ -323,22 +274,25 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
     }
   };
 
-  const handleUpdateAlt = async () => {
-    if (!selectedItem) return;
-    try {
-      const res = await adminFetch("/api/media", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: selectedItem.id, alt: editAlt }),
-      });
-      if (res.ok) {
+  const altMutation = useMutation({
+    mutationFn: async ({ id, alt }: { id: string, alt: string }) => {
+        const res = await adminFetch("/api/media", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id, alt }),
+        });
+        if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: () => {
         toast.success("Alt text updated");
         setEditAltOpen(false);
-        fetchMedia(page, search);
-      }
-    } catch (error) {
-      console.error("Failed to update alt text:", error);
-      toast.error("Update failed");
+        queryClient.invalidateQueries({ queryKey: ["admin-media"] });
+    }
+  });
+
+  const handleUpdateAlt = () => {
+    if (selectedItem) {
+        altMutation.mutate({ id: selectedItem.id, alt: editAlt });
     }
   };
 
@@ -415,11 +369,11 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
           />
           <Button
             onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
+            disabled={uploadMutation.isPending}
             className="gap-2"
           >
             <Upload className="h-4 w-4" />
-            {uploading ? "Uploading..." : "Upload"}
+            {uploadMutation.isPending ? "Uploading..." : "Upload"}
           </Button>
         </div>
       </div>
@@ -927,7 +881,7 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
               </Button>
               <Button
                 onClick={handleCreateFolder}
-                disabled={!newFolderName.trim()}
+                disabled={!newFolderName.trim() || createFolderMutation.isPending}
               >
                 Create
               </Button>
@@ -977,7 +931,7 @@ export function AdminMedia({ onSelect }: { onSelect?: (url: string) => void }) {
               >
                 Cancel
               </Button>
-              <Button onClick={handleMoveFile} disabled={!moveTargetFolder}>
+              <Button onClick={handleMoveFile} disabled={!moveTargetFolder || moveMutation.isPending}>
                 Move
               </Button>
             </DialogFooter>

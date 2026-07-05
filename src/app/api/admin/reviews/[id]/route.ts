@@ -5,7 +5,7 @@ import { getStoreId } from '@/lib/store-db';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const auth = await requireAdminAuth(request);
@@ -13,7 +13,7 @@ export async function PUT(
 
     const storeId = getStoreId(request);
 
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const { isActive } = body;
 
@@ -30,7 +30,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const auth = await requireAdminAuth(request);
@@ -38,7 +38,7 @@ export async function DELETE(
 
     const storeId = getStoreId(request);
 
-    const { id } = params;
+    const { id } = await params;
     await db.review.delete({
         where: { id, ...(storeId ? { storeId } : {}) }
     });

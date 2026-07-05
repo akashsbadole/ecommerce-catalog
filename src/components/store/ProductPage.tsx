@@ -5,12 +5,13 @@ import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { Package, Send, ChevronDown, ShoppingCart, Heart, ShieldCheck, Truck, RefreshCw, ZoomIn, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { getFirstImage } from "@/lib/utils";
 import { formatPrice as libFormatPrice } from "@/lib/pricing";
 import { toast } from "sonner";
 import { useSeo } from "@/lib/use-seo";
 import { useAppStore } from "@/lib/store";
-import { StoreLoading } from "./StoreLoading";
+import { StoreLoading, ProductSkeleton } from "./StoreLoading";
 import { ProductReviews } from "./ProductReviews";
 import { RecentlyViewed } from "./RecentlyViewed";
 import { Breadcrumbs } from "./Breadcrumbs";
@@ -28,7 +29,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [faqOpenIndex, setFaqOpenIndex] = useState<number | null>(null);
 
-  const { auth, settings, addToCart } = useAppStore();
+  const { auth, settings, addToCart, addToRecentlyViewed, wishlistIds, toggleWishlistId } = useAppStore();
   const currency = settings?.currency || "INR";
   const isB2C = settings?.store_mode === "b2c";
 
@@ -39,14 +40,13 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
         const data = await res.json();
         const prod = (data.products || [])[0];
         if (prod) {
-            // Recently Viewed
-            try {
-                const stored = localStorage.getItem('recently_viewed') || '[]';
-                let viewed = JSON.parse(stored);
-                viewed = viewed.filter((p: any) => p.id !== prod.id);
-                viewed.unshift({ id: prod.id, name: prod.name, slug: prod.slug, images: prod.images, price: prod.price });
-                localStorage.setItem('recently_viewed', JSON.stringify(viewed.slice(0, 10)));
-            } catch { /* ignore */ }
+            addToRecentlyViewed({
+                id: prod.id,
+                name: prod.name,
+                slug: prod.slug,
+                images: prod.images,
+                price: prod.price
+            });
         }
         return prod;
     }
@@ -75,7 +75,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
     ogImage: product?.ogImage,
   });
 
-  if (loading) return <StoreLoading />;
+  if (loading) return <ProductSkeleton />;
   if (!product) return <div className="py-20 text-center">Product not found</div>;
 
   const images = (() => {
@@ -102,12 +102,16 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
 
   const handleWishlist = async () => {
     if (!auth.user) { toast.error("Please log in"); return; }
+    const isAdded = wishlistIds.includes(product!.id);
     const res = await fetch("/api/wishlist", {
-        method: "POST",
+        method: isAdded ? "DELETE" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: product.id }),
+        body: JSON.stringify({ productId: product!.id }),
     });
-    if (res.ok) toast.success("Added to wishlist");
+    if (res.ok) {
+        toggleWishlistId(product!.id);
+        toast.success(isAdded ? "Removed from wishlist" : "Added to wishlist");
+    }
   };
 
   const specs = (() => {
@@ -214,8 +218,13 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                             <Button size="lg" className="flex-1 h-14 rounded-2xl text-lg font-bold gap-2 shadow-xl shadow-primary/20" onClick={handleAddToCart} disabled={product.stock <= 0}>
                                 <ShoppingCart className="h-5 w-5" /> {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
                             </Button>
-                            <Button size="lg" variant="outline" className="h-14 w-14 rounded-2xl p-0 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200" onClick={handleWishlist}>
-                                <Heart className="h-6 w-6" />
+                            <Button
+                                size="lg"
+                                variant="outline"
+                                className={`h-14 w-14 rounded-2xl p-0 transition-colors ${wishlistIds.includes(product.id) ? 'bg-rose-50 text-rose-500 border-rose-200' : 'hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200'}`}
+                                onClick={handleWishlist}
+                            >
+                                <Heart className={`h-6 w-6 ${wishlistIds.includes(product.id) ? 'fill-current' : ''}`} />
                             </Button>
                         </>
                     ) : (

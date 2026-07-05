@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
   Search,
@@ -123,6 +124,8 @@ interface Product {
   ogImage: string | null;
   customSchema: string | null;
   whatsappNumber: string | null;
+  tags: string | null;
+  attributes: string | null;
   deletedAt: string | null;
   stock: number;
   lowStockThreshold: number;
@@ -146,7 +149,11 @@ interface ProductFormData {
   images: string;
   categoryId: string;
   isFeatured: boolean;
+  isBestSeller: boolean;
   isActive: boolean;
+  isDigital: boolean;
+  downloadUrl: string;
+  videoUrl: string;
   sortOrder: string;
   specifications: string;
   metaTitle: string;
@@ -187,6 +194,8 @@ const emptyForm: ProductFormData = {
   ogImage: "",
   customSchema: "",
   whatsappNumber: "",
+  tags: "",
+  attributes: "{}",
   stock: "0",
   lowStockThreshold: "10",
   relatedProductIds: "",
@@ -221,12 +230,9 @@ function getFirstImageUrl(product: Product): string {
 }
 
 export function AdminProducts() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [currency, setCurrency] = useState("INR");
 
   // Dialog state
   const [formOpen, setFormOpen] = useState(false);
@@ -280,65 +286,132 @@ export function AdminProducts() {
   const [builderOpen, setBuilderOpen] = useState(false);
   const [builderSaving, setBuilderSaving] = useState(false);
 
-  // Product fields state (replacing blocks)
-  const fetchProducts = useCallback(async () => {
-    try {
-      const params = new URLSearchParams({ all: "true" });
-      if (activeTab === "trashed") params.set("trashed", "true");
-      if (searchTerm) params.set("search", searchTerm);
-      if (categoryFilter && categoryFilter !== "all")
-        params.set("categoryId", categoryFilter);
-      const res = await adminFetch(`/api/products?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        setProducts(data.products || []);
-      }
-    } catch {
-      toast.error("Failed to load products");
-    } finally {
-      setLoading(false);
+  // Queries
+  const { data: products = [], isLoading: loading } = useQuery({
+    queryKey: ["admin-products", activeTab, searchTerm, categoryFilter],
+    queryFn: async () => {
+        const params = new URLSearchParams({ all: "true" });
+        if (activeTab === "trashed") params.set("trashed", "true");
+        if (searchTerm) params.set("search", searchTerm);
+        if (categoryFilter && categoryFilter !== "all")
+            params.set("categoryId", categoryFilter);
+        const res = await adminFetch(`/api/products?${params.toString()}`);
+        if (!res.ok) throw new Error("Failed to load products");
+        return (await res.json()).products || [];
     }
-  }, [searchTerm, categoryFilter, activeTab]);
+  });
 
-  const fetchCategories = useCallback(async () => {
-    try {
-      const res = await adminFetch("/api/categories?all=true");
-      if (res.ok) {
-        const data = await res.json();
-        setCategories(data.categories || []);
-      }
-    } catch {
-      // ignore
+  const { data: categories = [] } = useQuery({
+    queryKey: ["admin-categories"],
+    queryFn: async () => {
+        const res = await adminFetch("/api/categories?all=true");
+        return (await res.json()).categories || [];
     }
-  }, []);
+  });
 
-  useEffect(() => {
-    setLoading(true);
-    setSelectedIds([]);
-    fetchProducts();
-  }, [fetchProducts]);
-
-  useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
-
-  // Fetch store currency
-  useEffect(() => {
-    async function fetchCurrency() {
-      try {
+  const { data: settings = [] } = useQuery({
+    queryKey: ["admin-settings"],
+    queryFn: async () => {
         const res = await adminFetch("/api/store/settings");
-        if (res.ok) {
-          const data = await res.json();
-          const settings = data.settings || [];
-          const curr = settings.find((s: any) => s.key === "currency");
-          if (curr?.value) setCurrency(curr.value);
-        }
-      } catch {
-        /* ignore */
-      }
+        return (await res.json()).settings || [];
     }
-    fetchCurrency();
-  }, []);
+  });
+
+  const currency = useMemo(() => {
+    return settings.find((s: any) => s.key === "currency")?.value || "INR";
+  }, [settings]);
+
+  // Mutations
+  const saveMutation = useMutation({
+    mutationFn: async ({ id, data }: { id?: string, data: any }) => {
+        const url = id ? `/api/products/${id}` : "/api/products";
+        const res = await adminFetch(url, {
+            method: id ? "PUT" : "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error((await res.json()).error || "Failed to save");
+        return res.json();
+    },
+    onSuccess: () => {
+        toast.success(editingProduct ? "Product updated" : "Product created");
+        setFormOpen(false);
+        queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    },
+    onError: (err: any) => toast.error(err.message)
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+        const res = await adminFetch(`/api/products/${id}`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: () => {
+        toast.success("Product moved to trash");
+        queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+        setDeleteId(null);
+    }
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: async (id: string) => {
+        const res = await adminFetch(`/api/products/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ restore: true }),
+        });
+        if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: () => {
+        toast.success("Product restored");
+        queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    }
+  });
+
+  const permanentDeleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+        const res = await adminFetch(`/api/products/${id}?permanent=true`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: () => {
+        toast.success("Product permanently deleted");
+        queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+        setPermanentDeleteId(null);
+    }
+  });
+
+  const bulkMutation = useMutation({
+    mutationFn: async ({ ids, action }: { ids: string[], action: string }) => {
+        const res = await adminFetch("/api/products/bulk", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ids, action }),
+        });
+        if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: (_, variables) => {
+        toast.success(`Bulk action ${variables.action} successful`);
+        setSelectedIds([]);
+        setBulkAction(null);
+        queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    }
+  });
+
+  const inlineStockMutation = useMutation({
+    mutationFn: async ({ id, stock }: { id: string, stock: number }) => {
+        const res = await adminFetch(`/api/products/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ stock }),
+        });
+        if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: () => {
+        toast.success("Stock updated");
+        setEditingStockId(null);
+        queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    }
+  });
 
   const handleOpenAdd = () => {
     setEditingProduct(null);
@@ -415,7 +488,7 @@ export function AdminProducts() {
     }));
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!form.name.trim()) {
       toast.error("Product name is required");
       return;
@@ -425,14 +498,12 @@ export function AdminProducts() {
       return;
     }
 
-    setSaving(true);
-    try {
-      const imagesArray = form.images
+    const imagesArray = form.images
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean);
 
-      const payload = {
+    const payload = {
         name: form.name.trim(),
         slug: form.slug.trim() || generateSlug(form.name),
         description: form.description.trim() || null,
@@ -448,7 +519,6 @@ export function AdminProducts() {
         images: imagesArray,
         categoryId: form.categoryId || null,
         isFeatured: form.isFeatured,
-        brandId: form.brandId || null,
         isBestSeller: form.isBestSeller,
         isActive: form.isActive,
         isDigital: form.isDigital,
@@ -466,32 +536,9 @@ export function AdminProducts() {
         stock: parseInt(form.stock) || 0,
         lowStockThreshold: parseInt(form.lowStockThreshold) || 10,
         relatedProductIds: JSON.stringify(selectedRelatedIds),
-      };
+    };
 
-      const url = editingProduct
-        ? `/api/products/${editingProduct.id}`
-        : "/api/products";
-      const method = editingProduct ? "PUT" : "POST";
-
-      const res = await adminFetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        toast.success(editingProduct ? "Product updated" : "Product created");
-        setFormOpen(false);
-        fetchProducts();
-      } else {
-        const err = await res.json();
-        toast.error(err.error || "Failed to save product");
-      }
-    } catch {
-      toast.error("Failed to save product");
-    } finally {
-      setSaving(false);
-    }
+    saveMutation.mutate({ id: editingProduct?.id, data: payload });
   };
 
   const handleSelectAll = () => {
@@ -508,119 +555,29 @@ export function AdminProducts() {
     );
   };
 
-  const handleBulkAction = async (action: string) => {
+  const handleBulkAction = (action: string) => {
     if (selectedIds.length === 0) return;
     if (action === "delete") {
       setBulkAction(action);
       return;
     }
-    setBulkLoading(true);
-    try {
-      const res = await adminFetch("/api/products/bulk", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: selectedIds, action }),
-      });
-      if (res.ok) {
-        toast.success(
-          `${action === "publish" ? "Published" : "Unpublished"} ${selectedIds.length} product(s)`,
-        );
-        setSelectedIds([]);
-        fetchProducts();
-      } else {
-        toast.error("Bulk action failed");
-      }
-    } catch {
-      toast.error("Bulk action failed");
-    } finally {
-      setBulkLoading(false);
-    }
+    bulkMutation.mutate({ ids: selectedIds, action });
   };
 
-  const handleBulkDelete = async () => {
-    if (selectedIds.length === 0) return;
-    setBulkLoading(true);
-    try {
-      const res = await adminFetch("/api/products/bulk", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: selectedIds, action: "delete" }),
-      });
-      if (res.ok) {
-        toast.success(`Deleted ${selectedIds.length} product(s)`);
-        setSelectedIds([]);
-        setBulkAction(null);
-        fetchProducts();
-      } else {
-        toast.error("Bulk delete failed");
-      }
-    } catch {
-      toast.error("Bulk delete failed");
-    } finally {
-      setBulkLoading(false);
-    }
+  const handleBulkDelete = () => {
+    bulkMutation.mutate({ ids: selectedIds, action: "delete" });
   };
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    setDeleting(true);
-    try {
-      const res = await adminFetch(`/api/products/${deleteId}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        toast.success("Product moved to trash");
-        setProducts((prev) => prev.filter((p) => p.id !== deleteId));
-        setDeleteId(null);
-      } else {
-        const err = await res.json();
-        toast.error(err.error || "Failed to delete product");
-      }
-    } catch {
-      toast.error("Failed to delete product");
-    } finally {
-      setDeleting(false);
-    }
+  const handleDelete = () => {
+    if (deleteId) deleteMutation.mutate(deleteId);
   };
 
-  const handleRestore = async (id: string) => {
-    try {
-      const res = await adminFetch(`/api/products/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ restore: true }),
-      });
-      if (res.ok) {
-        toast.success("Product restored");
-        setProducts((prev) => prev.filter((p) => p.id !== id));
-      } else {
-        toast.error("Failed to restore product");
-      }
-    } catch {
-      toast.error("Failed to restore product");
-    }
+  const handleRestore = (id: string) => {
+    restoreMutation.mutate(id);
   };
 
-  const handlePermanentDelete = async () => {
-    if (!permanentDeleteId) return;
-    setPermanentDeleting(true);
-    try {
-      const res = await adminFetch(
-        `/api/products/${permanentDeleteId}?permanent=true`,
-        { method: "DELETE" },
-      );
-      if (res.ok) {
-        toast.success("Product permanently deleted");
-        setProducts((prev) => prev.filter((p) => p.id !== permanentDeleteId));
-        setPermanentDeleteId(null);
-      } else {
-        toast.error("Failed to delete product");
-      }
-    } catch {
-      toast.error("Failed to delete product");
-    } finally {
-      setPermanentDeleting(false);
-    }
+  const handlePermanentDelete = () => {
+    if (permanentDeleteId) permanentDeleteMutation.mutate(permanentDeleteId);
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -726,7 +683,7 @@ export function AdminProducts() {
           toast.warning(`${data.errors.length} error(s) — check console`);
           console.warn("CSV Import Errors:", data.errors);
         }
-        fetchProducts();
+        queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       } else {
         const err = await res.json();
         toast.error(err.error || "Import failed");
@@ -761,28 +718,13 @@ export function AdminProducts() {
     }
   };
 
-  const handleInlineStockSave = async (productId: string) => {
+  const handleInlineStockSave = (productId: string) => {
     const newStock = parseInt(inlineStock);
     if (isNaN(newStock) || newStock < 0) {
       toast.error("Enter a valid stock quantity");
       return;
     }
-    try {
-      const res = await adminFetch(`/api/products/${productId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stock: newStock }),
-      });
-      if (res.ok) {
-        toast.success("Stock updated");
-        setEditingStockId(null);
-        fetchProducts();
-      } else {
-        toast.error("Failed to update stock");
-      }
-    } catch {
-      toast.error("Failed to update stock");
-    }
+    inlineStockMutation.mutate({ id: productId, stock: newStock });
   };
 
   const startInlineStockEdit = (product: Product) => {
@@ -913,8 +855,7 @@ export function AdminProducts() {
         <Button
           variant="outline"
           onClick={() => {
-            setLoading(true);
-            fetchProducts();
+            queryClient.invalidateQueries({ queryKey: ["admin-products"] });
           }}
         >
           <RefreshCw className="h-4 w-4" />
@@ -1919,8 +1860,8 @@ export function AdminProducts() {
             <Button variant="outline" onClick={() => setFormOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving
+            <Button onClick={handleSave} disabled={saveMutation.isPending}>
+              {saveMutation.isPending
                 ? "Saving..."
                 : editingProduct
                   ? "Update Product"
@@ -1949,10 +1890,10 @@ export function AdminProducts() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleBulkDelete}
-              disabled={bulkLoading}
+              disabled={bulkMutation.isPending}
               className="bg-rose-600 hover:bg-rose-700"
             >
-              {bulkLoading ? "Deleting..." : "Delete All"}
+              {bulkMutation.isPending ? "Deleting..." : "Delete All"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1972,10 +1913,10 @@ export function AdminProducts() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              disabled={deleting}
+              disabled={deleteMutation.isPending}
               className="bg-rose-600 hover:bg-rose-700"
             >
-              {deleting ? "Moving..." : "Move to Trash"}
+              {deleteMutation.isPending ? "Moving..." : "Move to Trash"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -2046,10 +1987,10 @@ export function AdminProducts() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handlePermanentDelete}
-              disabled={permanentDeleting}
+              disabled={permanentDeleteMutation.isPending}
               className="bg-rose-600 hover:bg-rose-700"
             >
-              {permanentDeleting ? "Deleting..." : "Permanent Delete"}
+              {permanentDeleteMutation.isPending ? "Deleting..." : "Permanent Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

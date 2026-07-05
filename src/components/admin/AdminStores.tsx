@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
   Pencil,
@@ -87,8 +88,7 @@ function generateSlug(name: string): string {
 }
 
 export function AdminStores() {
-  const [stores, setStores] = useState<StoreItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [currentStoreId, setCurrentStoreId] = useState<string | null>(null);
 
   // Dialog state
@@ -104,30 +104,60 @@ export function AdminStores() {
   // Switch loading state
   const [switchingId, setSwitchingId] = useState<string | null>(null);
 
-  const fetchStores = useCallback(async () => {
-    try {
-      const res = await adminFetch("/api/stores");
-      if (res.ok) {
+  const { data: stores = [], isLoading: loading } = useQuery({
+    queryKey: ["admin-stores"],
+    queryFn: async () => {
+        const res = await adminFetch("/api/stores");
+        if (!res.ok) throw new Error("Failed");
         const data = await res.json();
-        setStores(data.stores || []);
-        // Determine current store from active store in list
-        const active = data.stores?.find(
-          (s: StoreItem) => s.isActive && !s.isPaused,
-        );
-        if (active) setCurrentStoreId(active.id);
-      } else {
-        toast.error("Failed to load stores");
-      }
-    } catch {
-      toast.error("Failed to load stores");
-    } finally {
-      setLoading(false);
+        const active = data.stores?.find((s: StoreItem) => s.isActive && !s.isPaused);
+        if (active && !currentStoreId) setCurrentStoreId(active.id);
+        return data.stores || [];
     }
-  }, []);
+  });
 
-  useEffect(() => {
-    fetchStores();
-  }, [fetchStores]);
+  const saveMutation = useMutation({
+    mutationFn: async ({ id, data }: { id?: string, data: any }) => {
+        const url = id ? `/api/stores/${id}` : "/api/stores";
+        const res = await adminFetch(url, {
+            method: id ? "PUT" : "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error("Failed");
+        return res.json();
+    },
+    onSuccess: () => {
+        toast.success(editingStore ? "Store updated" : "Store created");
+        setFormOpen(false);
+        queryClient.invalidateQueries({ queryKey: ["admin-stores"] });
+    }
+  });
+
+  const switchMutation = useMutation({
+    mutationFn: async (id: string) => {
+        const res = await adminFetch(`/api/stores/${id}/switch`, { method: "POST" });
+        if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: (_, id) => {
+        setCurrentStoreId(id);
+        toast.success("Switched store");
+        queryClient.invalidateQueries({ queryKey: ["admin-stores"] });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+        const res = await adminFetch(`/api/stores/${id}`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: (_, id) => {
+        toast.success("Store deactivated");
+        if (currentStoreId === id) setCurrentStoreId(null);
+        setDeleteStore(null);
+        queryClient.invalidateQueries({ queryKey: ["admin-stores"] });
+    }
+  });
 
   const handleOpenAdd = () => {
     setEditingStore(null);
@@ -174,15 +204,12 @@ export function AdminStores() {
     }));
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!form.name.trim() || form.name.trim().length < 2) {
       toast.error("Store name must be at least 2 characters");
       return;
     }
-
-    setSaving(true);
-    try {
-      const payload: Record<string, unknown> = {
+    const payload = {
         name: form.name.trim(),
         domain: form.domain.trim() || null,
         description: form.description.trim() || null,
@@ -190,78 +217,16 @@ export function AdminStores() {
           currency: form.settings.currency || "INR",
           tax_rate: form.settings.tax_rate || "0",
         },
-      };
-
-      const url = editingStore
-        ? `/api/stores/${editingStore.id}`
-        : "/api/stores";
-      const method = editingStore ? "PUT" : "POST";
-
-      const res = await adminFetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        toast.success(editingStore ? "Store updated" : "Store created");
-        setFormOpen(false);
-        fetchStores();
-      } else {
-        const err = await res.json();
-        toast.error(err.error || "Failed to save store");
-      }
-    } catch {
-      toast.error("Failed to save store");
-    } finally {
-      setSaving(false);
-    }
+    };
+    saveMutation.mutate({ id: editingStore?.id, data: payload });
   };
 
-  const handleSwitch = async (store: StoreItem) => {
-    if (store.id === currentStoreId) return;
-    setSwitchingId(store.id);
-    try {
-      const res = await adminFetch(`/api/stores/${store.id}/switch`, {
-        method: "POST",
-      });
-      if (res.ok) {
-        setCurrentStoreId(store.id);
-        toast.success(`Switched to ${store.name}`);
-      } else {
-        const err = await res.json();
-        toast.error(err.error || "Failed to switch store");
-      }
-    } catch {
-      toast.error("Failed to switch store");
-    } finally {
-      setSwitchingId(null);
-    }
+  const handleSwitch = (store: StoreItem) => {
+    switchMutation.mutate(store.id);
   };
 
-  const handleDelete = async () => {
-    if (!deleteStore) return;
-    setDeleting(true);
-    try {
-      const res = await adminFetch(`/api/stores/${deleteStore.id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        toast.success("Store deactivated");
-        if (currentStoreId === deleteStore.id) {
-          setCurrentStoreId(null);
-        }
-        fetchStores();
-        setDeleteStore(null);
-      } else {
-        const err = await res.json();
-        toast.error(err.error || "Failed to delete store");
-      }
-    } catch {
-      toast.error("Failed to delete store");
-    } finally {
-      setDeleting(false);
-    }
+  const handleDelete = () => {
+    if (deleteStore) deleteMutation.mutate(deleteStore.id);
   };
 
   const activeStore = stores.find((s) => s.id === currentStoreId);
@@ -418,15 +383,15 @@ export function AdminStores() {
                         size="sm"
                         variant="outline"
                         className="flex-1"
-                        disabled={isSwitching || !store.isActive}
+                        disabled={switchMutation.isPending || !store.isActive}
                         onClick={() => handleSwitch(store)}
                       >
-                        {isSwitching ? (
+                        {switchMutation.isPending && switchMutation.variables === store.id ? (
                           <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                         ) : (
                           <ArrowRightLeft className="mr-1.5 h-3.5 w-3.5" />
                         )}
-                        {isSwitching ? "Switching..." : "Switch"}
+                        {switchMutation.isPending && switchMutation.variables === store.id ? "Switching..." : "Switch"}
                       </Button>
                     )}
                     <Button
@@ -559,11 +524,11 @@ export function AdminStores() {
             <Button variant="outline" onClick={() => setFormOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? (
+            <Button onClick={handleSave} disabled={saveMutation.isPending}>
+              {saveMutation.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
-              {saving
+              {saveMutation.isPending
                 ? "Saving..."
                 : editingStore
                   ? "Update Store"
@@ -591,10 +556,10 @@ export function AdminStores() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              disabled={deleting}
+              disabled={deleteMutation.isPending}
               className="bg-rose-600 hover:bg-rose-700"
             >
-              {deleting ? "Deleting..." : "Deactivate Store"}
+              {deleteMutation.isPending ? "Deleting..." : "Deactivate Store"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

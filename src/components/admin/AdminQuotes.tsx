@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Search,
   Eye,
@@ -109,11 +110,10 @@ const statusIcons: Record<string, typeof FileText> = {
 const PAGE_SIZE = 20;
 
 export function AdminQuotes() {
-  const [quotes, setQuotes] = useState<Quote[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [pagination, setPagination] = useState<PaginationInfo>({ page: 1, limit: PAGE_SIZE, total: 0, totalPages: 0 });
+  const [page, setPage] = useState(1);
 
   const [viewQuote, setViewQuote] = useState<Quote | null>(null);
   const [statusUpdate, setStatusUpdate] = useState('');
@@ -122,36 +122,23 @@ export function AdminQuotes() {
   const [tax, setTax] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const fetchQuotes = useCallback(async (page = 1) => {
-    try {
-      let url = `/api/admin/quotes?page=${page}&limit=${PAGE_SIZE}`;
-      if (activeFilter !== 'all') {
-        url += `&status=${activeFilter}`;
-      }
-      if (searchTerm) {
-        url += `&search=${encodeURIComponent(searchTerm)}`;
-      }
-      const res = await adminFetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        setQuotes(data.quotes || []);
-        setPagination(data.pagination || { page: 1, limit: PAGE_SIZE, total: 0, totalPages: 0 });
-      }
-    } catch {
-      toast.error('Failed to load quotes');
-    } finally {
-      setLoading(false);
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['admin-quotes', activeFilter, searchTerm, page],
+    queryFn: async () => {
+        let url = `/api/admin/quotes?page=${page}&limit=${PAGE_SIZE}`;
+        if (activeFilter !== 'all') url += `&status=${activeFilter}`;
+        if (searchTerm) url += `&search=${encodeURIComponent(searchTerm)}`;
+        const res = await adminFetch(url);
+        if (!res.ok) throw new Error('Failed');
+        return await res.json();
     }
-  }, [activeFilter, searchTerm]);
+  });
 
-  useEffect(() => {
-    setLoading(true);
-    fetchQuotes(1);
-  }, [fetchQuotes]);
+  const quotes = data?.quotes || [];
+  const pagination = data?.pagination || { page: 1, limit: PAGE_SIZE, total: 0, totalPages: 0 };
 
   const handlePageChange = (newPage: number) => {
-    setLoading(true);
-    fetchQuotes(newPage);
+    setPage(newPage);
   };
 
   const handleViewQuote = (quote: Quote) => {
@@ -162,46 +149,37 @@ export function AdminQuotes() {
     setTax(quote.tax?.toString() || '0');
   };
 
-  const handleSaveQuote = async () => {
-    if (!viewQuote) return;
-    setSaving(true);
-    try {
-      const body: Record<string, unknown> = {};
-      if (statusUpdate !== viewQuote.status) body.status = statusUpdate;
-      if (adminNotes !== (viewQuote.adminNotes || '')) body.adminNotes = adminNotes;
-      if (parseFloat(discount) !== (viewQuote.discount || 0)) body.discount = parseFloat(discount);
-      if (parseFloat(tax) !== (viewQuote.tax || 0)) body.tax = parseFloat(tax);
-
-      if (Object.keys(body).length === 0) {
-        setSaving(false);
-        return;
-      }
-
-      const res = await adminFetch(`/api/admin/quotes/${viewQuote.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      if (res.ok) {
-        const data = await res.json();
+  const saveMutation = useMutation({
+    mutationFn: async (body: any) => {
+        const res = await adminFetch(`/api/admin/quotes/${viewQuote!.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        if (!res.ok) throw new Error('Failed');
+        return await res.json();
+    },
+    onSuccess: (data) => {
         setViewQuote(data.quote);
         setStatusUpdate(data.quote.status);
         setAdminNotes(data.quote.adminNotes || '');
         setDiscount(data.quote.discount?.toString() || '0');
         setTax(data.quote.tax?.toString() || '0');
-        setQuotes(prev =>
-          prev.map(q => (q.id === data.quote.id ? data.quote : q))
-        );
         toast.success('Quote updated successfully');
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to update quote');
-      }
-    } catch {
-      toast.error('Failed to update quote');
-    } finally {
-      setSaving(false);
+        queryClient.invalidateQueries({ queryKey: ['admin-quotes'] });
     }
+  });
+
+  const handleSaveQuote = () => {
+    if (!viewQuote) return;
+    const body: Record<string, unknown> = {};
+    if (statusUpdate !== viewQuote.status) body.status = statusUpdate;
+    if (adminNotes !== (viewQuote.adminNotes || '')) body.adminNotes = adminNotes;
+    if (parseFloat(discount) !== (viewQuote.discount || 0)) body.discount = parseFloat(discount);
+    if (parseFloat(tax) !== (viewQuote.tax || 0)) body.tax = parseFloat(tax);
+
+    if (Object.keys(body).length === 0) return;
+    saveMutation.mutate(body);
   };
 
   return (
@@ -212,7 +190,7 @@ export function AdminQuotes() {
           <h2 className="text-2xl font-bold tracking-tight">Quotes</h2>
           <p className="text-muted-foreground">Manage customer quote requests and pricing</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => fetchQuotes(pagination.page)}>
+        <Button variant="outline" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-quotes'] })}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
@@ -516,8 +494,8 @@ export function AdminQuotes() {
             <Button variant="outline" onClick={() => setViewQuote(null)}>
               Close
             </Button>
-            <Button onClick={handleSaveQuote} disabled={saving}>
-              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button onClick={handleSaveQuote} disabled={saveMutation.isPending}>
+              {saveMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Changes
             </Button>
           </DialogFooter>

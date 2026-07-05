@@ -7,6 +7,7 @@ import {
   cloneElement,
   isValidElement,
 } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAppStore } from "@/lib/store";
 import { StoreHeader } from "./StoreHeader";
 import { StoreFooter } from "./StoreFooter";
@@ -15,7 +16,6 @@ import { CookieConsent } from "./CookieConsent";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { CompareBar } from "./CompareBar";
 import { GlobalEnquiryModal } from "./GlobalEnquiryModal";
-import { useEffect } from "react";
 import { StickyCtaBar } from "./StickyCtaBar";
 import { CustomScripts } from "./CustomScripts";
 
@@ -30,6 +30,7 @@ export function StoreLayout({
   onNavigate,
   children,
 }: StoreLayoutProps) {
+  const { auth, setWishlistIds } = useAppStore();
   const settings = useAppStore((s) => s.settings);
   const fetchSettings = useAppStore((s) => s.fetchSettings);
   const prevPageRef = useRef(currentPage);
@@ -39,6 +40,19 @@ export function StoreLayout({
       fetchSettings();
     }
   }, [settings, fetchSettings]);
+
+  // Sync wishlist IDs for instant UI feedback
+  useQuery({
+    queryKey: ["wishlist-ids"],
+    enabled: !!auth.user,
+    queryFn: async () => {
+        const res = await fetch("/api/wishlist");
+        const data = await res.json();
+        const ids = (data.items || []).map((i: any) => i.productId);
+        setWishlistIds(ids);
+        return ids;
+    }
+  });
 
   useEffect(() => {
     if (!settings) return;

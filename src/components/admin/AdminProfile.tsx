@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { User, Upload, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -19,96 +20,75 @@ interface UserProfile {
 }
 
 export function AdminProfile({ userId }: { userId?: string }) {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const queryClient = useQueryClient();
   const [form, setForm] = useState({ name: '', avatar: '', bio: '' });
 
-  const fetchProfile = useCallback(async () => {
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
-    try {
-      const res = await adminFetch(`/api/users/${userId}`);
-      if (res.ok) {
+  const { data: profile, isLoading: loading } = useQuery({
+    queryKey: ['admin-profile', userId],
+    queryFn: async () => {
+        if (!userId) return null;
+        const res = await adminFetch(`/api/users/${userId}`);
+        if (!res.ok) throw new Error('Failed');
         const data = await res.json();
-        const user = data.user;
-        setProfile(user);
         setForm({
-          name: user.name || '',
-          avatar: user.avatar || '',
-          bio: user.bio || '',
+          name: data.user.name || '',
+          avatar: data.user.avatar || '',
+          bio: data.user.bio || '',
         });
-      }
-    } catch {
-      toast.error('Failed to load profile');
-    } finally {
-      setLoading(false);
+        return data.user as UserProfile;
+    },
+    enabled: !!userId
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: async (data: any) => {
+        const res = await adminFetch(`/api/users/${profile!.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error('Failed');
+    },
+    onSuccess: () => {
+        toast.success('Profile updated');
+        queryClient.invalidateQueries({ queryKey: ['admin-profile', userId] });
     }
-  }, [userId]);
+  });
 
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
-
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const res = await adminFetch('/api/upload', { method: 'POST', body: formData });
-      if (res.ok) {
-        const data = await res.json();
+  const uploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await adminFetch('/api/upload', { method: 'POST', body: formData });
+        if (!res.ok) throw new Error('Failed');
+        return await res.json();
+    },
+    onSuccess: (data) => {
         setForm(prev => ({ ...prev, avatar: data.url }));
         toast.success('Avatar uploaded');
-      } else {
-        toast.error('Failed to upload avatar');
-      }
-    } catch {
-      toast.error('Failed to upload avatar');
-    } finally {
-      setUploading(false);
-      e.target.value = '';
     }
+  });
+
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) uploadMutation.mutate(file);
+    e.target.value = '';
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!form.name.trim()) {
       toast.error('Name is required');
       return;
     }
-    if (!profile?.id) {
-      toast.error('Profile not loaded');
-      return;
-    }
-    setSaving(true);
-    try {
-      const res = await adminFetch(`/api/users/${profile.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name.trim(),
-          avatar: form.avatar || null,
-          bio: form.bio.trim() || null,
-        }),
-      });
-      if (res.ok) {
-        toast.success('Profile updated');
-        fetchProfile();
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to update profile');
-      }
-    } catch {
-      toast.error('Failed to update profile');
-    } finally {
-      setSaving(false);
-    }
+    saveMutation.mutate({
+        name: form.name.trim(),
+        avatar: form.avatar || null,
+        bio: form.bio.trim() || null,
+    });
   };
+
+  const uploading = uploadMutation.isPending;
+  const saving = saveMutation.isPending;
 
   if (loading) {
     return (

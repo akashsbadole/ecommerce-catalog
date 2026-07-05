@@ -44,6 +44,8 @@ export function QuickViewModal({
   onOpenChange,
   onNavigate,
 }: QuickViewModalProps) {
+  const { settings, addToCart } = useAppStore();
+  const isB2C = settings?.store_mode === "b2c";
   const image = getFirstImage(product.images);
   const hasDiscount = product.comparePrice && product.comparePrice > product.price;
   const discountPercent = hasDiscount
@@ -52,7 +54,19 @@ export function QuickViewModal({
 
   const handleViewDetails = () => {
     onOpenChange(false);
-    onNavigate('category', product.Category?.slug || '');
+    onNavigate('product-page', product.slug);
+  };
+
+  const handleAddToCart = () => {
+    addToCart({
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        quantity: 1,
+        image: image || undefined
+    });
+    toast.success("Added to cart");
+    onOpenChange(false);
   };
 
   return (
@@ -134,23 +148,32 @@ export function QuickViewModal({
             </div>
           </div>
 
-          <DialogFooter className="flex-col gap-2 sm:flex-col">
-            <Button
-              className="w-full bg-primary hover:bg-primary/80 text-white"
-              onClick={handleViewDetails}
-            >
-              View Details
-            </Button>
+          <DialogFooter className="flex-col gap-2 sm:flex-col pt-4">
+            {isB2C ? (
+                <Button
+                    className="w-full bg-primary hover:bg-primary/80 text-white h-11 rounded-xl font-bold"
+                    onClick={handleAddToCart}
+                >
+                    <ShoppingCart className="mr-2 h-4 w-4" /> Add to Cart
+                </Button>
+            ) : (
+                <Button
+                    variant="default"
+                    className="w-full h-11 rounded-xl font-bold"
+                    onClick={() => {
+                        onOpenChange(false);
+                        useAppStore.getState().openEnquiryModal(product.name, product.id);
+                    }}
+                >
+                    <Send className="mr-2 h-4 w-4" /> Enquire Now
+                </Button>
+            )}
             <Button
               variant="outline"
-              className="w-full"
-              onClick={() => {
-                onOpenChange(false);
-                useAppStore.getState().openEnquiryModal(product.name, product.id);
-              }}
+              className="w-full h-11 rounded-xl font-bold"
+              onClick={handleViewDetails}
             >
-              <Send className="mr-2 h-4 w-4" />
-              Enquire
+              View Full Details
             </Button>
           </DialogFooter>
         </DialogContent>

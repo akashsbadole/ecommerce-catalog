@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   BarChart,
   Bar,
@@ -19,24 +20,16 @@ import { formatPrice } from "@/lib/pricing";
 import { useAppStore } from "@/lib/store";
 
 export function AdminAnalytics() {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const { settings } = useAppStore();
   const currency = settings?.currency || "INR";
 
-  useEffect(() => {
-    const fetchAnalytics = async () => {
-      try {
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ["admin-analytics"],
+    queryFn: async () => {
         const res = await adminFetch("/api/admin/analytics");
-        if (res.ok) {
-          setData(await res.json());
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAnalytics();
-  }, []);
+        return res.json();
+    }
+  });
 
   if (loading) return <div className="h-96 flex items-center justify-center">Loading analytics...</div>;
   if (!data) return <div>No data available</div>;

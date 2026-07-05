@@ -5,6 +5,7 @@ import Image from "next/image";
 import {
   Menu,
   X,
+  User,
   ShoppingBag,
   FileText,
   Search,
@@ -13,6 +14,7 @@ import {
   Clock,
   Trash2,
   ShoppingCart,
+  Heart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
@@ -69,7 +71,7 @@ interface MenuItem {
 const mainNavLinks: NavItem[] = [];
 
 export function StoreHeader({ onNavigate }: StoreHeaderProps) {
-  const { currentPage, settings, cart } = useAppStore();
+  const { currentPage, settings, cart, wishlistIds } = useAppStore();
   const isB2C = settings?.store_mode === "b2c";
   const cartItemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -476,6 +478,35 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
               <Search className="h-4.5 w-4.5" />
             </Button>
 
+            {/* Account Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => onNavigate("account")}
+              aria-label="Account"
+            >
+              <User className="h-4.5 w-4.5" />
+            </Button>
+
+            {/* Wishlist Button (B2C) */}
+            {isB2C && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 relative"
+                onClick={() => onNavigate("wishlist")}
+                aria-label="View wishlist"
+              >
+                <Heart className="h-4.5 w-4.5" />
+                {wishlistIds.length > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white">
+                    {wishlistIds.length}
+                  </span>
+                )}
+              </Button>
+            )}
+
             {/* Cart Button (B2C) */}
             {isB2C && (
               <Button
@@ -636,6 +667,18 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                       </Button>
                     </SheetClose>
                   )}
+
+                  {/* Account */}
+                  <SheetClose asChild>
+                    <Button
+                      variant="ghost"
+                      className="justify-start text-sm h-9"
+                      onClick={() => onNavigate("account")}
+                    >
+                      <User className="mr-2 h-4 w-4" />
+                      My Account
+                    </Button>
+                  </SheetClose>
 
                   {/* Search */}
                   <SheetClose asChild>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Pencil,
@@ -110,9 +111,7 @@ function getStockBadge(stock: number, threshold: number) {
 }
 
 export function AdminProductVariants({ productId, lowStockThreshold = 10, onVariantsChange }: AdminProductVariantsProps) {
-  const [variants, setVariants] = useState<ProductVariant[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [currency, setCurrency] = useState('INR');
+  const queryClient = useQueryClient();
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -128,40 +127,74 @@ export function AdminProductVariants({ productId, lowStockThreshold = 10, onVari
   const [editingStockId, setEditingStockId] = useState<string | null>(null);
   const [inlineStock, setInlineStock] = useState('');
 
-  const fetchVariants = async () => {
-    try {
-      const res = await adminFetch(`/api/products/${productId}/variants`);
-      if (res.ok) {
+  const { data: variants = [], isLoading: loading } = useQuery({
+    queryKey: ['admin-variants', productId],
+    queryFn: async () => {
+        const res = await adminFetch(`/api/products/${productId}/variants`);
+        if (!res.ok) throw new Error('Failed');
         const data = await res.json();
-        setVariants(data.variants || []);
         onVariantsChange?.(data.variants || []);
-      }
-    } catch {
-      toast.error('Failed to load variants');
-    } finally {
-      setLoading(false);
+        return data.variants || [];
     }
-  };
+  });
 
-  useEffect(() => {
-    fetchVariants();
-  }, [productId]);
-
-  // Fetch store currency
-  useEffect(() => {
-    async function fetchCurrency() {
-      try {
+  const { data: currency = 'INR' } = useQuery({
+    queryKey: ['admin-currency-minimal'],
+    queryFn: async () => {
         const res = await adminFetch('/api/store/settings');
-        if (res.ok) {
-          const data = await res.json();
-          const settings = data.settings || [];
-          const curr = settings.find((s: any) => s.key === 'currency');
-          if (curr?.value) setCurrency(curr.value);
-        }
-      } catch { /* ignore */ }
+        const data = await res.json();
+        const settings = data.settings || [];
+        return settings.find((s: any) => s.key === 'currency')?.value || 'INR';
     }
-    fetchCurrency();
-  }, []);
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: async ({ id, data }: { id?: string, data: any }) => {
+        const url = id
+            ? `/api/products/${productId}/variants/${id}`
+            : `/api/products/${productId}/variants`;
+        const res = await adminFetch(url, {
+            method: id ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error('Failed');
+        return res.json();
+    },
+    onSuccess: () => {
+        toast.success(editingVariant ? 'Variant updated' : 'Variant created');
+        setDialogOpen(false);
+        queryClient.invalidateQueries({ queryKey: ['admin-variants', productId] });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+        const res = await adminFetch(`/api/products/${productId}/variants/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed');
+    },
+    onSuccess: () => {
+        toast.success('Variant deleted');
+        setDeleteId(null);
+        queryClient.invalidateQueries({ queryKey: ['admin-variants', productId] });
+    }
+  });
+
+  const inlineStockMutation = useMutation({
+    mutationFn: async ({ id, stock }: { id: string, stock: number }) => {
+        const res = await adminFetch(`/api/products/${productId}/variants/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ stock }),
+        });
+        if (!res.ok) throw new Error('Failed');
+    },
+    onSuccess: () => {
+        toast.success('Stock updated');
+        setEditingStockId(null);
+        queryClient.invalidateQueries({ queryKey: ['admin-variants', productId] });
+    }
+  });
 
   const formatPriceValue = (price: number | null) => {
     if (price === null || price === undefined) return '—';
@@ -190,15 +223,12 @@ export function AdminProductVariants({ productId, lowStockThreshold = 10, onVari
     setDialogOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!form.name.trim()) {
       toast.error('Variant name is required');
       return;
     }
-
-    setSaving(true);
-    try {
-      const payload = {
+    const payload = {
         name: form.name.trim(),
         sku: form.sku.trim() || null,
         price: form.price || null,
@@ -208,79 +238,21 @@ export function AdminProductVariants({ productId, lowStockThreshold = 10, onVari
         images: form.images || '[]',
         sortOrder: parseInt(form.sortOrder) || 0,
         isActive: form.isActive,
-      };
-
-      const url = editingVariant
-        ? `/api/products/${productId}/variants/${editingVariant.id}`
-        : `/api/products/${productId}/variants`;
-      const method = editingVariant ? 'PUT' : 'POST';
-
-      const res = await adminFetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        toast.success(editingVariant ? 'Variant updated' : 'Variant created');
-        setDialogOpen(false);
-        fetchVariants();
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to save variant');
-      }
-    } catch {
-      toast.error('Failed to save variant');
-    } finally {
-      setSaving(false);
-    }
+    };
+    saveMutation.mutate({ id: editingVariant?.id, data: payload });
   };
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    setDeleting(true);
-    try {
-      const res = await adminFetch(`/api/products/${productId}/variants/${deleteId}`, {
-        method: 'DELETE',
-      });
-      if (res.ok) {
-        toast.success('Variant deleted');
-        fetchVariants();
-        setDeleteId(null);
-      } else {
-        toast.error('Failed to delete variant');
-      }
-    } catch {
-      toast.error('Failed to delete variant');
-    } finally {
-      setDeleting(false);
-    }
+  const handleDelete = () => {
+    if (deleteId) deleteMutation.mutate(deleteId);
   };
 
-  const handleInlineStockSave = async (variantId: string) => {
+  const handleInlineStockSave = (variantId: string) => {
     const newStock = parseInt(inlineStock);
     if (isNaN(newStock) || newStock < 0) {
       toast.error('Enter a valid stock quantity');
       return;
     }
-
-    try {
-      const res = await adminFetch(`/api/products/${productId}/variants/${variantId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stock: newStock }),
-      });
-
-      if (res.ok) {
-        toast.success('Stock updated');
-        setEditingStockId(null);
-        fetchVariants();
-      } else {
-        toast.error('Failed to update stock');
-      }
-    } catch {
-      toast.error('Failed to update stock');
-    }
+    inlineStockMutation.mutate({ id: variantId, stock: newStock });
   };
 
   const startInlineStockEdit = (variant: ProductVariant) => {
@@ -532,8 +504,8 @@ export function AdminProductVariants({ productId, lowStockThreshold = 10, onVari
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? 'Saving...' : editingVariant ? 'Update Variant' : 'Create Variant'}
+            <Button onClick={handleSave} disabled={saveMutation.isPending}>
+              {saveMutation.isPending ? 'Saving...' : editingVariant ? 'Update Variant' : 'Create Variant'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -552,10 +524,10 @@ export function AdminProductVariants({ productId, lowStockThreshold = 10, onVari
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              disabled={deleting}
+              disabled={deleteMutation.isPending}
               className="bg-rose-600 hover:bg-rose-700 text-white"
             >
-              {deleting ? 'Deleting...' : 'Delete'}
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

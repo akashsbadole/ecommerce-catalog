@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Search,
@@ -166,11 +167,9 @@ function parseTags(tags: string | null): string[] {
 }
 
 export function AdminBlog() {
-  const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [authors, setAuthors] = useState<Author[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
-  const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 12, total: 0, totalPages: 1 });
+  const [page, setPage] = useState(1);
 
   // Selection for bulk actions
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -198,58 +197,38 @@ export function AdminBlog() {
   const [importing, setImporting] = useState(false);
   const [exporting, setExporting] = useState(false);
 
-  const fetchPosts = useCallback(async (page = 1) => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams({ all: 'true', page: String(page), limit: '12' });
-      if (activeTab === 'trashed') params.set('trashed', 'true');
-      if (searchTerm) params.set('search', searchTerm);
-      const res = await adminFetch(`/api/blog?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        setPosts(data.blogPosts || []);
-        setPagination(data.pagination || { page: 1, limit: 12, total: 0, totalPages: 1 });
-      }
-    } catch {
-      toast.error('Failed to load blog posts');
-    } finally {
-      setLoading(false);
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['admin-blog-posts', activeTab, searchTerm, page],
+    queryFn: async () => {
+        const params = new URLSearchParams({ all: 'true', page: String(page), limit: '12' });
+        if (activeTab === 'trashed') params.set('trashed', 'true');
+        if (searchTerm) params.set('search', searchTerm);
+        const res = await adminFetch(`/api/blog?${params.toString()}`);
+        if (!res.ok) throw new Error('Failed');
+        return await res.json();
     }
-  }, [searchTerm, activeTab]);
+  });
 
-  const fetchAuthors = useCallback(async () => {
-    try {
-      const res = await adminFetch('/api/users?all=true');
-      if (res.ok) {
+  const posts = data?.blogPosts || [];
+  const pagination = data?.pagination || { page: 1, limit: 12, total: 0, totalPages: 1 };
+
+  const { data: authors = [] } = useQuery({
+    queryKey: ['admin-authors-minimal'],
+    queryFn: async () => {
+        const res = await adminFetch('/api/users?all=true');
         const data = await res.json();
-        const users = data.users || [];
-        setAuthors(users.map((u: { id: string; name: string; email: string }) => ({
-          id: u.id,
-          name: u.name,
-          email: u.email,
-        })));
-      }
-    } catch {
-      // ignore
+        return (data.users || []).map((u: any) => ({ id: u.id, name: u.name, email: u.email }));
     }
-  }, []);
-
-  useEffect(() => {
-    fetchPosts(1);
-  }, [fetchPosts]);
-
-  useEffect(() => {
-    fetchAuthors();
-  }, [fetchAuthors]);
+  });
 
   const handleSearch = () => {
     setSelectedIds([]);
-    fetchPosts(1);
+    setPage(1);
   };
 
   const handlePageChange = (newPage: number) => {
     setSelectedIds([]);
-    fetchPosts(newPage);
+    setPage(newPage);
   };
 
   const toggleSelect = (id: string) => {
@@ -266,29 +245,27 @@ export function AdminBlog() {
     }
   };
 
-  const handleBulkAction = async (action: 'publish' | 'unpublish' | 'delete') => {
-    if (selectedIds.length === 0) return;
-    setBulkLoading(true);
-    try {
-      const res = await adminFetch('/api/blog/bulk', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: selectedIds, action }),
-      });
-      if (res.ok) {
-        const data = await res.json();
+  const bulkMutation = useMutation({
+    mutationFn: async ({ ids, action }: { ids: string[], action: string }) => {
+        const res = await adminFetch('/api/blog/bulk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids, action }),
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Failed');
+        return res.json();
+    },
+    onSuccess: (data) => {
         toast.success(data.message);
         setSelectedIds([]);
-        fetchPosts(pagination.page);
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Bulk action failed');
-      }
-    } catch {
-      toast.error('Bulk action failed');
-    } finally {
-      setBulkLoading(false);
-    }
+        queryClient.invalidateQueries({ queryKey: ['admin-blog-posts'] });
+    },
+    onError: (err: any) => toast.error(err.message)
+  });
+
+  const handleBulkAction = (action: 'publish' | 'unpublish' | 'delete') => {
+    if (selectedIds.length === 0) return;
+    bulkMutation.mutate({ ids: selectedIds, action });
   };
 
   const handleOpenAdd = () => {
@@ -335,15 +312,32 @@ export function AdminBlog() {
     }));
   };
 
+  const saveMutation = useMutation({
+    mutationFn: async ({ id, data }: { id?: string, data: any }) => {
+        const url = id ? `/api/blog/${id}` : '/api/blog';
+        const res = await adminFetch(url, {
+            method: id ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Failed');
+        return res.json();
+    },
+    onSuccess: () => {
+        toast.success(editingPost ? 'Post updated' : 'Post created');
+        setFormOpen(false);
+        queryClient.invalidateQueries({ queryKey: ['admin-blog-posts'] });
+    },
+    onError: (err: any) => toast.error(err.message)
+  });
+
   const handleSave = async () => {
     if (!form.title.trim()) {
       toast.error('Post title is required');
       return;
     }
 
-    setSaving(true);
-    try {
-      const payload = {
+    const payload = {
         title: form.title.trim(),
         slug: form.slug.trim() || generateSlug(form.title),
         excerpt: form.excerpt.trim() || null,
@@ -356,32 +350,9 @@ export function AdminBlog() {
         customSchema: form.customSchema.trim() || null,
         tags: form.tags || null,
         isPublished: form.isPublished,
-      };
+    };
 
-      const url = editingPost
-        ? `/api/blog/${editingPost.id}`
-        : '/api/blog';
-      const method = editingPost ? 'PUT' : 'POST';
-
-      const res = await adminFetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        toast.success(editingPost ? 'Post updated' : 'Post created');
-        setFormOpen(false);
-        fetchPosts(pagination.page);
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to save post');
-      }
-    } catch {
-      toast.error('Failed to save post');
-    } finally {
-      setSaving(false);
-    }
+    saveMutation.mutate({ id: editingPost?.id, data: payload });
   };
 
   const handleCSVImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -401,7 +372,7 @@ export function AdminBlog() {
         if (data.errors && data.errors.length > 0) {
           toast.warning(`${data.errors.length} error(s) during import`);
         }
-        fetchPosts(1);
+        queryClient.invalidateQueries({ queryKey: ['admin-blog-posts'] });
       } else {
         const err = await res.json();
         toast.error(err.error || 'Import failed');
@@ -437,61 +408,55 @@ export function AdminBlog() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    setDeleting(true);
-    try {
-      const res = await adminFetch(`/api/blog/${deleteId}`, { method: 'DELETE' });
-      if (res.ok) {
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+        const res = await adminFetch(`/api/blog/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed');
+    },
+    onSuccess: () => {
         toast.success('Post moved to trash');
-        setPosts(prev => prev.filter(p => p.id !== deleteId));
         setDeleteId(null);
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to delete post');
-      }
-    } catch {
-      toast.error('Failed to delete post');
-    } finally {
-      setDeleting(false);
+        queryClient.invalidateQueries({ queryKey: ['admin-blog-posts'] });
     }
-  };
+  });
 
-  const handleRestore = async (id: string) => {
-    try {
-      const res = await adminFetch(`/api/blog/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ restore: true }),
-      });
-      if (res.ok) {
+  const restoreMutation = useMutation({
+    mutationFn: async (id: string) => {
+        const res = await adminFetch(`/api/blog/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ restore: true }),
+        });
+        if (!res.ok) throw new Error('Failed');
+    },
+    onSuccess: () => {
         toast.success('Post restored');
-        setPosts(prev => prev.filter(p => p.id !== id));
-      } else {
-        toast.error('Failed to restore post');
-      }
-    } catch {
-      toast.error('Failed to restore post');
+        queryClient.invalidateQueries({ queryKey: ['admin-blog-posts'] });
     }
+  });
+
+  const permanentDeleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+        const res = await adminFetch(`/api/blog/${id}?permanent=true`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed');
+    },
+    onSuccess: () => {
+        toast.success('Post permanently deleted');
+        setPermanentDeleteId(null);
+        queryClient.invalidateQueries({ queryKey: ['admin-blog-posts'] });
+    }
+  });
+
+  const handleDelete = () => {
+    if (deleteId) deleteMutation.mutate(deleteId);
   };
 
-  const handlePermanentDelete = async () => {
-    if (!permanentDeleteId) return;
-    setPermanentDeleting(true);
-    try {
-      const res = await adminFetch(`/api/blog/${permanentDeleteId}?permanent=true`, { method: 'DELETE' });
-      if (res.ok) {
-        toast.success('Post permanently deleted');
-        setPosts(prev => prev.filter(p => p.id !== permanentDeleteId));
-        setPermanentDeleteId(null);
-      } else {
-        toast.error('Failed to delete post');
-      }
-    } catch {
-      toast.error('Failed to delete post');
-    } finally {
-      setPermanentDeleting(false);
-    }
+  const handleRestore = (id: string) => {
+    restoreMutation.mutate(id);
+  };
+
+  const handlePermanentDelete = () => {
+    if (permanentDeleteId) permanentDeleteMutation.mutate(permanentDeleteId);
   };
 
   return (
@@ -551,7 +516,7 @@ export function AdminBlog() {
             className="pl-9"
           />
         </div>
-        <Button variant="outline" onClick={() => { setLoading(true); fetchPosts(pagination.page); }}>
+        <Button variant="outline" onClick={() => { queryClient.invalidateQueries({ queryKey: ['admin-blog-posts'] }); }}>
           <RefreshCw className="h-4 w-4" />
         </Button>
       </div>
@@ -566,7 +531,7 @@ export function AdminBlog() {
             <Button
               size="sm"
               variant="outline"
-              disabled={bulkLoading}
+              disabled={bulkMutation.isPending}
               onClick={() => handleBulkAction('publish')}
             >
               <Eye className="mr-1 h-3.5 w-3.5" />
@@ -575,7 +540,7 @@ export function AdminBlog() {
             <Button
               size="sm"
               variant="outline"
-              disabled={bulkLoading}
+              disabled={bulkMutation.isPending}
               onClick={() => handleBulkAction('unpublish')}
             >
               <EyeOff className="mr-1 h-3.5 w-3.5" />
@@ -584,7 +549,7 @@ export function AdminBlog() {
             <Button
               size="sm"
               variant="outline"
-              disabled={bulkLoading}
+              disabled={bulkMutation.isPending}
               className="text-rose-600 hover:text-rose-700"
               onClick={() => handleBulkAction('delete')}
             >
@@ -996,8 +961,8 @@ export function AdminBlog() {
             <Button variant="outline" onClick={() => setFormOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? 'Saving...' : editingPost ? 'Update Post' : 'Create Post'}
+            <Button onClick={handleSave} disabled={saveMutation.isPending}>
+              {saveMutation.isPending ? 'Saving...' : editingPost ? 'Update Post' : 'Create Post'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1016,10 +981,10 @@ export function AdminBlog() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              disabled={deleting}
+              disabled={deleteMutation.isPending}
               className="bg-rose-600 hover:bg-rose-700"
             >
-              {deleting ? 'Moving...' : 'Move to Trash'}
+              {deleteMutation.isPending ? 'Moving...' : 'Move to Trash'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1038,10 +1003,10 @@ export function AdminBlog() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handlePermanentDelete}
-              disabled={permanentDeleting}
+              disabled={permanentDeleteMutation.isPending}
               className="bg-rose-600 hover:bg-rose-700"
             >
-              {permanentDeleting ? 'Deleting...' : 'Permanent Delete'}
+              {permanentDeleteMutation.isPending ? 'Deleting...' : 'Permanent Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

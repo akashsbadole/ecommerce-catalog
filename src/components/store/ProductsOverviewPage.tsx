@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { Package, ChevronRight, ShoppingBag } from "lucide-react";
 import { StoreLoading } from "./StoreLoading";
@@ -21,23 +22,13 @@ interface ProductsOverviewPageProps {
 }
 
 export function ProductsOverviewPage({ onNavigate }: ProductsOverviewPageProps) {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function load() {
-      try {
+  const { data: categories = [], isLoading: loading } = useQuery({
+    queryKey: ["categories-all"],
+    queryFn: async () => {
         const res = await fetch("/api/categories?all=true");
-        if (res.ok) {
-          const data = await res.json();
-          setCategories(data.categories || []);
-        }
-      } finally {
-        setLoading(false);
-      }
+        return (await res.json()).categories || [];
     }
-    load();
-  }, []);
+  });
 
   return (
     <div className="bg-background min-h-screen">

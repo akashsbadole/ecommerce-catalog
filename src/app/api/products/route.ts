@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
     const inStock = searchParams.get('inStock');
+    const stockStatus = searchParams.get('stockStatus');
 
     if (minPrice) {
       const gte = parseFloat(minPrice);
@@ -59,8 +60,10 @@ export async function GET(request: NextRequest) {
       const lte = parseFloat(maxPrice);
       where.price = typeof where.price === 'object' ? { ...where.price, lte } : { lte };
     }
-    if (inStock === 'true') {
+    if (inStock === 'true' || stockStatus === 'in_stock') {
       where.stock = { gt: 0 };
+    } else if (stockStatus === 'out_of_stock') {
+      where.stock = { lte: 0 };
     }
 
     if (featured !== null && featured !== undefined) {

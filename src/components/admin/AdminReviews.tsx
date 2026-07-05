@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Star, CheckCircle2, XCircle, Trash2, Search, Loader2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,54 +18,48 @@ import { adminFetch } from "@/lib/admin-fetch";
 import { format } from "date-fns";
 
 export function AdminReviews() {
-  const [reviews, setReviews] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchReviews = async () => {
-    try {
-      const res = await adminFetch("/api/admin/reviews");
-      if (res.ok) {
-        const data = await res.json();
-        setReviews(data.reviews || []);
-      }
-    } catch {
-      toast.error("Failed to load reviews");
-    } finally {
-      setLoading(false);
+  const { data: reviews = [], isLoading: loading } = useQuery({
+    queryKey: ["admin-reviews"],
+    queryFn: async () => {
+        const res = await adminFetch("/api/admin/reviews");
+        return (await res.json()).reviews || [];
     }
-  };
+  });
 
-  useEffect(() => {
-    fetchReviews();
-  }, []);
-
-  const updateStatus = async (id: string, isActive: boolean) => {
-    try {
-      const res = await adminFetch(`/api/admin/reviews/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive }),
-      });
-      if (res.ok) {
-        toast.success(isActive ? "Review approved" : "Review hidden");
-        fetchReviews();
-      }
-    } catch {
-      toast.error("Failed to update review");
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: string, isActive: boolean }) => {
+        const res = await adminFetch(`/api/admin/reviews/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ isActive }),
+        });
+        if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: (_, variables) => {
+        toast.success(variables.isActive ? "Review approved" : "Review hidden");
+        queryClient.invalidateQueries({ queryKey: ["admin-reviews"] });
     }
-  };
+  });
 
-  const deleteReview = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this review?")) return;
-    try {
-      const res = await adminFetch(`/api/admin/reviews/${id}`, { method: "DELETE" });
-      if (res.ok) {
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+        const res = await adminFetch(`/api/admin/reviews/${id}`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: () => {
         toast.success("Review deleted");
-        fetchReviews();
-      }
-    } catch {
-      toast.error("Failed to delete review");
+        queryClient.invalidateQueries({ queryKey: ["admin-reviews"] });
     }
+  });
+
+  const updateStatus = (id: string, isActive: boolean) => {
+    updateStatusMutation.mutate({ id, isActive });
+  };
+
+  const deleteReview = (id: string) => {
+    if (confirm("Are you sure?")) deleteMutation.mutate(id);
   };
 
   return (

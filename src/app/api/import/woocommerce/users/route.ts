@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
                     name,
                     role: 'buyer',
                     isActive: true,
+                    currentStoreId: storeId || null,
                     // Note: No password imported from CSV
                 }
             });

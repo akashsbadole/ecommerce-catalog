@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Heart, Trash2, ShoppingCart, ShoppingBag } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
@@ -10,39 +11,31 @@ import { toast } from "sonner";
 
 export function WishlistPage() {
   const { auth, settings, navigate, addToCart } = useAppStore();
-  const [items, setItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const currency = settings?.currency || "INR";
 
-  const fetchWishlist = async () => {
-    if (!auth.user) return;
-    try {
-      const res = await fetch("/api/wishlist");
-      if (res.ok) {
-        const data = await res.json();
-        setItems(data.items || []);
-      }
-    } catch (error) {
-      console.error("Wishlist fetch error:", error);
-    } finally {
-      setLoading(false);
+  const { data: items = [], isLoading: loading } = useQuery({
+    queryKey: ["wishlist"],
+    enabled: !!auth.user,
+    queryFn: async () => {
+        const res = await fetch("/api/wishlist");
+        return (await res.json()).items || [];
     }
-  };
+  });
 
-  useEffect(() => {
-    fetchWishlist();
-  }, [auth.user]);
-
-  const removeFromWishlist = async (productId: string) => {
-    try {
-      const res = await fetch(`/api/wishlist?productId=${productId}`, { method: "DELETE" });
-      if (res.ok) {
-        setItems((prev) => prev.filter((i) => i.productId !== productId));
+  const deleteMutation = useMutation({
+    mutationFn: async (productId: string) => {
+        const res = await fetch(`/api/wishlist?productId=${productId}`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: () => {
         toast.success("Removed from wishlist");
-      }
-    } catch {
-      toast.error("Failed to remove item");
+        queryClient.invalidateQueries({ queryKey: ["wishlist"] });
     }
+  });
+
+  const removeFromWishlist = (productId: string) => {
+    deleteMutation.mutate(productId);
   };
 
   const handleMoveToCart = (item: any) => {

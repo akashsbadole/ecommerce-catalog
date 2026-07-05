@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import {
   ClipboardList,
@@ -67,46 +68,31 @@ function parseDetails(details: string | null): string {
 }
 
 export function AdminActivityLog() {
-  const [logs, setLogs] = useState<ActivityLogEntry[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
   const [entityFilter, setEntityFilter] = useState('all');
   const [expandedDetails, setExpandedDetails] = useState<Set<string>>(new Set());
 
   const limit = 20;
 
-  const fetchLogs = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        page: String(page),
-        limit: String(limit),
-      });
-      if (entityFilter && entityFilter !== 'all') {
-        params.set('entity', entityFilter);
-      }
-
-      const res = await adminFetch(`/api/activity-logs?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        setLogs(data.activityLogs || []);
-        setTotalPages(data.pagination?.totalPages || 1);
-        setTotal(data.pagination?.total || 0);
-      } else {
-        toast.error('Failed to load activity logs');
-      }
-    } catch {
-      toast.error('Failed to load activity logs');
-    } finally {
-      setLoading(false);
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['admin-activity-logs', page, entityFilter],
+    queryFn: async () => {
+        const params = new URLSearchParams({
+            page: String(page),
+            limit: String(limit),
+        });
+        if (entityFilter && entityFilter !== 'all') {
+            params.set('entity', entityFilter);
+        }
+        const res = await adminFetch(`/api/activity-logs?${params.toString()}`);
+        if (!res.ok) throw new Error('Failed');
+        return res.json();
     }
-  }, [page, entityFilter]);
+  });
 
-  useEffect(() => {
-    fetchLogs();
-  }, [fetchLogs]);
+  const logs = data?.activityLogs || [];
+  const totalPages = data?.pagination?.totalPages || 1;
+  const total = data?.pagination?.total || 0;
 
   const handleEntityFilterChange = (value: string) => {
     setEntityFilter(value);

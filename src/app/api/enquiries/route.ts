@@ -103,7 +103,6 @@ export async function POST(request: NextRequest) {
     }
     const validatedData = result.data;
 
-    const storeId = getStoreId(request);
     const enquiry = await db.enquiry.create({
       data: {
         name: validatedData.name,

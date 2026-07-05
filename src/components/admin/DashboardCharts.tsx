@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   AreaChart,
   Area,
@@ -66,27 +67,15 @@ function CustomTooltip({
 }
 
 export function DashboardCharts() {
-  const [data, setData] = useState<DashboardChartData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
+  const { data: rawData, isLoading: loading } = useQuery({
+    queryKey: ['admin-dashboard-stats-charts'],
+    queryFn: async () => {
         const res = await adminFetch('/api/dashboard/stats');
-        if (res.ok && !cancelled) {
-          const json = await res.json();
-          setData(json);
-        }
-      } catch {
-        // ignore
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+        return res.json();
     }
-    load();
-    return () => { cancelled = true; };
-  }, []);
+  });
+
+  const data = rawData as DashboardChartData | null;
 
   const weekDelta = data
     ? data.enquiryStats.thisWeek - data.enquiryStats.lastWeek

@@ -19,6 +19,7 @@ import { CartPage } from "./CartPage";
 import { CheckoutPage } from "./CheckoutPage";
 import { OrderSuccessPage } from "./OrderSuccessPage";
 import { OrdersPage } from "./OrdersPage";
+import { AccountPage } from "./AccountPage";
 import { WishlistPage } from "./WishlistPage";
 import { FaqPage } from "./FaqPage";
 import { ComparisonPage } from "./ComparisonPage";
@@ -49,6 +50,8 @@ const routeFromPath = (path: string, navigate: (page: string, data?: unknown) =>
     navigate("checkout");
   } else if (segments[0] === "order-success" && segments[1]) {
     navigate("order-success", segments[1]);
+  } else if (segments[0] === "account") {
+    navigate("account");
   } else if (segments[0] === "wishlist") {
     navigate("wishlist");
   } else if (segments[0] === "faq") {
@@ -153,6 +156,8 @@ export function StoreShell({ initialPage, children }: StoreShellProps) {
         return <OrderSuccessPage orderId={(page as any).orderId} />;
       case "orders":
         return <OrdersPage />;
+      case "account":
+        return <AccountPage />;
       case "wishlist":
         return <WishlistPage />;
       case "faq":

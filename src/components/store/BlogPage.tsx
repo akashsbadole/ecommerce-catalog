@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Calendar, ImageIcon, Search, Tag, Send } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -41,38 +42,25 @@ function parseTags(tagsStr: string | null): string[] {
 }
 
 export function BlogPage({ onNavigate }: BlogPageProps) {
-  const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [allTags, setAllTags] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const params = new URLSearchParams({ published: "true" });
-        const res = await fetch(`/api/blog?${params.toString()}`);
-        if (res.ok) {
-          const data = await res.json();
-          const fetchedPosts = data.blogPosts || [];
-          setPosts(fetchedPosts);
+  const { data: posts = [], isLoading: loading } = useQuery({
+    queryKey: ["blog-posts"],
+    queryFn: async () => {
+        const res = await fetch("/api/blog?published=true");
+        const data = await res.json();
+        return data.blogPosts || [];
+    }
+  });
 
-          // Extract all unique tags
-          const tagSet = new Set<string>();
-          fetchedPosts.forEach((post: BlogPost) => {
-            parseTags(post.tags).forEach((tag) => tagSet.add(tag));
-          });
-          setAllTags(Array.from(tagSet).sort());
-        }
-      } catch {
-        // ignore
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPosts();
-  }, []);
+  const allTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    posts.forEach((post: BlogPost) => {
+        parseTags(post.tags).forEach((tag) => tagSet.add(tag));
+    });
+    return Array.from(tagSet).sort();
+  }, [posts]);
 
   const filteredPosts = useMemo(() => {
     let result = posts;

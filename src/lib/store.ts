@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { toast } from "sonner";
 
 export type Page =
   | { type: "home" }
@@ -97,6 +98,15 @@ interface AppState {
   addToCompare: (product: any) => void;
   removeFromCompare: (productId: string) => void;
   clearCompare: () => void;
+
+  // Recently Viewed
+  recentlyViewed: any[];
+  addToRecentlyViewed: (product: any) => void;
+
+  // Wishlist (IDs for instant UI feedback)
+  wishlistIds: string[];
+  setWishlistIds: (ids: string[]) => void;
+  toggleWishlistId: (id: string) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -374,15 +384,36 @@ export const useAppStore = create<AppState>()(
       addToCompare: (product) => {
         const list = get().compareList;
         if (list.length >= 4) {
-            toast.error("You can compare up to 4 products");
-            return;
+          toast.error("You can compare up to 4 products");
+          return;
         }
-        if (!list.find(p => p.id === product.id)) {
-            set({ compareList: [...list, product] });
+        if (!list.find((p) => p.id === product.id)) {
+          set({ compareList: [...list, product] });
         }
       },
-      removeFromCompare: (id) => set({ compareList: get().compareList.filter(p => p.id !== id) }),
+      removeFromCompare: (id) =>
+        set({ compareList: get().compareList.filter((p) => p.id !== id) }),
       clearCompare: () => set({ compareList: [] }),
+
+      recentlyViewed: [],
+      addToRecentlyViewed: (product) => {
+        const list = get().recentlyViewed;
+        const filtered = list.filter((p) => p.id !== product.id);
+        set({
+          recentlyViewed: [product, ...filtered].slice(0, 10),
+        });
+      },
+
+      wishlistIds: [],
+      setWishlistIds: (ids) => set({ wishlistIds: ids }),
+      toggleWishlistId: (id) => {
+        const ids = get().wishlistIds;
+        if (ids.includes(id)) {
+          set({ wishlistIds: ids.filter((x) => x !== id) });
+        } else {
+          set({ wishlistIds: [...ids, id] });
+        }
+      },
     }),
     {
       name: "app-storage",
@@ -392,6 +423,9 @@ export const useAppStore = create<AppState>()(
         adminToken: state.adminToken,
         auth: state.auth,
         cart: state.cart,
+        recentlyViewed: state.recentlyViewed,
+        wishlistIds: state.wishlistIds,
+        compareList: state.compareList,
       }),
     },
   ),

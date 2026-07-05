@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Trash2, Pencil, Search, Loader2, ImageIcon } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,46 +25,50 @@ import {
 import { adminFetch } from "@/lib/admin-fetch";
 
 export function AdminBrands() {
-  const [brands, setBrands] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({ name: "", slug: "", description: "", image: "" });
 
-  const fetchBrands = async () => {
-    try {
-      const res = await adminFetch("/api/brands");
-      if (res.ok) {
-        const data = await res.json();
-        setBrands(data.brands || []);
-      }
-    } finally {
-      setLoading(false);
+  const { data: brands = [], isLoading: loading } = useQuery({
+    queryKey: ["admin-brands"],
+    queryFn: async () => {
+        const res = await adminFetch("/api/brands");
+        return (await res.json()).brands || [];
     }
-  };
+  });
 
-  useEffect(() => {
-    fetchBrands();
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      const res = await adminFetch("/api/brands", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      if (res.ok) {
+  const createMutation = useMutation({
+    mutationFn: async (data: any) => {
+        const res = await adminFetch("/api/brands", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error("Failed");
+        return res.json();
+    },
+    onSuccess: () => {
         toast.success("Brand created");
         setOpen(false);
         setFormData({ name: "", slug: "", description: "", image: "" });
-        fetchBrands();
-      }
-    } finally {
-      setSaving(false);
+        queryClient.invalidateQueries({ queryKey: ["admin-brands"] });
     }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+        const res = await adminFetch(`/api/brands/${id}`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: () => {
+        toast.success("Brand deleted");
+        queryClient.invalidateQueries({ queryKey: ["admin-brands"] });
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    createMutation.mutate(formData);
   };
 
   return (
@@ -104,7 +109,14 @@ export function AdminBrands() {
                   <TableCell className="font-medium">{brand.name}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">{brand.slug}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive"
+                        onClick={() => { if(confirm("Are you sure?")) deleteMutation.mutate(brand.id); }}
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -133,8 +145,8 @@ export function AdminBrands() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={saving}>
-                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" disabled={createMutation.isPending}>
+                {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Save Brand
               </Button>
             </DialogFooter>

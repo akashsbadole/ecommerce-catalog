@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
   Pencil,
@@ -139,8 +140,7 @@ function generateSlug(name: string): string {
 }
 
 export function AdminCategories() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -191,32 +191,20 @@ export function AdminCategories() {
   const [bulkLoading, setBulkLoading] = useState(false);
 
   // Product picker state
-  const [allProducts, setAllProducts] = useState<
-    { id: string; name: string }[]
-  >([]);
   const [productPickerOpen, setProductPickerOpen] = useState(false);
 
   // CSV import/export state
   const [importing, setImporting] = useState(false);
   const [exporting, setExporting] = useState(false);
 
-  const fetchCategories = useCallback(async () => {
-    try {
-      const res = await adminFetch("/api/categories?all=true");
-      if (res.ok) {
-        const data = await res.json();
-        setCategories(data.categories || []);
-      }
-    } catch {
-      toast.error("Failed to load categories");
-    } finally {
-      setLoading(false);
+  const { data: categories = [], isLoading: loading } = useQuery({
+    queryKey: ["admin-categories"],
+    queryFn: async () => {
+        const res = await adminFetch("/api/categories?all=true");
+        if (!res.ok) throw new Error("Failed");
+        return (await res.json()).categories || [];
     }
-  }, []);
-
-  useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
+  });
 
   const resetCategoryFields = () => {
     setCategoryFields({
@@ -259,23 +247,15 @@ export function AdminCategories() {
     setFormOpen(true);
   };
 
-  // Fetch all products when form opens
-  useEffect(() => {
-    if (formOpen) {
-      fetch("/api/products?limit=1000")
-        .then((r) => (r.ok ? r.json() : null))
-        .then((data) => {
-          if (data?.products)
-            setAllProducts(
-              data.products.map((p: { id: string; name: string }) => ({
-                id: p.id,
-                name: p.name,
-              })),
-            );
-        })
-        .catch(() => {});
-    }
-  }, [formOpen]);
+  const { data: allProducts = [] } = useQuery({
+    queryKey: ["admin-products-minimal"],
+    queryFn: async () => {
+        const res = await fetch("/api/products?limit=1000");
+        const data = await res.json();
+        return (data.products || []).map((p: any) => ({ id: p.id, name: p.name }));
+    },
+    enabled: formOpen
+  });
 
   const handleOpenEdit = async (cat: Category) => {
     setEditingCategory(cat);
@@ -355,15 +335,32 @@ export function AdminCategories() {
     }));
   };
 
+  const saveMutation = useMutation({
+    mutationFn: async ({ id, data }: { id?: string, data: any }) => {
+        const url = id ? `/api/categories/${id}` : "/api/categories";
+        const res = await adminFetch(url, {
+            method: id ? "PUT" : "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error((await res.json()).error || "Failed");
+        return res.json();
+    },
+    onSuccess: () => {
+        toast.success(editingCategory ? "Category updated" : "Category created");
+        setFormOpen(false);
+        queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
+    },
+    onError: (err: any) => toast.error(err.message)
+  });
+
   const handleSave = async () => {
     if (!form.name.trim()) {
       toast.error("Category name is required");
       return;
     }
 
-    setSaving(true);
-    try {
-      const payload: Record<string, unknown> = {
+    const payload = {
         name: form.name.trim(),
         slug: form.slug.trim() || generateSlug(form.name),
         description: form.description.trim() || null,
@@ -377,62 +374,10 @@ export function AdminCategories() {
         parentId: form.parentId || null,
         productIds: form.productIds,
         // Category page fields
-        heroTitle: categoryFields.heroTitle || null,
-        heroSubtitle: categoryFields.heroSubtitle || null,
-        heroDescription: categoryFields.heroDescription || null,
-        contentSplitImage: categoryFields.contentSplitImage || null,
-        contentSplitHeading: categoryFields.contentSplitHeading || null,
-        contentSplitParagraph: categoryFields.contentSplitParagraph || null,
-        contentSplitBullets: categoryFields.contentSplitBullets || "[]",
-        cardsTitle: categoryFields.cardsTitle || null,
-        cardsProductIds: categoryFields.cardsProductIds || "[]",
-        cardsMaxCount: categoryFields.cardsMaxCount ?? 8,
-        cardsColumns: categoryFields.cardsColumns ?? 4,
-        ctaHeading: categoryFields.ctaHeading || null,
-        ctaDescription: categoryFields.ctaDescription || null,
-        ctaBulkText: categoryFields.ctaBulkText || null,
-        ctaBulkLink: categoryFields.ctaBulkLink || null,
-        ctaPrivateLabelText: categoryFields.ctaPrivateLabelText || null,
-        ctaPrivateLabelLink: categoryFields.ctaPrivateLabelLink || null,
-        ctaBackgroundColor: categoryFields.ctaBackgroundColor || null,
-        processTitle: categoryFields.processTitle || null,
-        processSubtitle: categoryFields.processSubtitle || null,
-        processSteps: categoryFields.processSteps || "[]",
-        infographicImage: categoryFields.infographicImage || null,
-        infographicCaption: categoryFields.infographicCaption || null,
-        infographicAltText: categoryFields.infographicAltText || null,
-        galleryTitle: categoryFields.galleryTitle || null,
-        galleryImages: categoryFields.galleryImages || "[]",
-        faqTitle: categoryFields.faqTitle || null,
-        faqItems: categoryFields.faqItems || "[]",
-      };
+        ...categoryFields
+    };
 
-      const url = editingCategory
-        ? `/api/categories/${editingCategory.id}`
-        : "/api/categories";
-      const method = editingCategory ? "PUT" : "POST";
-
-      const res = await adminFetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        toast.success(
-          editingCategory ? "Category updated" : "Category created",
-        );
-        setFormOpen(false);
-        fetchCategories();
-      } else {
-        const err = await res.json();
-        toast.error(err.error || "Failed to save category");
-      }
-    } catch {
-      toast.error("Failed to save category");
-    } finally {
-      setSaving(false);
-    }
+    saveMutation.mutate({ id: editingCategory?.id, data: payload });
   };
 
   const handleSelectAll = () => {
@@ -449,59 +394,34 @@ export function AdminCategories() {
     );
   };
 
-  const handleBulkAction = async (action: string) => {
+  const bulkMutation = useMutation({
+    mutationFn: async ({ ids, action }: { ids: string[], action: string }) => {
+        const res = await adminFetch("/api/categories/bulk", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ids, action }),
+        });
+        if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: (_, variables) => {
+        toast.success(`Bulk action successful`);
+        setSelectedIds([]);
+        setBulkAction(null);
+        queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
+    }
+  });
+
+  const handleBulkAction = (action: string) => {
     if (selectedIds.length === 0) return;
     if (action === "delete") {
       setBulkAction(action);
       return;
     }
-    setBulkLoading(true);
-    try {
-      const res = await adminFetch("/api/categories/bulk", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: selectedIds, action }),
-      });
-      if (res.ok) {
-        toast.success(
-          `${action === "activate" ? "Activated" : "Deactivated"} ${selectedIds.length} categor${selectedIds.length === 1 ? "y" : "ies"}`,
-        );
-        setSelectedIds([]);
-        fetchCategories();
-      } else {
-        toast.error("Bulk action failed");
-      }
-    } catch {
-      toast.error("Bulk action failed");
-    } finally {
-      setBulkLoading(false);
-    }
+    bulkMutation.mutate({ ids: selectedIds, action });
   };
 
-  const handleBulkDelete = async () => {
-    if (selectedIds.length === 0) return;
-    setBulkLoading(true);
-    try {
-      const res = await adminFetch("/api/categories/bulk", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: selectedIds, action: "delete" }),
-      });
-      if (res.ok) {
-        toast.success(
-          `Deleted ${selectedIds.length} categor${selectedIds.length === 1 ? "y" : "ies"}`,
-        );
-        setSelectedIds([]);
-        setBulkAction(null);
-        fetchCategories();
-      } else {
-        toast.error("Bulk delete failed");
-      }
-    } catch {
-      toast.error("Bulk delete failed");
-    } finally {
-      setBulkLoading(false);
-    }
+  const handleBulkDelete = () => {
+    bulkMutation.mutate({ ids: selectedIds, action: "delete" });
   };
 
   const handleDeleteClick = (cat: Category) => {
@@ -526,7 +446,7 @@ export function AdminCategories() {
         if (data.errors && data.errors.length > 0) {
           toast.warning(`${data.errors.length} error(s) during import`);
         }
-        fetchCategories();
+        queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
       } else {
         const err = await res.json();
         toast.error(err.error || "Import failed");
@@ -562,27 +482,21 @@ export function AdminCategories() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    setDeleting(true);
-    try {
-      const res = await adminFetch(`/api/categories/${deleteId}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+        const res = await adminFetch(`/api/categories/${id}`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: () => {
         toast.success("Category deleted");
-        setCategories((prev) => prev.filter((c) => c.id !== deleteId));
+        queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
         setDeleteId(null);
         setDeleteCategory(null);
-      } else {
-        const err = await res.json();
-        toast.error(err.error || "Failed to delete category");
-      }
-    } catch {
-      toast.error("Failed to delete category");
-    } finally {
-      setDeleting(false);
     }
+  });
+
+  const handleDelete = () => {
+    if (deleteId) deleteMutation.mutate(deleteId);
   };
 
   return (
@@ -1158,8 +1072,8 @@ export function AdminCategories() {
             <Button variant="outline" onClick={() => setFormOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving
+            <Button onClick={handleSave} disabled={saveMutation.isPending}>
+              {saveMutation.isPending
                 ? "Saving..."
                 : editingCategory
                   ? "Update Category"
@@ -1192,10 +1106,10 @@ export function AdminCategories() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              disabled={deleting}
+              disabled={deleteMutation.isPending}
               className="bg-rose-600 hover:bg-rose-700"
             >
-              {deleting ? "Deleting..." : "Delete"}
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1223,10 +1137,10 @@ export function AdminCategories() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleBulkDelete}
-              disabled={bulkLoading}
+              disabled={bulkMutation.isPending}
               className="bg-rose-600 hover:bg-rose-700"
             >
-              {bulkLoading
+              {bulkMutation.isPending
                 ? "Deleting..."
                 : `Delete ${selectedIds.length} Categor${selectedIds.length === 1 ? "y" : "ies"}`}
             </AlertDialogAction>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Search,
   Eye,
@@ -118,11 +119,10 @@ const typeLabels: Record<string, string> = {
 const PAGE_SIZE = 20;
 
 export function AdminEnquiries() {
-  const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [pagination, setPagination] = useState<PaginationInfo>({ page: 1, limit: PAGE_SIZE, total: 0, totalPages: 0 });
+  const [page, setPage] = useState(1);
 
   // Bulk selection state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -146,46 +146,33 @@ export function AdminEnquiries() {
   });
   const [creatingQuote, setCreatingQuote] = useState(false);
 
-  const fetchEnquiries = useCallback(async (page = 1) => {
-    try {
-      let url = `/api/enquiries?page=${page}&limit=${PAGE_SIZE}`;
-      if (activeFilter !== 'all') {
-        url += `&status=${activeFilter}`;
-      }
-      const res = await adminFetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        let items = data.enquiries || [];
-        if (searchTerm) {
-          const lower = searchTerm.toLowerCase();
-          items = items.filter(
-            (e: Enquiry) =>
-              e.name.toLowerCase().includes(lower) ||
-              e.email.toLowerCase().includes(lower) ||
-              e.subject.toLowerCase().includes(lower) ||
-              (e.companyName && e.companyName.toLowerCase().includes(lower))
-          );
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['admin-enquiries', activeFilter, page],
+    queryFn: async () => {
+        let url = `/api/enquiries?page=${page}&limit=${PAGE_SIZE}`;
+        if (activeFilter !== 'all') {
+            url += `&status=${activeFilter}`;
         }
-        setEnquiries(items);
-        setPagination(data.pagination || { page: 1, limit: PAGE_SIZE, total: 0, totalPages: 0 });
-      }
-    } catch {
-      toast.error('Failed to load enquiries');
-    } finally {
-      setLoading(false);
+        const res = await adminFetch(url);
+        if (!res.ok) throw new Error('Failed');
+        return await res.json();
     }
-  }, [activeFilter, searchTerm]);
+  });
 
-  useEffect(() => {
-    setLoading(true);
-    setSelectedIds(new Set());
-    fetchEnquiries(1);
-  }, [fetchEnquiries]);
+  const enquiriesRaw = data?.enquiries || [];
+  const pagination = data?.pagination || { page: 1, limit: PAGE_SIZE, total: 0, totalPages: 0 };
+
+  const enquiries = searchTerm ? enquiriesRaw.filter(
+    (e: Enquiry) =>
+      e.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      e.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      e.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (e.companyName && e.companyName.toLowerCase().includes(searchTerm.toLowerCase()))
+  ) : enquiriesRaw;
 
   const handlePageChange = (newPage: number) => {
-    setLoading(true);
+    setPage(newPage);
     setSelectedIds(new Set());
-    fetchEnquiries(newPage);
   };
 
   // Selection handlers
@@ -214,71 +201,84 @@ export function AdminEnquiries() {
     setBulkStatus('');
   };
 
-  // Bulk operations
-  const handleBulkStatusUpdate = async () => {
-    if (!bulkStatus || selectedIds.size === 0) return;
-    setBulkLoading(true);
-    try {
-      const res = await adminFetch('/api/enquiries/bulk', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ids: Array.from(selectedIds),
-          action: 'update-status',
-          status: bulkStatus,
-        }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        toast.success(`${data.count} enquiry(ies) status updated`);
-        clearSelection();
-        fetchEnquiries(pagination.page);
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to update status');
-      }
-    } catch {
-      toast.error('Failed to update status');
-    } finally {
-      setBulkLoading(false);
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string, status: string }) => {
+        const res = await adminFetch(`/api/enquiries/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status }),
+        });
+        if (!res.ok) throw new Error('Failed');
+    },
+    onSuccess: (_, variables) => {
+        queryClient.invalidateQueries({ queryKey: ['admin-enquiries'] });
+        if (viewEnquiry && viewEnquiry.id === variables.id) {
+            setViewEnquiry({ ...viewEnquiry, status: variables.status });
+        }
     }
+  });
+
+  const bulkMutation = useMutation({
+    mutationFn: async ({ ids, action, status }: { ids: string[], action: string, status?: string }) => {
+        const res = await adminFetch('/api/enquiries/bulk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids, action, status }),
+        });
+        if (!res.ok) throw new Error('Failed');
+        return res.json();
+    },
+    onSuccess: (data, variables) => {
+        toast.success(`${data.count} enquiry(ies) processed`);
+        clearSelection();
+        setShowBulkDelete(false);
+        queryClient.invalidateQueries({ queryKey: ['admin-enquiries'] });
+    }
+  });
+
+  const quoteMutation = useMutation({
+    mutationFn: async (data: any) => {
+        const res = await adminFetch('/api/quotes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error('Failed');
+    },
+    onSuccess: () => {
+        toast.success('Formal quote created and sent to buyer');
+        setQuoteOpen(false);
+        queryClient.invalidateQueries({ queryKey: ['admin-enquiries'] });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+        const res = await adminFetch(`/api/enquiries/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed');
+    },
+    onSuccess: () => {
+        toast.success('Enquiry deleted');
+        setDeleteId(null);
+        queryClient.invalidateQueries({ queryKey: ['admin-enquiries'] });
+    }
+  });
+
+  const handleBulkStatusUpdate = () => {
+    if (!bulkStatus || selectedIds.size === 0) return;
+    bulkMutation.mutate({ ids: Array.from(selectedIds), action: 'update-status', status: bulkStatus });
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = () => {
     if (selectedIds.size === 0) return;
-    setBulkLoading(true);
-    try {
-      const res = await adminFetch('/api/enquiries/bulk', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ids: Array.from(selectedIds),
-          action: 'delete',
-        }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        toast.success(`${data.count} enquiry(ies) deleted`);
-        setShowBulkDelete(false);
-        clearSelection();
-        fetchEnquiries(pagination.page);
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to delete enquiries');
-      }
-    } catch {
-      toast.error('Failed to delete enquiries');
-    } finally {
-      setBulkLoading(false);
-    }
+    bulkMutation.mutate({ ids: Array.from(selectedIds), action: 'delete' });
   };
 
   const handleViewEnquiry = (enquiry: Enquiry) => {
     setViewEnquiry(enquiry);
     setStatusUpdate(enquiry.status);
-    // Auto mark as read
     if (enquiry.status === 'new') {
-      updateStatus(enquiry.id, 'read');
+        updateMutation.mutate({ id: enquiry.id, status: 'read' });
     }
   };
 
@@ -292,97 +292,36 @@ export function AdminEnquiries() {
     setQuoteOpen(true);
   };
 
-  const handleCreateQuote = async () => {
+  const handleCreateQuote = () => {
     if (!quotingEnquiry || !quoteForm.totalAmount) {
       toast.error('Please enter a total amount');
       return;
     }
-
-    setCreatingQuote(true);
-    try {
-      const res = await adminFetch('/api/quotes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          enquiryId: quotingEnquiry.id,
-          userId: quotingEnquiry.User?.id || quotingEnquiry.id,
-          companyId: quotingEnquiry.User?.companyId,
-          totalAmount: parseFloat(quoteForm.totalAmount),
-          validUntil: quoteForm.validUntil,
-          notes: quoteForm.notes,
-          items: quotingEnquiry.productId ? [{
+    quoteMutation.mutate({
+        enquiryId: quotingEnquiry.id,
+        userId: quotingEnquiry.User?.id || quotingEnquiry.id,
+        companyId: quotingEnquiry.User?.companyId,
+        totalAmount: parseFloat(quoteForm.totalAmount),
+        validUntil: quoteForm.validUntil,
+        notes: quoteForm.notes,
+        items: quotingEnquiry.productId ? [{
             productId: quotingEnquiry.productId,
             name: quotingEnquiry.Product?.name,
             quantity: quotingEnquiry.quantity || 1,
             unitPrice: parseFloat(quoteForm.totalAmount) / (quotingEnquiry.quantity || 1)
-          }] : []
-        })
-      });
-
-      if (res.ok) {
-        toast.success('Formal quote created and sent to buyer');
-        setQuoteOpen(false);
-        fetchEnquiries(pagination.page);
-      } else {
-        toast.error('Failed to create quote');
-      }
-    } catch {
-      toast.error('Failed to create quote');
-    } finally {
-      setCreatingQuote(false);
-    }
-  };
-
-  const updateStatus = async (id: string, status: string) => {
-    try {
-      const res = await adminFetch(`/api/enquiries/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
-      });
-      if (res.ok) {
-        setEnquiries(prev =>
-          prev.map(e => (e.id === id ? { ...e, status } : e))
-        );
-        if (viewEnquiry && viewEnquiry.id === id) {
-          setViewEnquiry(prev => (prev ? { ...prev, status } : null));
-        }
-      }
-    } catch {
-      // ignore
-    }
+        }] : []
+    });
   };
 
   const handleStatusChange = (newStatus: string) => {
     setStatusUpdate(newStatus);
     if (viewEnquiry) {
-      updateStatus(viewEnquiry.id, newStatus);
+        updateMutation.mutate({ id: viewEnquiry.id, status: newStatus });
     }
   };
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    setDeleting(true);
-    try {
-      const res = await adminFetch(`/api/enquiries/${deleteId}`, { method: 'DELETE' });
-      if (res.ok) {
-        toast.success('Enquiry deleted');
-        setEnquiries(prev => prev.filter(e => e.id !== deleteId));
-        setSelectedIds(prev => {
-          const next = new Set(prev);
-          next.delete(deleteId);
-          return next;
-        });
-        setDeleteId(null);
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to delete enquiry');
-      }
-    } catch {
-      toast.error('Failed to delete enquiry');
-    } finally {
-      setDeleting(false);
-    }
+  const handleDelete = () => {
+    if (deleteId) deleteMutation.mutate(deleteId);
   };
 
   const formatDate = (dateStr: string) => {
@@ -424,7 +363,7 @@ export function AdminEnquiries() {
           <h2 className="text-2xl font-bold tracking-tight">Enquiries</h2>
           <p className="text-muted-foreground mt-1">View and manage customer enquiries</p>
         </div>
-        <Button variant="outline" onClick={() => { setLoading(true); fetchEnquiries(pagination.page); }}>
+        <Button variant="outline" onClick={() => { queryClient.invalidateQueries({ queryKey: ['admin-enquiries'] }); }}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
@@ -478,9 +417,9 @@ export function AdminEnquiries() {
               <Button
                 size="sm"
                 onClick={handleBulkStatusUpdate}
-                disabled={!bulkStatus || bulkLoading}
+                disabled={!bulkStatus || bulkMutation.isPending}
               >
-                {bulkLoading && <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />}
+                {bulkMutation.isPending && <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />}
                 Apply
               </Button>
             </div>
@@ -828,10 +767,10 @@ export function AdminEnquiries() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              disabled={deleting}
+              disabled={deleteMutation.isPending}
               className="bg-rose-600 hover:bg-rose-700"
             >
-              {deleting ? 'Deleting...' : 'Delete'}
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -850,10 +789,10 @@ export function AdminEnquiries() {
             <AlertDialogCancel onClick={() => setShowBulkDelete(false)}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleBulkDelete}
-              disabled={bulkLoading}
+              disabled={bulkMutation.isPending}
               className="bg-rose-600 hover:bg-rose-700"
             >
-              {bulkLoading ? (
+              {bulkMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Deleting...
@@ -909,8 +848,8 @@ export function AdminEnquiries() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setQuoteOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreateQuote} disabled={creatingQuote}>
-              {creatingQuote ? 'Creating...' : 'Send Quote'}
+            <Button onClick={handleCreateQuote} disabled={quoteMutation.isPending}>
+              {quoteMutation.isPending ? 'Creating...' : 'Send Quote'}
             </Button>
           </DialogFooter>
         </DialogContent>

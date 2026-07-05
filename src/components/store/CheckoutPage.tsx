@@ -44,12 +44,6 @@ export function CheckoutPage() {
 
   const total = subtotal - discount;
 
-  useEffect(() => {
-    if (auth.user) {
-        fetchAddresses();
-    }
-  }, [auth.user]);
-
   const fetchAddresses = async () => {
     try {
         const res = await fetch("/api/account/addresses", {
@@ -59,10 +53,28 @@ export function CheckoutPage() {
             const data = await res.json();
             setAddresses(data.addresses || []);
             const def = data.addresses.find((a: any) => a.isDefault);
-            if (def) handleSelectAddress(def);
+            if (def) {
+                setSelectedAddressId(def.id);
+                setFormData(prev => ({
+                    ...prev,
+                    name: def.name,
+                    email: auth.user?.email || '',
+                    phone: def.phone,
+                    address: def.address,
+                    city: def.city,
+                    state: def.state,
+                    zipCode: def.pincode,
+                }));
+            }
         }
     } catch { /* ignore */ }
   };
+
+  useEffect(() => {
+    if (auth.user) {
+        fetchAddresses();
+    }
+  }, [auth.user]);
 
   const handleSelectAddress = (addr: any) => {
     setSelectedAddressId(addr.id);

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { PageBlockRenderer } from './PageBlockRenderer';
 import type { PageBlock } from '@/lib/page-blocks';
 import { normalizePageBlocks } from '@/lib/page-blocks';
@@ -21,67 +22,34 @@ interface CmsPageProps {
 }
 
 export function CmsPage({ slug, onNavigate, fallbackBlocks }: CmsPageProps) {
-  const [blocks, setBlocks] = useState<PageBlock[] | null>(null);
-  const [pageData, setPageData] = useState<PageData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setBlocks(null);
-    setPageData(null);
-
-    const fetchPage = async () => {
-      try {
-        const res = await fetch(`/api/content-pages?slug=${encodeURIComponent(slug)}`, { cache: 'no-store' });
-        if (cancelled) return;
-        if (res.ok) {
-          const data = await res.json();
-          if (cancelled) return;
-          const pages = data.contentPages || [];
-          if (pages.length > 0) {
-            const page = pages[0];
-            setPageData({
-              title: page.title || '',
-              metaTitle: page.metaTitle || null,
-              metaDescription: page.metaDescription || null,
-              ogImage: page.ogImage || null,
-            });
-            let parsed: PageBlock[] = [];
-            try {
-              parsed = normalizePageBlocks(page.blocks);
-            } catch (e) {
-              console.error('Error parsing blocks:', e);
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['cms-page', slug],
+    queryFn: async () => {
+        const res = await fetch(`/api/content-pages?slug=${encodeURIComponent(slug)}`);
+        const data = await res.json();
+        const page = (data.contentPages || [])[0];
+        if (page) {
+            let blocks = normalizePageBlocks(page.blocks || "[]");
+            if (blocks.length === 0 && page.content) {
+                blocks = [{ id: 'legacy-content', type: 'text', data: { content: page.content } }];
             }
-
-            if (parsed.length > 0) {
-              setBlocks(parsed);
-              setLoading(false);
-              return;
-            } else if (page.content) {
-              setBlocks([{ id: 'legacy-content', type: 'text', data: { content: page.content } }]);
-              setLoading(false);
-              return;
-            }
-          }
+            return {
+                pageData: {
+                    title: page.title || '',
+                    metaTitle: page.metaTitle || null,
+                    metaDescription: page.metaDescription || null,
+                    ogImage: page.ogImage || null,
+                },
+                blocks
+            };
         }
+        if (fallbackBlocks) return { pageData: null, blocks: fallbackBlocks };
+        return null;
+    }
+  });
 
-      } catch {
-        if (!cancelled && fallbackBlocks) {
-          setBlocks(fallbackBlocks);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-    fetchPage();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [slug, fallbackBlocks]);
+  const pageData = data?.pageData || null;
+  const blocks = data?.blocks || null;
 
   useSeo(`cms-${slug}`, {
     title: pageData?.metaTitle || pageData?.title,

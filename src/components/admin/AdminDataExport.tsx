@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { Download, Package, FolderOpen, FileText, MessageSquare, Users, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,13 +24,9 @@ const exportItems: ExportItem[] = [
 ];
 
 export function AdminDataExport() {
-  const [counts, setCounts] = useState<Record<string, number>>({});
-  const [loading, setLoading] = useState(true);
-  const [exporting, setExporting] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function fetchCounts() {
-      try {
+  const { data: counts = {}, isLoading: loading } = useQuery({
+    queryKey: ['admin-export-counts'],
+    queryFn: async () => {
         const results = await Promise.all([
           adminFetch('/api/products?all=true').then(r => r.ok ? r.json().then(d => d.products?.length || 0) : 0),
           adminFetch('/api/categories?all=true').then(r => r.ok ? r.json().then(d => d.categories?.length || 0) : 0),
@@ -37,28 +34,23 @@ export function AdminDataExport() {
           adminFetch('/api/enquiries?limit=1').then(r => r.ok ? r.json().then(d => d.pagination?.total || 0) : 0),
           adminFetch('/api/users?all=true').then(r => r.ok ? r.json().then(d => d.users?.length || 0) : 0),
         ]);
-        setCounts({
+        return {
           products: results[0],
           categories: results[1],
           blog: results[2],
           enquiries: results[3],
           users: results[4],
-        });
-      } catch {
-        // ignore
-      } finally {
-        setLoading(false);
-      }
+        };
     }
-    fetchCounts();
-  }, []);
+  });
 
-  const handleExport = async (type: string) => {
-    setExporting(type);
-    try {
-      const res = await adminFetch(`/api/export?type=${type}`);
-      if (res.ok) {
-        const blob = await res.blob();
+  const exportMutation = useMutation({
+    mutationFn: async (type: string) => {
+        const res = await adminFetch(`/api/export?type=${type}`);
+        if (!res.ok) throw new Error('Failed');
+        return { type, blob: await res.blob() };
+    },
+    onSuccess: ({ type, blob }) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -68,15 +60,13 @@ export function AdminDataExport() {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
         toast.success(`${type} export downloaded`);
-      } else {
-        toast.error(`Failed to export ${type}`);
-      }
-    } catch {
-      toast.error(`Failed to export ${type}`);
-    } finally {
-      setExporting(null);
-    }
-  };
+    },
+    onError: (_, type) => toast.error(`Failed to export ${type}`)
+  });
+
+  const handleExport = (type: string) => exportMutation.mutate(type);
+
+  const exporting = exportMutation.isPending ? exportMutation.variables : null;
 
   return (
     <div className="space-y-6">

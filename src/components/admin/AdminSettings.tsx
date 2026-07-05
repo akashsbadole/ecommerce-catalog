@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Save,
   Mail,
@@ -17,6 +18,7 @@ import {
   FileText,
   Users,
   Trash2,
+  MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -101,76 +103,64 @@ const defaultSettings: Settings = {
 };
 
 export function AdminSettings() {
+  const queryClient = useQueryClient();
   const fetchGlobalSettings = useAppStore((s) => s.fetchSettings);
   const [settings, setSettings] = useState<Settings>(defaultSettings);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [testing, setTesting] = useState(false);
 
-  useEffect(() => {
-    async function fetchSettings() {
-      try {
+  const { isLoading: loading } = useQuery({
+    queryKey: ["admin-store-settings"],
+    queryFn: async () => {
         const res = await adminFetch("/api/store/settings");
-        if (res.ok) {
-          const data = await res.json();
-          const merged: Settings = { ...defaultSettings };
-          for (const key of Object.keys(data.settings)) {
+        if (!res.ok) throw new Error("Failed");
+        const data = await res.json();
+        const merged: Settings = { ...defaultSettings };
+        for (const key of Object.keys(data.settings)) {
             merged[key] = data.settings[key] ?? "";
-          }
-          setSettings(merged);
         }
-      } catch {
-        toast.error("Failed to load settings");
-      } finally {
-        setLoading(false);
-      }
+        setSettings(merged);
+        return data.settings;
     }
-    fetchSettings();
-  }, []);
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: async (newSettings: Settings) => {
+        const res = await adminFetch("/api/store/settings", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ settings: newSettings }),
+        });
+        if (!res.ok) throw new Error("Failed");
+        return res.json();
+    },
+    onSuccess: () => {
+        toast.success("Settings saved");
+        fetchGlobalSettings();
+        queryClient.invalidateQueries({ queryKey: ["admin-store-settings"] });
+    }
+  });
+
+  const testEmailMutation = useMutation({
+    mutationFn: async () => {
+        const res = await adminFetch("/api/settings", { method: "POST" });
+        if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: () => toast.success("Test email sent")
+  });
 
   const handleSettingChange = (key: string, value: string) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const res = await adminFetch("/api/store/settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ settings }),
-      });
-      if (res.ok) {
-        toast.success("Settings saved successfully");
-        // Update global app state to reflect new logo/site name in sidebar immediately
-        fetchGlobalSettings();
-      } else {
-        const err = await res.json();
-        toast.error(err.error || "Failed to save settings");
-      }
-    } catch {
-      toast.error("Failed to save settings");
-    } finally {
-      setSaving(false);
-    }
+  const handleSave = () => {
+    saveMutation.mutate(settings);
   };
 
-  const handleTestEmail = async () => {
-    setTesting(true);
-    try {
-      const res = await adminFetch("/api/settings", { method: "POST" });
-      if (res.ok) {
-        toast.success("Test email sent successfully");
-      } else {
-        const err = await res.json();
-        toast.error(err.error || "Failed to send test email");
-      }
-    } catch {
-      toast.error("Failed to send test email");
-    } finally {
-      setTesting(false);
-    }
+  const handleTestEmail = () => {
+    testEmailMutation.mutate();
   };
+
+  const saving = saveMutation.isPending;
+  const testing = testEmailMutation.isPending;
 
   if (loading) {
     return (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Clock, Zap, ShoppingBag, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/pricing";
@@ -24,59 +25,38 @@ export function HomePage({
   settings,
   data: externalData,
 }: HomePageProps) {
-  const [blocks, setBlocks] = useState<PageBlock[] | null>(null);
-  const [cmsLoading, setCmsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [homeMeta, setHomeMeta] = useState<{
-    metaTitle: string | null;
-    metaDescription: string | null;
-    ogImage: string | null;
-  } | null>(null);
-  const [newArrivals, setNewArrivals] = useState<any[]>([]);
-
-  useEffect(() => {
-    fetch("/api/products?limit=4&sort=newest")
-      .then(res => res.ok ? res.json() : null)
-      .then(data => { if (data?.products) setNewArrivals(data.products); });
-  }, []);
-
-  useEffect(() => {
-    if (externalData) {
-      setCmsLoading(false);
-      return;
+  const { data: newArrivals = [] } = useQuery({
+    queryKey: ["new-arrivals"],
+    queryFn: async () => {
+        const res = await fetch("/api/products?limit=4&sort=newest");
+        const data = await res.json();
+        return data.products || [];
     }
+  });
 
-    const fetchHomepage = async () => {
-      try {
+  const { data: homepageData, isLoading: cmsLoading } = useQuery({
+    queryKey: ["homepage-cms"],
+    enabled: !externalData,
+    queryFn: async () => {
         const res = await fetch("/api/content-pages?slug=homepage");
-        if (res.ok) {
-          const data = await res.json();
-          const pages = data.contentPages || [];
-          if (pages.length > 0) {
-            const page = pages[0];
-            setHomeMeta({
-              metaTitle: page.metaTitle || null,
-              metaDescription: page.metaDescription || null,
-              ogImage: page.ogImage || null,
-            });
-            if (page.blocks) {
-              const parsed = normalizePageBlocks(page.blocks);
-              if (parsed.length > 0) {
-                setBlocks(parsed);
-                return;
-              }
-            }
-            setCmsLoading(false);
-            return;
-          }
+        const data = await res.json();
+        const page = (data.contentPages || [])[0];
+        if (page) {
+            return {
+                meta: {
+                    metaTitle: page.metaTitle || null,
+                    metaDescription: page.metaDescription || null,
+                    ogImage: page.ogImage || null,
+                },
+                blocks: normalizePageBlocks(page.blocks || "[]")
+            };
         }
-      } catch {
-      } finally {
-        setCmsLoading(false);
-      }
-    };
-    fetchHomepage();
-  }, [externalData]);
+        return null;
+    }
+  });
+
+  const blocks = homepageData?.blocks || null;
+  const homeMeta = homepageData?.meta || null;
 
   const siteOrigin =
     typeof window !== "undefined" ? window.location.origin : "";
@@ -122,7 +102,7 @@ export function HomePage({
   }
 
   // Error state
-  if (error || (!externalData && (!blocks || blocks.length === 0))) {
+  if (!externalData && (!blocks || blocks.length === 0)) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <p className="text-muted-foreground">

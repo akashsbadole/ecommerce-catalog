@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Pencil,
@@ -80,8 +81,7 @@ const emptyForm: BannerFormData = {
 };
 
 export function AdminBanners() {
-  const [banners, setBanners] = useState<Banner[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
@@ -92,23 +92,59 @@ export function AdminBanners() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const fetchBanners = useCallback(async () => {
-    try {
-      const res = await adminFetch('/api/banners?all=true');
-      if (res.ok) {
-        const data = await res.json();
-        setBanners(data.banners || []);
-      }
-    } catch {
-      toast.error('Failed to load banners');
-    } finally {
-      setLoading(false);
+  const { data: banners = [], isLoading: loading } = useQuery({
+    queryKey: ['admin-banners'],
+    queryFn: async () => {
+        const res = await adminFetch('/api/banners?all=true');
+        if (!res.ok) throw new Error('Failed');
+        return (await res.json()).banners || [];
     }
-  }, []);
+  });
 
-  useEffect(() => {
-    fetchBanners();
-  }, [fetchBanners]);
+  const saveMutation = useMutation({
+    mutationFn: async ({ id, data }: { id?: string, data: any }) => {
+        const url = id ? `/api/banners/${id}` : '/api/banners';
+        const res = await adminFetch(url, {
+            method: id ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error('Failed');
+        return res.json();
+    },
+    onSuccess: () => {
+        toast.success(editingBanner ? 'Banner updated' : 'Banner created');
+        setFormOpen(false);
+        queryClient.invalidateQueries({ queryKey: ['admin-banners'] });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+        const res = await adminFetch(`/api/banners/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed');
+    },
+    onSuccess: () => {
+        toast.success('Banner deleted');
+        setDeleteId(null);
+        queryClient.invalidateQueries({ queryKey: ['admin-banners'] });
+    }
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: string, isActive: boolean }) => {
+        const res = await adminFetch(`/api/banners/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ isActive }),
+        });
+        if (!res.ok) throw new Error('Failed');
+    },
+    onSuccess: () => {
+        toast.success('Banner updated');
+        queryClient.invalidateQueries({ queryKey: ['admin-banners'] });
+    }
+  });
 
   const handleOpenAdd = () => {
     setEditingBanner(null);
@@ -130,15 +166,12 @@ export function AdminBanners() {
     setFormOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!form.title.trim()) {
       toast.error('Banner title is required');
       return;
     }
-
-    setSaving(true);
-    try {
-      const payload = {
+    const payload = {
         title: form.title.trim(),
         subtitle: form.subtitle.trim() || null,
         image: form.image.trim() || null,
@@ -146,72 +179,16 @@ export function AdminBanners() {
         linkText: form.linkText.trim() || null,
         sortOrder: parseInt(form.sortOrder) || 0,
         isActive: form.isActive,
-      };
-
-      const url = editingBanner
-        ? `/api/banners/${editingBanner.id}`
-        : '/api/banners';
-      const method = editingBanner ? 'PUT' : 'POST';
-
-      const res = await adminFetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        toast.success(editingBanner ? 'Banner updated' : 'Banner created');
-        setFormOpen(false);
-        fetchBanners();
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to save banner');
-      }
-    } catch {
-      toast.error('Failed to save banner');
-    } finally {
-      setSaving(false);
-    }
+    };
+    saveMutation.mutate({ id: editingBanner?.id, data: payload });
   };
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    setDeleting(true);
-    try {
-      const res = await adminFetch(`/api/banners/${deleteId}`, { method: 'DELETE' });
-      if (res.ok) {
-        toast.success('Banner deleted');
-        setBanners(prev => prev.filter(b => b.id !== deleteId));
-        setDeleteId(null);
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to delete banner');
-      }
-    } catch {
-      toast.error('Failed to delete banner');
-    } finally {
-      setDeleting(false);
-    }
+  const handleDelete = () => {
+    if (deleteId) deleteMutation.mutate(deleteId);
   };
 
-  const handleToggleActive = async (banner: Banner) => {
-    try {
-      const res = await adminFetch(`/api/banners/${banner.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive: !banner.isActive }),
-      });
-      if (res.ok) {
-        setBanners(prev =>
-          prev.map(b =>
-            b.id === banner.id ? { ...b, isActive: !b.isActive } : b
-          )
-        );
-        toast.success(banner.isActive ? 'Banner deactivated' : 'Banner activated');
-      }
-    } catch {
-      toast.error('Failed to update banner');
-    }
+  const handleToggleActive = (banner: Banner) => {
+    toggleMutation.mutate({ id: banner.id, isActive: !banner.isActive });
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -506,8 +483,8 @@ export function AdminBanners() {
             <Button variant="outline" onClick={() => setFormOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving
+            <Button onClick={handleSave} disabled={saveMutation.isPending}>
+              {saveMutation.isPending
                 ? 'Saving...'
                 : editingBanner
                   ? 'Update Banner'
@@ -530,10 +507,10 @@ export function AdminBanners() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              disabled={deleting}
+              disabled={deleteMutation.isPending}
               className="bg-rose-600 hover:bg-rose-700"
             >
-              {deleting ? 'Deleting...' : 'Delete'}
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

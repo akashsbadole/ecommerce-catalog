@@ -6,22 +6,12 @@ import { getFirstImage } from "@/lib/utils";
 import { formatPrice } from "@/lib/pricing";
 
 export function RecentlyViewed({ productId }: { productId?: string }) {
-  const [products, setProducts] = useState<any[]>([]);
-  const { navigate, settings } = useAppStore();
+  const { navigate, settings, recentlyViewed } = useAppStore();
   const currency = settings?.currency || "INR";
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("recently_viewed") || "[]";
-      let viewed = JSON.parse(stored);
-      if (productId) {
-        viewed = viewed.filter((p: any) => p.id !== productId);
-      }
-      setProducts(viewed.slice(0, 4));
-    } catch {
-      /* ignore */
-    }
-  }, [productId]);
+  const products = productId
+    ? recentlyViewed.filter(p => p.id !== productId).slice(0, 4)
+    : recentlyViewed.slice(0, 4);
 
   if (products.length === 0) return null;
 

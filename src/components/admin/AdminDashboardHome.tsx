@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Package,
   FolderOpen,
@@ -80,52 +81,40 @@ const statusColors: Record<string, string> = {
 };
 
 export function AdminDashboardHome({ onNavigate }: { onNavigate?: (tab: string) => void }) {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [recentEnquiries, setRecentEnquiries] = useState<EnquiryRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [smtpConfigured, setSmtpConfigured] = useState(true);
+  const { data: statsData, isLoading: statsLoading } = useQuery({
+    queryKey: ['admin-dashboard-stats'],
+    queryFn: async () => {
+        const res = await adminFetch('/api/dashboard/stats');
+        return res.json();
+    }
+  });
 
-  useEffect(() => {
-    async function checkSmtp() {
-      try {
+  const stats = statsData as DashboardStats | null;
+
+  const { data: enquiriesData, isLoading: enquiriesLoading } = useQuery({
+    queryKey: ['admin-recent-enquiries'],
+    queryFn: async () => {
+        const res = await adminFetch('/api/enquiries?limit=5');
+        return res.json();
+    }
+  });
+
+  const recentEnquiries = (enquiriesData?.enquiries || []) as EnquiryRow[];
+
+  const { data: settingsData } = useQuery({
+    queryKey: ['admin-smtp-check'],
+    queryFn: async () => {
         const res = await adminFetch('/api/store/settings');
-        if (res.ok) {
-          const data = await res.json();
-          const hasSmtp = data.settings?.smtp_host && data.settings?.smtp_user;
-          setSmtpConfigured(!!hasSmtp);
-        }
-      } catch {}
+        return res.json();
     }
-    checkSmtp();
-  }, []);
+  });
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        // Fetch dashboard stats from the new unified endpoint
-        const statsRes = await adminFetch('/api/dashboard/stats');
-        if (statsRes.ok && !cancelled) {
-          const statsData = await statsRes.json();
-          setStats(statsData);
-        }
+  const smtpConfigured = useMemo(() => {
+    const s = settingsData?.settings;
+    return !!(s?.smtp_host && s?.smtp_user);
+  }, [settingsData]);
 
-        // Fetch recent enquiries (still need full enquiry data for the table)
-        const enquiriesRes = await adminFetch('/api/enquiries');
-        if (enquiriesRes.ok && !cancelled) {
-          const d = await enquiriesRes.json();
-          const all: EnquiryRow[] = d.enquiries || [];
-          setRecentEnquiries(all.slice(0, 5));
-        }
-      } catch {
-        // ignore
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    load();
-    return () => { cancelled = true; };
-  }, []);
+  const loading = statsLoading || enquiriesLoading;
 
   const statCards = stats
     ? [

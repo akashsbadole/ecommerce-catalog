@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -8,29 +9,28 @@ import { Mail, Loader2, CheckCircle2 } from "lucide-react";
 
 export function Newsletter() {
   const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
 
-  const handleSubscribe = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch("/api/newsletter/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      if (res.ok) {
+  const subscribeMutation = useMutation({
+    mutationFn: async (email: string) => {
+        const res = await fetch("/api/newsletter/subscribe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
+        });
+        if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: () => {
         setSubscribed(true);
         toast.success("Successfully subscribed!");
-      } else {
-        toast.error("Subscription failed. Please try again.");
-      }
-    } catch {
-      toast.error("An error occurred.");
-    } finally {
-      setLoading(false);
-    }
+    },
+    onError: () => toast.error("Subscription failed")
+  });
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    subscribeMutation.mutate(email);
   };
 
   if (subscribed) {
@@ -60,8 +60,8 @@ export function Newsletter() {
             required
           />
         </div>
-        <Button type="submit" size="lg" className="rounded-xl px-6 h-11 font-bold" disabled={loading}>
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Join"}
+        <Button type="submit" size="lg" className="rounded-xl px-6 h-11 font-bold" disabled={subscribeMutation.isPending}>
+          {subscribeMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Join"}
         </Button>
       </form>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Mail, Download, Search, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -17,25 +18,15 @@ import { adminFetch } from "@/lib/admin-fetch";
 import { format } from "date-fns";
 
 export function AdminNewsletter() {
-  const [subscribers, setSubscribers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  const fetchSubscribers = async () => {
-    try {
-      const res = await adminFetch("/api/admin/newsletter");
-      if (res.ok) {
-        const data = await res.json();
-        setSubscribers(data.subscribers || []);
-      }
-    } finally {
-      setLoading(false);
+  const { data: subscribers = [], isLoading: loading } = useQuery({
+    queryKey: ["admin-newsletter"],
+    queryFn: async () => {
+        const res = await adminFetch("/api/admin/newsletter");
+        return (await res.json()).subscribers || [];
     }
-  };
-
-  useEffect(() => {
-    fetchSubscribers();
-  }, []);
+  });
 
   const handleExport = () => {
     const csv = [

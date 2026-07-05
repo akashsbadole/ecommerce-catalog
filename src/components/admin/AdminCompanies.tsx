@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Building2,
   Search,
@@ -74,8 +75,7 @@ interface Company {
 }
 
 export function AdminCompanies() {
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [tierFilter, setTierFilter] = useState('all');
 
@@ -96,27 +96,46 @@ export function AdminCompanies() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const fetchCompanies = useCallback(async () => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      if (searchTerm) params.set('search', searchTerm);
-      if (tierFilter !== 'all') params.set('tier', tierFilter);
-      const res = await adminFetch(`/api/companies?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        setCompanies(data.companies || []);
-      }
-    } catch {
-      toast.error('Failed to load companies');
-    } finally {
-      setLoading(false);
+  const { data: companies = [], isLoading: loading } = useQuery({
+    queryKey: ['admin-companies', searchTerm, tierFilter],
+    queryFn: async () => {
+        const params = new URLSearchParams();
+        if (searchTerm) params.set('search', searchTerm);
+        if (tierFilter !== 'all') params.set('tier', tierFilter);
+        const res = await adminFetch(`/api/companies?${params.toString()}`);
+        if (!res.ok) throw new Error('Failed');
+        return (await res.json()).companies || [];
     }
-  }, [searchTerm, tierFilter]);
+  });
 
-  useEffect(() => {
-    fetchCompanies();
-  }, [fetchCompanies]);
+  const saveMutation = useMutation({
+    mutationFn: async (data: any) => {
+        const res = await adminFetch(`/api/companies/${editingCompany?.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error('Failed');
+        return res.json();
+    },
+    onSuccess: () => {
+        toast.success('Company updated successfully');
+        setFormOpen(false);
+        queryClient.invalidateQueries({ queryKey: ['admin-companies'] });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+        const res = await adminFetch(`/api/companies/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed');
+    },
+    onSuccess: () => {
+        toast.success('Company deleted');
+        setDeleteId(null);
+        queryClient.invalidateQueries({ queryKey: ['admin-companies'] });
+    }
+  });
 
   const handleOpenEdit = (company: Company) => {
     setEditingCompany(company);
@@ -131,53 +150,16 @@ export function AdminCompanies() {
     setFormOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!form.name.trim()) {
       toast.error('Company name is required');
       return;
     }
-
-    setSaving(true);
-    try {
-      const res = await adminFetch(`/api/companies/${editingCompany?.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-
-      if (res.ok) {
-        toast.success('Company updated successfully');
-        setFormOpen(false);
-        fetchCompanies();
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to save company');
-      }
-    } catch {
-      toast.error('Failed to save company');
-    } finally {
-      setSaving(false);
-    }
+    saveMutation.mutate(form);
   };
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    setDeleting(true);
-    try {
-      const res = await adminFetch(`/api/companies/${deleteId}`, { method: 'DELETE' });
-      if (res.ok) {
-        toast.success('Company deleted');
-        setCompanies(prev => prev.filter(c => c.id !== deleteId));
-        setDeleteId(null);
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to delete company');
-      }
-    } catch {
-      toast.error('Failed to delete company');
-    } finally {
-      setDeleting(false);
-    }
+  const handleDelete = () => {
+    if (deleteId) deleteMutation.mutate(deleteId);
   };
 
   const getTierBadge = (tier: string) => {
@@ -220,7 +202,7 @@ export function AdminCompanies() {
             <SelectItem value="platinum">Platinum</SelectItem>
           </SelectContent>
         </Select>
-        <Button variant="outline" onClick={() => { setLoading(true); fetchCompanies(); }}>
+        <Button variant="outline" onClick={() => { queryClient.invalidateQueries({ queryKey: ['admin-companies'] }); }}>
           <RefreshCw className="h-4 w-4" />
         </Button>
       </div>
@@ -377,7 +359,7 @@ export function AdminCompanies() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setFormOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Update Company'}</Button>
+            <Button onClick={handleSave} disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : 'Update Company'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -392,8 +374,8 @@ export function AdminCompanies() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-rose-600 hover:bg-rose-700" disabled={deleting}>
-              {deleting ? 'Deleting...' : 'Delete Company'}
+            <AlertDialogAction onClick={handleDelete} className="bg-rose-600 hover:bg-rose-700" disabled={deleteMutation.isPending}>
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete Company'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

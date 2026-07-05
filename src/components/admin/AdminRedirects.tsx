@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Pencil,
@@ -79,8 +80,7 @@ const emptyForm: RedirectFormData = {
 };
 
 export function AdminRedirects() {
-  const [redirects, setRedirects] = useState<Redirect[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   // Selection for bulk actions
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -102,23 +102,62 @@ export function AdminRedirects() {
   const [importing, setImporting] = useState(false);
   const [exporting, setExporting] = useState(false);
 
-  const fetchRedirects = useCallback(async () => {
-    try {
-      const res = await adminFetch('/api/redirects');
-      if (res.ok) {
-        const data = await res.json();
-        setRedirects(data.redirects || []);
-      }
-    } catch {
-      toast.error('Failed to load redirects');
-    } finally {
-      setLoading(false);
+  const { data: redirects = [], isLoading: loading } = useQuery({
+    queryKey: ['admin-redirects'],
+    queryFn: async () => {
+        const res = await adminFetch('/api/redirects');
+        if (!res.ok) throw new Error('Failed');
+        return (await res.json()).redirects || [];
     }
-  }, []);
+  });
 
-  useEffect(() => {
-    fetchRedirects();
-  }, [fetchRedirects]);
+  const saveMutation = useMutation({
+    mutationFn: async ({ id, data }: { id?: string, data: any }) => {
+        const url = id ? `/api/redirects/${id}` : '/api/redirects';
+        const res = await adminFetch(url, {
+            method: id ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Failed');
+        return res.json();
+    },
+    onSuccess: () => {
+        toast.success(editingRedirect ? 'Redirect updated' : 'Redirect created');
+        setFormOpen(false);
+        queryClient.invalidateQueries({ queryKey: ['admin-redirects'] });
+    },
+    onError: (err: any) => toast.error(err.message)
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+        const res = await adminFetch(`/api/redirects/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed');
+    },
+    onSuccess: () => {
+        toast.success('Redirect deleted');
+        setDeleteId(null);
+        queryClient.invalidateQueries({ queryKey: ['admin-redirects'] });
+    }
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+        const res = await adminFetch('/api/redirects/bulk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids, action: 'delete' }),
+        });
+        if (!res.ok) throw new Error('Failed');
+        return res.json();
+    },
+    onSuccess: (data) => {
+        toast.success(data.message);
+        setSelectedIds([]);
+        queryClient.invalidateQueries({ queryKey: ['admin-redirects'] });
+    }
+  });
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev =>
@@ -134,29 +173,9 @@ export function AdminRedirects() {
     }
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = () => {
     if (selectedIds.length === 0) return;
-    setBulkLoading(true);
-    try {
-      const res = await adminFetch('/api/redirects/bulk', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: selectedIds, action: 'delete' }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        toast.success(data.message);
-        setSelectedIds([]);
-        fetchRedirects();
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Bulk delete failed');
-      }
-    } catch {
-      toast.error('Bulk delete failed');
-    } finally {
-      setBulkLoading(false);
-    }
+    bulkDeleteMutation.mutate(selectedIds);
   };
 
   const handleOpenAdd = () => {
@@ -176,50 +195,24 @@ export function AdminRedirects() {
     setFormOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!form.from.trim() || !form.to.trim()) {
       toast.error('From and To paths are required');
       return;
     }
 
-    // Ensure from path starts with /
     const fromPath = form.from.trim().startsWith('/')
       ? form.from.trim()
       : `/${form.from.trim()}`;
 
-    setSaving(true);
-    try {
-      const payload = {
+    const payload = {
         from: fromPath,
         to: form.to.trim(),
         type: form.type,
         isActive: form.isActive,
-      };
+    };
 
-      const url = editingRedirect
-        ? `/api/redirects/${editingRedirect.id}`
-        : '/api/redirects';
-      const method = editingRedirect ? 'PUT' : 'POST';
-
-      const res = await adminFetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        toast.success(editingRedirect ? 'Redirect updated' : 'Redirect created');
-        setFormOpen(false);
-        fetchRedirects();
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to save redirect');
-      }
-    } catch {
-      toast.error('Failed to save redirect');
-    } finally {
-      setSaving(false);
-    }
+    saveMutation.mutate({ id: editingRedirect?.id, data: payload });
   };
 
   const handleCSVImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -239,7 +232,7 @@ export function AdminRedirects() {
         if (data.errors && data.errors.length > 0) {
           toast.warning(`${data.errors.length} error(s) during import`);
         }
-        fetchRedirects();
+        queryClient.invalidateQueries({ queryKey: ['admin-redirects'] });
       } else {
         const err = await res.json();
         toast.error(err.error || 'Import failed');
@@ -275,24 +268,8 @@ export function AdminRedirects() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    setDeleting(true);
-    try {
-      const res = await adminFetch(`/api/redirects/${deleteId}`, { method: 'DELETE' });
-      if (res.ok) {
-        toast.success('Redirect deleted');
-        setRedirects(prev => prev.filter(r => r.id !== deleteId));
-        setDeleteId(null);
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to delete redirect');
-      }
-    } catch {
-      toast.error('Failed to delete redirect');
-    } finally {
-      setDeleting(false);
-    }
+  const handleDelete = () => {
+    if (deleteId) deleteMutation.mutate(deleteId);
   };
 
   return (
@@ -304,6 +281,10 @@ export function AdminRedirects() {
           <p className="text-muted-foreground mt-1">Manage URL redirects for SEO and page migrations</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-redirects'] })}>
+            <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+            Refresh
+          </Button>
           <label className="cursor-pointer">
             <input type="file" accept=".csv" className="hidden" onChange={handleCSVImport} disabled={importing} />
             <Button variant="outline" size="sm" disabled={importing} asChild>
@@ -344,7 +325,7 @@ export function AdminRedirects() {
             <Button
               size="sm"
               variant="outline"
-              disabled={bulkLoading}
+              disabled={bulkDeleteMutation.isPending}
               className="text-rose-600 hover:text-rose-700"
               onClick={handleBulkDelete}
             >
@@ -551,8 +532,8 @@ export function AdminRedirects() {
             <Button variant="outline" onClick={() => setFormOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? 'Saving...' : editingRedirect ? 'Update Redirect' : 'Create Redirect'}
+            <Button onClick={handleSave} disabled={saveMutation.isPending}>
+              {saveMutation.isPending ? 'Saving...' : editingRedirect ? 'Update Redirect' : 'Create Redirect'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -572,10 +553,10 @@ export function AdminRedirects() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              disabled={deleting}
+              disabled={deleteMutation.isPending}
               className="bg-rose-600 hover:bg-rose-700"
             >
-              {deleting ? 'Deleting...' : 'Delete'}
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

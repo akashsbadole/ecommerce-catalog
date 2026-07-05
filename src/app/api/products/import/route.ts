@@ -243,10 +243,14 @@ function mergeShopifyProduct(rows: ShopifyRow[], storeId?: string | null): Produ
   };
 }
 
+import { getStoreId } from '@/lib/store-db';
+
 export async function POST(request: NextRequest) {
   try {
     const auth = await requireAdminAuth(request);
     if (!auth.success) return auth.response;
+
+    const storeId = getStoreId(request);
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
     const forcePlatform = formData.get('platform') as string | null;
@@ -304,7 +308,12 @@ export async function POST(request: NextRequest) {
           }
 
           const { categoryName, ...createData } = productData;
-          await db.product.create({ data: createData });
+          await db.product.create({
+            data: {
+              ...createData,
+              ...(storeId ? { storeId } : {})
+            }
+          });
           imported++;
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : 'Unknown error';
@@ -347,7 +356,12 @@ export async function POST(request: NextRequest) {
             productData.slug = `${productData.slug}-${rowNum}`;
           }
 
-          await db.product.create({ data: productData });
+          await db.product.create({
+            data: {
+              ...productData,
+              ...(storeId ? { storeId } : {})
+            }
+          });
           imported++;
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : 'Unknown error';

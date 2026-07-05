@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Search,
@@ -132,9 +133,7 @@ function RoleBadge({ role }: { role: string }) {
 }
 
 export function AdminUsers() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [companies, setCompanies] = useState<{id: string, name: string}[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
 
   // Selection for bulk actions
@@ -157,39 +156,24 @@ export function AdminUsers() {
   const [importing, setImporting] = useState(false);
   const [exporting, setExporting] = useState(false);
 
-  const fetchUsers = useCallback(async () => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      if (searchTerm) params.set('search', searchTerm);
-      const res = await adminFetch(`/api/users?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        setUsers(data.users || []);
-      }
-    } catch {
-      toast.error('Failed to load users');
-    } finally {
-      setLoading(false);
+  const { data: users = [], isLoading: loading } = useQuery({
+    queryKey: ['admin-users', searchTerm],
+    queryFn: async () => {
+        const params = new URLSearchParams();
+        if (searchTerm) params.set('search', searchTerm);
+        const res = await adminFetch(`/api/users?${params.toString()}`);
+        if (!res.ok) throw new Error('Failed');
+        return (await res.json()).users || [];
     }
-  }, [searchTerm]);
+  });
 
-  const fetchCompanies = useCallback(async () => {
-    try {
-      const res = await adminFetch('/api/companies');
-      if (res.ok) {
-        const data = await res.json();
-        setCompanies(data.companies || []);
-      }
-    } catch {
-      // ignore
+  const { data: companies = [] } = useQuery({
+    queryKey: ['admin-companies'],
+    queryFn: async () => {
+        const res = await adminFetch('/api/companies');
+        return (await res.json()).companies || [];
     }
-  }, []);
-
-  useEffect(() => {
-    fetchUsers();
-    fetchCompanies();
-  }, [fetchUsers, fetchCompanies]);
+  });
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev =>
@@ -205,53 +189,27 @@ export function AdminUsers() {
     }
   };
 
-  const handleBulkAction = async (action: 'activate' | 'deactivate' | 'delete') => {
-    if (selectedIds.length === 0) return;
-    if (action === 'delete') {
-      setBulkLoading(true);
-      try {
+  const bulkMutation = useMutation({
+    mutationFn: async ({ ids, action }: { ids: string[], action: string }) => {
         const res = await adminFetch('/api/users/bulk', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ids: selectedIds, action }),
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids, action }),
         });
-        if (res.ok) {
-          const data = await res.json();
-          toast.success(data.message);
-          setSelectedIds([]);
-          fetchUsers();
-        } else {
-          const err = await res.json();
-          toast.error(err.error || 'Bulk action failed');
-        }
-      } catch {
-        toast.error('Bulk action failed');
-      } finally {
-        setBulkLoading(false);
-      }
-      return;
-    }
-    setBulkLoading(true);
-    try {
-      const res = await adminFetch('/api/users/bulk', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: selectedIds, action }),
-      });
-      if (res.ok) {
-        const data = await res.json();
+        if (!res.ok) throw new Error((await res.json()).error || 'Failed');
+        return res.json();
+    },
+    onSuccess: (data) => {
         toast.success(data.message);
         setSelectedIds([]);
-        fetchUsers();
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Bulk action failed');
-      }
-    } catch {
-      toast.error('Bulk action failed');
-    } finally {
-      setBulkLoading(false);
-    }
+        queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+    onError: (err: any) => toast.error(err.message)
+  });
+
+  const handleBulkAction = (action: 'activate' | 'deactivate' | 'delete') => {
+    if (selectedIds.length === 0) return;
+    bulkMutation.mutate({ ids: selectedIds, action });
   };
 
   const handleOpenAdd = () => {
@@ -277,7 +235,26 @@ export function AdminUsers() {
     setFormOpen(true);
   };
 
-  const handleSave = async () => {
+  const saveMutation = useMutation({
+    mutationFn: async ({ id, data }: { id?: string, data: any }) => {
+        const url = id ? `/api/users/${id}` : '/api/users';
+        const res = await adminFetch(url, {
+            method: id ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Failed');
+        return res.json();
+    },
+    onSuccess: () => {
+        toast.success(editingUser ? 'User updated' : 'User created');
+        setFormOpen(false);
+        queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+    onError: (err: any) => toast.error(err.message)
+  });
+
+  const handleSave = () => {
     if (!form.name.trim()) {
       toast.error('User name is required');
       return;
@@ -291,9 +268,7 @@ export function AdminUsers() {
       return;
     }
 
-    setSaving(true);
-    try {
-      const payload: Record<string, unknown> = {
+    const payload: Record<string, unknown> = {
         name: form.name.trim(),
         email: form.email.trim(),
         role: form.role,
@@ -303,39 +278,15 @@ export function AdminUsers() {
         companyId: form.companyId || null,
         avatar: form.avatar || null,
         bio: form.bio.trim() || null,
-      };
+    };
 
-      if (!editingUser) {
+    if (!editingUser) {
         payload.password = form.password;
-      } else if (form.password.trim()) {
-        // Optional password reset when editing
+    } else if (form.password.trim()) {
         payload.password = form.password;
-      }
-
-      const url = editingUser
-        ? `/api/users/${editingUser.id}`
-        : '/api/users';
-      const method = editingUser ? 'PUT' : 'POST';
-
-      const res = await adminFetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        toast.success(editingUser ? 'User updated' : 'User created');
-        setFormOpen(false);
-        fetchUsers();
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to save user');
-      }
-    } catch {
-      toast.error('Failed to save user');
-    } finally {
-      setSaving(false);
     }
+
+    saveMutation.mutate({ id: editingUser?.id, data: payload });
   };
 
   const handleCSVImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -355,7 +306,7 @@ export function AdminUsers() {
         if (data.errors && data.errors.length > 0) {
           toast.warning(`${data.errors.length} error(s) during import`);
         }
-        fetchUsers();
+        queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       } else {
         const err = await res.json();
         toast.error(err.error || 'Import failed');
@@ -391,24 +342,20 @@ export function AdminUsers() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    setDeleting(true);
-    try {
-      const res = await adminFetch(`/api/users/${deleteId}`, { method: 'DELETE' });
-      if (res.ok) {
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+        const res = await adminFetch(`/api/users/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed');
+    },
+    onSuccess: () => {
         toast.success('User deleted');
-        setUsers(prev => prev.filter(u => u.id !== deleteId));
         setDeleteId(null);
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to delete user');
-      }
-    } catch {
-      toast.error('Failed to delete user');
-    } finally {
-      setDeleting(false);
+        queryClient.invalidateQueries({ queryKey: ['admin-users'] });
     }
+  });
+
+  const handleDelete = () => {
+    if (deleteId) deleteMutation.mutate(deleteId);
   };
 
   return (
@@ -451,7 +398,7 @@ export function AdminUsers() {
             className="pl-9"
           />
         </div>
-        <Button variant="outline" onClick={() => { setLoading(true); fetchUsers(); }}>
+        <Button variant="outline" onClick={() => { queryClient.invalidateQueries({ queryKey: ['admin-users'] }); }}>
           <RefreshCw className="h-4 w-4" />
         </Button>
       </div>
@@ -466,7 +413,7 @@ export function AdminUsers() {
             <Button
               size="sm"
               variant="outline"
-              disabled={bulkLoading}
+              disabled={bulkMutation.isPending}
               onClick={() => handleBulkAction('activate')}
             >
               <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
@@ -475,7 +422,7 @@ export function AdminUsers() {
             <Button
               size="sm"
               variant="outline"
-              disabled={bulkLoading}
+              disabled={bulkMutation.isPending}
               onClick={() => handleBulkAction('deactivate')}
             >
               <XCircle className="mr-1 h-3.5 w-3.5" />
@@ -484,7 +431,7 @@ export function AdminUsers() {
             <Button
               size="sm"
               variant="outline"
-              disabled={bulkLoading}
+              disabled={bulkMutation.isPending}
               className="text-rose-600 hover:text-rose-700"
               onClick={() => handleBulkAction('delete')}
             >
@@ -835,8 +782,8 @@ export function AdminUsers() {
             <Button variant="outline" onClick={() => setFormOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? 'Saving...' : editingUser ? 'Update User' : 'Create User'}
+            <Button onClick={handleSave} disabled={saveMutation.isPending}>
+              {saveMutation.isPending ? 'Saving...' : editingUser ? 'Update User' : 'Create User'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -855,10 +802,10 @@ export function AdminUsers() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              disabled={deleting}
+              disabled={deleteMutation.isPending}
               className="bg-rose-600 hover:bg-rose-700"
             >
-              {deleting ? 'Deleting...' : 'Delete'}
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

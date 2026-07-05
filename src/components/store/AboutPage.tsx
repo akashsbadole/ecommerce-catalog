@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Factory,
   Route,
@@ -14,7 +15,7 @@ import {
   MapPin,
   Linkedin,
 } from "lucide-react";
-import { BLOCK_DEFAULTS, deepMerge } from "@/lib/page-blocks";
+import { BLOCK_DEFAULTS, deepMerge, normalizePageBlocks } from "@/lib/page-blocks";
 import { useAppStore } from "@/lib/store";
 import { useSeo } from "@/lib/use-seo";
 import { StoreHeroBanner } from "@/components/store/StoreHeroBanner";
@@ -53,34 +54,34 @@ function ResolvedIcon({
   return null;
 }
 
-export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
+export function AboutPage({ onNavigate, data: externalData }: AboutPageProps) {
   useSeo("about", {
     title: "About Us | Purva Bites",
     description:
       "Built on trust. Driven by quality. From a distribution background to a full-scale FMCG manufacturing company — the Purva Bites story is one of conviction and craft.",
   });
 
-  const slugMap: Record<string, string> = {
-    "about-page-content": "about-us",
-    "mfg-page-content": "manufacturing",
-    "contact-page-content": "contact",
-    home: "homepage",
-  };
+  const { data: cmsData } = useQuery({
+    queryKey: ["about-cms"],
+    enabled: !externalData,
+    queryFn: async () => {
+        const res = await fetch("/api/content-pages?slug=about");
+        const json = await res.json();
+        const page = (json.contentPages || [])[0];
+        if (page?.blocks) {
+            const blocks = normalizePageBlocks(page.blocks);
+            return getPageContentData(
+                blocks,
+                "about-page-content",
+                BLOCK_DEFAULTS["about-page-content"].defaultData
+            );
+        }
+        return null;
+    }
+  });
 
-  const cmsSlug =
-    (slugMap["about-page-content"] as string | undefined) ||
-    "about-page-content";
-
-  const { blocks: aboutBlocks } = useContentPage("about-page-content");
-  const { blocks: fallbackBlocks } = useContentPage(cmsSlug);
-  const effectiveBlocks = aboutBlocks ?? fallbackBlocks;
-  const cmsAboutData = getPageContentData(
-    effectiveBlocks,
-    "about-page-content",
-    BLOCK_DEFAULTS["about-page-content"].defaultData,
-  );
   const fallbackAbout = BLOCK_DEFAULTS["about-page-content"].defaultData;
-  const data = deepMerge(fallbackAbout, cmsAboutData);
+  const data = externalData || deepMerge(fallbackAbout, cmsData || {});
 
   const hero = (data.hero as Record<string, unknown>) || {};
   const stats = (data.stats as Array<{ value: string; label: string }>) || [];

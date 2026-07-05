@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Search,
@@ -100,11 +101,8 @@ const INTERNAL_PAGES = [
 ];
 
 export function AdminMenus() {
-  const [menus, setMenus] = useState<Menu[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
-  const [contentPages, setContentPages] = useState<{title: string, slug: string}[]>([]);
-  const [categories, setCategories] = useState<{name: string, slug: string}[]>([]);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
@@ -121,48 +119,31 @@ export function AdminMenus() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const fetchMenus = useCallback(async () => {
-    try {
-      const params = new URLSearchParams();
-      if (searchTerm) params.set('search', searchTerm);
-      const res = await adminFetch(`/api/admin/menus?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        setMenus(data.menus || []);
-      }
-    } catch {
-      toast.error('Failed to load menus');
-    } finally {
-      setLoading(false);
+  const { data: menus = [], isLoading: loading } = useQuery({
+    queryKey: ['admin-menus', searchTerm],
+    queryFn: async () => {
+        const params = new URLSearchParams();
+        if (searchTerm) params.set('search', searchTerm);
+        const res = await adminFetch(`/api/admin/menus?${params.toString()}`);
+        return (await res.json()).menus || [];
     }
-  }, [searchTerm]);
+  });
 
-  const fetchContentPages = useCallback(async () => {
-    try {
-      const res = await adminFetch('/api/content-pages?all=true');
-      if (res.ok) {
-        const data = await res.json();
-        setContentPages(data.contentPages || []);
-      }
-    } catch { /* ignore */ }
-  }, []);
+  const { data: contentPages = [] } = useQuery({
+    queryKey: ['admin-content-pages-minimal'],
+    queryFn: async () => {
+        const res = await adminFetch('/api/content-pages?all=true');
+        return (await res.json()).contentPages || [];
+    }
+  });
 
-  const fetchCategories = useCallback(async () => {
-    try {
-      const res = await adminFetch('/api/categories?all=true');
-      if (res.ok) {
-        const data = await res.json();
-        setCategories(data.categories || []);
-      }
-    } catch { /* ignore */ }
-  }, []);
-
-  useEffect(() => {
-    setLoading(true);
-    fetchMenus();
-    fetchContentPages();
-    fetchCategories();
-  }, [fetchMenus, fetchContentPages, fetchCategories]);
+  const { data: categories = [] } = useQuery({
+    queryKey: ['admin-categories-minimal'],
+    queryFn: async () => {
+        const res = await adminFetch('/api/categories?all=true');
+        return (await res.json()).categories || [];
+    }
+  });
 
   const handleOpenAdd = () => {
     setEditingMenu(null);
@@ -203,7 +184,26 @@ export function AdminMenus() {
     }));
   };
 
-  const handleSave = async () => {
+  const saveMutation = useMutation({
+    mutationFn: async ({ id, data }: { id?: string, data: any }) => {
+        const url = id ? `/api/admin/menus/${id}` : '/api/admin/menus';
+        const res = await adminFetch(url, {
+            method: id ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Failed');
+        return res.json();
+    },
+    onSuccess: () => {
+        toast.success(editingMenu ? 'Menu updated' : 'Menu created');
+        setFormOpen(false);
+        queryClient.invalidateQueries({ queryKey: ['admin-menus'] });
+    },
+    onError: (err: any) => toast.error(err.message)
+  });
+
+  const handleSave = () => {
     if (!form.name.trim()) {
       toast.error('Menu name is required');
       return;
@@ -217,61 +217,32 @@ export function AdminMenus() {
       return;
     }
 
-    setSaving(true);
-    try {
-      const payload = {
+    const payload = {
         name: form.name.trim(),
         slug: form.slug.trim(),
         location: form.location,
         description: form.description.trim() || null,
         isActive: form.isActive,
         items: form.items,
-      };
+    };
 
-      const url = editingMenu
-        ? `/api/admin/menus/${editingMenu.id}`
-        : '/api/admin/menus';
-      const method = editingMenu ? 'PUT' : 'POST';
-
-      const res = await adminFetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        toast.success(editingMenu ? 'Menu updated' : 'Menu created');
-        setFormOpen(false);
-        fetchMenus();
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to save menu');
-      }
-    } catch {
-      toast.error('Failed to save menu');
-    } finally {
-      setSaving(false);
-    }
+    saveMutation.mutate({ id: editingMenu?.id, data: payload });
   };
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    setDeleting(true);
-    try {
-      const res = await adminFetch(`/api/admin/menus/${deleteId}`, { method: 'DELETE' });
-      if (res.ok) {
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+        const res = await adminFetch(`/api/admin/menus/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed');
+    },
+    onSuccess: () => {
         toast.success('Menu deleted');
-        setMenus(prev => prev.filter(m => m.id !== deleteId));
         setDeleteId(null);
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to delete menu');
-      }
-    } catch {
-      toast.error('Failed to delete menu');
-    } finally {
-      setDeleting(false);
+        queryClient.invalidateQueries({ queryKey: ['admin-menus'] });
     }
+  });
+
+  const handleDelete = () => {
+    if (deleteId) deleteMutation.mutate(deleteId);
   };
 
   const addMenuItem = (parentId?: string | null) => {
@@ -514,7 +485,7 @@ export function AdminMenus() {
             className="pl-9"
           />
         </div>
-        <Button variant="outline" onClick={() => { setLoading(true); fetchMenus(); }}>
+        <Button variant="outline" onClick={() => { queryClient.invalidateQueries({ queryKey: ['admin-menus'] }); }}>
           <RefreshCw className="h-4 w-4" />
         </Button>
       </div>
@@ -722,8 +693,8 @@ export function AdminMenus() {
                 >
                   Cancel
                 </Button>
-                <Button onClick={handleSave} disabled={saving}>
-                  {saving ? 'Saving...' : editingMenu ? 'Update Menu' : 'Create Menu'}
+                <Button onClick={handleSave} disabled={saveMutation.isPending}>
+                  {saveMutation.isPending ? 'Saving...' : editingMenu ? 'Update Menu' : 'Create Menu'}
                 </Button>
               </div>
             </CardContent>
@@ -745,10 +716,10 @@ export function AdminMenus() {
             </Button>
             <Button
               onClick={handleDelete}
-              disabled={deleting}
+              disabled={deleteMutation.isPending}
               className="bg-rose-600 hover:bg-rose-700"
             >
-              {deleting ? 'Deleting...' : 'Delete'}
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
             </Button>
           </DialogFooter>
         </DialogContent>

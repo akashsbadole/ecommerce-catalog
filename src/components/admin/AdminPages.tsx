@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Search,
@@ -126,8 +127,7 @@ function generateSlug(name: string): string {
 }
 
 export function AdminPages() {
-  const [pages, setPages] = useState<ContentPage[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
 
   const [formOpen, setFormOpen] = useState(false);
@@ -146,26 +146,16 @@ export function AdminPages() {
   const [builderBlocks, setBuilderBlocks] = useState<PageBlock[]>([]);
   const [builderSaving, setBuilderSaving] = useState(false);
 
-  const fetchPages = useCallback(async () => {
-    try {
-      const params = new URLSearchParams({ all: 'true' });
-      if (searchTerm) params.set('search', searchTerm);
-      const res = await adminFetch(`/api/content-pages?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        setPages(data.contentPages || []);
-      }
-    } catch {
-      toast.error('Failed to load pages');
-    } finally {
-      setLoading(false);
+  const { data: pages = [], isLoading: loading } = useQuery({
+    queryKey: ['admin-pages', searchTerm],
+    queryFn: async () => {
+        const params = new URLSearchParams({ all: 'true' });
+        if (searchTerm) params.set('search', searchTerm);
+        const res = await adminFetch(`/api/content-pages?${params.toString()}`);
+        if (!res.ok) throw new Error('Failed');
+        return (await res.json()).contentPages || [];
     }
-  }, [searchTerm]);
-
-  useEffect(() => {
-    setLoading(true);
-    fetchPages();
-  }, [fetchPages]);
+  });
 
   const handleOpenAdd = () => {
     setEditingPage(null);
@@ -207,31 +197,29 @@ export function AdminPages() {
     setBuilderBlocks([]);
   };
 
-  const handleBuilderSave = async () => {
+  const saveMutation = useMutation({
+    mutationFn: async ({ id, data }: { id?: string, data: any }) => {
+        const url = id ? `/api/content-pages/${id}` : '/api/content-pages';
+        const res = await adminFetch(url, {
+            method: id ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Failed');
+        return res.json();
+    },
+    onSuccess: (_, variables) => {
+        toast.success(variables.id ? 'Page updated' : 'Page created');
+        setFormOpen(false);
+        setBuilderMode(false);
+        queryClient.invalidateQueries({ queryKey: ['admin-pages'] });
+    },
+    onError: (err: any) => toast.error(err.message)
+  });
+
+  const handleBuilderSave = () => {
     if (!builderPageId) return;
-    if (!Array.isArray(builderBlocks)) {
-      toast.error('Block data is invalid');
-      return;
-    }
-    setBuilderSaving(true);
-    try {
-      const res = await adminFetch(`/api/content-pages/${builderPageId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ blocks: builderBlocks }),
-      });
-      if (res.ok) {
-        toast.success('Page blocks saved');
-        fetchPages();
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to save blocks');
-      }
-    } catch {
-      toast.error('Failed to save blocks');
-    } finally {
-      setBuilderSaving(false);
-    }
+    saveMutation.mutate({ id: builderPageId, data: { blocks: builderBlocks } });
   };
 
   const handleTitleChange = (title: string) => {
@@ -242,15 +230,13 @@ export function AdminPages() {
     }));
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!form.title.trim()) {
       toast.error('Page title is required');
       return;
     }
 
-    setSaving(true);
-    try {
-      const payload = {
+    const payload = {
         title: form.title.trim(),
         slug: form.slug.trim() || generateSlug(form.title),
         content: form.content.trim() || '',
@@ -262,52 +248,25 @@ export function AdminPages() {
         customSchema: form.customSchema.trim() || null,
         isActive: form.isActive,
         sortOrder: parseInt(form.sortOrder) || 0,
-      };
+    };
 
-      const url = editingPage
-        ? `/api/content-pages/${editingPage.id}`
-        : '/api/content-pages';
-      const method = editingPage ? 'PUT' : 'POST';
-
-      const res = await adminFetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        toast.success(editingPage ? 'Page updated' : 'Page created');
-        setFormOpen(false);
-        fetchPages();
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to save page');
-      }
-    } catch {
-      toast.error('Failed to save page');
-    } finally {
-      setSaving(false);
-    }
+    saveMutation.mutate({ id: editingPage?.id, data: payload });
   };
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    setDeleting(true);
-    try {
-      const res = await adminFetch(`/api/content-pages/${deleteId}`, { method: 'DELETE' });
-      if (res.ok) {
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+        const res = await adminFetch(`/api/content-pages/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed');
+    },
+    onSuccess: () => {
         toast.success('Page deleted');
-        setPages(prev => prev.filter(p => p.id !== deleteId));
         setDeleteId(null);
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to delete page');
-      }
-    } catch {
-      toast.error('Failed to delete page');
-    } finally {
-      setDeleting(false);
+        queryClient.invalidateQueries({ queryKey: ['admin-pages'] });
     }
+  });
+
+  const handleDelete = () => {
+    if (deleteId) deleteMutation.mutate(deleteId);
   };
 
   // Builder mode view
@@ -327,9 +286,9 @@ export function AdminPages() {
               </p>
             </div>
           </div>
-          <Button onClick={handleBuilderSave} disabled={builderSaving}>
+          <Button onClick={handleBuilderSave} disabled={saveMutation.isPending}>
             <Save className="mr-2 h-4 w-4" />
-            {builderSaving ? 'Saving...' : 'Save Blocks'}
+            {saveMutation.isPending ? 'Saving...' : 'Save Blocks'}
           </Button>
         </div>
 
@@ -367,7 +326,7 @@ export function AdminPages() {
             className="pl-9"
           />
         </div>
-        <Button variant="outline" onClick={() => { setLoading(true); fetchPages(); }}>
+        <Button variant="outline" onClick={() => { queryClient.invalidateQueries({ queryKey: ['admin-pages'] }); }}>
           <RefreshCw className="h-4 w-4" />
         </Button>
       </div>
@@ -659,8 +618,8 @@ export function AdminPages() {
             <Button variant="outline" onClick={() => setFormOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? 'Saving...' : editingPage ? 'Update Page' : 'Create Page'}
+            <Button onClick={handleSave} disabled={saveMutation.isPending}>
+              {saveMutation.isPending ? 'Saving...' : editingPage ? 'Update Page' : 'Create Page'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -679,10 +638,10 @@ export function AdminPages() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              disabled={deleting}
+              disabled={deleteMutation.isPending}
               className="bg-rose-600 hover:bg-rose-700"
             >
-              {deleting ? 'Deleting...' : 'Delete'}
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

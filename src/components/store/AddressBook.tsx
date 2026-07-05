@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { MapPin, Plus, Trash2, Home, Briefcase, CheckCircle2, Loader2 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
@@ -17,10 +18,8 @@ import {
 
 export function AddressBook() {
   const { auth } = useAppStore();
-  const [addresses, setAddresses] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     label: "Home",
     name: "",
@@ -31,67 +30,63 @@ export function AddressBook() {
     pincode: "",
   });
 
-  const fetchAddresses = async () => {
-    if (!auth.token) return;
-    try {
-      const res = await fetch("/api/account/addresses", {
-        headers: { Authorization: `Bearer ${auth.token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setAddresses(data.addresses || []);
-      }
-    } catch {
-      toast.error("Failed to load addresses");
-    } finally {
-      setLoading(false);
+  const { data: addresses = [], isLoading: loading } = useQuery({
+    queryKey: ["addresses"],
+    enabled: !!auth.token,
+    queryFn: async () => {
+        const res = await fetch("/api/account/addresses", {
+            headers: { Authorization: `Bearer ${auth.token}` },
+        });
+        return (await res.json()).addresses || [];
     }
-  };
+  });
 
-  useEffect(() => {
-    fetchAddresses();
-  }, [auth.token]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      const res = await fetch("/api/account/addresses", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${auth.token}`,
-        },
-        body: JSON.stringify(formData),
-      });
-      if (res.ok) {
+  const addMutation = useMutation({
+    mutationFn: async (data: any) => {
+        const res = await fetch("/api/account/addresses", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${auth.token}`,
+            },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error("Failed");
+        return res.json();
+    },
+    onSuccess: () => {
         toast.success("Address added");
         setOpen(false);
-        fetchAddresses();
-      }
-    } finally {
-      setSaving(false);
+        queryClient.invalidateQueries({ queryKey: ["addresses"] });
     }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+        const updated = addresses.filter((a: any) => a.id !== id);
+        const res = await fetch("/api/account/addresses", {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${auth.token}`,
+            },
+            body: JSON.stringify({ addresses: updated }),
+          });
+          if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: () => {
+        toast.success("Address deleted");
+        queryClient.invalidateQueries({ queryKey: ["addresses"] });
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    addMutation.mutate(formData);
   };
 
-  const deleteAddress = async (id: string) => {
-    const updated = addresses.filter((a) => a.id !== id);
-    try {
-      const res = await fetch("/api/account/addresses", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${auth.token}`,
-        },
-        body: JSON.stringify({ addresses: updated }),
-      });
-      if (res.ok) {
-        setAddresses(updated);
-        toast.success("Address deleted");
-      }
-    } catch {
-      toast.error("Failed to delete");
-    }
+  const deleteAddress = (id: string) => {
+    deleteMutation.mutate(id);
   };
 
   return (
@@ -181,8 +176,8 @@ export function AddressBook() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={saving}>
-                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" disabled={addMutation.isPending}>
+                {addMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Save Address
               </Button>
             </DialogFooter>

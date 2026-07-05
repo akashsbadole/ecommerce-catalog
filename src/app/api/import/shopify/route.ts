@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { parseCSV } from '@/lib/utils';
 import { requireAdminAuth } from '@/lib/admin-auth';
+import { getStoreId } from '@/lib/store-db';
 
 interface ShopifyProduct {
   Handle: string;
@@ -57,6 +58,8 @@ export async function POST(request: NextRequest) {
   try {
     const auth = await requireAdminAuth(request);
     if (!auth.success) return auth.response;
+
+    const storeId = getStoreId(request);
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const categoryId = formData.get('categoryId') as string | null;
@@ -125,6 +128,7 @@ export async function POST(request: NextRequest) {
             images: JSON.stringify(images),
             isActive: firstVariant.Published === 'TRUE' || firstVariant.Status === 'active',
             categoryId: categoryId || undefined,
+            ...(storeId ? { storeId } : {}),
           },
         });
 

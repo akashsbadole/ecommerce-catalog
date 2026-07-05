@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { parseCSV } from '@/lib/utils';
 import { requireAdminAuth } from '@/lib/admin-auth';
+import { getStoreId } from '@/lib/store-db';
 
 interface WooProduct {
   ID: string;
@@ -52,6 +53,8 @@ export async function POST(request: NextRequest) {
   try {
     const auth = await requireAdminAuth(request);
     if (!auth.success) return auth.response;
+
+    const storeId = getStoreId(request);
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const categoryId = formData.get('categoryId') as string | null;
@@ -108,7 +111,11 @@ export async function POST(request: NextRequest) {
           const categoryName = product.Categories.split(',')[0].trim();
           if (categoryName) {
             let category = await db.category.findFirst({
-              where: { name: categoryName, deletedAt: null },
+              where: {
+                name: categoryName,
+                deletedAt: null,
+                ...(storeId ? { storeId } : {})
+              },
             });
             if (!category) {
               category = await db.category.create({
@@ -116,6 +123,7 @@ export async function POST(request: NextRequest) {
                   name: categoryName,
                   slug: categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
                   isActive: true,
+                  ...(storeId ? { storeId } : {}),
                 },
               });
             }
@@ -135,6 +143,7 @@ export async function POST(request: NextRequest) {
             images: JSON.stringify(images),
             isActive: product.Published === '1' && product.Status !== 'private',
             categoryId: finalCategoryId || undefined,
+            ...(storeId ? { storeId } : {}),
           },
         });
 
