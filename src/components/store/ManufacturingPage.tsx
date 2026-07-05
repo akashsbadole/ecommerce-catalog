@@ -354,13 +354,27 @@ export function ManufacturingPage({
                     </span>
                   </div>
                 ))}
-                <button
-                  onClick={() => onNavigate("contact")}
-                  className="w-full mt-5 bg-primary text-primary-foreground text-sm font-medium rounded-md py-2.5 hover:bg-primary/90 transition-colors"
-                >
-                  {(privateLabel.ctaText as string) ||
-                    "Enquire for private label →"}
-                </button>
+                {(privateLabel.ctaLink as string) ? (
+                  <button
+                    onClick={() => {
+                      const link = (privateLabel.ctaLink as string);
+                      if (link.startsWith("http")) {
+                        window.open(link, "_blank");
+                      } else if (link.startsWith("#")) {
+                        const el = document.getElementById(link.slice(1));
+                        if (el) el.scrollIntoView({ behavior: "smooth" });
+                      } else if (link.startsWith("/")) {
+                        window.location.assign(link);
+                      } else {
+                        onNavigate(link);
+                      }
+                    }}
+                    className="w-full mt-5 bg-primary text-primary-foreground text-sm font-medium rounded-md py-2.5 hover:bg-primary/90 transition-colors"
+                  >
+                    {(privateLabel.ctaText as string) ||
+                      "Enquire for private label →"}
+                  </button>
+                ) : null}
               </div>
             </div>
           </div>
