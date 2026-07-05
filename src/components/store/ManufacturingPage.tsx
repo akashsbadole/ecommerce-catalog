@@ -272,12 +272,14 @@ export function ManufacturingPage({
                   ))}
                   {activeLineData?.ctaEnabled !== false && (
                     <button
-                      onClick={() =>
-                        onNavigate(
-                          (activeLineData?.ctaLink as string) || "category",
-                          activeLineData?.id || "khakhra",
-                        )
-                      }
+                      onClick={() => {
+                        const link = (activeLineData?.ctaLink as string) || "";
+                        if (link.startsWith("/")) {
+                          window.location.assign(link);
+                        } else {
+                          onNavigate(link || "category", activeLineData?.id || "khakhra");
+                        }
+                      }}
                       className="text-xs bg-primary text-primary-foreground rounded px-3 py-1.5 hover:bg-primary/90 transition-colors ml-auto"
                     >
                       {activeLineData?.ctaText || "View Products →"}

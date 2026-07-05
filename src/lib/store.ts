@@ -136,7 +136,7 @@ export const useAppStore = create<AppState>()(
           case "product-page":
             set({ currentPage: { type: "product-page", slug: data as string } });
             if (typeof window !== "undefined")
-              window.history.pushState({}, "", `/product/${data as string}`);
+              window.history.pushState({}, "", `/products/${data as string}`);
             break;
           case "content-page": {
             const rawSlug = (data as string) || "";
