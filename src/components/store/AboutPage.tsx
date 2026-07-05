@@ -17,6 +17,7 @@ import {
 import { useAppStore } from "@/lib/store";
 import { useSeo } from "@/lib/use-seo";
 import { StoreHeroBanner } from "@/components/store/StoreHeroBanner";
+import { Breadcrumb } from "@/components/store/Breadcrumb";
 import { getPageContentData } from "@/lib/use-page-content";
 import { useCmsPageData } from "@/lib/use-cms-data";
 import { LeadCaptureSection } from "@/components/store/LeadCaptureSection";
@@ -127,6 +128,13 @@ export function AboutPage({ onNavigate, data: _data }: AboutPageProps) {
       {(story.heading || story.subtitle || stats.length > 0) && (
       <section className="bg-muted/40 py-16 px-4">
         <div className="container mx-auto max-w-5xl">
+          <Breadcrumb
+            items={[
+              { label: "Home", page: "home" },
+              { label: "About Us" },
+            ]}
+            onNavigate={onNavigate}
+          />
           <div className="flex flex-col md:flex-row gap-10 items-center">
             <div className="hidden md:block w-1 h-12 bg-primary rounded-full flex-shrink-0" />
             <div className="flex-1">

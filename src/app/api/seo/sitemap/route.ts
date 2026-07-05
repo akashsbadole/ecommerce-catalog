@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     // Products
     for (const product of products) {
       const lastmod = product.updatedAt.toISOString().split('T')[0];
-      urls.push(`  <url>\n    <loc>${baseUrl}/${product.slug}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`);
+      urls.push(`  <url>\n    <loc>${baseUrl}/products/${product.slug}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`);
     }
 
     // Categories

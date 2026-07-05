@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useSeo } from "@/lib/use-seo";
 import { CategoryFieldsRenderer } from "./CategoryFieldsRenderer";
 import type { CategoryFieldData } from "./CategoryFieldsRenderer";
+import { Breadcrumb } from "@/components/store/Breadcrumb";
 import { StoreLoading } from "./StoreLoading";
 
 interface CategoryPageProps {
@@ -159,7 +160,15 @@ export function CategoryPage({ slug, onNavigate }: CategoryPageProps) {
 
   return (
     <div className="flex flex-col">
-      <CategoryFieldsRenderer fields={fields} onNavigate={onNavigate} />
+      <CategoryFieldsRenderer
+        fields={fields}
+        onNavigate={onNavigate}
+        breadcrumb={[
+          { label: "Home", page: "home" },
+          { label: "Products", page: "products" },
+          { label: category.name },
+        ]}
+      />
     </div>
   );
 }

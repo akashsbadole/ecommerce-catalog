@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useSeo } from "@/lib/use-seo";
 import { StoreHeroBanner } from "@/components/store/StoreHeroBanner";
+import { Breadcrumb } from "@/components/store/Breadcrumb";
 import { getPageContentData } from "@/lib/use-page-content";
 import { useCmsPageData } from "@/lib/use-cms-data";
 import { LeadCaptureSection } from "@/components/store/LeadCaptureSection";
@@ -106,6 +107,16 @@ export function ContactPage({ onNavigate, data: _data }: ContactPageProps) {
         selectedType={selectedType}
         onSelectType={setSelectedType}
       />
+
+      <div className="container mx-auto max-w-5xl px-4 pt-6">
+        <Breadcrumb
+          items={[
+            { label: "Home", page: "home" },
+            { label: "Contact" },
+          ]}
+          onNavigate={onNavigate}
+        />
+      </div>
 
       {/* CT1: Contact Form */}
       <LeadCaptureSection

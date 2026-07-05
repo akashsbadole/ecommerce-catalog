@@ -15,6 +15,7 @@ import { useSeo } from "@/lib/use-seo";
 import { getPageContentData } from "@/lib/use-page-content";
 import { useCmsPageData } from "@/lib/use-cms-data";
 import { LeadCaptureSection } from "@/components/store/LeadCaptureSection";
+import { Breadcrumb } from "@/components/store/Breadcrumb";
 import { StoreLoading } from "./StoreLoading";
 
 interface DistributionPageProps {
@@ -130,6 +131,16 @@ export function DistributionPage({
           )}
         </div>
       </section>
+
+      <div className="container mx-auto max-w-5xl px-4 pt-6">
+        <Breadcrumb
+          items={[
+            { label: "Home", page: "home" },
+            { label: "Distribution" },
+          ]}
+          onNavigate={onNavigate}
+        />
+      </div>
 
       {/* Stats bar */}
       {stats.length > 0 && (

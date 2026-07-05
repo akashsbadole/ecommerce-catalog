@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useSeo } from "@/lib/use-seo";
 import { StoreHeroBanner } from "@/components/store/StoreHeroBanner";
+import { Breadcrumb } from "@/components/store/Breadcrumb";
 import { getPageContentData } from "@/lib/use-page-content";
 import { useCmsPageData } from "@/lib/use-cms-data";
 import { LeadCaptureSection } from "@/components/store/LeadCaptureSection";
@@ -105,9 +106,13 @@ export function ManufacturingPage({
       {(intro.heading || intro.description || metrics.length > 0) && (
       <section className="bg-muted/40 py-12 px-4">
         <div className="container mx-auto max-w-5xl">
-          <p className="text-xs text-muted-foreground mb-4">
-            Home › Manufacturing
-          </p>
+          <Breadcrumb
+            items={[
+              { label: "Home", page: "home" },
+              { label: "Manufacturing" },
+            ]}
+            onNavigate={onNavigate}
+          />
           <div className="flex flex-col md:flex-row gap-10 items-center">
             <div className="flex-[2]">
               {(intro.heading as string) && (

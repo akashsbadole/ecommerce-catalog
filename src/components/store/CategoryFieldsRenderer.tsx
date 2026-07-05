@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
 import { getFirstImage } from "@/lib/utils";
 import { LeadCaptureSection } from "./LeadCaptureSection";
+import { Breadcrumb } from "@/components/store/Breadcrumb";
 
 export interface CategoryFieldData {
   heroTitle: string | null;
@@ -714,11 +715,13 @@ function GallerySection({
 interface CategoryFieldsRendererProps {
   fields: CategoryFieldData;
   onNavigate?: (page: string, data?: unknown) => void;
+  breadcrumb?: Array<{ label: string; page?: string; slug?: string }>;
 }
 
 export function CategoryFieldsRenderer({
   fields,
   onNavigate,
+  breadcrumb,
 }: CategoryFieldsRendererProps) {
   const bullets = parseJsonArray<string>(fields.contentSplitBullets);
   const productIds = parseJsonArray<string>(fields.cardsProductIds);
@@ -739,6 +742,12 @@ export function CategoryFieldsRenderer({
         backgroundImage={fields.heroBackgroundImage || undefined}
         backgroundColor={fields.heroBackgroundColor || undefined}
       />
+
+      {breadcrumb && breadcrumb.length > 0 && (
+        <div className="container mx-auto max-w-5xl px-4 pt-6">
+          <Breadcrumb items={breadcrumb} onNavigate={onNavigate} />
+        </div>
+      )}
 
       <ContentSplitSection
         image={fields.contentSplitImage || ""}

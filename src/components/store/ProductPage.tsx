@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { getFirstImage } from "@/lib/utils";
 import { useSeo } from "@/lib/use-seo";
 import { useAppStore } from "@/lib/store";
+import { Breadcrumb } from "@/components/store/Breadcrumb";
 import { StoreLoading } from "./StoreLoading";
 import { LeadCaptureSection } from "./LeadCaptureSection";
 
@@ -130,6 +131,20 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
           Enquire Now
         </Button>
       </section>
+
+      <div className="container mx-auto max-w-5xl px-4 pb-2">
+        <Breadcrumb
+          items={[
+            { label: "Home", page: "home" },
+            { label: "Products", page: "products" },
+            ...(product.Category
+              ? [{ label: product.Category.name, page: "category" as const, slug: product.Category.slug }]
+              : []),
+            { label: product.name },
+          ]}
+          onNavigate={onNavigate}
+        />
+      </div>
 
       <LeadCaptureSection
         heading={`Enquire about ${product.name}`}

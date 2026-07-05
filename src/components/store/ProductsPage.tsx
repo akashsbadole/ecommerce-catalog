@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Info, Download, ArrowRight } from "lucide-react";
+import { Breadcrumb } from "@/components/store/Breadcrumb";
 
 interface ProductsPageProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -172,7 +173,13 @@ export function ProductsPage({
       {/* Breadcrumb + B2B notice */}
       <section className="bg-muted/40 py-3 px-4">
         <div className="container mx-auto max-w-5xl flex items-center justify-between">
-          <p className="text-xs text-muted-foreground">Home › Products</p>
+          <Breadcrumb
+            items={[
+              { label: "Home", page: "home" },
+              { label: "Products" },
+            ]}
+            onNavigate={onNavigate}
+          />
           <div className="flex items-center gap-2 bg-background border rounded px-3 py-1.5">
             <Info className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">

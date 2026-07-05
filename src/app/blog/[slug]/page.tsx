@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { db } from "@/lib/db";
 import { BlogPostClientPage } from "./client";
 
 interface Props {
@@ -7,9 +8,21 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
+  const post = await db.blogPost.findFirst({
+    where: { slug },
+    select: { title: true, metaTitle: true, metaDescription: true, ogImage: true },
+  });
+
+  if (!post) {
+    return { title: "Blog Post" };
+  }
+
   return {
-    title: `${slug.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")} | Purva Bites Blog`,
-    description: `Read our latest blog post about ${slug.replace(/-/g, " ")}.`,
+    title: post.metaTitle || post.title,
+    description: post.metaDescription || "",
+    ...(post.ogImage
+      ? { openGraph: { images: [{ url: post.ogImage }] } }
+      : {}),
   };
 }
 
