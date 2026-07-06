@@ -111,7 +111,11 @@ export function LeadCaptureSection({
 
           <form className="space-y-4" onSubmit={handleSubmit}>
             {productContext && (
-              <input type="hidden" name="productName" value={productContext.name} />
+              <input
+                type="hidden"
+                name="productName"
+                value={productContext.name}
+              />
             )}
             {fields.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">

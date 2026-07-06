@@ -201,18 +201,16 @@ function HeroBlock({
   onNavigate?: (page: string, data?: unknown) => void;
 }) {
   const bgImage = (data.backgroundImage as string) || "";
+  const mobileImage = (data.mobileImage as string) || "";
+  const tabletImage = (data.tabletImage as string) || "";
+  const desktopImage = (data.desktopImage as string) || "";
   const title = (data.title as string) || "Welcome";
   const subtitle = (data.subtitle as string) || "";
   const buttonText = (data.buttonText as string) || "";
   const buttonLink = (data.buttonLink as string) || "/purva-bites-distribution";
-  const height = (data.height as string) || "medium";
   const alignment = (data.alignment as string) || "center";
 
-  const heightClasses: Record<string, string> = {
-    small: "min-h-[200px] sm:min-h-[250px]",
-    medium: "min-h-[300px] sm:min-h-[400px] lg:min-h-[450px]",
-    large: "min-h-[400px] sm:min-h-[500px] lg:min-h-[600px]",
-  };
+  const hasResponsiveImage = !!(mobileImage || tabletImage || desktopImage);
 
   const alignClasses: Record<string, string> = {
     left: "text-left",
@@ -221,21 +219,39 @@ function HeroBlock({
   };
 
   return (
-    <div
-      className={`relative flex items-center overflow-hidden w-full ${heightClasses[height] || heightClasses.medium}`}
-    >
-      {bgImage ? (
+    <div className="relative w-full">
+      {hasResponsiveImage ? (
+        <picture className="block w-full leading-[0]">
+          {mobileImage && (
+            <source
+              media="(max-width: 640px)"
+              srcSet={getOptimizedUrl(mobileImage, 640)}
+            />
+          )}
+          {tabletImage && (
+            <source
+              media="(max-width: 1024px)"
+              srcSet={getOptimizedUrl(tabletImage, 640)}
+            />
+          )}
+          <StoreImg
+            src={desktopImage || bgImage}
+            alt=""
+            className="w-full h-auto"
+          />
+        </picture>
+      ) : bgImage ? (
         <StoreImg
           src={bgImage}
           alt=""
-          className="absolute inset-0 w-full h-full object-cover"
+          className="w-full h-auto"
         />
       ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary/80" />
+        <div className="w-full min-h-[300px] bg-gradient-to-br from-primary via-primary/90 to-primary/80" />
       )}
       <div className="absolute inset-0 bg-black/30" />
       <div
-        className={`relative z-10 w-full ${alignClasses[alignment] || alignClasses.center}`}
+        className={`absolute inset-0 flex flex-col items-center justify-center ${alignClasses[alignment] || alignClasses.center}`}
       >
         <div className="mx-auto w-full px-6">
           <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
@@ -244,24 +260,28 @@ function HeroBlock({
           {subtitle && (
             <p className="mt-4 text-lg text-white/90 sm:text-xl">{subtitle}</p>
           )}
-          {buttonText && (
-            <Button
-              size="lg"
-              className="mt-6 bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={() =>
-                onNavigate &&
-                buttonLink &&
-                onNavigate(
-                  buttonLink.startsWith("/") ? "content-page" : "distribution",
-                  buttonLink.replace("/page/", ""),
-                )
-              }
-            >
-              {buttonText}
-            </Button>
-          )}
         </div>
       </div>
+      {buttonText && (
+        <div
+          className={`absolute bottom-0 left-0 right-0 z-10 w-full px-6 pb-6 sm:pb-8 ${alignClasses[alignment] || alignClasses.center}`}
+        >
+          <Button
+            size="lg"
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+            onClick={() =>
+              onNavigate &&
+              buttonLink &&
+              onNavigate(
+                buttonLink.startsWith("/") ? "content-page" : "distribution",
+                buttonLink.replace("/page/", ""),
+              )
+            }
+          >
+            {buttonText}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -276,6 +296,9 @@ function HeroCarouselBlock({
   const slides =
     (data.slides as Array<{
       image: string;
+      mobileImage: string;
+      tabletImage: string;
+      desktopImage: string;
       title: string;
       subtitle: string;
       buttonText: string;
@@ -284,14 +307,7 @@ function HeroCarouselBlock({
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const interval = (data.interval as number) || 6000;
-  const height = (data.height as string) || "medium";
   const alignment = (data.alignment as string) || "center";
-
-  const heightClasses: Record<string, string> = {
-    small: "min-h-[200px] sm:min-h-[250px]",
-    medium: "min-h-[300px] sm:min-h-[400px] lg:min-h-[450px]",
-    large: "min-h-[400px] sm:min-h-[500px] lg:min-h-[600px]",
-  };
 
   const alignClasses: Record<string, string> = {
     left: "text-left",
@@ -316,7 +332,7 @@ function HeroCarouselBlock({
 
   return (
     <div
-      className={`relative flex items-center overflow-hidden w-full ${heightClasses[height] || heightClasses.medium}`}
+      className="relative w-full"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
@@ -327,24 +343,52 @@ function HeroCarouselBlock({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.8 }}
-          className="absolute inset-0"
         >
-          {slides[activeIndex].image ? (
-            <StoreImg
-              src={slides[activeIndex].image}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary/80" />
-          )}
+          {(() => {
+            const slide = slides[activeIndex];
+            const hasResponsive = !!(
+              slide.mobileImage ||
+              slide.tabletImage ||
+              slide.desktopImage
+            );
+            if (hasResponsive) {
+              return (
+                <picture className="block w-full leading-[0]">
+                  {slide.mobileImage && (
+                    <source
+                      media="(max-width: 640px)"
+                      srcSet={getOptimizedUrl(slide.mobileImage, 640)}
+                    />
+                  )}
+                  {slide.tabletImage && (
+                    <source
+                      media="(max-width: 1024px)"
+                      srcSet={getOptimizedUrl(slide.tabletImage, 640)}
+                    />
+                  )}
+                  <StoreImg
+                    src={slide.desktopImage || slide.image}
+                    alt=""
+                    className="w-full h-auto"
+                  />
+                </picture>
+              );
+            }
+            return slide.image ? (
+              <StoreImg
+                src={slide.image}
+                alt=""
+                className="w-full h-auto"
+              />
+            ) : (
+              <div className="w-full min-h-[300px] bg-gradient-to-br from-primary via-primary/90 to-primary/80" />
+            );
+          })()}
           <div className="absolute inset-0 bg-black/30" />
         </motion.div>
       </AnimatePresence>
 
-      <div
-        className={`relative z-10 w-full ${alignClasses[alignment] || alignClasses.center}`}
-      >
+      <div className="absolute inset-0 flex items-center justify-center">
         <div className="mx-auto w-full px-6">
           <AnimatePresence mode="wait">
             <motion.div
@@ -374,35 +418,30 @@ function HeroCarouselBlock({
                   {slides[activeIndex].subtitle}
                 </motion.p>
               )}
-              {slides[activeIndex].buttonText && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.3 }}
-                  className="mt-6"
-                >
-                  <Button
-                    size="lg"
-                    className="bg-primary text-primary-foreground hover:bg-primary/90"
-                    onClick={() =>
-                      onNavigate &&
-                      slides[activeIndex].buttonLink &&
-                      onNavigate(
-                        slides[activeIndex].buttonLink.startsWith("/")
-                          ? "content-page"
-                          : "distribution",
-                        slides[activeIndex].buttonLink.replace("/page/", ""),
-                      )
-                    }
-                  >
-                    {slides[activeIndex].buttonText}
-                  </Button>
-                </motion.div>
-              )}
             </motion.div>
           </AnimatePresence>
         </div>
       </div>
+      {slides[activeIndex].buttonText && (
+        <div className="absolute bottom-0 left-0 right-0 z-10 w-full px-6 pb-6 sm:pb-8 text-center">
+          <Button
+            size="lg"
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+            onClick={() =>
+              onNavigate &&
+              slides[activeIndex].buttonLink &&
+              onNavigate(
+                slides[activeIndex].buttonLink.startsWith("/")
+                  ? "content-page"
+                  : "distribution",
+                slides[activeIndex].buttonLink.replace("/page/", ""),
+              )
+            }
+          >
+            {slides[activeIndex].buttonText}
+          </Button>
+        </div>
+      )}
 
       {slides.length > 1 && (
         <>
@@ -1607,7 +1646,7 @@ function LeadershipBlock({
             {heading}
           </h2>
         )}
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {members.map((person, i) => (
             <motion.div
               key={i}
@@ -1615,20 +1654,20 @@ function LeadershipBlock({
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1, duration: 0.4 }}
-              className="flex items-start gap-4 p-4 rounded-xl border"
+              className="flex flex-col rounded-xl border overflow-hidden"
             >
-              <div className="w-[150px] h-full rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center border">
+              <div className="aspect-[3/4] bg-muted overflow-hidden flex items-center justify-center">
                 {person.image ? (
                   <StoreImg
                     src={person.image}
                     alt={person.name}
-                    className="w-[full] h-full object-cover"
+                    className="w-full h-full object-cover"
                   />
                 ) : (
-                  <UserCircle className="h-6 w-6 text-muted-foreground/40" />
+                  <UserCircle className="h-10 w-10 text-muted-foreground/40" />
                 )}
               </div>
-              <div>
+              <div className="p-4 sm:p-5 flex flex-col gap-1">
                 <h3 className="font-semibold text-sm">{person.name}</h3>
                 <p className="text-xs text-muted-foreground">{person.role}</p>
                 <p className="text-xs text-muted-foreground/70 mt-1 leading-relaxed">
@@ -1639,7 +1678,7 @@ function LeadershipBlock({
           ))}
         </div>
         {ctaText && (
-          <div className="flex flex-col justify-center items-center gap-2 p-4 rounded-xl border border-dashed">
+          <div className="flex justify-center mt-8">
             <Button
               variant="outline"
               size="sm"

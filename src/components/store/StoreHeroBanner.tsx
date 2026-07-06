@@ -2,6 +2,7 @@
 
 import React from "react";
 import { StoreImg } from "./StoreImg";
+import { getOptimizedUrl } from "@/lib/images";
 
 interface RequirementType {
   id: string;
@@ -54,6 +55,9 @@ export function StoreHeroBanner({
   const subtitle = (hero.subtitle as string) ?? "";
   const estYear = (hero.estYear as string) ?? "";
   const heroBgImage = (hero.backgroundImage as string) ?? "";
+  const mobileImage = (hero.mobileImage as string) ?? "";
+  const tabletImage = (hero.tabletImage as string) ?? "";
+  const desktopImage = (hero.desktopImage as string) ?? "";
   const resolvedBackgroundImage = heroBgImage || propBackgroundImage || "";
   const badge = (hero.badge as string) ?? "";
   const topLabel = (hero.topLabel as string) ?? "";
@@ -86,13 +90,21 @@ export function StoreHeroBanner({
       className="relative overflow-hidden py-24 md:py-32 px-4"
       style={{ backgroundColor }}
     >
-      {resolvedBackgroundImage && (
-        <StoreImg
-          src={resolvedBackgroundImage}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-      )}
+      {resolvedBackgroundImage && (() => {
+        const hasResponsive = !!(mobileImage || tabletImage || desktopImage);
+        if (hasResponsive) {
+          return (
+            <picture className="absolute inset-0 w-full h-full">
+              {mobileImage && <source media="(max-width: 640px)" srcSet={getOptimizedUrl(mobileImage, 640)} />}
+              {tabletImage && <source media="(max-width: 1024px)" srcSet={getOptimizedUrl(tabletImage, 640)} />}
+              <StoreImg src={desktopImage || resolvedBackgroundImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            </picture>
+          );
+        }
+        return (
+          <StoreImg src={resolvedBackgroundImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        );
+      })()}
 
       {resolvedBackgroundImage && (
         <div

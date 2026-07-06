@@ -75,8 +75,11 @@ export const BLOCK_DEFAULTS: Record<
       title: "Welcome",
       subtitle: "",
       buttonText: "Learn More",
-      buttonLink: "/products",
+      buttonLink: "/purva-bites-distribution",
       backgroundImage: "",
+      mobileImage: "",
+      tabletImage: "",
+      desktopImage: "",
       height: "medium",
       alignment: "center",
     },
@@ -88,6 +91,9 @@ export const BLOCK_DEFAULTS: Record<
       slides: [
         {
           image: "",
+          mobileImage: "",
+          tabletImage: "",
+          desktopImage: "",
           title: "Slide 1",
           subtitle: "Description for slide 1",
           buttonText: "Shop Now",
@@ -95,6 +101,9 @@ export const BLOCK_DEFAULTS: Record<
         },
         {
           image: "",
+          mobileImage: "",
+          tabletImage: "",
+          desktopImage: "",
           title: "Slide 2",
           subtitle: "Description for slide 2",
           buttonText: "Learn More",
