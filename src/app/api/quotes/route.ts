@@ -13,17 +13,7 @@ export async function GET(request: NextRequest) {
 
     const where: any = {};
 
-    if (reqUserRole === 'buyer') {
-      const user = await db.user.findUnique({ where: { id: reqUserId || '' }, select: { companyId: true } });
-      if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-      where.OR = [
-        { userId: reqUserId },
-      ];
-      if (user.companyId) {
-        where.OR.push({ companyId: user.companyId });
-      }
-    } else {
+    if (reqUserRole === 'admin' || reqUserRole === 'clerk') {
       if (userId) where.userId = userId;
       if (companyId) where.companyId = companyId;
     }

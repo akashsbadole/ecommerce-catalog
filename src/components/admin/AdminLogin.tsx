@@ -9,7 +9,6 @@ import {
   Loader2,
   KeyRound,
   ArrowRight,
-  Building2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -196,23 +195,13 @@ export function AdminLogin({ onLogin, onNavigate }: AdminLoginProps) {
                     "Sign In"
                   )}
                 </Button>
-              </form>
+               </form>
 
-              {/* B2B Registration Link */}
-              <div className="mt-6 flex flex-col gap-2 text-center">
-                <Button
-                  variant="outline"
-                  className="w-full border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                  onClick={() => (window.location.href = "/register")}
-                >
-                  <Building2 className="mr-2 h-4 w-4" />
-                  Register as B2B Partner
-                </Button>
-
+              <div className="mt-4 text-center">
                 <button
                   type="button"
                   onClick={() => setShowForgot(true)}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors mt-2"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Forgot Password?
                 </button>

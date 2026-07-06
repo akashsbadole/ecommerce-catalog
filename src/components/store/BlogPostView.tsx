@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StoreLoading } from "./StoreLoading";
+import { StoreImg } from "./StoreImg";
 import { SocialShare } from "./SocialShare";
 import { generateArticleSchema } from "@/lib/seo/schema-generator";
 import { useSeo } from "@/lib/use-seo";
@@ -32,7 +33,13 @@ interface BlogPostData {
   isPublished: boolean;
   publishedAt: string | null;
   createdAt: string;
-  User?: { id: string; name: string; email: string; avatar?: string | null; bio?: string | null } | null;
+  User?: {
+    id: string;
+    name: string;
+    email: string;
+    avatar?: string | null;
+    bio?: string | null;
+  } | null;
 }
 
 interface BlogPostViewProps {
@@ -299,7 +306,7 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
         {post.User && (
           <span className="flex items-center gap-2">
             {post.User.avatar ? (
-              <img
+              <StoreImg
                 src={post.User.avatar}
                 alt={post.User.name}
                 className="h-8 w-8 rounded-full object-cover"
@@ -309,7 +316,9 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
                 {post.User.name.charAt(0).toUpperCase()}
               </span>
             )}
-            <span className="font-medium text-foreground">{post.User.name}</span>
+            <span className="font-medium text-foreground">
+              {post.User.name}
+            </span>
           </span>
         )}
         {post.publishedAt && (
@@ -452,7 +461,7 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
             <div className="mt-10 pt-8 border-t">
               <div className="flex gap-4 p-5 rounded-xl bg-muted/30 border">
                 {post.User.avatar ? (
-                  <img
+                  <StoreImg
                     src={post.User.avatar}
                     alt={post.User.name}
                     className="h-14 w-14 rounded-full object-cover shrink-0"
@@ -463,7 +472,9 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
                   </span>
                 )}
                 <div className="min-w-0">
-                  <p className="font-semibold text-foreground">{post.User.name}</p>
+                  <p className="font-semibold text-foreground">
+                    {post.User.name}
+                  </p>
                   <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
                     {post.User.bio}
                   </p>
@@ -498,7 +509,7 @@ export function BlogPostView({ postId, onNavigate }: BlogPostViewProps) {
                   >
                     <div className="relative h-40 rounded-lg overflow-hidden bg-muted mb-3">
                       {rp.coverImage ? (
-                        <img
+                        <StoreImg
                           src={rp.coverImage}
                           alt={rp.title}
                           className="w-full h-full object-cover transition-transform group-hover:scale-105"

@@ -37,7 +37,7 @@ export function MobileBottomNav({ onNavigate }: MobileBottomNavProps) {
               "relative flex flex-col items-center justify-center w-full h-full gap-1 transition-colors",
               item.active
                 ? "text-primary after:absolute after:bottom-1 after:left-1/3 after:w-1/3 after:h-0.5 after:bg-primary after:rounded-full after:content-['']"
-                : "text-muted-foreground hover:text-foreground"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             <div className="relative">

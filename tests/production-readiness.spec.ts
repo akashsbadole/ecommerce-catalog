@@ -19,7 +19,7 @@ test.describe("Platform Production Readiness", () => {
       await browseBtn.click();
       await expect(page.getByText(/Product distribution/i)).toBeVisible();
     } else {
-      await page.goto("/distribution");
+      await page.goto("/purva-bites-distribution");
     }
   });
 

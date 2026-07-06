@@ -9,6 +9,7 @@ import { useAppStore } from "@/lib/store";
 import { Breadcrumb } from "@/components/store/Breadcrumb";
 import { StoreLoading } from "./StoreLoading";
 import { LeadCaptureSection } from "./LeadCaptureSection";
+import { StoreImg } from "./StoreImg";
 
 interface ProductPageProps {
   slug: string;
@@ -105,7 +106,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
       <section className="container mx-auto max-w-3xl px-4 pt-12 md:pt-16 pb-6 md:pb-8 text-center">
         {image && (
           <div className="relative h-48 sm:h-56 md:h-64 w-full max-w-lg mx-auto mb-4 md:mb-6 rounded-xl overflow-hidden bg-muted">
-            <img
+            <StoreImg
               src={image}
               alt={product.name}
               className="w-full h-full object-cover"
@@ -138,7 +139,13 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
             { label: "Home", page: "home" },
             { label: "Products", page: "products" },
             ...(product.Category
-              ? [{ label: product.Category.name, page: "category" as const, slug: product.Category.slug }]
+              ? [
+                  {
+                    label: product.Category.name,
+                    page: "category" as const,
+                    slug: product.Category.slug,
+                  },
+                ]
               : []),
             { label: product.name },
           ]}
@@ -151,12 +158,56 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
         description="Fill in your details and we'll get back to you within 24 hours"
         submitText="Send Enquiry"
         fields={[
-          { name: "name", label: "Your name", type: "text", required: true, placeholder: "Your name *" },
-          { name: "company", label: "Company name", type: "text", required: true, placeholder: "Company name *" },
-          { name: "phone", label: "Phone number", type: "tel", required: true, placeholder: "Phone number *" },
-          { name: "email", label: "Email address", type: "email", required: false, placeholder: "Email address" },
-          { name: "requirement", label: "Requirement type", type: "select", required: true, placeholder: "Inquiry type", options: ["Bulk Order", "Private Label", "White Label", "Distribution", "Institutional Order", "Other"] },
-          { name: "city", label: "City / state", type: "text", required: false, placeholder: "City / state" },
+          {
+            name: "name",
+            label: "Your name",
+            type: "text",
+            required: true,
+            placeholder: "Your name *",
+          },
+          {
+            name: "company",
+            label: "Company name",
+            type: "text",
+            required: true,
+            placeholder: "Company name *",
+          },
+          {
+            name: "phone",
+            label: "Phone number",
+            type: "tel",
+            required: true,
+            placeholder: "Phone number *",
+          },
+          {
+            name: "email",
+            label: "Email address",
+            type: "email",
+            required: false,
+            placeholder: "Email address",
+          },
+          {
+            name: "requirement",
+            label: "Requirement type",
+            type: "select",
+            required: true,
+            placeholder: "Inquiry type",
+            options: [
+              "Bulk Order",
+              "Private Label",
+              "White Label",
+              "Distribution",
+              "Institutional Order",
+              "Other",
+            ],
+          },
+          {
+            name: "city",
+            label: "City / state",
+            type: "text",
+            required: false,
+            placeholder: "City / state",
+          },
         ]}
         messageField
         productContext={{ name: product.name, id: product.id }}

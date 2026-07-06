@@ -14,9 +14,12 @@ import { Button } from "@/components/ui/button";
 import { useSeo } from "@/lib/use-seo";
 import { getPageContentData } from "@/lib/use-page-content";
 import { useCmsPageData } from "@/lib/use-cms-data";
+import { BLOCK_DEFAULTS } from "@/lib/page-blocks";
 import { LeadCaptureSection } from "@/components/store/LeadCaptureSection";
 import { Breadcrumb } from "@/components/store/Breadcrumb";
 import { StoreLoading } from "./StoreLoading";
+import { StoreImg } from "./StoreImg";
+import { getOptimizedUrl } from "@/lib/images";
 
 interface DistributionPageProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -62,7 +65,11 @@ export function DistributionPage({
   const effectiveBlocks = distPageData?.blocks ?? fallbackData?.blocks ?? null;
   const cmsData =
     externalData ??
-    getPageContentData(effectiveBlocks, "distribution-content", {});
+    getPageContentData(
+      effectiveBlocks,
+      "distribution-content",
+      BLOCK_DEFAULTS["distribution-content"].defaultData,
+    );
 
   const hero = (cmsData.hero as Record<string, unknown>) || {};
   const sections =
@@ -93,51 +100,52 @@ export function DistributionPage({
     return <StoreLoading />;
   }
 
+  const hasContent = !!(hero.title || hero.backgroundImage);
+
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="relative h-[50vh] min-h-[400px] flex items-center justify-center overflow-hidden">
-        {(hero.backgroundImage as string) && (
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{
-              backgroundImage: `url(${hero.backgroundImage as string})`,
-            }}
-          >
-            <div className="absolute inset-0 bg-black/50" />
-          </div>
-        )}
-        {!(hero.backgroundImage as string) && (
-          <div className="absolute inset-0 bg-gray-900" />
-        )}
-        <div className="relative z-10 text-center px-4 max-w-3xl">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            {(hero.title as string) ?? ""}
-          </h1>
-          <p className="text-lg text-white/80 mb-8 max-w-xl mx-auto">
-            {(hero.subtitle as string) ?? ""}
-          </p>
-          {(hero.ctaText as string) && (
-            <div className="flex gap-3 justify-center">
-              <Button
-                size="lg"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                onClick={() => onNavigate("contact")}
-              >
-                {(hero.ctaText as string)}{" "}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+      {hasContent && (
+        <section className="relative h-[40vh] sm:h-[50vh] min-h-[280px] sm:min-h-[400px] flex items-center justify-center overflow-hidden">
+          {(hero.backgroundImage as string) && (
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{
+                backgroundImage: `url(${getOptimizedUrl(hero.backgroundImage as string, 1200)})`,
+              }}
+            >
+              <div className="absolute inset-0 bg-black/50" />
             </div>
           )}
-        </div>
-      </section>
+          {!(hero.backgroundImage as string) && (
+            <div className="absolute inset-0 bg-gray-900" />
+          )}
+          <div className="relative z-10 text-center px-4 sm:px-6 max-w-3xl">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-3 sm:mb-4">
+              {(hero.title as string) ?? ""}
+            </h1>
+            <p className="text-base sm:text-lg text-white/80 mb-6 sm:mb-8 max-w-xl mx-auto">
+              {(hero.subtitle as string) ?? ""}
+            </p>
+            {(hero.ctaText as string) && (
+              <div className="flex gap-3 justify-center">
+                <Button
+                  size="lg"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                  onClick={() => onNavigate("contact")}
+                >
+                  {hero.ctaText as string}{" "}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       <div className="container mx-auto max-w-5xl px-4 pt-6">
         <Breadcrumb
-          items={[
-            { label: "Home", page: "home" },
-            { label: "Distribution" },
-          ]}
+          items={[{ label: "Home", page: "home" }, { label: "Distribution" }]}
           onNavigate={onNavigate}
         />
       </div>
@@ -169,23 +177,23 @@ export function DistributionPage({
 
       {/* 2-column alternating sections */}
       {sections.length > 0 && (
-        <section className="py-16 px-4">
-          <div className="container mx-auto max-w-5xl space-y-16">
+        <section className="py-12 sm:py-16 px-4">
+          <div className="container mx-auto max-w-5xl space-y-12 sm:space-y-16">
             {sections.map((section, i) => (
               <div
                 key={section.title || i}
                 className={`flex flex-col ${section.imageSide === "right" ? "md:flex-row" : "md:flex-row-reverse"} gap-8 items-center`}
               >
-                <div className="flex-1">
+                <div className="flex-1 hidden md:flex">
                   <div className="aspect-video bg-muted rounded-xl overflow-hidden">
                     {section.imageUrl ? (
-                      <img
+                      <StoreImg
                         src={section.imageUrl}
                         alt={section.title}
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                      <div className="w-full h-full flex md:items-center md:justify-center text-muted-foreground">
                         <ResolvedIcon
                           name={section.icon || "Package"}
                           className="h-12 w-12"
@@ -212,7 +220,7 @@ export function DistributionPage({
 
       {/* CTA */}
       {(cta.title as string) && (
-        <section className="bg-muted/40 py-16 px-4">
+        <section className="bg-muted/40 py-12 sm:py-16 px-4">
           <div className="container mx-auto max-w-3xl text-center">
             <h2 className="text-2xl font-bold mb-4">{cta.title as string}</h2>
             <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
@@ -228,7 +236,7 @@ export function DistributionPage({
 
       {/* Promo banner grid */}
       {promoBanners.length > 0 && (
-        <section className="py-16 px-4">
+        <section className="py-12 sm:py-16 px-4">
           <div className="container mx-auto max-w-5xl">
             {promoTitle && (
               <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">
@@ -243,7 +251,7 @@ export function DistributionPage({
                 >
                   {banner.image ? (
                     <div className="aspect-video overflow-hidden">
-                      <img
+                      <StoreImg
                         src={banner.image}
                         alt={banner.headline}
                         className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"

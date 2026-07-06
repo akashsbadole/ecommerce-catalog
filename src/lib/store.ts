@@ -24,39 +24,19 @@ interface AdminUser {
 }
 
 interface AppState {
-  // Navigation
   currentPage: Page;
   navigate: (page: string, data?: unknown) => void;
 
-  // Auth
   isAdmin: boolean;
   adminUser: AdminUser | null;
   adminToken: string | null;
-  auth: {
-    user:
-      | (AdminUser & {
-          tier?: string;
-          isVerified?: boolean;
-          companyName?: string | null;
-          taxId?: string | null;
-          businessPhone?: string | null;
-          businessAddress?: string | null;
-          phone?: string | null;
-        })
-      | null;
-    token: string | null;
-  };
   setAdminLogin: (user: AdminUser, token: string) => void;
   setAdminLogout: () => void;
-  login: (user: any, token: string) => void;
-  logout: () => void;
 
-  // Global Settings
   settings: Record<string, string> | null;
   setSettings: (settings: Record<string, string>) => void;
   fetchSettings: () => Promise<void>;
 
-  // Global Enquiry Modal
   enquiryModal: { open: boolean; productName?: string; productId?: string };
   openEnquiryModal: (productName?: string, productId?: string) => void;
   closeEnquiryModal: () => void;
@@ -79,7 +59,7 @@ export const useAppStore = create<AppState>()(
           case "distribution":
             set({ currentPage: { type: "distribution" } });
             if (typeof window !== "undefined")
-              window.history.pushState({}, "", "/distribution");
+              window.history.pushState({}, "", "/purva-bites-distribution");
             break;
           case "category":
             set({ currentPage: { type: "category", slug: data as string } });
@@ -136,7 +116,6 @@ export const useAppStore = create<AppState>()(
             const rawSlug = (data as string) || "";
             const slug = rawSlug.replace(/^\/+/, "");
             if (!slug) break;
-            // Redirect known dedicated-page slugs to their proper page type
             const SLUG_REDIRECTS: Record<string, string> = {
               "distribution": "distribution",
               "about": "about",
@@ -183,51 +162,19 @@ export const useAppStore = create<AppState>()(
       isAdmin: false,
       adminUser: null,
       adminToken: null,
-      auth: { user: null, token: null },
       setAdminLogin: (user, token) =>
         set({
           isAdmin: true,
           adminUser: user,
           adminToken: token,
-          auth: { user, token },
         }),
       setAdminLogout: () =>
         set({
           isAdmin: false,
           adminUser: null,
           adminToken: null,
-          auth: { user: null, token: null },
           currentPage: { type: "home" },
         }),
-      login: (user, token) =>
-        set({
-          auth: { user, token },
-          isAdmin:
-            user.role === "admin" ||
-            user.role === "clerk" ||
-            user.role === "editor",
-          adminUser:
-            user.role === "admin" ||
-            user.role === "clerk" ||
-            user.role === "editor"
-              ? user
-              : null,
-          adminToken:
-            user.role === "admin" ||
-            user.role === "clerk" ||
-            user.role === "editor"
-              ? token
-              : null,
-        }),
-      logout: () => {
-        set({
-          auth: { user: null, token: null },
-          isAdmin: false,
-          adminUser: null,
-          adminToken: null,
-          currentPage: { type: "home" },
-        });
-      },
 
       settings: null,
       setSettings: (settings) => set({ settings }),
@@ -253,7 +200,6 @@ export const useAppStore = create<AppState>()(
         isAdmin: state.isAdmin,
         adminUser: state.adminUser,
         adminToken: state.adminToken,
-        auth: state.auth,
       }),
     },
   ),

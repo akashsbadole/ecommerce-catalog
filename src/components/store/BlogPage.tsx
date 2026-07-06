@@ -6,7 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { StoreLoading } from "./StoreLoading";
-import { useAppStore } from '@/lib/store';
+import { StoreImg } from "./StoreImg";
+import { useAppStore } from "@/lib/store";
 
 interface BlogPost {
   id: string;
@@ -17,7 +18,13 @@ interface BlogPost {
   isPublished: boolean;
   publishedAt: string | null;
   tags: string | null;
-  User?: { id: string; name: string; email: string; avatar?: string | null; bio?: string | null } | null;
+  User?: {
+    id: string;
+    name: string;
+    email: string;
+    avatar?: string | null;
+    bio?: string | null;
+  } | null;
 }
 
 interface BlogPageProps {
@@ -249,7 +256,7 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
                 {/* Cover Image */}
                 <div className="aspect-video bg-muted relative overflow-hidden">
                   {post.coverImage ? (
-                    <img
+                    <StoreImg
                       src={post.coverImage}
                       alt={post.title}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
@@ -307,7 +314,7 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
                     {post.User && (
                       <span className="flex items-center gap-1.5">
                         {post.User.avatar ? (
-                          <img
+                          <StoreImg
                             src={post.User.avatar}
                             alt={post.User.name}
                             className="h-5 w-5 rounded-full object-cover"
@@ -317,7 +324,9 @@ export function BlogPage({ onNavigate }: BlogPageProps) {
                             {post.User.name.charAt(0).toUpperCase()}
                           </span>
                         )}
-                        <span className="truncate max-w-[120px]">{post.User.name}</span>
+                        <span className="truncate max-w-[120px]">
+                          {post.User.name}
+                        </span>
                       </span>
                     )}
                   </div>

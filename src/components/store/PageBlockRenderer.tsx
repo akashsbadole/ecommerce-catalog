@@ -3,6 +3,8 @@
 import { useEffect, useState, useRef } from "react";
 import DOMPurify from "dompurify";
 import { useAppStore } from "@/lib/store";
+import { StoreImg } from "./StoreImg";
+import { getOptimizedUrl } from "@/lib/images";
 import {
   Image,
   ImageIcon,
@@ -202,7 +204,7 @@ function HeroBlock({
   const title = (data.title as string) || "Welcome";
   const subtitle = (data.subtitle as string) || "";
   const buttonText = (data.buttonText as string) || "";
-  const buttonLink = (data.buttonLink as string) || "/distribution";
+  const buttonLink = (data.buttonLink as string) || "/purva-bites-distribution";
   const height = (data.height as string) || "medium";
   const alignment = (data.alignment as string) || "center";
 
@@ -223,7 +225,7 @@ function HeroBlock({
       className={`relative flex items-center overflow-hidden w-full ${heightClasses[height] || heightClasses.medium}`}
     >
       {bgImage ? (
-        <img
+        <StoreImg
           src={bgImage}
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
@@ -249,10 +251,10 @@ function HeroBlock({
               onClick={() =>
                 onNavigate &&
                 buttonLink &&
-                  onNavigate(
-                    buttonLink.startsWith("/") ? "content-page" : "distribution",
-                    buttonLink.replace("/page/", ""),
-                  )
+                onNavigate(
+                  buttonLink.startsWith("/") ? "content-page" : "distribution",
+                  buttonLink.replace("/page/", ""),
+                )
               }
             >
               {buttonText}
@@ -328,10 +330,10 @@ function HeroCarouselBlock({
           className="absolute inset-0"
         >
           {slides[activeIndex].image ? (
-            <img
+            <StoreImg
               src={slides[activeIndex].image}
               alt=""
-              className="absolute inset-0 w-full h-full object-contain"
+              className="absolute inset-0 w-full h-full object-cover"
             />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary/80" />
@@ -386,10 +388,10 @@ function HeroCarouselBlock({
                       onNavigate &&
                       slides[activeIndex].buttonLink &&
                       onNavigate(
-                          slides[activeIndex].buttonLink.startsWith("/")
-                            ? "content-page"
-                            : "distribution",
-                          slides[activeIndex].buttonLink.replace("/page/", ""),
+                        slides[activeIndex].buttonLink.startsWith("/")
+                          ? "content-page"
+                          : "distribution",
+                        slides[activeIndex].buttonLink.replace("/page/", ""),
                       )
                     }
                   >
@@ -557,7 +559,7 @@ function TestimonialsBlock({ data }: { data: Record<string, unknown> }) {
             <p className="text-foreground/80 italic">&ldquo;{t.quote}&rdquo;</p>
             <div className="mt-4 flex items-center gap-3">
               {t.avatar ? (
-                <img
+                <StoreImg
                   src={t.avatar}
                   alt={t.name}
                   className="h-10 w-10 rounded-full object-cover"
@@ -609,7 +611,7 @@ function ImageGalleryBlock({ data }: { data: Record<string, unknown> }) {
             key={i}
             className="aspect-square overflow-hidden rounded-lg bg-muted"
           >
-            <img
+            <StoreImg
               src={src}
               alt={`Gallery image ${i + 1}`}
               className="h-full w-full object-cover transition-transform hover:scale-105"
@@ -737,7 +739,7 @@ function ProductsBlock({
               >
                 <div className="relative w-32 shrink-0 overflow-hidden bg-muted">
                   {image ? (
-                    <img
+                    <StoreImg
                       src={image}
                       alt={product.name}
                       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
@@ -772,7 +774,7 @@ function ProductsBlock({
               >
                 <div className="relative aspect-square overflow-hidden bg-muted">
                   {image ? (
-                    <img
+                    <StoreImg
                       src={image}
                       alt={product.name}
                       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
@@ -1052,14 +1054,14 @@ function CapabilitiesBlock({
   const renderMedia = () => {
     if (hasGallery) {
       return (
-        <div className="grid grid-cols-2 gap-2 w-75">
+        <div className="grid grid-cols-2 gap-2 md:w-75 w-full">
           {[0, 1, 2, 3].map((i) =>
             galleryUrls[i] ? (
               <div
                 key={i}
                 className="aspect-square rounded-md overflow-hidden bg-muted"
               >
-                <img
+                <StoreImg
                   src={galleryUrls[i]}
                   alt={`${imageCaption || "Capabilities"} ${i + 1}`}
                   className="w-full h-full object-cover"
@@ -1081,7 +1083,11 @@ function CapabilitiesBlock({
       return (
         <div
           className="absolute inset-0 bg-cover bg-center cursor-pointer group"
-          style={image ? { backgroundImage: `url(${image})` } : undefined}
+          style={
+            image
+              ? { backgroundImage: `url(${getOptimizedUrl(image, 1200)})` }
+              : undefined
+          }
           onClick={() => window.open(videoUrl, "_blank")}
         >
           <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40 transition-colors">
@@ -1102,7 +1108,7 @@ function CapabilitiesBlock({
     if (image) {
       return (
         <>
-          <img
+          <StoreImg
             src={image}
             alt={imageCaption || "Capabilities"}
             className="w-full h-full object-cover"
@@ -1190,7 +1196,7 @@ function CapabilitiesBlock({
               )}
             </div>
             <div
-              className={`relative rounded-xl overflow-hidden  justify-self-end ${hasGallery ? "lg:col-span-2" : "lg:col-span-2 aspect-[4/3]"}`}
+              className={`relative rounded-xl overflow-hidden  md:justify-self-end ${hasGallery ? "lg:col-span-2" : "lg:col-span-2 aspect-[4/3]"}`}
             >
               {renderMedia()}
             </div>
@@ -1319,7 +1325,7 @@ function ProductCategoriesBlock({
               >
                 <div className="aspect-square rounded-xl bg-muted flex items-center justify-center overflow-hidden border group-hover:border-brand/30 transition-colors">
                   {"image" in cat && cat.image ? (
-                    <img
+                    <StoreImg
                       src={cat.image as string}
                       alt={cat.name}
                       className="h-full w-full object-cover"
@@ -1413,7 +1419,7 @@ function FactoryReelBlock({
             )}
             <div className="relative max-w-3xl mx-auto aspect-video rounded-xl overflow-hidden bg-muted border shadow-lg">
               {thumbnailUrl ? (
-                <img
+                <StoreImg
                   src={thumbnailUrl}
                   alt={heading}
                   className="absolute inset-0 w-full h-full object-cover"
@@ -1502,7 +1508,7 @@ function CertificationsBlock({
                     className="flex flex-col items-center gap-2 max-w-[140px]"
                   >
                     <div className="w-[170px] h-full rounded-xl bg-background border flex items-center justify-center p-2 overflow-hidden">
-                      <img
+                      <StoreImg
                         src={item.image}
                         alt={item.caption || `Certification ${i + 1}`}
                         className="w-full h-full object-contain"
@@ -1540,7 +1546,28 @@ function CertificationsBlock({
 import { LeadCaptureSection } from "./LeadCaptureSection";
 
 function LeadCaptureBlock({ data }: { data: Record<string, unknown> }) {
-  return <LeadCaptureSection heading={data.heading as string} description={data.description as string} submitText={data.submitText as string} disclaimer={data.disclaimer as string} fields={data.fields as Array<{ name: string; label: string; type: string; required: boolean; placeholder: string; options?: string[] }>} messageField={data.messageField as boolean} bgColor={data.bgColor as string} apiEndpoint={data.apiEndpoint as string} successMessage={data.successMessage as string} />;
+  return (
+    <LeadCaptureSection
+      heading={data.heading as string}
+      description={data.description as string}
+      submitText={data.submitText as string}
+      disclaimer={data.disclaimer as string}
+      fields={
+        data.fields as Array<{
+          name: string;
+          label: string;
+          type: string;
+          required: boolean;
+          placeholder: string;
+          options?: string[];
+        }>
+      }
+      messageField={data.messageField as boolean}
+      bgColor={data.bgColor as string}
+      apiEndpoint={data.apiEndpoint as string}
+      successMessage={data.successMessage as string}
+    />
+  );
 }
 
 function LeadershipBlock({
@@ -1592,7 +1619,7 @@ function LeadershipBlock({
             >
               <div className="w-[150px] h-full rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center border">
                 {person.image ? (
-                  <img
+                  <StoreImg
                     src={person.image}
                     alt={person.name}
                     className="w-[full] h-full object-cover"
@@ -1661,7 +1688,7 @@ function PartnerLogosBlock({ data }: { data: Record<string, unknown> }) {
                 className="h-10 w-24 flex items-center justify-center"
               >
                 {logoUrl ? (
-                  <img
+                  <StoreImg
                     src={logoUrl}
                     alt={logoAlt}
                     className="max-h-full max-w-full object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all"
@@ -1818,7 +1845,10 @@ function StickyCtaBlock({
                   const el = document.getElementById(btn.link.slice(1));
                   el?.scrollIntoView({ behavior: "smooth" });
                 } else if (btn.action === "enquiry") {
-                  routeFromPath(btn.link || "/contact", onNavigate || (() => {}));
+                  routeFromPath(
+                    btn.link || "/contact",
+                    onNavigate || (() => {}),
+                  );
                 } else if (btn.action === "whatsapp") {
                   window.open(btn.link || "https://wa.me/", "_blank");
                 } else if (btn.action === "phone") {
@@ -1972,7 +2002,7 @@ function BlogGridBlock({
                 className="flex gap-4 items-start rounded-xl border bg-card p-4 shadow-sm hover:shadow-md transition-shadow"
               >
                 {post.coverImage && (
-                  <img
+                  <StoreImg
                     src={post.coverImage}
                     alt={post.title}
                     className="h-20 w-20 rounded-lg object-cover shrink-0"
@@ -2003,7 +2033,7 @@ function BlogGridBlock({
                   className="min-w-[280px] max-w-[320px] rounded-xl border bg-card shadow-sm hover:shadow-md transition-shadow flex flex-col"
                 >
                   {post.coverImage && (
-                    <img
+                    <StoreImg
                       src={post.coverImage}
                       alt={post.title}
                       className="h-40 w-full rounded-t-xl object-cover"
@@ -2036,7 +2066,7 @@ function BlogGridBlock({
                 className="rounded-xl border bg-card flex flex-col"
               >
                 {post.coverImage ? (
-                  <img
+                  <StoreImg
                     src={post.coverImage}
                     alt={post.title}
                     className="h-48 w-full object-cover rounded-t-xl"
@@ -2228,7 +2258,7 @@ function HeroSplitBlock({
                     const page =
                       btn.link === "/contact"
                         ? "contact"
-                        : btn.link === "/distribution"
+                        : btn.link === "/purva-bites-distribution"
                           ? "distribution"
                           : "content-page";
                     onNavigate?.(
@@ -2371,7 +2401,7 @@ function ProcessFlowBlock({ data }: { data: Record<string, unknown> }) {
           ))}
         </div>
         {trustItems.length > 0 && (
-          <div className="mt-10 bg-muted/50 border rounded-lg p-4 flex flex-wrap gap-6 items-center">
+          <div className="mt-10 bg-muted/50 border rounded-lg p-4 flex flex-wrap gap-6 items-center justify-center">
             {trustItems.map((item) => (
               <span
                 key={item}
@@ -2679,7 +2709,7 @@ function SliderBlock({
           }`}
         >
           {item.image ? (
-            <img
+            <StoreImg
               src={item.image}
               alt={item.title}
               className="h-full w-full object-cover"
@@ -2779,7 +2809,7 @@ function AboutBlock({
         </div>
         {image && (
           <div className="flex-1 w-full max-w-xl">
-            <img
+            <StoreImg
               src={image}
               alt={title}
               className="rounded-2xl shadow-xl w-full object-cover aspect-4/3"
@@ -2826,7 +2856,7 @@ function ProductContentSplitBlock({ data }: { data: Record<string, unknown> }) {
       <div className="grid md:grid-cols-2 gap-10 items-center">
         <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-muted">
           {image ? (
-            <img
+            <StoreImg
               src={image}
               alt={heading}
               className="w-full h-full object-cover"
@@ -2948,7 +2978,7 @@ function ProductCardsBlock({
               >
                 <div className="relative h-48 bg-muted overflow-hidden">
                   {image ? (
-                    <img
+                    <StoreImg
                       src={image}
                       alt={product.name}
                       className="w-full h-full object-cover"
@@ -3121,7 +3151,7 @@ function ProductInfographicBlock({ data }: { data: Record<string, unknown> }) {
     <section className="container mx-auto max-w-5xl px-4 py-16">
       <div className="rounded-xl overflow-hidden bg-muted">
         {image ? (
-          <img
+          <StoreImg
             src={image}
             alt={altText}
             className="w-full h-auto object-cover"

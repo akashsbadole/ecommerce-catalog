@@ -410,7 +410,7 @@ export function AdminEnquiries() {
     }
   };
 
-  const hasB2BFields = (enq: Enquiry) =>
+  const hasBusinessInfo = (enq: Enquiry) =>
     enq.companyName || enq.companyEmail || enq.companyPhone ||
     enq.companyAddress || enq.quantity;
 
@@ -741,8 +741,8 @@ export function AdminEnquiries() {
                 </div>
               </div>
 
-              {/* B2B Details */}
-              {hasB2BFields(viewEnquiry) && (
+              {/* Business Details */}
+              {hasBusinessInfo(viewEnquiry) && (
                 <>
                   <Separator />
                   <div className="space-y-2">

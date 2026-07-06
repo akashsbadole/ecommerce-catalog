@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { StoreImg } from "./StoreImg";
 
 interface RequirementType {
   id: string;
@@ -57,10 +58,21 @@ export function StoreHeroBanner({
   const badge = (hero.badge as string) ?? "";
   const topLabel = (hero.topLabel as string) ?? "";
   const buttons =
-    (hero.buttons as Array<{ text: string; page?: string; variant?: string }>) ??
-    [];
+    (hero.buttons as Array<{
+      text: string;
+      page?: string;
+      variant?: string;
+    }>) ?? [];
 
-  const hasContent = !!(title || resolvedBackgroundImage || buttons.length > 0 || badge || topLabel || estYear || (requirementTypes && requirementTypes.length > 0));
+  const hasContent = !!(
+    title ||
+    resolvedBackgroundImage ||
+    buttons.length > 0 ||
+    badge ||
+    topLabel ||
+    estYear ||
+    (requirementTypes && requirementTypes.length > 0)
+  );
   if (!hasContent) return null;
 
   const backgroundColor = (hero.backgroundColor as string) ?? "#78350f";
@@ -75,7 +87,7 @@ export function StoreHeroBanner({
       style={{ backgroundColor }}
     >
       {resolvedBackgroundImage && (
-        <img
+        <StoreImg
           src={resolvedBackgroundImage}
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
@@ -93,10 +105,7 @@ export function StoreHeroBanner({
       )}
 
       {patternStyle && (
-        <div
-          className="absolute inset-0 opacity-[0.07]"
-          style={patternStyle}
-        />
+        <div className="absolute inset-0 opacity-[0.07]" style={patternStyle} />
       )}
 
       <div className="relative container mx-auto max-w-5xl text-center text-white">

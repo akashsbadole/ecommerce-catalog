@@ -25,12 +25,9 @@ export async function GET(
       return NextResponse.json({ error: 'Quote not found' }, { status: 404 });
     }
 
-    // Authorization: Buyers can only see their own quotes or their company's quotes
-    if (reqUserRole === 'buyer') {
-      const user = await db.user.findUnique({ where: { id: reqUserId || '' }, select: { companyId: true } });
-      if (!user || (quote.userId !== reqUserId && quote.companyId !== user.companyId)) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      }
+    // Authorization: only admin/clerk can view quotes
+    if (reqUserRole !== 'admin' && reqUserRole !== 'clerk') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     return NextResponse.json({ quote });
@@ -56,29 +53,17 @@ export async function PUT(
       return NextResponse.json({ error: 'Quote not found' }, { status: 404 });
     }
 
-    const data: any = {};
-
-    if (reqUserRole === 'buyer') {
-      // Buyers can only accept or decline their own/company quotes
-      const user = await db.user.findUnique({ where: { id: reqUserId || '' }, select: { companyId: true } });
-      if (!user || (quote.userId !== reqUserId && quote.companyId !== user.companyId)) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      }
-
-      if (status && (status === 'accepted' || status === 'declined')) {
-        data.status = status;
-      } else {
-        return NextResponse.json({ error: 'Buyers can only update status to accepted or declined' }, { status: 403 });
-      }
-    } else if (reqUserRole === 'admin' || reqUserRole === 'clerk') {
-      if (status) data.status = status;
-      if (items) data.items = JSON.stringify(items);
-      if (totalAmount !== undefined) data.totalAmount = totalAmount;
-      if (notes !== undefined) data.notes = notes;
-      if (validUntil) data.validUntil = new Date(validUntil);
-    } else {
+    if (reqUserRole !== 'admin' && reqUserRole !== 'clerk') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
+
+    const data: any = {};
+
+    if (status) data.status = status;
+    if (items) data.items = JSON.stringify(items);
+    if (totalAmount !== undefined) data.totalAmount = totalAmount;
+    if (notes !== undefined) data.notes = notes;
+    if (validUntil) data.validUntil = new Date(validUntil);
 
     const updatedQuote = await db.quote.update({
       where: { id },

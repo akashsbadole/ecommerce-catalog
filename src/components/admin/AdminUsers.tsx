@@ -14,7 +14,6 @@ import {
   XCircle,
   FileText,
   Download,
-  Building2,
   Upload,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -68,7 +67,6 @@ interface User {
   role: string;
   isActive: boolean;
   isVerified: boolean;
-  tier: string;
   companyId: string | null;
   avatar?: string | null;
   bio?: string | null;
@@ -87,8 +85,6 @@ interface UserFormData {
   role: string;
   isActive: boolean;
   isVerified: boolean;
-  tier: string;
-  companyId: string;
   avatar: string;
   bio: string;
 }
@@ -100,8 +96,6 @@ const emptyForm: UserFormData = {
   role: 'clerk',
   isActive: true,
   isVerified: false,
-  tier: 'standard',
-  companyId: '',
   avatar: '',
   bio: '',
 };
@@ -125,15 +119,13 @@ function RoleBadge({ role }: { role: string }) {
   }
   return (
     <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-      <Building2 className="mr-1 h-3 w-3" />
-      Buyer
+      {role}
     </Badge>
   );
 }
 
 export function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
-  const [companies, setCompanies] = useState<{id: string, name: string}[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -174,22 +166,9 @@ export function AdminUsers() {
     }
   }, [searchTerm]);
 
-  const fetchCompanies = useCallback(async () => {
-    try {
-      const res = await adminFetch('/api/companies');
-      if (res.ok) {
-        const data = await res.json();
-        setCompanies(data.companies || []);
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
-
   useEffect(() => {
     fetchUsers();
-    fetchCompanies();
-  }, [fetchUsers, fetchCompanies]);
+  }, [fetchUsers]);
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev =>
@@ -269,8 +248,6 @@ export function AdminUsers() {
       role: user.role,
       isActive: user.isActive,
       isVerified: user.isVerified || false,
-      tier: user.tier || 'standard',
-      companyId: user.companyId || '',
       avatar: user.avatar || '',
       bio: user.bio || '',
     });
@@ -299,8 +276,6 @@ export function AdminUsers() {
         role: form.role,
         isActive: form.isActive,
         isVerified: form.isVerified,
-        tier: form.tier,
-        companyId: form.companyId || null,
         avatar: form.avatar || null,
         bio: form.bio.trim() || null,
       };
@@ -308,7 +283,6 @@ export function AdminUsers() {
       if (!editingUser) {
         payload.password = form.password;
       } else if (form.password.trim()) {
-        // Optional password reset when editing
         payload.password = form.password;
       }
 
@@ -752,57 +726,9 @@ export function AdminUsers() {
                       Clerk
                     </span>
                   </SelectItem>
-                  <SelectItem value="buyer">
-                    <span className="flex items-center gap-2">
-                      <Building2 className="h-3.5 w-3.5 text-amber-600" />
-                      Buyer
-                    </span>
-                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Company Selection */}
-            {form.role === 'buyer' && (
-              <div className="space-y-2">
-                <Label>Company</Label>
-                <Select
-                  value={form.companyId || '__none__'}
-                  onValueChange={(val) => setForm(prev => ({ ...prev, companyId: val === '__none__' ? '' : val }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select company" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">No Company</SelectItem>
-                    {companies.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {/* B2B Tier */}
-            {form.role === 'buyer' && (
-              <div className="space-y-2">
-                <Label>B2B Pricing Tier</Label>
-                <Select
-                  value={form.tier}
-                  onValueChange={(val) => setForm(prev => ({ ...prev, tier: val }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="standard">Standard</SelectItem>
-                    <SelectItem value="silver">Silver</SelectItem>
-                    <SelectItem value="gold">Gold</SelectItem>
-                    <SelectItem value="platinum">Platinum</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
 
             {/* Verified Status */}
             <div className="flex items-center gap-2">

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Phone, MessageCircle, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from "react";
+import { Phone, MessageCircle, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface StickyCtaBarProps {
   onNavigate: (page: string, data?: unknown) => void;
@@ -12,15 +12,15 @@ interface StickyCtaBarProps {
 export function StickyCtaBar({ onNavigate, settings }: StickyCtaBarProps) {
   const [visible, setVisible] = useState(false);
 
-  const whatsappNumber = settings?.whatsapp_number || '';
-  const contactPhone = settings?.contact_phone || '';
+  const whatsappNumber = settings?.whatsapp_number || "";
+  const contactPhone = settings?.contact_phone || "";
 
   useEffect(() => {
     const handleScroll = () => {
       setVisible(window.scrollY > 400);
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   if (!visible) return null;
@@ -31,14 +31,16 @@ export function StickyCtaBar({ onNavigate, settings }: StickyCtaBarProps) {
       <div className="h-[60px]" aria-hidden="true" />
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-gray-900 px-4 py-3 text-white shadow-lg">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
-          <span className="text-sm font-medium">Ready to manufacture at scale?</span>
+          <span className="text-sm font-medium">
+            Ready to manufacture at scale?
+          </span>
           <div className="flex flex-wrap gap-2">
             <Button
               size="sm"
               className="bg-primary text-white hover:bg-primary/90"
-              onClick={() => onNavigate('distribution')}
+              onClick={() => onNavigate("distribution")}
             >
-              Get bulk quote
+              Purva Bites Distribution
               <ArrowRight className="ml-1 h-3 w-3" />
             </Button>
             {whatsappNumber && (
@@ -48,8 +50,8 @@ export function StickyCtaBar({ onNavigate, settings }: StickyCtaBarProps) {
                 className="border-green-600 text-green-400 hover:bg-green-600/20"
                 onClick={() =>
                   window.open(
-                    `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}`,
-                    '_blank'
+                    `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, "")}`,
+                    "_blank",
                   )
                 }
               >

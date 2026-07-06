@@ -91,7 +91,7 @@ export const BLOCK_DEFAULTS: Record<
           title: "Slide 1",
           subtitle: "Description for slide 1",
           buttonText: "Shop Now",
-          buttonLink: "/distribution",
+          buttonLink: "/purva-bites-distribution",
         },
         {
           image: "",
@@ -407,7 +407,7 @@ export const BLOCK_DEFAULTS: Record<
         { name: "Namkeen", variants: "8+ variants" },
       ],
       ctaText: "View all products & packaging",
-      ctaLink: "/distribution",
+      ctaLink: "/purva-bites-distribution",
       ctaButtonColor: "var(--primary)",
       ctaTextColor: "#FFFFFF",
       showButton: true,
@@ -617,7 +617,7 @@ export const BLOCK_DEFAULTS: Record<
       text: "Ready to manufacture at scale?",
       buttons: [
         {
-          text: "Get bulk quote",
+          text: "Purva Bites Distribution",
           type: "primary",
           action: "enquiry",
           link: "#contact",
@@ -649,7 +649,11 @@ export const BLOCK_DEFAULTS: Record<
       alignment: "left",
       buttons: [
         { text: "Primary CTA", link: "/contact", variant: "primary" },
-        { text: "Secondary CTA", link: "/distribution", variant: "outline" },
+        {
+          text: "Secondary CTA",
+          link: "/purva-bites-distribution",
+          variant: "outline",
+        },
       ],
       badges: [],
       ctaButtonColor: "var(--primary)",
@@ -1393,7 +1397,8 @@ export const BLOCK_DEFAULTS: Record<
     defaultData: {
       hero: {
         title: "Purva Bites Distribution",
-        subtitle: "Your trusted FMCG distribution partner — pan-India coverage, quality assured supply chain.",
+        subtitle:
+          "Your trusted FMCG distribution partner — pan-India coverage, quality assured supply chain.",
         backgroundImage: "/placeholder-hero.jpg",
         ctaText: "Become a Distributor",
       },
@@ -1406,21 +1411,24 @@ export const BLOCK_DEFAULTS: Record<
       sections: [
         {
           title: "Nationwide Reach",
-          description: "Our distribution network spans across 500+ cities with 50,000+ retail touch points, ensuring your products reach every corner of the country.",
+          description:
+            "Our distribution network spans across 500+ cities with 50,000+ retail touch points, ensuring your products reach every corner of the country.",
           imageUrl: "",
           imageSide: "left",
           icon: "Globe",
         },
         {
           title: "Quality Assured Supply Chain",
-          description: "Every product is manufactured in our ISO-certified facilities and transported through our temperature-controlled logistics network.",
+          description:
+            "Every product is manufactured in our ISO-certified facilities and transported through our temperature-controlled logistics network.",
           imageUrl: "",
           imageSide: "right",
           icon: "Shield",
         },
         {
           title: "Timely Delivery Commitment",
-          description: "With our optimized logistics and multiple warehouse locations, we ensure on-time delivery with real-time tracking for all orders.",
+          description:
+            "With our optimized logistics and multiple warehouse locations, we ensure on-time delivery with real-time tracking for all orders.",
           imageUrl: "",
           imageSide: "left",
           icon: "Truck",
@@ -1428,10 +1436,30 @@ export const BLOCK_DEFAULTS: Record<
       ],
       promoTitle: "Our Product Range",
       promoBanners: [
-        { image: "", headline: "Product 1", description: "Product description here", buttonText: "Inquiry" },
-        { image: "", headline: "Product 2", description: "Product description here", buttonText: "Inquiry" },
-        { image: "", headline: "Product 3", description: "Product description here", buttonText: "Inquiry" },
-        { image: "", headline: "Product 4", description: "Product description here", buttonText: "Inquiry" },
+        {
+          image: "",
+          headline: "Product 1",
+          description: "Product description here",
+          buttonText: "Inquiry",
+        },
+        {
+          image: "",
+          headline: "Product 2",
+          description: "Product description here",
+          buttonText: "Inquiry",
+        },
+        {
+          image: "",
+          headline: "Product 3",
+          description: "Product description here",
+          buttonText: "Inquiry",
+        },
+        {
+          image: "",
+          headline: "Product 4",
+          description: "Product description here",
+          buttonText: "Inquiry",
+        },
       ],
       cta: {
         title: "Ready to partner with us?",
@@ -1554,10 +1582,7 @@ export function deepMerge<T extends Record<string, unknown>>(
           (m) => (m as Record<string, unknown>)?.id === item.id,
         );
         if (idx >= 0) {
-          merged[idx] = deepMerge(
-            merged[idx] as Record<string, unknown>,
-            item,
-          );
+          merged[idx] = deepMerge(merged[idx] as Record<string, unknown>, item);
         } else {
           merged.push(item);
         }

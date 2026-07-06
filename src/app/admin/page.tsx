@@ -14,7 +14,6 @@ export default async function AdminPage() {
         <SignIn
           routing="hash"
           fallbackRedirectUrl="/admin/dashboard"
-          signUpUrl="/register"
           appearance={{
             elements: {
               formButtonPrimary: 'bg-emerald-600 hover:bg-emerald-700',

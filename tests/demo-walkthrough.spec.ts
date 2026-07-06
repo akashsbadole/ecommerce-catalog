@@ -11,7 +11,7 @@ test.describe('Platform Demo Walkthrough', () => {
 
     // 2. Explore distribution
     console.log("Exploring distribution...");
-    await page.goto("/distribution");
+    await page.goto("/purva-bites-distribution");
     await page.waitForTimeout(5000);
 
     // 3. Admin Dashboard

@@ -2,7 +2,7 @@
 
 ## Introduction
 
-WCommerce Catalogue is a multi-tenant e-commerce platform that lets businesses create and manage their own online stores. This guide covers the main features for store owners (admins) and customers (buyers).
+WCommerce Catalogue is a multi-tenant e-commerce platform that lets businesses create and manage their own online stores. This guide covers the main features for store owners (admins).
 
 ## Table of Contents
 
@@ -11,20 +11,25 @@ WCommerce Catalogue is a multi-tenant e-commerce platform that lets businesses c
   - [Dashboard](#dashboard)
   - [Product Management](#product-management)
   - [Category Management](#category-management)
-  - [B2B: Enquiries & Quotes](#b2b-enquiries--quotes)
-  - [Company Management](#company-management)
+  - [Enquiries & Quotes](#enquiries-quotes)
   - [Customer Management](#customer-management)
   - [Blog & Content Pages](#blog--content-pages)
   - [Media Library](#media-library)
   - [Banners](#banners)
   - [Settings](#settings)
   - [Multi-Store Management](#multi-store-management)
-  - [Backup & Restore](#backup--restore)
-  - [Import & Export](#import--export)
-- [For Customers (Buyers)](#for-customers-buyers)
-  - [Browsing Products](#browsing-products)
-  - [Enquiries & Quotes](#enquiries--quotes-buyer)
-  - [Contact Form](#contact-form)
+  - [Backup & Restore](#backup-restore)
+  - [Import & Export](#import-export)
+- [Frequently Asked Questions](#faq)
+- [Blocks Reference](#blocks-reference)
+  - [Layout Blocks](#layout-blocks)
+  - [Library Blocks](#library-blocks)
+  - [Page Content Blocks](#page-content-blocks)
+  - [Product Page Blocks](#product-page-blocks)
+  - [Category Fields Reference](#category-fields-reference)
+  - [Icon Name Reference](#icon-name-reference)
+  - [JSON Editor Tips](#json-editor-tips)
+  - [Platform Page Slugs](#platform-page-slugs)
 
 ---
 
@@ -57,21 +62,21 @@ The dashboard shows:
 1. Go to **Products** tab
 2. Click **Add Product**
 3. Fill in:
-   - **Name** (required) - Product title
-   - **Slug** - Auto-generated from name, editable
-   - **Description** - Full product description
-   - **Short Description** - Brief summary for listings
-   - **Price** (required) - Regular selling price
-   - **Compare Price** - Original/struck-through price (optional)
-   - **Wholesale Price** - B2B pricing (optional)
-   - **SKU** - Stock Keeping Unit identifier
-   - **Stock** - Available quantity
-   - **Low Stock Threshold** - Alert level for low stock
-   - **Category** - Assign to a category
-   - **Images** - Upload product images
-   - **Specifications** - Technical specs
-   - **Min Order Qty** - Minimum order quantity for B2B
-   - **WhatsApp Number** - For quick enquiry via WhatsApp
+   - **Name** (required) — Product title
+   - **Slug** — Auto-generated from name, editable
+   - **Description** — Full product description
+   - **Short Description** — Brief summary for listings
+   - **Price** (required) — Regular selling price
+   - **Compare Price** — Original/struck-through price (optional)
+   - **Wholesale Price** — Wholesale pricing (optional)
+   - **SKU** — Stock Keeping Unit identifier
+   - **Stock** — Available quantity
+   - **Low Stock Threshold** — Alert level for low stock
+   - **Category** — Assign to a category
+   - **Images** — Upload product images
+   - **Specifications** — Technical specs
+   - **Min Order Qty** — Minimum order quantity
+   - **WhatsApp Number** — For quick enquiry via WhatsApp
 4. Click **Save**
 
 #### Product Variants
@@ -105,25 +110,25 @@ Deleted products go to Trash. You can restore them or permanently delete.
 
 Each category has a **rich landing page** with dedicated builder sections:
 
-| Field | Description |
-|---|---|
-| **Hero** | Large banner with heading, subtext, and optional buttons |
-| **Content Split** | Two-column text + image section |
-| **Cards** | Feature / info cards grid |
-| **CTA** | Call-to-action banner with button |
-| **Process** | Step-by-step process flow (up to 4 steps) |
-| **Infographic** | Image-rich infographic section |
+| Field             | Description                                              |
+| ----------------- | -------------------------------------------------------- |
+| **Hero**          | Large banner with heading, subtext, and optional buttons |
+| **Content Split** | Two-column text + image section                          |
+| **Cards**         | Feature / info cards grid                                |
+| **CTA**           | Call-to-action banner with button                        |
+| **Process**       | Step-by-step process flow (up to 4 steps)                |
+| **Infographic**   | Image-rich infographic section                           |
 
 These fields render on the storefront at `/product/<slug>` (e.g. `/product/khakhra`). Use them to create branded, content-rich category landing pages — no coding required.
 
 Categories also support the full **Page Builder** via the block editor for more complex layouts (26+ block types available).
 
-### B2B: Enquiries & Quotes
+### Enquiries & Quotes
 
 #### Enquiries
 
 - View all product enquiries and contact form submissions
-- Update status: New > Contacted > In Progress > Resolved > Closed
+- Update status: New → Contacted → In Progress → Resolved → Closed
 - Link enquiries to products and users
 - Bulk update status or delete
 
@@ -134,22 +139,15 @@ Categories also support the full **Page Builder** via the block editor for more 
    - Link to an enquiry
    - Add line items with products, quantities, and prices
    - Set validity date
-   - Add notes and admin notes
+   - Add notes
 3. Send quotes to customers
-4. Track status: Draft > Sent > Accepted > Rejected
-
-### Company Management
-
-- View all registered B2B companies
-- Verify companies (grants verified status to all company users)
-- Assign pricing tiers: Standard, Silver, Gold, Platinum
-- View company users, enquiries, and quotes
+4. Track status: Draft → Sent → Accepted → Rejected
 
 ### Customer Management
 
 1. Go to **Users** tab
 2. View all registered users
-3. Manage roles: Admin, Clerk, Buyer
+3. Manage roles: Admin, Clerk
 4. Activate/deactivate users
 5. Bulk operations: delete, activate, deactivate
 6. Import users from CSV
@@ -198,10 +196,11 @@ Categories also support the full **Page Builder** via the block editor for more 
 Configure your store under the **Settings** tab:
 
 - **General**: Site name, description, logo, favicon
+- **Contact**: Email, phone, address, social media links
+- **Company Details**: GSTIN, FSSAI, CIN registration numbers
 - **SMTP**: Email server configuration for notifications
-- **B2B**: Enable/disable B2B features, set tier discounts
-- **Tax**: Tax rate configuration
 - **SEO**: Default meta tags, schema.org settings
+- **Scripts**: Custom header and footer scripts
 
 ### Multi-Store Management
 
@@ -214,8 +213,8 @@ If you operate multiple stores:
 
 ### Backup & Restore
 
-- **Backup**: Export all data as JSON (products, orders, users, settings, etc.)
-- **Restore**: Import from a JSON backup file
+- **Backup** — Export all data as JSON (products, orders, users, settings, etc.)
+- **Restore** — Import from a JSON backup file
 - Settings and categories are upserted during restore
 
 ### Import & Export
@@ -232,44 +231,6 @@ If you operate multiple stores:
 
 ---
 
-## For Customers (Buyers)
-
-### Browsing Products
-
-1. Visit the store homepage
-2. Browse **Featured Products** or navigate to **Catalogue** (`/product`)
-3. Use **filters** to narrow by:
-   - Category
-   - Price range
-   - In-stock availability
-4. **Search** for products by name or description (opens enquiry modal directly)
-5. **Sort** by relevance, price, newest, or name
-6. Click a **category** to view its landing page at `/product/<slug>` with hero, cards, CTA, and other sections
-7. Click **Enquire** on any product card to open the enquiry modal — fill in quantity and message to send a request directly to the admin
-
-### Enquiries & Quotes (Buyer)
-
-#### Submitting an Enquiry
-
-1. On any **product card** (category pages, search results, featured products), click **Enquire**
-2. Fill in name, email, phone, quantity, and message
-3. Submit — admins will respond with a formal quote
-
-#### Responding to Quotes
-
-1. Go to **Portal** > **Quotes**
-2. View quote details with line items and totals
-3. **Accept** or **Decline** the quote
-4. Accepted quotes can proceed to order
-
-### Contact Form
-
-- Visit the **Contact** page
-- Fill in name, email, subject, and message
-- Submit - you'll receive a confirmation email
-
----
-
 ## Frequently Asked Questions
 
 ### How do I reset my password?
@@ -278,24 +239,6 @@ If you operate multiple stores:
 2. Enter your email address
 3. Check your email for a reset link (valid for 1 hour)
 4. Click the link and set a new password
-
-### How do I become a B2B buyer?
-
-1. Click **Register** and select B2B registration
-2. Provide your company details (name, tax ID, address)
-3. Wait for admin verification
-4. Once verified, you'll have access to B2B pricing and the Buyer Portal
-
-### What pricing tiers are available?
-
-| Tier     | Discount |
-| -------- | -------- |
-| Standard | 0%       |
-| Silver   | 5%       |
-| Gold     | 10%      |
-| Platinum | 15%      |
-
-Tiers are assigned by the admin based on your business relationship.
 
 ---
 
@@ -390,17 +333,17 @@ Rotating slideshow of hero banners with autoplay.
 }
 ```
 
-| Field                 | Type    | Description                                  |
-| --------------------- | ------- | -------------------------------------------- |
-| `slides[].image`      | string  | Slide background image URL                   |
-| `slides[].title`      | string  | Slide heading                                |
-| `slides[].subtitle`   | string  | Slide sub-heading                            |
-| `slides[].buttonText` | string  | CTA button label                             |
-| `slides[].buttonLink` | string  | CTA destination                              |
-| `autoplay`            | boolean | Auto-advance slides                          |
-| `interval`            | number  | Milliseconds between slides (e.g. 6000 = 6s) |
-| `height`              | string  | Height preset                                |
-| `alignment`           | string  | Text alignment                               |
+| Field                 | Type    | Description                 |
+| --------------------- | ------- | --------------------------- |
+| `slides[].image`      | string  | Slide background image URL  |
+| `slides[].title`      | string  | Slide heading               |
+| `slides[].subtitle`   | string  | Slide sub-heading           |
+| `slides[].buttonText` | string  | CTA button label            |
+| `slides[].buttonLink` | string  | CTA destination             |
+| `autoplay`            | boolean | Auto-advance slides         |
+| `interval`            | number  | Milliseconds between slides |
+| `height`              | string  | Height preset               |
+| `alignment`           | string  | Text alignment              |
 
 #### Text
 
@@ -666,7 +609,7 @@ Highlight numbers / statistics row.
 
 #### Audience Cards
 
-Cards targeting different B2B buyer types with individual CTAs.
+Cards targeting different audience types with individual CTAs.
 
 ```json
 {
@@ -678,7 +621,7 @@ Cards targeting different B2B buyer types with individual CTAs.
   "showButton": true,
   "cards": [
     {
-      "title": "B2B brands",
+      "title": "Brands",
       "description": "Bulk supply of finished goods under your brand",
       "cta": "Enquire now",
       "link": "/contact"
@@ -791,7 +734,7 @@ Preview grid of product categories with CTAs.
 | `categories[].name`     | string   | Category display name                                 |
 | `categories[].variants` | string   | Variant count text                                    |
 | `ctaText`               | string   | CTA button label                                      |
-| `ctaLink`               | string   | CTA destination                                       |
+| `ctaLink`               | string   | CTA button destination                                |
 | `showButton`            | boolean  | Show CTA button                                       |
 
 #### Factory Reel
@@ -818,7 +761,7 @@ Video showcase for factory tour or facility walkthrough.
 | `videoUrl`     | string | Video URL (YouTube or direct) |
 | `thumbnailUrl` | string | Cover image before play       |
 | `ctaText`      | string | CTA button label              |
-| `ctaLink`      | string | CTA destination               |
+| `ctaLink`      | string | CTA button destination        |
 
 #### Certifications (Award)
 
@@ -841,7 +784,7 @@ Certifications and compliance badges with optional gallery.
 | `heading`           | string   | Main heading              |
 | `items`             | string[] | Certification names       |
 | `ctaText`           | string   | CTA button label          |
-| `ctaLink`           | string   | CTA destination           |
+| `ctaLink`           | string   | CTA button destination    |
 | `gallery[].image`   | string   | Certificate image URL     |
 | `gallery[].caption` | string   | Image caption             |
 
@@ -877,7 +820,7 @@ Team/director profile cards.
 | `label`           | string | Small label above heading |
 | `heading`         | string | Main heading              |
 | `ctaText`         | string | CTA button label          |
-| `ctaLink`         | string | CTA destination           |
+| `ctaLink`         | string | CTA button destination    |
 | `members[].name`  | string | Person's name             |
 | `members[].role`  | string | Their title               |
 | `members[].bio`   | string | Biography text            |
@@ -1093,7 +1036,7 @@ Fixed-position bar at the bottom of the viewport for quick actions.
   "text": "Ready to manufacture at scale?",
   "buttons": [
     {
-      "text": "Get bulk quote",
+      "text": "Purva Bites Distribution",
       "type": "primary",
       "action": "enquiry",
       "link": "#contact"
@@ -1346,7 +1289,7 @@ Location cards for factory, office, and visit information.
     {
       "type": "visit",
       "title": "Planning a factory visit?",
-      "description": "We welcome B2B buyers..."
+      "description": "Contact us to schedule a visit..."
     }
   ]
 }
@@ -1477,677 +1420,52 @@ Controls the **Manufacturing** page (`/manufacturing`). Renders: hero banner, in
     { "value": "55+", "label": "Active SKUs" },
     { "value": "17+", "label": "Years experience" }
   ],
+  ...
+}
+```
+
+Full schema is too large to display here. Refer to the `manufacturing-content` block in the Page Builder JSON editor for all available fields.
+
+---
+
+#### `about-content`
+
+Controls the **About** page (`/about`). Renders: hero, intro/about text, leadership cards, journey timeline, values/approch section, and call-to-action.
+
+```json
+{
+  "hero": {
+    "title": "Our Story",
+    "subtitle": "How Purva Bites started and where we are today",
+    "backgroundImage": "..."
+  },
   "intro": {
-    "heading": "Built to Manufacture. Not to Outsource.",
-    "description": "Every product that leaves our facility is made in-house on our machinery..."
+    "heading": "From a small beginning to a trusted name",
+    "content": "<p>Full HTML content about the company...</p>",
+    "image": "...",
+    "imagePosition": "left"
   },
-  "productionLines": [
-    {
-      "id": "khakhra",
-      "name": "Roasted Khakhra",
-      "flagship": true,
-      "capacity": "1,000 kg",
-      "variants": "12+ flavours",
-      "packs": "200g · Bulk",
-      "desc": "Made from fresh wheat, ground in-house...",
-      "tags": ["100% Roasted, Never Fried", "Fresh Wheat, Ground In-House"],
-      "ctaText": "View Products →",
-      "ctaLink": "/product/coin-khakhra-manufacturer-india",
-      "ctaEnabled": true,
-      "image": "https://res.cloudinary.com/...jpg"
-    }
-  ],
-  "qualitySteps": [
-    {
-      "icon": "Leaf",
-      "color": "bg-primary/10 text-primary",
-      "title": "Raw material intake",
-      "desc": "Supplier grading, moisture check, lab testing before acceptance"
-    },
-    {
-      "icon": "Filter",
-      "color": "bg-emerald-50 text-emerald-600",
-      "title": "Cleaning & prep",
-      "desc": "Sieving, washing, pre-treatment as per product spec"
-    },
-    {
-      "icon": "Flame",
-      "color": "bg-amber-50 text-amber-600",
-      "title": "Production",
-      "desc": "Automated processing on dedicated line - controlled temp, time, texture"
-    },
-    {
-      "icon": "Microscope",
-      "color": "bg-orange-50 text-orange-600",
-      "title": "In-line QC checks",
-      "desc": "Colour, texture, weight, taste checks at every 30 min intervals"
-    },
-    {
-      "icon": "Package",
-      "color": "bg-blue-50 text-blue-600",
-      "title": "Packaging",
-      "desc": "Auto-fill, seal, label - Purva Bites or custom private label pack"
-    },
-    {
-      "icon": "Truck",
-      "color": "bg-green-50 text-green-700",
-      "title": "Dispatch",
-      "desc": "Lot-tagged, batch-coded, climate-appropriate loading & dispatch"
-    }
-  ],
-  "qualityFooterItems": [
-    "Batch traceability maintained",
-    "Staff in hygienic uniforms & gloves",
-    "CCTV-monitored production areas",
-    "Third-party lab testing on request"
-  ],
-  "privateLabel": {
-    "heading": "Your brand. Our factory.",
-    "subtitle": "We handle the entire manufacturing and packaging process - you bring the brand identity",
-    "items": [
-      {
-        "icon": "Package",
-        "title": "Custom packaging",
-        "desc": "Supply your artwork / brief - we print and pack under your brand"
-      },
-      {
-        "icon": "Settings",
-        "title": "Custom formulation",
-        "desc": "Adjust flavour, spice levels, ingredients"
-      },
-      {
-        "icon": "ShieldCheck",
-        "title": "Regulatory compliance handled",
-        "desc": "FSSAI declaration, nutritional labels, batch coding"
-      }
-    ],
-    "details": [
-      {
-        "label": "Minimum order qty (MOQ)",
-        "value": "As per product - share requirement"
-      },
-      { "label": "Lead time (first batch)", "value": "15-21 working days" },
-      { "label": "Pack size flexibility", "value": "10g to 1kg - all sizes" },
-      { "label": "NDA / confidentiality", "value": "Available on request" },
-      { "label": "Sample order", "value": "Available before bulk" }
-    ],
-    "ctaText": "Enquire for private label →",
-    "ctaLink": "#contact"
-  },
-  "certifications": [
-    { "name": "FSSAI licence", "desc": "Food safety & standards authority" },
-    { "name": "ISO certification", "desc": "Quality management systems" },
-    { "name": "BIS certification", "desc": "Bureau of Indian standards" },
-    { "name": "Other certification", "desc": "To be added by client" }
-  ],
-  "cta": {
-    "title": "Ready to see it for yourself?",
-    "subtitle": "Share your details - we'll get back within 24 hours",
-    "formBgColor": "#2639ED",
-    "formTextColor": "#FFFFFF"
-  }
+  ...
 }
 ```
-
-| Field                          | Type     | Description                                                          |
-| ------------------------------ | -------- | -------------------------------------------------------------------- | --- |
-| `hero.title`                   | string   | Main hero heading                                                    |
-| `hero.subtitle`                | string   | Hero sub-heading                                                     |
-| `hero.badge`                   | string   | Badge text (e.g. certifications)                                     |
-| `hero.backgroundImage`         | string   | Hero background image URL                                            |
-| `metrics[].value`              | string   | Statistic value                                                      |
-| `metrics[].label`              | string   | Statistic label                                                      |
-| `intro.heading`                | string   | Intro section heading                                                |
-| `intro.description`            | string   | Intro paragraph                                                      |
-| `productionLines[].id`         | string   | Unique identifier (used as tab key)                                  |
-| `productionLines[].name`       | string   | Display name on tab button                                           |
-| `productionLines[].flagship`   | boolean  | Show "Flagship line" badge                                           |
-| `productionLines[].capacity`   | string   | Daily capacity display                                               |
-| `productionLines[].variants`   | string   | Variant count display                                                |
-| `productionLines[].packs`      | string   | Pack size options                                                    |
-| `productionLines[].desc`       | string   | Detailed description                                                 |
-| `productionLines[].tags`       | string[] | Tag badges                                                           |
-| `productionLines[].ctaText`    | string   | CTA button label (renders only if non-empty)                         |
-| `productionLines[].ctaLink`    | string   | Button destination (`/path`, `http://`, `#hash`, or page type)       |
-| `productionLines[].ctaEnabled` | boolean  | Show/hide the CTA button                                             |
-| `productionLines[].image`      | string   | Production line image                                                |
-| `qualitySteps[].icon`          | string   | Lucide icon name                                                     |
-| `qualitySteps[].color`         | string   | Tailwind CSS colour classes                                          |
-| `qualitySteps[].title`         | string   | Step heading                                                         |
-| `qualitySteps[].desc`          | string   | Step description                                                     |
-| `qualityFooterItems`           | string[] | Checkmark items below quality section                                |
-| `privateLabel.heading`         | string   | Section heading                                                      |
-| `privateLabel.subtitle`        | string   | Section sub-heading                                                  |
-| `privateLabel.items[].icon`    | string   | Lucide icon                                                          |     |
-| `privateLabel.items[].title`   | string   | Item title                                                           |
-| `privateLabel.items[].desc`    | string   | Item description                                                     |
-| `privateLabel.details[].label` | string   | Detail row label                                                     |
-| `privateLabel.details[].value` | string   | Detail row value                                                     |
-| `privateLabel.ctaText`         | string   | CTA button label                                                     |
-| `privateLabel.ctaLink`         | string   | Button destination (renders button only if both text and link exist) |
-| `certifications[].name`        | string   | Certification name                                                   |
-| `certifications[].desc`        | string   | Description                                                          |
-| `cta.title`                    | string   | Lead capture form heading                                            |
-| `cta.subtitle`                 | string   | Form sub-heading                                                     |
-| `cta.formBgColor`              | string   | Form background colour                                               |
-| `cta.formTextColor`            | string   | Form text colour                                                     |
-
----
-
-#### `about-page-content`
-
-Controls the **About** page (`/about`). Renders: hero, company story, stats, timeline, directors, quote, mission/vision/values, factory location with logistics, and CTA cards.
-
-```json
-{
-  "hero": {
-    "title": "Built on trust. Driven by quality.",
-    "subtitle": "From a distribution background to a full-scale FMCG manufacturing company",
-    "estYear": "Est. 2010 · Gujarat, India",
-    "backgroundImage": "",
-    "backgroundColor": "#3d6f08",
-    "pattern": "none",
-    "overlayColor": "#1c1917",
-    "overlayOpacity": "0.45",
-    "badge": ""
-  },
-  "stats": [
-    { "value": "15+", "label": "Years in business" },
-    { "value": "5", "label": "Production lines" },
-    { "value": "5,000+", "label": "MT / year" },
-    { "value": "80+", "label": "Active SKUs" }
-  ],
-  "story": {
-    "heading": "How we got here",
-    "subtitle": "A business built from the ground up...",
-    "narrative": [
-      "The founders began their journey in FMCG distribution...",
-      "That ground-level experience gave them a perspective...",
-      "Today, Purva Bites operates a state-of-the-art manufacturing facility..."
-    ],
-    "ctaText": "Meet the founders →",
-    "ctaPage": "manufacturing",
-    "timeline": [
-      {
-        "year": "2010",
-        "title": "Founded",
-        "desc": "Purva Bites was established..."
-      },
-      {
-        "year": "2015",
-        "title": "First manufacturing unit",
-        "desc": "Opened own production facility..."
-      },
-      {
-        "year": "2018",
-        "title": "Expansion",
-        "desc": "Added new production lines..."
-      },
-      {
-        "year": "2020",
-        "title": "Quality certification",
-        "desc": "Achieved FSSAI certification..."
-      },
-      {
-        "year": "2023",
-        "title": "Scale-up",
-        "desc": "Expanded to multiple product categories..."
-      },
-      {
-        "year": "Today",
-        "title": "Pan-India presence",
-        "desc": "Serving brands and distributors across India...",
-        "current": true
-      }
-    ]
-  },
-  "directors": [
-    {
-      "name": "[Director name]",
-      "role": "Co-founder & Managing Director",
-      "bio": "With 20+ years of experience in FMCG manufacturing and distribution...",
-      "imageUrl": "",
-      "socialUrl": ""
-    }
-  ],
-  "quote": {
-    "text": "\"The business was built on the belief that quality manufacturing should be accessible...\"",
-    "author": "[Director name], Co-founder"
-  },
-  "ctaCard": {
-    "title": "Direct access to leadership",
-    "desc": "We believe in building partnerships, not just fulfilling orders. Reach out directly to our management team.",
-    "cta": "Speak to us directly →"
-  },
-  "missionVisionValues": [
-    {
-      "icon": "Target",
-      "color": "text-primary",
-      "bg": "bg-primary/10",
-      "label": "Mission",
-      "title": "To deliver high-quality FMCG products...",
-      "desc": "We strive to make premium food products accessible..."
-    },
-    {
-      "icon": "Eye",
-      "color": "text-emerald-600",
-      "bg": "bg-emerald-50",
-      "label": "Vision",
-      "title": "To be India's most trusted FMCG manufacturing partner...",
-      "desc": "Setting benchmarks in quality, innovation and reliability..."
-    },
-    {
-      "icon": "HeartHandshake",
-      "color": "text-amber-600",
-      "bg": "bg-amber-50",
-      "label": "Values",
-      "title": "Integrity. Quality. Partnership.",
-      "desc": "Every decision we make is guided by these three principles..."
-    }
-  ],
-  "location": {
-    "factoryAddress": "[Factory address line 1]\n[Area / Industrial estate]\n[City, District] - [PIN]\nGujarat, India",
-    "googleMapsEmbedUrl": "",
-    "logistics": [
-      {
-        "icon": "Train",
-        "label": "Nearest railway station",
-        "value": "[Station] - X km"
-      },
-      {
-        "icon": "Plane",
-        "label": "Nearest airport",
-        "value": "[Airport] - X km"
-      },
-      { "icon": "Route", "label": "National highway", "value": "NH-X - X km" },
-      {
-        "icon": "Truck",
-        "label": "Freight terminal",
-        "value": "[Terminal] - X km"
-      }
-    ],
-    "dispatchTags": ["Pan-India dispatch", "Road + rail", "Batch-tracked"],
-    "dispatchDesc": "We dispatch to all major markets across India via road and rail freight."
-  },
-  "cta": {
-    "title": "Ready to work with us?",
-    "cards": [
-      {
-        "icon": "Factory",
-        "title": "See our manufacturing",
-        "desc": "Explore our production lines, quality processes and certifications.",
-        "cta": "View manufacturing →",
-        "page": "manufacturing",
-        "useForm": false
-      },
-      {
-        "icon": "Target",
-        "title": "Distribution enquiry",
-        "desc": "Looking to stock Purva Bites products in your region?",
-        "cta": "Send enquiry →",
-        "page": "contact",
-        "useForm": true
-      },
-      {
-        "icon": "Linkedin",
-        "title": "Partner with us",
-        "desc": "Institutional buyers, private label partners, suppliers.",
-        "cta": "Send enquiry →",
-        "page": "contact",
-        "useForm": true
-      }
-    ]
-  }
-}
-```
-
-| Field                         | Type                                     | Description                                    |
-| ----------------------------- | ---------------------------------------- | ---------------------------------------------- |
-| `hero.title`                  | string                                   | Hero heading                                   |
-| `hero.subtitle`               | string                                   | Hero sub-heading                               |
-| `hero.estYear`                | string                                   | Est. year display                              |
-| `hero.backgroundImage`        | string                                   | Background image URL                           |
-| `hero.backgroundColor`        | string                                   | Fallback background colour                     |
-| `hero.pattern`                | `"none"` `"dots"` `"diagonal"` `"waves"` | Overlay pattern                                |
-| `hero.overlayColor`           | string                                   | Overlay tint colour                            |
-| `hero.overlayOpacity`         | string                                   | Overlay opacity (e.g. `"0.45"`)                |
-| `hero.badge`                  | string                                   | Badge text                                     |
-| `stats[].value`               | string                                   | Statistic                                      |
-| `stats[].label`               | string                                   | Statistic label                                |
-| `story.heading`               | string                                   | Story section heading                          |
-| `story.subtitle`              | string                                   | Story section sub-heading                      |
-| `story.narrative`             | string[]                                 | Paragraphs of the company story                |
-| `story.ctaText`               | string                                   | CTA button text (renders only if non-empty)    |
-| `story.ctaPage`               | string                                   | CTA destination page type                      |
-| `story.timeline[].year`       | string                                   | Year label                                     |
-| `story.timeline[].title`      | string                                   | Milestone title                                |
-| `story.timeline[].desc`       | string                                   | Milestone description                          |
-| `story.timeline[].current`    | boolean                                  | Mark as most recent                            |
-| `directors[].name`            | string                                   | Director name                                  |
-| `directors[].role`            | string                                   | Director role                                  |
-| `directors[].bio`             | string                                   | Biography                                      |
-| `directors[].imageUrl`        | string                                   | Photo URL                                      |
-| `directors[].socialUrl`       | string                                   | LinkedIn or social URL                         |
-| `quote.text`                  | string                                   | Quote text                                     |
-| `quote.author`                | string                                   | Quote attribution                              |
-| `quote.authorImage`           | string                                   | Author photo URL                               |
-| `ctaCard.title`               | string                                   | CTA card heading                               |
-| `ctaCard.desc`                | string                                   | CTA card description                           |
-| `ctaCard.cta`                 | string                                   | CTA card button text                           |
-| `missionVisionValues[].icon`  | string                                   | Lucide icon name                               |
-| `missionVisionValues[].color` | string                                   | Tailwind text colour                           |
-| `missionVisionValues[].bg`    | string                                   | Tailwind background colour                     |
-| `missionVisionValues[].label` | string                                   | Card label (Mission/Vision/Values)             |
-| `missionVisionValues[].title` | string                                   | Card heading                                   |
-| `missionVisionValues[].desc`  | string                                   | Card description                               |
-| `location.factoryAddress`     | string                                   | Factory address (support `\n` for line breaks) |
-| `location.googleMapsEmbedUrl` | string                                   | Google Maps embed URL                          |
-| `location.logistics[].icon`   | string                                   | Lucide icon name                               |
-| `location.logistics[].label`  | string                                   | Logistics label                                |
-| `location.logistics[].value`  | string                                   | Value (e.g. distance)                          |
-| `location.dispatchTags`       | string[]                                 | Dispatch capability tags                       |
-| `location.dispatchDesc`       | string                                   | Dispatch description paragraph                 |
-| `cta.title`                   | string                                   | CTA section heading                            |
-| `cta.cards[].icon`            | string                                   | Lucide icon name                               |
-| `cta.cards[].title`           | string                                   | Card title                                     |
-| `cta.cards[].desc`            | string                                   | Card description                               |
-| `cta.cards[].cta`             | string                                   | Card button text                               |
-| `cta.cards[].page`            | string                                   | Card button destination page                   |
-| `cta.cards[].useForm`         | boolean                                  | Open enquiry form instead of navigating        |
-
----
-
-#### `contact-page-content`
-
-Controls the **Contact** page (`/contact`). Renders: hero with requirement type pills, contact form, response promise table, and location cards.
-
-```json
-{
-  "hero": {
-    "title": "Let's talk about your requirement",
-    "subtitle": "Whether you're looking for bulk supply, private label manufacturing or a distribution partnership - share your requirement and we'll respond within 24 hours",
-    "backgroundImage": "https://res.cloudinary.com/.../image/upload/...jpg"
-  },
-  "formSection": {
-    "title": "Send us your requirement",
-    "subtitle": "Fields marked * are required. We respond within 24 working hours."
-  },
-  "responsePromise": {
-    "title": "Our response commitment",
-    "items": [
-      { "label": "Bulk / PL enquiries", "time": "Within 4 hours" },
-      { "label": "Distribution enquiries", "time": "Within 24 hours" },
-      { "label": "All other enquiries", "time": "Within 24 hours" }
-    ],
-    "footer": "Mon-Sat, 9am-6pm IST"
-  },
-  "locations": {
-    "title": "Our locations",
-    "cards": [
-      {
-        "type": "factory",
-        "title": "Manufacturing & Registered Unit",
-        "subtitle": "Primary",
-        "address": "[Full address with PIN]",
-        "accessibility": "[Station] X km · [Airport] X km",
-        "buttons": [
-          {
-            "text": "Get directions",
-            "icon": "MapPin",
-            "link": "https://maps.google.com/..."
-          },
-          { "text": "Book visit", "icon": "Factory", "link": "" }
-        ]
-      },
-      {
-        "type": "office",
-        "title": "Corporate office",
-        "subtitle": "",
-        "address": "[Office address with PIN]",
-        "accessibility": "Mon-Sat · 10am - 7pm IST",
-        "buttons": [
-          {
-            "text": "Get directions",
-            "icon": "MapPin",
-            "link": "https://maps.google.com/..."
-          }
-        ]
-      },
-      {
-        "type": "visit",
-        "title": "Planning a factory visit?",
-        "subtitle": "",
-        "description": "We welcome B2B buyers, private and white label partners and distributors to visit our facility. Please schedule in advance.",
-        "highlights": [
-          "Full production line walkthrough",
-          "Warehouse & dispatch area tour",
-          "Meet the directors in person",
-          "Product sampling on request"
-        ],
-        "cta": "Schedule a factory visit →",
-        "link": "#contact-form"
-      }
-    ]
-  }
-}
-```
-
-| Field                              | Type                             | Description                     |
-| ---------------------------------- | -------------------------------- | ------------------------------- |
-| `hero.title`                       | string                           | Hero heading                    |
-| `hero.subtitle`                    | string                           | Hero sub-heading                |
-| `hero.backgroundImage`             | string                           | Hero background image           |
-| `formSection.title`                | string                           | Contact form heading            |
-| `formSection.subtitle`             | string                           | Contact form description        |
-| `responsePromise.title`            | string                           | Response commitment heading     |
-| `responsePromise.items[].label`    | string                           | Enquiry type label              |
-| `responsePromise.items[].time`     | string                           | Response time                   |
-| `responsePromise.footer`           | string                           | Footer text                     |
-| `locations.title`                  | string                           | Locations section heading       |
-| `locations.cards[].type`           | `"factory"` `"office"` `"visit"` | Card type                       |
-| `locations.cards[].title`          | string                           | Card title                      |
-| `locations.cards[].subtitle`       | string                           | Badge/subtitle                  |
-| `locations.cards[].address`        | string                           | Full address                    |
-| `locations.cards[].accessibility`  | string                           | Accessibility info              |
-| `locations.cards[].description`    | string                           | Description (visit cards)       |
-| `locations.cards[].highlights`     | string[]                         | Highlight bullets (visit cards) |
-| `locations.cards[].cta`            | string                           | CTA button text                 |
-| `locations.cards[].link`           | string                           | CTA button link                 |
-| `locations.cards[].buttons[].text` | string                           | Button label                    |
-| `locations.cards[].buttons[].icon` | string                           | Lucide icon name                |
-| `locations.cards[].buttons[].link` | string                           | Button destination              |
-
----
-
-#### `distribution-content`
-
-Controls the **Distribution** page (`/distribution`). Renders: hero, stats bar, alternating two-column sections, CTA strip, promo banner grid, and lead capture form.
-
-```json
-{
-  "hero": {
-    "title": "Purva Bites Distribution",
-    "subtitle": "Your trusted FMCG distribution partner - pan-India coverage, quality assured supply chain.",
-    "backgroundImage": "https://res.cloudinary.com/...jpg",
-    "ctaText": "Become a Distributor"
-  },
-  "stats": [
-    { "label": "Cities Covered", "value": "500+", "icon": "MapPin" },
-    { "label": "Retail Touch Points", "value": "50K+", "icon": "Package" },
-    { "label": "Years of Excellence", "value": "25+", "icon": "Clock" },
-    { "label": "Product Variants", "value": "100+", "icon": "TrendingUp" }
-  ],
-  "sections": [
-    {
-      "title": "Nationwide Reach",
-      "description": "Our distribution network covers over 500 cities across India...",
-      "imageUrl": "",
-      "imageSide": "left",
-      "icon": "Globe"
-    },
-    {
-      "title": "Quality Assured Supply Chain",
-      "description": "Every product is batch-tracked and quality-checked...",
-      "imageUrl": "",
-      "imageSide": "right",
-      "icon": "Shield"
-    },
-    {
-      "title": "Timely Delivery Commitment",
-      "description": "We maintain a consistent supply chain with on-time delivery...",
-      "imageUrl": "",
-      "imageSide": "left",
-      "icon": "Truck"
-    }
-  ],
-  "promoTitle": "Our Product Range",
-  "promoBanners": [
-    {
-      "image": "",
-      "headline": "Khakhra Range",
-      "description": "Thin, crispy roasted flatbreads in 12+ flavours",
-      "buttonText": "Inquiry"
-    },
-    {
-      "image": "",
-      "headline": "Makhana Range",
-      "description": "Premium roasted fox nuts in 6+ flavours",
-      "buttonText": "Inquiry"
-    },
-    {
-      "image": "",
-      "headline": "Bhakhri Range",
-      "description": "Traditional thick roasted flatbreads",
-      "buttonText": "Inquiry"
-    },
-    {
-      "image": "",
-      "headline": "Extruder Range",
-      "description": "Puffed snacks and shaped novelties",
-      "buttonText": "Inquiry"
-    }
-  ],
-  "cta": {
-    "title": "Ready to partner with us?",
-    "description": "Join our growing network of distributors across India.",
-    "buttonText": "Enquire Now"
-  }
-}
-```
-
-| Field                        | Type               | Description                                      |
-| ---------------------------- | ------------------ | ------------------------------------------------ |
-| `hero.title`                 | string             | Hero heading                                     |
-| `hero.subtitle`              | string             | Hero sub-heading                                 |
-| `hero.backgroundImage`       | string             | Hero background image URL                        |
-| `hero.ctaText`               | string             | Hero CTA button text (renders only if non-empty) |
-| `stats[].label`              | string             | Statistic label                                  |
-| `stats[].value`              | string             | Statistic value                                  |
-| `stats[].icon`               | string             | Lucide icon name                                 |
-| `sections[].title`           | string             | Section heading                                  |
-| `sections[].description`     | string             | Section text                                     |
-| `sections[].imageUrl`        | string             | Section image URL                                |
-| `sections[].imageSide`       | `"left"` `"right"` | Image placement                                  |
-| `sections[].icon`            | string             | Lucide icon name                                 |
-| `promoTitle`                 | string             | Promo banners section heading                    |
-| `promoBanners[].image`       | string             | Banner image URL                                 |
-| `promoBanners[].headline`    | string             | Banner title                                     |
-| `promoBanners[].description` | string             | Banner description                               |
-| `promoBanners[].buttonText`  | string             | Inquiry button label                             |
-| `cta.title`                  | string             | CTA section heading                              |
-| `cta.description`            | string             | CTA description                                  |
-| `cta.buttonText`             | string             | CTA button text                                  |
 
 ---
 
 ### Product Page Blocks
 
-Six block types available for **product page content** (used in the product admin, not the PageBuilder). These are added to individual products via the product editor.
+#### `product-page-content`
 
-#### product-hero
-
-```json
-{
-  "title": "Product Name",
-  "subtitle": "Bulk Manufacturer · Private Label Ready",
-  "description": "Premium quality product manufactured in-house..."
-}
-```
-
-#### product-content-split
+Controls individual **Product** pages (`/products/<slug>`). Renders: product hero, key specs, features/benefits, variants (if any), specifications, packaging grid, related products, usage instructions, nutritional information (if any), certifications, and enquiry CTA.
 
 ```json
 {
-  "image": "",
-  "heading": "Sourced direct. Made in-house. Built for bulk.",
-  "paragraph": "Our product is sourced directly...",
-  "bullets": [
-    "Direct sourcing, no middlemen",
-    "In-house processing",
-    "FSSAI certified, hygienic packaging"
-  ]
-}
-```
-
-#### product-cards
-
-```json
-{
-  "title": "Our range",
-  "productIds": [],
-  "maxCards": 8,
-  "columns": 4
-}
-```
-
-#### product-cta
-
-```json
-{
-  "heading": "Looking for bulk supply or private label?",
-  "description": "Share your requirement...",
-  "showBulkCta": true,
-  "bulkCtaText": "Enquire for Bulk Order →",
-  "bulkCtaLink": "/contact",
-  "showPrivateLabelCta": true,
-  "privateLabelCtaText": "Start Private Label →",
-  "privateLabelCtaLink": "/contact",
-  "backgroundColor": "dark"
-}
-```
-
-#### product-process
-
-```json
-{
-  "title": "From raw material to dispatch",
-  "subtitle": "Every batch follows the same controlled process",
-  "steps": [
-    {
-      "title": "Raw material intake",
-      "description": "Sourced direct from growers"
-    },
-    {
-      "title": "Grading & cleaning",
-      "description": "Sorted by size and quality"
-    },
-    { "title": "Processing", "description": "Controlled heat and time" },
-    { "title": "Quality check", "description": "Batch-level inspection" },
-    {
-      "title": "Packing & dispatch",
-      "description": "Sealed, labelled, shipped"
-    }
-  ]
-}
-```
-
-#### product-infographic
-
-```json
-{
-  "image": "",
-  "caption": "",
-  "altText": "Infographic"
+  "productId": "...",
+  "hero": {
+    "title": "Product Name",
+    "subtitle": "Product tagline",
+    "images": ["...", "..."]
+  },
+  ...
 }
 ```
 
@@ -2155,132 +1473,58 @@ Six block types available for **product page content** (used in the product admi
 
 ### Category Fields Reference
 
-Categories in the admin have their own field system (separate from the PageBuilder). These fields render on the category landing page at `/product/<slug>`.
+Categories support the following custom fields, rendered on their landing pages:
 
-| Admin Field             | JSON Key                | Storefront Section | Description                                  |
-| ----------------------- | ----------------------- | ------------------ | -------------------------------------------- |
-| Hero Title              | `heroTitle`             | Hero Banner        | Large heading at top of page                 |
-| Hero Subtitle           | `heroSubtitle`          | Hero Banner        | Sub-heading below title                      |
-| Hero Description        | `heroDescription`       | Hero Banner        | Additional text                              |
-| Hero BG Color           | `heroBackgroundColor`   | Hero Banner        | Background colour style (dark/light/brand)   |
-| Hero BG Image           | `heroBackgroundImage`   | Hero Banner        | Background image (displayed over colour)     |
-| Content Split Image     | `contentSplitImage`     | Content Split      | Two-column section image                     |
-| Content Split Heading   | `contentSplitHeading`   | Content Split      | Section heading                              |
-| Content Split Paragraph | `contentSplitParagraph` | Content Split      | Section text                                 |
-| Content Split Bullets   | `contentSplitBullets`   | Content Split      | JSON array of bullet points                  |
-| Cards Title             | `cardsTitle`            | Product Cards      | Section heading                              |
-| Card Product IDs        | `cardsProductIds`       | Product Cards      | Comma-separated product IDs                  |
-| Cards Max Count         | `cardsMaxCount`         | Product Cards      | Maximum cards to show                        |
-| Cards Columns           | `cardsColumns`          | Product Cards      | Grid columns (2/3/4)                         |
-| CTA Heading             | `ctaHeading`            | CTA Strip          | CTA section heading                          |
-| CTA Description         | `ctaDescription`        | CTA Strip          | CTA supporting text                          |
-| CTA Bulk Text           | `ctaBulkText`           | CTA Strip          | Bulk order button label                      |
-| CTA Bulk Link           | `ctaBulkLink`           | CTA Strip          | Bulk order destination                       |
-| CTA Private Label Text  | `ctaPrivateLabelText`   | CTA Strip          | Private label button label                   |
-| CTA Private Label Link  | `ctaPrivateLabelLink`   | CTA Strip          | Private label destination                    |
-| CTA BG Color            | `ctaBackgroundColor`    | CTA Strip          | Background style (dark/light/brand)          |
-| Process Title           | `processTitle`          | Process Flow       | Section heading                              |
-| Process Subtitle        | `processSubtitle`       | Process Flow       | Section sub-heading                          |
-| Process Steps           | `processSteps`          | Process Flow       | JSON array of `{title, description}` objects |
-| Infographic Image       | `infographicImage`      | Infographic        | Main image                                   |
-| Infographic Video URL   | `infographicVideoUrl`   | Infographic        | YouTube video URL (replaces image if set)    |
-| Infographic Caption     | `infographicCaption`    | Infographic        | Image caption                                |
-| Infographic Alt Text    | `infographicAltText`    | Infographic        | Image alt text                               |
-| Gallery Title           | `galleryTitle`          | Gallery            | Section heading                              |
-| Gallery Images          | `galleryImages`         | Gallery            | JSON array of image URLs                     |
-| FAQ Title               | `faqTitle`              | FAQ                | Section heading                              |
-| FAQ Items               | `faqItems`              | FAQ                | JSON array of `{question, answer}` objects   |
-| Lead Capture Enabled    | `leadCaptureEnabled`    | Lead Capture       | Show/hide enquiry form                       |
-
-> **Note:** The category hero section also supports a **YouTube video URL** field for the infographic. If set, the video embeds as a 16:9 responsive iframe instead of the static infographic image.
+| Field Key               | Label               | Type      | Description                                      |
+| ----------------------- | ------------------- | --------- | ------------------------------------------------ |
+| `hero_title`            | Hero Title          | text      | Large heading on category page                   |
+| `hero_subtitle`         | Hero Subtitle       | text      | Sub-heading below title                          |
+| `hero_bg`               | Hero Background     | image     | Background image for hero banner                 |
+| `content_split_heading` | Content Heading     | text      | Heading for content split section                |
+| `content_split_content` | Content Body        | rich-text | HTML content for description block               |
+| `content_split_image`   | Content Image       | image     | Image shown alongside text                       |
+| `cards_heading`         | Cards Heading       | text      | Heading for the cards grid section               |
+| `cta_heading`           | CTA Heading         | text      | Call-to-action section heading                   |
+| `cta_text`              | CTA Button Text     | text      | Button label                                     |
+| `cta_link`              | CTA Button Link     | url       | Button destination                               |
+| `process_heading`       | Process Heading     | text      | Section heading for process steps                |
+| `process_subtitle`      | Process Subtitle    | text      | Lead text above steps                            |
+| `process_steps`         | Process Steps       | JSON      | Array of step objects (title, description, icon) |
+| `infographic_title`     | Infographic Title   | text      | Section heading                                  |
+| `infographic_content`   | Infographic Content | rich-text | Supporting text                                  |
+| `infographic_image`     | Infographic Image   | image     | Main infographic image                           |
+| `infographic_items`     | Infographic Items   | JSON      | Array of {title, description} items              |
 
 ---
 
 ### Icon Name Reference
 
-Many blocks use Lucide icon names for visual elements. Use any of these valid names:
+Use any Lucide icon name in the `icon` field of blocks that support it.
 
-| Category          | Icon Names                                                                                                                       |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| **General**       | `Star`, `Heart`, `Shield`, `Award`, `Target`, `Eye`, `Flag`, `Home`, `Search`, `Bell`, `Settings`, `User`, `Users`, `UserCircle` |
-| **Business**      | `Building`, `Factory`, `Warehouse`, `Store`, `Briefcase`, `Globe`, `TrendingUp`, `BarChart3`, `LineChart`, `PieChart`            |
-| **Commerce**      | `Package`, `Box`, `ShoppingBag`, `ShoppingCart`, `Tag`, `CreditCard`, `Truck`, `Ship`, `Plane`, `Train`                          |
-| **Communication** | `Mail`, `Phone`, `MessageSquare`, `Send`, `Headphones`, `Voicemail`, `MapPin`, `Navigation`                                      |
-| **Media**         | `Image`, `Images`, `Camera`, `Video`, `Film`, `Music`, `Play`                                                                    |
-| **Arrows**        | `ArrowRight`, `ArrowLeft`, `ArrowUp`, `ArrowDown`, `ChevronRight`, `ChevronLeft`, `MoveRight`, `ExternalLink`                    |
-| **Actions**       | `Download`, `Upload`, `Share`, `Link`, `Trash`, `Edit`, `Copy`, `Check`, `X`, `Plus`, `Minus`                                    |
-| **UI**            | `LayoutGrid`, `Columns`, `Rows`, `Table`, `List`, `Grid3X3`, `Sidebar`, `PanelRight`                                             |
-| **Content**       | `FileText`, `Newspaper`, `BookOpen`, `Quote`, `HelpCircle`, `Info`, `AlertCircle`, `ClipboardCheck`, `CheckCircle`               |
-| **Status**        | `ShieldCheck`, `ShieldAlert`, `ShieldOff`, `Verified`, `BadgeCheck`, `BadgePercent`                                              |
-| **Process**       | `GitBranch`, `GitMerge`, `GitCommit`, `Workflow`, `Route`, `Map`, `Compass`                                                      |
-| **Nature**        | `Leaf`, `Flame`, `Microscope`, `Sun`, `Moon`, `Cloud`, `Droplet`                                                                 |
+Common examples: `Star`, `ShieldCheck`, `Truck`, `Package`, `Leaf`, `Flame`, `CheckCircle`, `ClipboardCheck`, `Award`, `Users`, `Building2`, `Globe`, `Mail`, `Phone`, `MapPin`, `Clock`, `ExternalLink`.
 
-Usage: set the `icon` field to the exact PascalCase name (e.g. `"ShieldCheck"`). The component will render the matching Lucide icon or nothing if the name is invalid.
+Full list: https://lucide.dev/icons/
 
 ---
 
 ### JSON Editor Tips
 
-**Validating JSON:**
-
-- Use **double quotes** for strings, never single quotes
-- No **trailing commas** after the last item in arrays or objects
-- Boolean values: `true` / `false` (no quotes)
-- Numbers: no quotes
-- Null: use `null` (not `"null"`)
-
-**Example of valid JSON:**
-
-```json
-{
-  "title": "Correct",
-  "count": 42,
-  "enabled": true,
-  "items": ["one", "two"],
-  "metadata": null
-}
-```
-
-**Example of invalid JSON (will error):**
-
-```json
-{
-  "title": "Wrong", // ← single quotes
-  "count": 42,
-  "enabled": true,
-  "items": ["one", "two"] // ← trailing comma
-}
-```
-
-**Getting image URLs:**
-
-1. Upload images via the **Media Library** tab in admin
-2. Copy the Cloudinary URL from the media item
-3. Paste into the image field
-
-**HTML in text fields:**
-The `content` field in the **Text** block supports HTML. Safe tags: `<p>`, `<h1>`-`<h6>`, `<ul>`, `<ol>`, `<li>`, `<a>`, `<img>`, `<strong>`, `<em>`, `<br>`, `<blockquote>`, `<span>`.
-
-**Page content blocks must use JSON Editor:**
-The UI Editor shows a notice for nested blocks. Always use the **JSON Editor** tab for `manufacturing-content`, `about-page-content`, `contact-page-content`, and `distribution-content` blocks.
-
-**Copy-paste defaults:**
-Use the default JSON shown in this reference as a starting point. Paste it into the JSON Editor, then customise the fields you need. Fields you leave as empty strings `""` will not render a default value.
+- Always use valid JSON syntax (double quotes, no trailing commas)
+- Use `null` or `""` to clear optional string fields
+- Arrays must be enclosed in `[]` — even empty arrays `[]`
+- For rich-text fields, HTML strings are supported (`<p>`, `<ul>`, `<a>`, etc.)
+- Save the block first after switching to JSON mode before editing
 
 ---
 
 ### Platform Page Slugs
 
-These page slugs are reserved for the core platform pages and cannot be used for custom content pages:
-
-| Slug            | Route                                   |
-| --------------- | --------------------------------------- |
-| `homepage`      | `/`                                     |
-| `about-us`      | `/about`                                |
-| `manufacturing` | `/manufacturing`                        |
-| `contact`       | `/contact`                              |
-| `distribution`  | `/distribution`                         |
-| `products`      | `/products` (redirects to distribution) |
-| `blog`          | `/blog`                                 |
-
-Content pages use the **Pages** tab in admin and can have any custom slug not in this reserved list.
+| Slug                                 | Page                     |
+| ------------------------------------ | ------------------------ |
+| `home` / `homepage`                  | Home page                |
+| `distribution`                       | Distribution / Catalogue |
+| `about` / `about-us`                 | About Us                 |
+| `manufacturing` / `mfg-page-content` | Manufacturing            |
+| `contact` / `contact-us`             | Contact                  |
+| `blog`                               | Blog                     |
+| `products` / `product`               | Distribution redirect    |

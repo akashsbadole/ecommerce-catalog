@@ -42,7 +42,7 @@ export const BLOCK_DEFAULTS: Record<
             title: "Welcome",
             subtitle: "",
             buttonText: "Learn More",
-            buttonLink: "/distribution",
+            buttonLink: "/purva-bites-distribution",
             backgroundImage: "",
             height: "medium",
             alignment: "center",

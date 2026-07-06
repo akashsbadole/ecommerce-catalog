@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
+import { StoreImg } from "./StoreImg";
 import {
   Menu,
   X,
@@ -366,13 +367,13 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
               className="flex items-center gap-2 transition-opacity hover:opacity-80 shrink-0"
             >
               {settings?.site_logo ? (
-                <img
+                <StoreImg
                   src={settings.site_logo}
                   alt={settings.site_name || "Logo"}
                   className="h-[50px] w-auto object-contain"
                 />
               ) : (
-                <img
+                <StoreImg
                   src="/pruvabites.jpg"
                   alt="Logo"
                   className="h-[50px] w-auto object-contain"
@@ -465,7 +466,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
             >
               <Search className="h-4.5 w-4.5" />
             </Button> */}
-            {/* Get Bulk Quote CTA */}
+            {/* Purva Bites Distribution CTA */}
             <Button
               size="sm"
               className="hidden md:flex text-sm bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 px-4"
@@ -492,7 +493,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                 <SheetHeader className="border-b px-4 py-3">
                   <SheetTitle className="flex items-center gap-2 text-base">
                     {settings?.site_logo ? (
-                      <img
+                      <StoreImg
                         src={settings.site_logo}
                         alt={settings.site_name || "Logo"}
                         className="h-6 w-auto object-contain"
@@ -588,12 +589,12 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                       onClick={() => onNavigate("distribution")}
                     >
                       <FileText className="mr-2 h-4 w-4" />
-                      Get Bulk Quote
+                      Purva Bites Distribution
                     </Button>
                   </SheetClose>
 
                   {/* Search */}
-                  <SheetClose asChild>
+                  {/* <SheetClose asChild>
                     <Button
                       variant="outline"
                       className="justify-start text-sm h-9"
@@ -602,7 +603,7 @@ export function StoreHeader({ onNavigate }: StoreHeaderProps) {
                       <Search className="mr-2 h-4 w-4" />
                       Search Products
                     </Button>
-                  </SheetClose>
+                  </SheetClose> */}
                 </nav>
               </SheetContent>
             </Sheet>

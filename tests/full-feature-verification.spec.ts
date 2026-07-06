@@ -29,7 +29,7 @@ test.describe('Full Feature Verification', () => {
         slug: `header-${Date.now()}`,
         location: 'primary',
         isActive: true,
-        items: [{ label: primaryLabel, url: '/distribution', sortOrder: 0, isActive: true }]
+        items: [{ label: primaryLabel, url: '/purva-bites-distribution', sortOrder: 0, isActive: true }]
       },
       headers: { 'Authorization': `Bearer ${authToken}` }
     });
@@ -104,7 +104,7 @@ test.describe('Full Feature Verification', () => {
 
     // Check product price
     // Note: We need a product that actually exists and has a price. Seeding should have created some.
-    await page.goto('/distribution');
+    await page.goto('/purva-bites-distribution');
     const firstProduct = page.locator('a[href*="/product/"]').first();
     await firstProduct.click();
 
@@ -166,7 +166,7 @@ test.describe('Full Feature Verification', () => {
     });
 
     // 3. Verify on distribution
-    await page.goto('/distribution');
+    await page.goto('/purva-bites-distribution');
     await expect(page.getByText(prodName).first()).toBeVisible({ timeout: 15000 });
 
     // 4. Cleanup

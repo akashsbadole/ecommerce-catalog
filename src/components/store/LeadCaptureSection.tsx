@@ -92,7 +92,7 @@ export function LeadCaptureSection({
         className="absolute inset-0"
         style={{ backgroundColor: bgColor || "#016129" }}
       />
-      <div className="relative z-10 container mx-auto px-4 py-16">
+      <div className="relative z-10 container mx-auto px-4 py-12 sm:py-16">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}

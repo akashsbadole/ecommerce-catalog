@@ -6,8 +6,7 @@ const categories = [
     slug: "khakhra",
     description:
       "Khakhra is a thin, crispy flatbread originating from Gujarat, India. Made from whole wheat flour, oil, and spices, it is rolled paper-thin and slow-roasted until brittle — a healthy, crunchy snack enjoyed across India.",
-    image:
-      "https://images.unsplash.com/photo-1590947132387-155cc02f3212?w=600",
+    image: "https://images.unsplash.com/photo-1590947132387-155cc02f3212?w=600",
     sortOrder: 1,
     isActive: true,
     heroTitle: "The Crunch That Wins Every Bite",
@@ -73,8 +72,7 @@ const categories = [
     slug: "makhana",
     description:
       "Makhana (fox nuts / Euryale ferox) is a highly nutritious seed harvested from lotus ponds across Bihar and Uttar Pradesh. Light, crunchy, and packed with protein, it is a premium snack and superfood ingredient.",
-    image:
-      "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600",
+    image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600",
     sortOrder: 2,
     isActive: true,
     heroTitle: "India's Ancient Superfood, Roasted to Order",
@@ -100,7 +98,7 @@ const categories = [
     ctaHeading: "Bulk Makhana Supply? We're India's Largest Exporter.",
     ctaDescription:
       "We ship makhana in bulk to buyers across USA, Canada, UK, Australia, Middle East, and Southeast Asia. HACCP-compliant facility, export documentation, and door-to-door logistics.",
-    ctaBulkText: "Get Bulk Quote →",
+    ctaBulkText: "Purva Bites Distribution →",
     ctaBulkLink: "/contact-us",
     ctaPrivateLabelText: "Private Labelling Available",
     ctaPrivateLabelLink: "/contact-us",
@@ -140,8 +138,7 @@ const categories = [
     slug: "papad",
     description:
       "Papad is a thin, crispy disc-shaped savoury traditionally made from black gram (urad dal) flour, rice flour, or potato starch, seasoned with spices and sun-dried. A staple across Indian meals.",
-    image:
-      "https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=600",
+    image: "https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=600",
     sortOrder: 3,
     isActive: true,
     heroTitle: "Papad That Pops — Made the Village Way",
@@ -212,8 +209,7 @@ const categories = [
     slug: "spices",
     description:
       "Premium-grade Indian spices sourced directly from spice-growing regions — turmeric from Erode, chilli from Guntur, cardamom from Idukki, and cumin from Unjha.",
-    image:
-      "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=600",
+    image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=600",
     sortOrder: 4,
     isActive: true,
     heroTitle: "India's Finest Spices, Direct from the Farm",
@@ -245,8 +241,7 @@ const categories = [
     ctaPrivateLabelLink: "/contact-us",
     ctaBackgroundColor: "dark",
     processTitle: "Farm-to-Facility Excellence",
-    processSubtitle:
-      "Our supply chain ensures purity from harvest to dispatch",
+    processSubtitle: "Our supply chain ensures purity from harvest to dispatch",
     processSteps: JSON.stringify([
       {
         title: "Farm Procurement",
@@ -281,8 +276,7 @@ const categories = [
     slug: "namkeen",
     description:
       "Traditional Indian namkeen — crispy, spiced savoury snacks made from gram flour, rice, lentils, and nuts. From classic bhujia to modern fusion mixes, we have it all.",
-    image:
-      "https://images.unsplash.com/photo-1600959908209-7550a32d0ae0?w=600",
+    image: "https://images.unsplash.com/photo-1600959908209-7550a32d0ae0?w=600",
     sortOrder: 5,
     isActive: true,
     heroTitle: "Namkeen That Tastes Like Home",
@@ -314,8 +308,7 @@ const categories = [
     ctaPrivateLabelLink: "/contact-us",
     ctaBackgroundColor: "dark",
     processTitle: "From Family Kitchen to Global Pantry",
-    processSubtitle:
-      "We scaled up traditional recipes without cutting corners",
+    processSubtitle: "We scaled up traditional recipes without cutting corners",
     processSteps: JSON.stringify([
       {
         title: "Ingredient Preparation",

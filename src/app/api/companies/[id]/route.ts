@@ -10,12 +10,8 @@ export async function GET(
     const reqUserRole = request.headers.get('x-user-role');
     const { id } = await params;
 
-    // Authorization: Buyers can only see their own company
-    if (reqUserRole === 'buyer') {
-      const user = await db.user.findUnique({ where: { id: reqUserId || '' }, select: { companyId: true } });
-      if (!user || user.companyId !== id) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      }
+    if (reqUserRole !== 'admin' && reqUserRole !== 'clerk') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const company = await db.company.findUnique({

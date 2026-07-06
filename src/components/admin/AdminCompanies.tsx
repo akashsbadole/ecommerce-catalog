@@ -194,7 +194,7 @@ export function AdminCompanies() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Companies</h2>
-          <p className="text-muted-foreground mt-1">Manage B2B partner business profiles</p>
+          <p className="text-muted-foreground mt-1">Manage company business profiles</p>
         </div>
       </div>
 
@@ -237,7 +237,7 @@ export function AdminCompanies() {
             <Building2 className="h-12 w-12 text-muted-foreground/50" />
             <h3 className="mt-4 text-lg font-medium">No companies found</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Businesses appear here when B2B partners register
+               Businesses appear here when partners register
             </p>
           </div>
         ) : (
@@ -387,7 +387,7 @@ export function AdminCompanies() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Company</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure? This will also affect linked users and their ability to access B2B features.
+              Are you sure? This will also affect linked users.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

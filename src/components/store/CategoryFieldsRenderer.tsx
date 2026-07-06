@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
 import { getFirstImage } from "@/lib/utils";
 import { LeadCaptureSection } from "./LeadCaptureSection";
+import { StoreImg } from "./StoreImg";
 import { Breadcrumb } from "@/components/store/Breadcrumb";
 
 export interface CategoryFieldData {
@@ -86,7 +87,7 @@ function HeroSection({
   return (
     <section className="relative flex items-center justify-center overflow-hidden w-full min-h-[280px] md:min-h-[350px]">
       {backgroundImage ? (
-        <img
+        <StoreImg
           src={backgroundImage}
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
@@ -133,7 +134,7 @@ function ContentSplitSection({
       <div className="grid md:grid-cols-2 gap-6 md:gap-10 items-center">
         <div className="relative  rounded-xl overflow-hidden bg-muted order-0 md:order-none">
           {image ? (
-            <img
+            <StoreImg
               src={image}
               alt={heading}
               className="w-full h-full object-cover"
@@ -274,7 +275,7 @@ function CardsSection({
             >
               <div className="relative sm:h-65 md:h-65 bg-muted overflow-hidden">
                 {image ? (
-                  <img
+                  <StoreImg
                     src={image}
                     alt={product.name}
                     className="w-full h-full object-cover"
@@ -520,7 +521,7 @@ function InfographicSection({
             />
           </div>
         ) : image ? (
-          <img
+          <StoreImg
             src={image}
             alt={altText || "Infographic"}
             className="w-full h-auto object-cover"
@@ -618,7 +619,7 @@ function GallerySection({
               {!loaded.has(i) && (
                 <div className="absolute inset-0 bg-muted animate-pulse" />
               )}
-              <img
+              <StoreImg
                 src={src}
                 alt={`${title || "Gallery"} image ${i + 1}`}
                 loading="lazy"
@@ -683,7 +684,7 @@ function GallerySection({
             </>
           )}
 
-          <img
+          <StoreImg
             src={images[lightboxIndex]}
             alt={`${title || "Gallery"} image ${lightboxIndex + 1}`}
             className="max-h-[85vh] max-w-[90vw] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200"

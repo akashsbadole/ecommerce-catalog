@@ -237,7 +237,7 @@
         "text": "Ready to manufacture at scale?",
         "buttons": [
           {
-            "text": "Get bulk quote",
+            "text": "Purva Bites Distribution",
             "type": "primary",
             "action": "enquiry",
             "link": "#contact"

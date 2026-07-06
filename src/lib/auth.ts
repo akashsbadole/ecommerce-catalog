@@ -7,14 +7,6 @@ export interface AuthUser {
   email: string;
   name: string;
   role: string;
-  tier?: string;
-  isVerified?: boolean;
-  companyId?: string | null;
-  companyName?: string | null;
-  taxId?: string | null;
-  businessAddress?: string | null;
-  avatar?: string | null;
-  bio?: string | null;
 }
 
 export async function getUserById(id: string): Promise<AuthUser | null> {
@@ -28,14 +20,6 @@ export async function getUserById(id: string): Promise<AuthUser | null> {
     email: user.email,
     name: user.name,
     role: user.role,
-    tier: user.tier,
-    isVerified: user.isVerified,
-    companyId: user.companyId,
-    companyName: user.Company?.name,
-    taxId: user.Company?.taxId,
-    businessAddress: user.Company?.address,
-    avatar: user.avatar,
-    bio: user.bio,
   };
 }
 
@@ -76,9 +60,6 @@ export async function authenticateUser(
       email: user.email,
       name: user.name,
       role: user.role,
-      tier: user.tier,
-      isVerified: user.isVerified,
-      companyId: user.companyId,
     },
     token,
   };

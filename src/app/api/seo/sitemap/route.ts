@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     urls.push(`  <url>\n    <loc>${baseUrl}</loc>\n    <lastmod>${siteLastmod}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>`);
 
     // Distribution
-    urls.push(`  <url>\n    <loc>${baseUrl}/distribution</loc>\n    <lastmod>${siteLastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`);
+    urls.push(`  <url>\n    <loc>${baseUrl}/purva-bites-distribution</loc>\n    <lastmod>${siteLastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`);
 
     // Products
     for (const product of products) {
