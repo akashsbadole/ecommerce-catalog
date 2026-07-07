@@ -14,6 +14,8 @@ import {
   FileText,
   Users,
   Trash2,
+  Search,
+  Info,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";

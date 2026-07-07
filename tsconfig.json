@@ -46,6 +46,7 @@
     "tests",
     "src/test-setup.ts",
     "vitest.config.ts",
+    "scripts",
     "**/*.spec.ts",
     "**/*.test.ts",
     "**/*.spec.tsx",
