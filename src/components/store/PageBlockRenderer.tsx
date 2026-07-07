@@ -389,7 +389,7 @@ function HeroCarouselBlock({
       </AnimatePresence>
 
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="mx-auto w-full px-6">
+        <div className="mx-auto w-full px-6 flex flex-col min-h-[60vh] md:min-h-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={`text-${activeIndex}`}
@@ -420,28 +420,28 @@ function HeroCarouselBlock({
               )}
             </motion.div>
           </AnimatePresence>
+          {slides[activeIndex].buttonText && (
+            <div className="mt-auto md:mt-6 text-center">
+              <Button
+                size="lg"
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={() =>
+                  onNavigate &&
+                  slides[activeIndex].buttonLink &&
+                  onNavigate(
+                    slides[activeIndex].buttonLink.startsWith("/")
+                      ? "content-page"
+                      : "distribution",
+                    slides[activeIndex].buttonLink.replace("/page/", ""),
+                  )
+                }
+              >
+                {slides[activeIndex].buttonText}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
-      {slides[activeIndex].buttonText && (
-        <div className="absolute bottom-0 left-0 right-0 z-10 w-full px-6 pb-6 sm:pb-8 text-center">
-          <Button
-            size="lg"
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
-            onClick={() =>
-              onNavigate &&
-              slides[activeIndex].buttonLink &&
-              onNavigate(
-                slides[activeIndex].buttonLink.startsWith("/")
-                  ? "content-page"
-                  : "distribution",
-                slides[activeIndex].buttonLink.replace("/page/", ""),
-              )
-            }
-          >
-            {slides[activeIndex].buttonText}
-          </Button>
-        </div>
-      )}
 
       {slides.length > 1 && (
         <>

@@ -120,7 +120,7 @@ export function StoreHeroBanner({
         <div className="absolute inset-0 opacity-[0.07]" style={patternStyle} />
       )}
 
-      <div className="relative container mx-auto max-w-5xl text-center text-white">
+      <div className="relative container mx-auto max-w-5xl text-center text-white flex flex-col min-h-[60vh] md:min-h-0">
         {topLabel && (
           <p className="text-xs uppercase tracking-[0.2em] text-amber-200/80 mb-4">
             {topLabel}
@@ -170,7 +170,7 @@ export function StoreHeroBanner({
         )}
 
         {buttons.length > 0 && (
-          <div className="flex gap-4 justify-center flex-wrap">
+          <div className="flex gap-4 justify-center flex-wrap mt-auto md:mt-0">
             {buttons.map((btn, i) => {
               const isPrimary = btn.variant === "primary";
               return (
