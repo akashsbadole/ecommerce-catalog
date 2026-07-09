@@ -1,3 +1,4 @@
+import { Resend } from 'resend';
 import nodemailer from 'nodemailer';
 import { db } from './db';
 
@@ -9,39 +10,79 @@ export async function getSiteSettings() {
 export async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
   try {
     const getSetting = await getSiteSettings();
-    const host = getSetting('smtp_host');
-    if (!host) {
-      console.log('SMTP not configured, skipping email');
-      return false;
+    const service = process.env.EMAIL_SERVICE || 'smtp';
+
+    if (service === 'resend') {
+      const apiKey = process.env.RESEND_API_KEY;
+      if (!apiKey) {
+        console.error('Resend API key not configured, skipping email');
+        return false;
+      }
+
+      const resend = new Resend(apiKey);
+      const from = process.env.EMAIL_FROM || getSetting('email_from') || 'onboarding@resend.dev';
+      const siteName = process.env.SITE_NAME || getSetting('site_name') || 'Store';
+
+      const response = await resend.emails.send({
+        from: `"${siteName}" <${from}>`,
+        to,
+        subject,
+        html,
+      });
+
+      if (response.error) {
+        console.error('Resend error response:', response.error);
+        return false;
+      }
+      return true;
+    } else {
+      // SMTP service (for Zoho or standard SMTP)
+      // Check environment variables first
+      let host = process.env.SMTP_HOST;
+      let portStr = process.env.SMTP_PORT;
+      let user = process.env.SMTP_USER;
+      let pass = process.env.SMTP_PASS;
+      let from = process.env.EMAIL_FROM;
+      let siteName = process.env.SITE_NAME;
+
+      // Fallback to database site settings if environment variables are missing
+      if (!host) host = getSetting('smtp_host');
+      if (!portStr) portStr = getSetting('smtp_port') || '587';
+      if (!user) user = getSetting('smtp_user');
+      if (!pass) pass = getSetting('smtp_pass');
+      if (!from) from = getSetting('email_from') || 'noreply@store.com';
+      if (!siteName) siteName = getSetting('site_name') || 'Store';
+
+      if (!host) {
+        console.log('SMTP host not configured, skipping email');
+        return false;
+      }
+      if (!user || !pass) {
+        console.log('SMTP credentials not configured, skipping email');
+        return false;
+      }
+
+      const port = parseInt(portStr);
+      const secure = port === 465;
+
+      const transporter = nodemailer.createTransport({
+        host,
+        port,
+        secure,
+        auth: {
+          user,
+          pass,
+        },
+      });
+
+      await transporter.sendMail({
+        from: `"${siteName}" <${from}>`,
+        to,
+        subject,
+        html,
+      });
+      return true;
     }
-
-    const user = getSetting('smtp_user');
-    const pass = getSetting('smtp_pass');
-    if (!user || !pass) {
-      console.log('SMTP credentials not configured, skipping email');
-      return false;
-    }
-
-    const transporter = nodemailer.createTransport({
-      host,
-      port: parseInt(getSetting('smtp_port') || '587'),
-      secure: parseInt(getSetting('smtp_port') || '587') === 465,
-      auth: {
-        user: getSetting('smtp_user'),
-        pass: getSetting('smtp_pass'),
-      },
-    });
-
-    const from = getSetting('email_from') || 'noreply@store.com';
-    const siteName = getSetting('site_name') || 'Store';
-
-    await transporter.sendMail({
-      from: `"${siteName}" <${from}>`,
-      to,
-      subject,
-      html,
-    });
-    return true;
   } catch (error) {
     console.error('Email error:', error);
     return false;
@@ -53,9 +94,19 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
  * Used by admin UI to show warnings.
  */
 export async function getSmtpStatus(): Promise<{ configured: boolean; host: string; user: string }> {
+  const service = process.env.EMAIL_SERVICE || 'smtp';
+  if (service === 'resend') {
+    const apiKey = process.env.RESEND_API_KEY;
+    return {
+      configured: !!apiKey,
+      host: 'Resend API',
+      user: apiKey ? 'API Key Configured' : 'Missing API Key',
+    };
+  }
+
   const getSetting = await getSiteSettings();
-  const host = getSetting('smtp_host');
-  const user = getSetting('smtp_user');
+  const host = process.env.SMTP_HOST || getSetting('smtp_host');
+  const user = process.env.SMTP_USER || getSetting('smtp_user');
   return {
     configured: !!(host && user),
     host: host || '',
@@ -84,8 +135,8 @@ export async function sendEnquiryNotificationToAdmin(enquiry: {
   productName?: string;
 }) {
   const getSetting = await getSiteSettings();
-  const siteEmail = getSetting('site_email') || 'admin@store.com';
-  const siteName = getSetting('site_name') || 'Store';
+  const siteEmail = process.env.EMAIL_FROM || getSetting('site_email') || 'admin@store.com';
+  const siteName = process.env.SITE_NAME || getSetting('site_name') || 'Store';
 
   let content = `<h2 style="margin-top:0">New ${enquiry.type === 'rfq' ? 'RFQ' : 'Enquiry'} Received</h2>`;
   content += `<p>A new ${enquiry.type === 'rfq' ? 'Request for Quote' : 'enquiry'} has been submitted on your website.</p>`;
@@ -117,8 +168,7 @@ export async function sendEnquiryConfirmation(enquiry: {
   productName?: string;
 }) {
   const getSetting = await getSiteSettings();
-  const siteName = getSetting('site_name') || 'Store';
-  const siteEmail = getSetting('site_email') || 'admin@store.com';
+  const siteName = process.env.SITE_NAME || getSetting('site_name') || 'Store';
   const sitePhone = getSetting('site_phone') || '';
 
   let content = `<h2 style="margin-top:0">Thank You for Your Enquiry!</h2>`;
